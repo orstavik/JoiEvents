@@ -1,43 +1,9 @@
 # Pattern: EventToEventComposition
 
-> It was surprising to see how rarely EventToEventComposition is used. 
-> It made me second guess my self.
-> And, while pursuing these second guesses, I became even more surprised. 
-> Firstly, many native events follow the EventToEventComposition pattern. 
-> Through its actions, the platform implicitly, but still quite strongly, advocates using this pattern. 
-> Second, pursuing this pattern reveals several flaws in other approaches and several large benefits 
-> for EventToEventComposition: 
-> extreme ease of reuse, both across apps and within apps; 
-> extremely low coupling to other parts of the code;
-> super clear interfaces yielding less confusion, misuse and general anxiety;
-> and lightDOM composeability, ie. you can combine events from the same vantage point as you can native elements. 
-> Yet, almost no one uses this approach! Why is that? 
-> I really don't know. ¯\\\_(ツ)\_/¯
-
 EventToEventComposition is the act of making a new event from one or more other events.
 EventToEventComposition is implemented as a single JS function added as a global, capture event listener.
 When composing events, one relies on a series of strategic choices, that put together form different
-design patterns for EventToEventCompositions. But, before we look at these strategies, 
-we need to define a vocabulary.
-
- * **event**: something happening in the browser. DOM Events being dispatched is an event, of course,
-   but a callback triggered or native system task executed are also generally speaking an event.
- * **DOM Event**: an event that is triggered by one or more other events. Some native system tasks
-   such as browser navigation, (cf. defaultAction or native behavior) can often be considered an
-   invisible DOM Event.
- * **Composed event**: a DOM Event that is triggered by one or more other DOM Events.
- * **Triggering event**: a DOM Event that will initiate the dispatch a new composed event.
- * **Atomic event**: a DOM event that is not triggered by any other DOM events.
- * **Event sequence**: a series of triggering events that when following a specific order 
-   will dispatch a composed event.
- * **Preceding event**: a DOM Event that propagates before another DOM Event.
- * **Trailing event**: a DOM Event that propagates after another DOM Event.
- * **Event Triggering function**: a (set of) functions that capture DOM events and dispatch composed events.
-   The triggering function is at the very start of a triggering event's propagation: 
-   added a) globally (ie. to `window`) and b) in the capture phase of the propagation.
- * **Native events**: DOM Events created by the browser.
- * **Custom events**: DOM Events created by a script.
- * **Global events**: DOM Events that can apply to HTML elements in the entire DOM.
+design patterns for EventToEventCompositions. 
       
 ## EventToEventComposition strategies
 The strategic choices the developer needs to consider when composing events are:
@@ -86,7 +52,6 @@ In this book, we will present the following EventToEventComposition patterns:
    
 4. Pattern: **ReplaceDefaultAction**: 
    The chapter uses an `echo-click` event as its example.
-   
  
 5. **AttributableEvent**: This pattern illustrate how HTML attributes can be used to turn on or off
    a composed event per individual elements.
@@ -134,7 +99,7 @@ Thus, my advice is strongly, strive hard to only rely on data from the triggerin
 from the DOM elements the triggering events directly propagates to.
 
 
-9. **CapturedTarget**. This pattern illustrate how EventSequences can control the targets in its events,
+9. **GrabTarget**. This pattern illustrate how EventSequences can control the targets in its events,
    very much replicating the `setPointerCapture()` functionality.
    The example is a `mouse-dragging` event.
 
