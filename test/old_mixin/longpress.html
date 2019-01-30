@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<style>
+  longpress-button-callback,
+  longpress-button-event,
+  longpress-button-callback-and-event{
+    display: block;
+    width: 200px;
+    height: 50px;
+    background: lightblue;
+    border: 10px solid blue;
+    margin: 10px;
+    padding: 10px;
+  }
+</style>
+<h1>Longpress demo: press each box more than 1000ms</h1>
+<longpress-button-callback>Callback<br>yellow body</longpress-button-callback>
+<longpress-button-event>Event<br>red border</longpress-button-event>
+<longpress-button-callback-and-event>Event and Callback<br>green body and border</longpress-button-callback-and-event>
+
+<script>
+
+  function LongpressMixin (Base){
+    return class LongpressMixin extends Base{
+
+      static get longpressDuration() {
+        return 1000;
+      }
+
+      // static get longpressEvent() {                                     //[3]
+      //   return false;
+      // }
+
+      constructor(){
+        super();
+        this._downListener = (e) => this._down(e);
+        this._upListener = (e) => this._up(e);
+        this._downTime = undefined;
+      }
+
+      connectedCallback(){
+        if (super.connectedCallback) super.connectedCallback();
+        this.addEventListener("mousedown", this._downListener);
+      }
+
+      disconnectedCallback(){
+        if (super.disconnectedCallback) super.disconnectedCallback();
+        this.removeEventListener("mousedown", this._downListener);
+      }
+
+      _down(e){
+        this._downTime = e.timeStamp;
+        this.addEventListener("mouseup", this._upListener);
+      }
+
+      _up(e){
+        this.removeEventListener("mouseup", this._upListener);
+        const duration = e.timeStamp -this._downTime;
+        if (duration < this.constructor.longpressDuration)
+          return;
+        this.longpressCallback && this.longpressCallback(duration);         //[1]
+        if (this.constructor.longpressEvent)                                //[2]
+          this.dispatchEvent(new CustomEvent("longpress", {bubbles: true}));
+      }
+    }
+  }
+
+  class LongpressButtonCallback extends LongpressMixin(HTMLElement) {
+
+    longpressCallback(duration){
+      this.style.background = "yellow";
+    }
+  }
+
+  class LongpressButtonEvent extends LongpressMixin(HTMLElement) {
+
+    static get longpressEvent() {                                     //[3]
+      return true;                  //this element will throw longpress events.
+    }
+  }
+
+  class LongpressButtonCallbackAndEvent extends LongpressMixin(HTMLElement) {
+
+    static get longpressEvent() {                                     //[3]
+      return true;                  //this element will throw longpress events.
+    }
+
+    longpressCallback(duration){
+      this.style.background = "green";
+    }
+  }
+
+  customElements.define("longpress-button-callback", LongpressButtonCallback);
+  customElements.define("longpress-button-event", LongpressButtonEvent);
+  customElements.define("longpress-button-callback-and-event", LongpressButtonCallbackAndEvent);
+
+  document.querySelector("longpress-button-event").addEventListener("longpress", (e) => e.currentTarget.style.borderColor = "darkred");
+  document.querySelector("longpress-button-callback-and-event").addEventListener("longpress", (e) => e.currentTarget.style.borderColor = "darkgreen");
+</script>
+</body>
+</html>
