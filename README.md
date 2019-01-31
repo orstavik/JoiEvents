@@ -45,5 +45,4 @@ I really don't know. ¯\\\_(ツ)\_/¯
 
 ## Test
 
-<a class="jsbin-embed" href="https://jsbin.com/taqanow/embed?html,output">JS Bin on jsbin.com</a>
-<script src="https://static.jsbin.com/js/embed.min.js?4.1.7"></script>
+<script async src="//jsfiddle.net/orstavik/8byg1o6s/1/embed/html,result/"></script>
