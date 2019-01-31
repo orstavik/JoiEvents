@@ -46,3 +46,7 @@ I really don't know. ¯\\\_(ツ)\_/¯
 ## Test
 
 <script async src="//jsfiddle.net/orstavik/8byg1o6s/1/embed/html,result/"></script>
+
+## Test 2
+
+<iframe width="100%" height="300" src="//jsfiddle.net/orstavik/8byg1o6s/1/embedded/html,result/" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
