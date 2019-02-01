@@ -16,7 +16,8 @@ When storing these values, a good strategy is to create separate arrays for each
 This gives more variables for the state, but an efficient structure.
 Using separate arrays to store state like this is not generally recommended as it can quickly
 lead to discrepancies between the sequence and order between the arrays,
-but as the state structure of 
+but as the state structure of event trigger functions should be so narrow to begin with
+(used in such few places), this practice can often be afforded.
 
 ## Example: `triple-click`
 
