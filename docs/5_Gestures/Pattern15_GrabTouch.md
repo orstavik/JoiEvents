@@ -1,7 +1,3 @@
----
-title: GrabTouch
----
-
 # Pattern: GrabTouch
 
 ## Dynamic control
