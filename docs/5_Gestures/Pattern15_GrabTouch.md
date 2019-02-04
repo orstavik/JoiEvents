@@ -187,6 +187,8 @@ function onTouchstart(e) {
 window.addEventListener("touchstart", onTouchstart, true);
 ```
 
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
+
 ## References
 
  * 

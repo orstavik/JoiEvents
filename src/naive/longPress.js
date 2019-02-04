@@ -26,7 +26,11 @@
     var duration = e.timeStamp - primaryEvent.timeStamp;
     //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
     if (duration > 300 && e.target === primaryEvent.target)
-      dispatchPriorEvent(e.target, new CustomEvent("naive-long-press", {bubbles: true, composed: true, detail: duration})),e);
+      dispatchPriorEvent(
+        e.target,
+        new CustomEvent("naive-long-press", {bubbles: true, composed: true, detail: duration}),
+        e
+      );
     resetSequenceState();
   }
 
