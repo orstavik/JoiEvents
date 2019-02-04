@@ -186,8 +186,8 @@ function onTouchstart(e) {
 
 window.addEventListener("touchstart", onTouchstart, true);
 ```
-                     https://cdn.jsdelivr.net/gh/orstavik/JoiEvents/bookapp/PrettyPrinter.js
-<script src="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
+                     
+<script src="https://cdn.jsdelivr.net/gh/orstavik/JoiEvents/bookapp/PrettyPrinter.js"></script>
 <pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
 
 ## References
