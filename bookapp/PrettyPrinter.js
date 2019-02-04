@@ -17,13 +17,19 @@ class PrettyPrinter extends HTMLElement {
 <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/google/code-prettify/master/src/prettify.css">
 <pre class="prettyprint"></pre>
 <style>
+
+  pre {
+    position: relative;
+    overflow: scroll; 
+    background: white;
+  }
   .extra {
     background: white;
   }
   .com:hover {
     cursor: help;
   }
-</style> 
+</style>                                                                 
 <!--
 we don't want to do this, as it would load the script in every web component.
 <script src="https://cdn.rawgit.com/google/code-prettify/master/src/prettify.js" defer="defer"></script>
@@ -60,7 +66,7 @@ we don't want to do this, as it would load the script in every web component.
     if (active)
       return active.remove();
     var addOnComment = this.getCommentText(num);
-    var commentDiv = makeCommentDiv(num, addOnComment, e.x, e.y);
+    var commentDiv = makeCommentDiv(num, addOnComment, e.offsetX, e.offsetY);
     this.shadowRoot.appendChild(commentDiv);
   }
 
@@ -82,7 +88,7 @@ function makeCommentDiv(num, addOnComment, x, y){
   div.id = "extra"+num;
   div.innerText = addOnComment;
   div.classList.add("extra");
-  div.style.position = "fixed";
+  div.style.position = "absolute";
   div.style.top = y + "px";
   div.style.left = x + "px";
   return div;
