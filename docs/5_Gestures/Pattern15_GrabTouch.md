@@ -38,11 +38,13 @@ double-tap-to-zoom and swipe-to-scroll: `touch-action` and its twin `pointer-act
 `touch-action` and/or `pointer-action` are **restrictive** CSS properties. 
 If you set a `touch-action` property on a DOM element that does not allow scrolling, 
 no touch event that is targeted at any element inside the DOM element with that restriction 
-will be able to scroll (even if another CSS property deep down explicitly allows such behavior). 
+will be able to scroll (even if another CSS property deeper down explicitly allows such behavior). 
 Once restricted, that is it.
  
 This sounds good. To assert control and restrict native touch behavior, all we have to do is set this 
 CSS behavior at the top level such as on the `<body>` element. Except. That it doesn't work! Whaaat??!!   
+
+<script async src="//jsfiddle.net/orstavik/nheLpx3y/1/embed/html,result/"></script>
 
 ```html
 <script>
@@ -67,15 +69,15 @@ no effect on default touch actions until the next `pointerdown` or `touchstart` 
 This makes these CSS properties useless for dynamic control of touch events. 
 
 Can't touch this! What?! Why?? Noooo... Shutdown hard by the two CSS twins. 
-You try to pretend like nothing happened, and quickly check your hair in a mirror.
+You try to pretend like nothing happened and while you check your clothes.
 No, it wasn't me. The CSS twins were probably just in a bad mood. 
 And you TapDance your way over to another girl on the dance floor.
 
-Second, we approach the pointer event sisters with our `preventDefault()` moves. 
-`preventDefault()` will not fail us, you think.
-To `preventDefault()` with the pointer sisters is not such a fun and varied dance as the 
-pan-this-way, pan-that-way, pan-this-that-and-the-other you could try with the CSS sisters.
-But it definitively should make an impact. Habba-habba-`preventDefault()`!
+Second, we approach the pointer event girl gang with our `preventDefault()` moves. 
+`preventDefault()` will never fail us! You think.
+To do the `preventDefault()` with the pointer girls is not as suave as doing the 
+pan-this-way, pan-that-way, pan-this-that-and-the-other with the exotic CSS sisters.
+But the pointer girls are cool. To habba-habba-do-the-`preventDefault()` with them is alright.
 
 ```html
 <script>
@@ -88,19 +90,20 @@ But it definitively should make an impact. Habba-habba-`preventDefault()`!
 <div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
 ```
 
-But, what is this?! The pointer events ignores your preventDefault?!? Strike two!! No....
+But, what is this?! The pointer events just ignores your preventDefault?!? Strike two!! No....
 Apparently, the browsers did not find it poignant to disconnect the defaultAction of the touch events
 from their MergedEvent relative. But you do! Arrghh.. The pain! The senseless, meaningless torture of 
 default actions run awry. Why couldn't they just have made the merged pointer events properly? 
 
 Then how do I control the touch actions dynamically??
-After some deliberations, you get an idea. Can you go old-school? 
+After some deliberations, you get an idea. 
 Stripped of all your confidence and filled with self-consciousness after two rejections, 
 you try to discretely robot and moon-walk your way over to your ex-girlfriend at the other side 
-of the room. Ohh... The self-consciousness makes you question your every limb, which breaks your 
-rythm and flow horribly.. Ohh.. I hope she has forgotten all the bad stuff I told her during the 
-breakup when you told her you wanted to try something new with one of the pointer sisters.. 
-I hope she will dance with me, if only out of pity...
+of the room. Ohh... The self-doubt installed in you after the two previous rejections makes you
+monitor your every limb, which breaks your rythm and flow horribly.. Ohh.. I hope she has forgotten 
+that I told her she wasn't as cool as the pointer sisters during the breakup.. 
+Hopefully she will dance with me, if only out of pity and to show me this once that I was wrong to 
+dump her...
 
 Third, you add an event listener for `touchstart`, whose sole purpose is to control the native touch
 events by calling `.preventDefault()` on that event. 
