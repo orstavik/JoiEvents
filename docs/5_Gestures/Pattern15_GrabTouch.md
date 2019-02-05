@@ -112,7 +112,7 @@ Ok. When composing DOM Events dynamically, the rules are:
 
 ## Example: `tripple-tap`
 
-<script src="https://cdn.jsdelivr.net/gh/orstavik/JoiEvents/bookapp/PrettyPrinter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
 <pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
 
 ## References

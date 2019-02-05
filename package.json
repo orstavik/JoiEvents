@@ -1,0 +1,31 @@
+{
+  "name": "joievents",
+  "version": "1.0.0",
+  "description": "*compose events like a native!*",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orstavik/JoiEvents.git"
+  },
+  "keywords": [
+    "HTML",
+    "JS",
+    "DOM",
+    "events",
+    "gestures",
+    "routing"
+  ],
+  "author": "orstavik",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/orstavik/JoiEvents/issues"
+  },
+  "homepage": "https://github.com/orstavik/JoiEvents#readme"
+}
