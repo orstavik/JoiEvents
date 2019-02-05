@@ -1,0 +1,25 @@
+<big>Demo: touchstartPreventDefault</big><br>
+<small>JoiEvents: Pattern15 TouchGrab</small>
+<hr>
+
+<script>
+  window.addEventListener("touchstart", function(e){e.preventDefault();});
+</script>
+
+<div>
+  Try to scroll or double tap.
+</div>
+<div>
+  This works. You can stop native gestures
+  using .preventDefault() on the touchstart event.
+</div>
+
+<style>
+  div {
+    width: 100vw;
+    height: 50vh;
+    margin: 10px;
+    padding: 10px;
+    border: 2px solid blue;
+  }
+</style>

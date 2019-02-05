@@ -44,23 +44,7 @@ Once restricted, that is it.
 This sounds good. To assert control and restrict native touch behavior, all we have to do is set this 
 CSS behavior at the top level such as on the `<body>` element. Except. That it doesn't work! Whaaat??!!   
 
-<script async src="//jsfiddle.net/orstavik/nheLpx3y/1/embed/html,result/"></script>
-
-```html
-<script>
-  window.addEventListener("touchstart", function(){
-    document.children[0].style.pointerAction = "none";
-    document.children[0].style.touchActions = "none";
-  });
-  window.addEventListener("touchend", function(){
-    document.children[0].style.pointerAction = undefined;
-    document.children[0].style.touchActions = undefined;
-  });
-</script>
-<div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
-<h1>try to double tap</h1>
-<div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
-```
+<script async src="//jsfiddle.net/orstavik/nheLpx3y/29/embed/result,html/"></script>
 
 The [spec]() states that once the initial `touchstart` event propagates, the CSS properties of
 `touch-action` and `pointer-action` have already been read, captured, and locked down. So,
@@ -77,18 +61,9 @@ Second, we approach the pointer event girl gang with our `preventDefault()` move
 `preventDefault()` will never fail us! You think.
 To do the `preventDefault()` with the pointer girls is not as suave as doing the 
 pan-this-way, pan-that-way, pan-this-that-and-the-other with the exotic CSS sisters.
-But the pointer girls are cool. To habba-habba-do-the-`preventDefault()` with them is alright.
+But the pointer girls are cool. To habba-habba-do-the-`preventDefault()` with them is still alright.
 
-```html
-<script>
-  window.addEventListener("pointerdown", function(e){e.preventDefault();});
-  window.addEventListener("pointermove", function(e){e.preventDefault();});
-  window.addEventListener("pointerup", function(e){e.preventDefault();});
-</script>
-<div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
-<h1>try to double tap</h1>
-<div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
-```
+<script async src="//jsfiddle.net/orstavik/L0fr2nuh/5/embed/result,html/"></script>
 
 But, what is this?! The pointer events just ignores your preventDefault?!? Strike two!! No....
 Apparently, the browsers did not find it poignant to disconnect the defaultAction of the touch events
@@ -112,14 +87,7 @@ You still plan to use all your new pointer event listeners for all your other co
 you must add this one extra listener for `touchstart` because it is the only place where you can 
 block the defaultAction of touch events dynamically.
 
-```html
-<script>
-  window.addEventListener("touchstart", function(e){e.preventDefault();});
-</script>
-<div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
-<h1>try to double tap</h1>
-<div style="width: 200vw; height: 90vh; background: blue">try to scroll on me</div>
-```
+<script async src="//jsfiddle.net/orstavik/46vhLstn/3/embed/result,html/"></script>
 
 It works! Phew.. Saved by your ex-girlfriend. She isn't that bad after all.. 
 You suddenly get filled with nostalgia and think about how nice you two actually had it.
@@ -143,6 +111,15 @@ Ok. When composing DOM Events dynamically, the rules are:
  * call `preventDefault()` on `touchstart` to block all native touch gestures.
 
 ## Example: `tripple-tap`
+
+<script src="https://cdn.jsdelivr.net/gh/orstavik/JoiEvents/bookapp/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
+
+## References
+
+ * 
+ 
+## Old
 
 ```javascript
 function dispatchPriorEvent(target, composedEvent, trigger) {   
@@ -189,10 +166,3 @@ function onTouchstart(e) {
 
 window.addEventListener("touchstart", onTouchstart, true);
 ```
-                     
-<script src="https://cdn.jsdelivr.net/gh/orstavik/JoiEvents/bookapp/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
-
-## References
-
- * 
