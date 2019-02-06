@@ -72,35 +72,7 @@ This `link-click` event takes much of the headache out of controlling the templa
 In the demo below we use `link-click` to control navigation. It is in a sense a micro, binary router, 
 a router that blocks or let pass different navigation events.
 
-```html
-<ul>
-    <li><a href="https://letmepass.com/">not blocked</a></li>
-    <li><a href="https://justalittle.blocked.com/">only navigation blocked</a></li>
-    <li><a href="https://fully.blocked.com/">both click event and navigation blocked</a></li>
-    <li>you can click me too, if you'd like</li>
-</ul>
-<script>
-  window.addEventListener("click", function (e) {
-    alert(e.type + ": " + e.target.innerText);
-  });
-  window.addEventListener("link-click", function (e) {
-    alert(e.type + ": " + e.target.innerText);
-  });
-
-  //micro router
-  window.addEventListener("link-click", function (e) {
-    if (e.target.href.endsWith("letmepass.com/")) {
-      alert("This link I will let pass");
-    } else if (e.target.href.endsWith("fully.blocked.com/")) {
-      e.preventDefault();
-    } else if (e.target.href.endsWith("justalittle.blocked.com/")) {
-      e.trigger.preventDefault();
-    } else {
-      //let it pass
-    }
-  });
-</script>
-```
+<script async src="//jsfiddle.net/orstavik/7vgnbq21/2/embed/html,result/"></script>
 
 ## Discussion: `link-click`, `preventDefault()` and PriorEvent
 
@@ -111,16 +83,13 @@ PriorEvent is the only pattern that allows a developer to both create a custom, 
 filters out all the relevant "navigation events" and then *selectively block* such navigation events
 (cf. PriorEvent, AfterthoughtEvent and ReplaceDefaultAction).
 
-(If you really cannot stand the composed event propagating before the trigger event, 
+If you really cannot stand the composed event propagating before the trigger event, 
 there is one other alternative: The replaceDefaultAction pattern could be employed, 
 and then once the developer wishes to let navigation events bypass, a new `<form>` element with 
 the correct `href` and `method="get"` could be created and then called `.submit()` upon. 
 However, this is a far more complex solution than the PriorEvent pattern.
 I consider the drawback of reverse propagation order to be less than the potential bugs that could 
-arise from the composed event before the trigger event).
-
-
-
+arise from the composed event before the trigger event.
 
 ## References
 
