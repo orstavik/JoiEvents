@@ -1,0 +1,34 @@
+<big>Demo: link-click-es6</big><br>
+<small>JoiEvents: Event link-click</small>
+<hr>
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.3/src/browse/link-click-es6.js"></script>
+
+<ul>
+  <li><a href="https://letmepass.com/">not blocked</a></li>
+  <li><a href="https://justalittle.blocked.com/">only navigation blocked</a></li>
+  <li><a href="https://fully.blocked.com/">both click event and navigation blocked</a></li>
+  <li>you can click me too, if you'd like</li>
+</ul>
+<script>
+  window.addEventListener("click", function (e) {
+    alert(e.type + ": " + e.target.innerText);
+  });
+  window.addEventListener("link-click", function (e) {
+    alert(e.type + ": " + e.target.innerText);
+  });
+
+  //micro router
+  window.addEventListener("link-click", function (e) {
+    let href = e.getHref();
+    if (href.endsWith("letmepass.com/")) {
+      alert("This link I will let pass");
+    } else if (href.endsWith("fully.blocked.com/")) {
+      e.preventDefault();
+    } else if (href.endsWith("justalittle.blocked.com/")) {
+      e.trigger.preventDefault();
+    } else {
+      //let it pass
+    }
+  });
+</script>

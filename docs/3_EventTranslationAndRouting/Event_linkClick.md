@@ -58,28 +58,14 @@ function getLinkHref(link, click){
 }
 ```
 
-## `link-click`, `preventDefault()` and PriorEvent
-
-The `link-click` event is a prime example of why and when the PriorEvent pattern is needed.
-If the developer wishes to control the navigation behavior of the browser's DOM, this particular event 
-(in addition to `submit`) needs to be intercepted and controlled.
-As described in the chapters on PriorEvent, AfterthoughtEvent and ReplaceDefaultAction, 
-the only pattern that allows a developer to both create a custom, composed event that filters out all 
-the relevant "navigation events" *and* that allows the developer to direct and selectively stop
-such navigation events is PriorEvent.
-
-(In the case of click, there is one other alternative. The replaceDefaultAction pattern could be employed, 
-and then once the developer wishes to let navigation events bypass, a new `<form>` element with the correct
-`href` and `method="get"` could be created and then called `.submit()` upon. However, this is thus 
-far considered an inferior solution to the PriorEvent pattern, whose only drawback is a reverse order propagating
-the composed event before the trigger event).
-
-
-## Event: `link-click`
+## Event: Complete `link-click` ES6
 
 When we combine the PriorEvent, EarlyBird, TypeFilteredEvent and CustomEventMethod patterns with the
 edge cases above, we get the following custom, composed `link-click` DOM Event.
 This `link-click` event takes much of the headache out of controlling the template based navigation.
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/browse/link-click.js"></pretty-printer>
 
 ## Demo: `link-click` 
 
@@ -87,40 +73,6 @@ In the demo below we use `link-click` to control navigation. It is in a sense a 
 a router that blocks or let pass different navigation events.
 
 ```html
-<script>
-  function filterNavigationTargets(e) {
-    if (e.metaKey)
-      return;
-    for (var el = e.target; el; el = el.parentNode) {
-      if (el.nodeName === "A" || el.nodeName === "AREA" || el.nodeName === "a")
-        return el;
-    }
-  }
-
-  function dispatchPriorEvent(target, composedEvent, trigger) {
-    composedEvent.preventDefault = function () {
-      trigger.preventDefault();
-      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-    };
-    composedEvent.trigger = trigger;
-    return target.dispatchEvent(composedEvent);
-  }
-
-  window.addEventListener(
-    "click",
-    function (e) {
-      var newTarget = filterNavigationTargets(e);
-      if (!newTarget)
-        return;
-      dispatchPriorEvent(
-        newTarget,
-        new CustomEvent("link-click", {bubbles: true, composed: true}),
-        e
-      );
-    },
-    true);
-</script>
-
 <ul>
     <li><a href="https://letmepass.com/">not blocked</a></li>
     <li><a href="https://justalittle.blocked.com/">only navigation blocked</a></li>
@@ -149,6 +101,26 @@ a router that blocks or let pass different navigation events.
   });
 </script>
 ```
+
+## Discussion: `link-click`, `preventDefault()` and PriorEvent
+
+The `link-click` event is a prime example of why and when the PriorEvent pattern is needed.
+If the developer wishes to control the navigation behavior of the browser's DOM, this particular event 
+(in addition to `submit`) needs to be intercepted and controlled.
+PriorEvent is the only pattern that allows a developer to both create a custom, composed event that 
+filters out all the relevant "navigation events" and then *selectively block* such navigation events
+(cf. PriorEvent, AfterthoughtEvent and ReplaceDefaultAction).
+
+(If you really cannot stand the composed event propagating before the trigger event, 
+there is one other alternative: The replaceDefaultAction pattern could be employed, 
+and then once the developer wishes to let navigation events bypass, a new `<form>` element with 
+the correct `href` and `method="get"` could be created and then called `.submit()` upon. 
+However, this is a far more complex solution than the PriorEvent pattern.
+I consider the drawback of reverse propagation order to be less than the potential bugs that could 
+arise from the composed event before the trigger event).
+
+
+
 
 ## References
 

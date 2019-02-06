@@ -1,38 +1,43 @@
-//link-click event starts here
-
-//https://www.w3.org/html/wg/spec/content-models.html#interactive-content-0
-//http://qaru.site/questions/10726/can-i-nest-a-button-element-inside-an-a-using-html5
-
-//todo make this into a discussion in the chapter, explain how the default action of the click event
-//todo is not hindered when interactive content is illegally put inside an <a href> tag and still
-//todo displayed in the browser.
-
-//https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission
 (function () {
-  function filterClicks(e) {
+
+  class LinkClickEvent extends Event {
+    constructor(trigger) {
+      super("link-click", {bubbles: true, composed: true, cancelable: true});
+      this.trigger = trigger;
+    }
+
+    preventDefault() {
+      this.trigger.preventDefault();
+      this.trigger.stopImmediatePropagation ?
+        this.trigger.stopImmediatePropagation() :
+        this.trigger.stopPropagation();
+    };
+
+    getHref() {
+      let link = this.target;
+      if (link.href.animVal)
+        return link.href.animVal;
+      let click = this.trigger;
+      if (click.target.nodeName === "IMG" && click.target.hasAttribute("ismap"))
+        return link.href + "?" + click.offsetX + "," + click.offsetY;
+      return link.href;
+    }
+  }
+
+  function filterNavigationTargets(e) {
     if (e.metaKey)
       return;
     for (let el = e.target; el; el = el.parentNode) {
-      if (el.nodeName === "A" || el.nodeName === "a" || el.nodeName === "AREA")
-        return el.hasAttribute("href") ? el : null;           //tomax research and confirm that we should filter out elements that does not have an href attribute
+      if (el.nodeName === "A" || el.nodeName === "AREA" || el.nodeName === "a")
+        return el;
     }
-    return null;
   }
 
-  function dispatchPriorEvent(target, composedEvent, trigger) {
-    if (!composedEvent || !target)
-      return;
-    composedEvent.preventDefault = function () {
-      trigger.preventDefault();
-      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-    };
-    composedEvent.trigger = trigger;
-    return target.dispatchEvent(composedEvent);
+  function onClick(e) {
+    const newTarget = filterNavigationTargets(e);
+    if (newTarget)
+      newTarget.dispatchEvent(new LinkClickEvent(e));
   }
 
-  window.addEventListener("click", e => dispatchPriorEvent(
-    filterClicks(e),
-    new CustomEvent("link-click", {bubbles: true, composed: true}),
-    e
-  ), true);
+  window.addEventListener("click", onClick, true);
 })();
