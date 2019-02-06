@@ -32,36 +32,7 @@ In the demo below we use `link-click-1` to control navigation.
 It is in a sense a micro, binary router, 
 a router that blocks or let pass different navigation events.
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/browse/link-click-1.js"></script>
-<ul>
-    <li><a href="https://letmepass.com/">not blocked</a></li>
-    <li><a href="https://justalittle.blocked.com/">only navigation blocked</a></li>
-    <li><a href="https://fully.blocked.com/">both click event and navigation blocked</a></li>
-    <li>you can click me too, if you'd like</li>
-</ul>
-<script>
-  window.addEventListener("click", function (e) {
-    alert(e.type + ": " + e.target.innerText);
-  });
-  window.addEventListener("link-click-1", function (e) {
-    alert(e.type + ": " + e.target.innerText);
-  });
-
-  //micro router
-  window.addEventListener("link-click-1", function (e) {
-    if (e.target.href.endsWith("letmepass.com/")) {
-      alert("This link I will let pass");
-    } else if (e.target.href.endsWith("fully.blocked.com/")) {
-      e.preventDefault();
-    } else if (e.target.href.endsWith("justalittle.blocked.com/")) {
-      e.trigger.preventDefault();
-    } else {
-      //let it pass
-    }
-  });
-</script>
-```
+<script async src="//jsfiddle.net/orstavik/sr1Lefmb/1/embed/html,result/"></script>
 
 ## References
 
