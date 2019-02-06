@@ -91,22 +91,16 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   composedEvent.trigger = trigger;                              
   target.dispatchEvent(composedEvent);                   
 }
-
-window.addEventListener(
-  "click", 
-  function(e) {
-    var newTarget = filterOnAttribute(e, "echo-click");
-    if (!newTarget)                                           //2
-      return;
-    dispatchPriorEvent(
-      newTarget,                     
-      new CustomEvent("echo-click", {bubbles: true, composed: true}), 
-      e
-    );
-  }, 
-  true
-);
+function onClick(e) {
+  var newTarget = filterOnAttribute(e, "echo-click");
+  if (!newTarget)                                           //2
+    return;
+  dispatchPriorEvent(newTarget, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+}
+  
+window.addEventListener("click", onClick, true);
 ```
+
 1. The `filterOnAttribute(e, attributeName)` finds the first target in the target-chain with the
    specified `attributeName`. If no such element exists, it returns `undefined`.
 2. If no new target is filtered out, the trigger function simply aborts.

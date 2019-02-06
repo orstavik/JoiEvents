@@ -11,7 +11,7 @@ A simple and clean way to make such methods is to:
  2. and then create an anonymous function (closure) that calls this method using the custom event 
     itself as input.
 
-## Example 1: `link-click` with naive `getHref()` method
+## Example 1: naive `link-click` with naive `getHref()` method
 
 To illustrate this practice we return to our `link-click` event. 
 We create a function `getLinkHref(element)` that given a target element returns 
@@ -40,20 +40,19 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   return target.dispatchEvent(composedEvent);
 }
 
-window.addEventListener(
-  "click", 
-  function(e){ 
-    var newTarget = filterOnType(e, "A");
-    if (!newTarget)
-      return;
-    var composedEvent = new CustomEvent("link-click", {bubbles: true, composed: true});
-    composedEvent.getHref = function(){getLinkHref(newTarget);};
-    dispatchPriorEvent(newTarget, composedEvent, e);
-  }, 
-  true);
+function onClick(e) { 
+  var newTarget = filterOnType(e, "A");
+  if (!newTarget)
+    return;
+  var composedEvent = new CustomEvent("link-click", {bubbles: true, composed: true});
+  composedEvent.getHref = function(){getLinkHref(newTarget);};
+  dispatchPriorEvent(newTarget, composedEvent, e);
+}
+
+window.addEventListener("click", onClick, true);
 ```
 
-## Example 2: `link-click` with true `getHref()` method
+## Example 2: naive `link-click` with full `getHref()` method
 
 As in all things defaultAction and browser navigation, nothing is simple and without edge-cases.
 The problem with `link-click`s is that early on, the browsers did not implement very clean logic.
@@ -91,18 +90,34 @@ function getLinkHref(link, click){
 }
 ```
 
-Put together, this yields a full custom, composed `link-click` event that takes all the headache out of
-link-click-navigation:
+
+
+
+## Example 3: Efficient ES6 `link-click` with `getHref()` method
 
 ```javascript
-function getLinkHref(link, click){
-  //dirty little secret nr 1: SVG
-  if (link.href.animVal) 
-    return link.href.animVal;    
-  //dirty little secret nr 2: <img ismap>
-  if (click.target.nodeName === "IMG" && click.target.hasAttribute("ismap"))
-    return link.href + "?" + click.offsetX + "," + click.offsetY;        
-  return link.href;
+class LinkClickEvent extends Event{
+  constructor(trigger){
+    super("link-click", {bubbles:true, composed:true, cancelable: true});
+    this.trigger = trigger;
+  }
+  
+  preventDefault() {
+    this.trigger.preventDefault();
+    this.trigger.stopImmediatePropagation ? 
+      this.trigger.stopImmediatePropagation() : 
+      this.trigger.stopPropagation();
+  };
+  
+  getHref(){
+    //dirty little secret nr 1: SVG
+    if (this.target.href.animVal) 
+      return this.target.href.animVal;    
+    //dirty little secret nr 2: <img ismap>
+    if (this.trigger.target.nodeName === "IMG" && this.trigger.target.hasAttribute("ismap"))
+      return this.target.href + "?" + this.trigger.offsetX + "," + this.trigger.offsetY;        
+    return this.target.href;
+  }
 }
 
 function filterOnType(e, typeName) {
@@ -112,26 +127,66 @@ function filterOnType(e, typeName) {
   }
 }                            
 
-function dispatchPriorEvent(target, composedEvent, trigger) {
-  composedEvent.preventDefault = function () {
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;
-  return target.dispatchEvent(composedEvent);
+function onClick(e) { 
+  var newTarget = filterOnType(e, "A");
+  if (newTarget)
+    newTarget.dispatchEvent(new LinkClickEvent(e));
 }
 
-window.addEventListener(
-  "click", 
-  function(e){ 
-    var newTarget = filterOnType(e, "A");                
-    if (!newTarget)
-      return;
-    var composedEvent = new CustomEvent("link-click", {bubbles: true, composed: true});
-    composedEvent.getHref = function(){getLinkHref(newTarget, e);};
-    dispatchPriorEvent(newTarget, composedEvent, e);
-  }, 
-  true);
+window.addEventListener("click", onClick, true);
+```
+
+## Example 4: ES5 `link-click` with `getHref()` method
+
+```javascript
+//CustomEvent polyfill
+(function () {
+
+  if ( typeof window.CustomEvent === "function" ) return false;
+
+  function CustomEvent ( event, params ) {
+    params = params || { bubbles: false, cancelable: false, detail: null };
+    var evt = document.createEvent( 'CustomEvent' );
+    evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail);
+    return evt;
+   }
+
+  CustomEvent.prototype = window.Event.prototype;
+
+  window.CustomEvent = CustomEvent;
+})();
+
+var eventPrototype = new CustomEvent("link-click", {bubbles:true, composed:true, cancelable: true, detail: null});
+eventPrototype.getHref = function(){
+  return this.target.href;
+}
+eventPrototype.preventDefault = function(){
+  this.trigger.preventDefault();
+  this.trigger.stopImmediatePropagation ? 
+    this.trigger.stopImmediatePropagation() : 
+    this.trigger.stopPropagation();
+}
+
+function makeLinkClickEvent(trigger){
+  var linkClick = Object.create(eventPrototype);
+  linkClick.trigger = trigger;
+  return linkClick;
+}
+
+function filterOnType(e, typeName) {
+  for (var el = e.target; el; el = el.parentNode) {
+    if (el.nodeName === typeName)
+      return el;        
+  }
+}                            
+
+function onClick(e) { 
+  var newTarget = filterOnType(e, "A");
+  if (newTarget)
+    newTarget.dispatchEvent(makeLinkClickEvent(e));
+}
+
+window.addEventListener("click", onClick, true);
 ```
 
 ## Demo: Full `link-click` navigation
