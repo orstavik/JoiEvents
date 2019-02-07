@@ -75,10 +75,9 @@ on that element.
    
 ```javascript
 function filterOnAttribute(e, attributeName) {                //1
-  for (var el = e.target; el; el = el.parentNode) {
-    if (!el.hasAttribute)
-      return;
-    if (el.hasAttribute(attributeName))
+  var target = e.composedPath ? e.composedPath()[0] : e.target;
+  for (var el = target; el; el = el.parentNode) {
+    if (el.hasAttribute && el.hasAttribute(attributeName))
       return el;
   }
 }
@@ -111,10 +110,9 @@ in action.
 ```html
 <script>
 function filterOnAttribute(e, attributeName) {                //1
-  for (var el = e.target; el; el = el.parentNode) {
-    if (!el.hasAttribute)
-      return;
-    if (el.hasAttribute(attributeName))
+  var target = e.composedPath ? e.composedPath()[0] : e.target;
+  for (var el = target; el; el = el.parentNode) {
+    if (el.hasAttribute && el.hasAttribute(attributeName))
       return el;
   }
 }
@@ -127,21 +125,14 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   composedEvent.trigger = trigger;                              
   target.dispatchEvent(composedEvent);                   
 }
-
-window.addEventListener(
-  "click", 
-  function(e) {
-    var newTarget = filterOnAttribute(e, "echo-click");
-    if (!newTarget)                                           //2
-      return;
-    dispatchPriorEvent(
-      newTarget,                     
-      new CustomEvent("echo-click", {bubbles: true, composed: true}), 
-      e
-    );
-  }, 
-  true
-);
+function onClick(e) {
+  var newTarget = filterOnAttribute(e, "echo-click");
+  if (!newTarget)                                           //2
+    return;
+  dispatchPriorEvent(newTarget, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+}
+  
+window.addEventListener("click", onClick, true);
 </script>
 
 <div id="a1">
