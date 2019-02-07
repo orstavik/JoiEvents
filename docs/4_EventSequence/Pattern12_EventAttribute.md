@@ -1,5 +1,11 @@
 # Pattern: EventSettings
 
+> EventSettings is NOT needed to give directions for CustomEventMethods. 
+> You just supply the CustomEventMethod with the needed settings as parameters.
+> EventSettings are needed when they specify whether an event is dispatched or not.
+> CustomEventMethods that work against event sequence data are used to give a specific view of an
+> Eevent or EventSequence's data.
+
 A big benefit of EarlyBird composed events is that they are global. You can add one event listener per
 event type, and then apply that event to as many DOM elements as you would like.
 However, sometimes, you need make adjustments to the event. You need to describe some EventSettings.
