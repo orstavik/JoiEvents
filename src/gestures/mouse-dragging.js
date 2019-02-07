@@ -34,7 +34,7 @@ const sequence = Symbol("globalSequence");
     }
 
     fling(duration) {
-      const flingStart = getFlingStart(this.trigger, duration, this[sequence]);
+      const flingStart = getFlingStart(this.trigger, duration, this[sequence].recorded);
       const distX = parseInt(this.pageX) - flingStart.pageX;
       const distY = parseInt(this.pageY) - flingStart.pageY;
       const distDiag = Math.sqrt(distX * distX + distY * distY);
