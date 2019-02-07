@@ -1,6 +1,6 @@
 {
   "name": "joievents",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "*compose events like a native!*",
   "main": "index.js",
   "directories": {

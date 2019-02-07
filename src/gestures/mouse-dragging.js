@@ -1,6 +1,6 @@
-const sequence = Symbol("globalSequence");
-
 (function () {
+
+  const sequence = Symbol("globalSequence");
 
   function getFlingStart(end, duration, events) {
     const flingTime = end.timeStamp - duration;
@@ -89,6 +89,8 @@ const sequence = Symbol("globalSequence");
     body.style.userSelect = "none";
     window.addEventListener("mousemove", onMousemoveListener, true); //[8] ListenUp
     window.addEventListener("mouseup", onMouseupListener, true);
+    window.addEventListener("mouseout", onMouseoutListener, true);
+    window.addEventListener("focusin", onFocusin, true);
     !globalSequence.cancelMouseout && window.addEventListener("mouseout", onMouseoutListener, true);
   }
 
@@ -101,6 +103,7 @@ const sequence = Symbol("globalSequence");
     window.removeEventListener("mouseup", onMouseupListener, true);
     window.removeEventListener("mousemove", onMousemoveListener, true);
     window.removeEventListener("mouseout", onMouseoutListener, true);
+    window.removeEventListener("focusin", onFocusin, true);
     //the content of the globalSequence could be queued to be emptied here.
     //it must be a double setTimeout as the replaceDefaultAction dispatch of the event is setTimeout shortly after this one.
     //this will force the event to hold on to the data for 2 set timeouts, always. This is bad.
@@ -116,8 +119,6 @@ const sequence = Symbol("globalSequence");
   }
 
   function onMousedown(trigger) {
-    if (trigger.button !== 0)
-      return;
     if (globalSequence) {
       var cancelEvent = makeDraggingEvent("cancel", trigger);
       var target = globalSequence.target;
@@ -125,6 +126,8 @@ const sequence = Symbol("globalSequence");
       replaceDefaultAction(target, cancelEvent, trigger);
       return;
     }
+    if (trigger.button !== 0)
+      return;
     var target = filterOnAttribute(trigger, "draggable");
     if (!target)
       return;
@@ -159,6 +162,13 @@ const sequence = Symbol("globalSequence");
   function onMouseout(trigger) {
     if (trigger.clientY > 0 && trigger.clientX > 0 && trigger.clientX < window.innerWidth && trigger.clientY < window.innerHeight)
       return;
+    var cancelEvent = makeDraggingEvent("cancel", trigger);
+    var target = globalSequence.target;
+    stopSequence();
+    replaceDefaultAction(target, cancelEvent, trigger);
+  }
+
+  function onFocusin(trigger) {
     var cancelEvent = makeDraggingEvent("cancel", trigger);
     var target = globalSequence.target;
     stopSequence();
