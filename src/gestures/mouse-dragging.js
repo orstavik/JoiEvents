@@ -82,7 +82,6 @@
     var body = document.querySelector("body");
     globalSequence = {
       target,                                                                 //[9] GrabTarget
-      cancelMouseout: target.hasAttribute("draggable-cancel-mouseout"),        //[6] EventSetting
       recorded: [e],
       userSelectStart: body.style.userSelect                                   //[1]. GrabMouse
     };
@@ -91,7 +90,6 @@
     window.addEventListener("mouseup", onMouseupListener, true);
     window.addEventListener("mouseout", onMouseoutListener, true);
     window.addEventListener("focusin", onFocusin, true);
-    !globalSequence.cancelMouseout && window.addEventListener("mouseout", onMouseoutListener, true);
   }
 
   function updateSequence(e) {                                        //[7] TakeNote
