@@ -2,6 +2,15 @@ const sequence = Symbol("globalSequence");
 
 (function () {
 
+  function getFlingStart(end, duration, events) {
+    const flingTime = end.timeStamp - duration;
+    for (let i = events.length - 1; i >= 0; i--) {
+      if (events[i].trigger.timeStamp < flingTime)
+        return events[i];
+    }
+    return events[0];
+  }
+
   //The DraggingEvent class has access to the globalSequence variable via a symbol property.
   //This property should not be tampered with from the outside, and the symbol defense should be strong enough.
   //The DraggingEvent must ONLY read from the sequence property, it should NEVER write to it.
@@ -24,28 +33,14 @@ const sequence = Symbol("globalSequence");
       this[sequence] = globals;
     }
 
-    getFlingStart(duration) {
-      const flingTime = this.trigger.timeStamp - duration;
-      const events = this[sequence].recorded;
-      for (let i = events.length - 1; i >= 0; i--) {
-        if (events[i].trigger.timeStamp < flingTime)
-          return events[i];
-      }
-      return events[0];
-    }
-
-    //require you to run getFlingStart(duration) first
-    getFlingDetails(flingStart) {
+    fling(duration) {
+      const flingStart = getFlingStart(this.trigger, duration, this[sequence]);
       const distX = parseInt(this.pageX) - flingStart.pageX;
       const distY = parseInt(this.pageY) - flingStart.pageY;
       const distDiag = Math.sqrt(distX * distX + distY * distY);
       const durationMs = this.trigger.timeStamp - flingStart.trigger.timeStamp;
-      return {distX, distY, distDiag, durationMs};
-    }
-
-    //require you to run getFlingDetails(flingStart) first
-    getFlingAngle(distX, distY) {
-      return ((Math.atan2(distY, -distX) * 180 / Math.PI) + 270) % 360;
+      const angle = ((Math.atan2(distY, -distX) * 180 / Math.PI) + 270) % 360;
+      return {distX, distY, distDiag, durationMs, angle, flingStart};
     }
   }
 
