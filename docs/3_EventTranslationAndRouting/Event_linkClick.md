@@ -60,7 +60,7 @@ function getLinkHref(link, click){
 
 ## Event: Complete `link-click` ES6
 
-When we combine the PriorEvent, EarlyBird, TypeFilteredEvent and CustomEventMethod patterns with the
+When we combine the PriorEvent, EarlyBird, TypeFilteredEvent and DetailsOnDemand patterns with the
 edge cases above, we get the following custom, composed `link-click` DOM Event.
 This `link-click` event takes much of the headache out of controlling the template based navigation.
 

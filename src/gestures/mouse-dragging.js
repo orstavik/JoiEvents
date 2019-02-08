@@ -185,7 +185,7 @@
 //6. `EventAttribute` - you can set your own conditions for fling events by defining them in custom properties. If you do not define them, the default values will be applied.
 //7. `TakeNote` - 
 //X. `MarkMyValues` - 
-//Y. `CustomEventMethod` - 
+//Y. `DetailsOnDemand` -
 //8. `ListenUp` - Adding listeners alternately. Events such as `touchmove`, `touchup` and `touchcancel` will be added only after the `mousedown` event is activated, and will pass through several filtering steps. This allows us to avoid possible mistakes.
 //9. `GrabTarget` - target is "captured" in the initial trigger event function (`mousedown`), then stored in the EventSequence's internal state, and then reused as the target in subsequent, secondary composed DOM Events.
 //10. `GrabMouse` - the idea is that the initial launch event changes `userSelect` to `none` and after the end of the event sequence, return this value to the state in which it was before the start of the event sequence.

@@ -69,9 +69,9 @@ we then add a closure that calls `getLinkHref(element)` using the `newTarget` as
                                                                     
 A drawback with link-click-2 above is that it creates a closure for each event.
 As we only have both a single closure and non-frequent event click, this is slight inefficiency
-is not problematic. But, if we add more CustomEventMethods to our composed events or
-if we add CustomEventMethods to high frequent composed events, then we would like to avoid
-creating similar functions each time. And to avoid that we can create our own `Event` subclass.
+is not problematic. But, if we provide DetailsOnDemand to fine-grained composed events, 
+then we would like to avoid creating similar functions each time. 
+And to avoid that we can create our own `Event` subclass.
 
 <pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/browse/link-click-2-es6.js"></pretty-printer>
 
@@ -82,7 +82,7 @@ the same effect can be achieved with this similar, but less readable es5 alterna
 
 <pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/browse/link-click-2-es5.js"></pretty-printer>
 
-In this book we will base our explanations on es6 code. If you need to convert CustomEventMethods to es5,
+In this book we will base our explanations on es6 code. If you need to convert DetailsOnDemand to es5,
 simply return to this chapter and convert the code manually.
 
 ## Demo: `link-click-2` navigation

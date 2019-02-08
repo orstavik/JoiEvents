@@ -34,5 +34,5 @@
 
 //1. EarlyBird
 //2. TypeFilteredEvent
-//3. CustomEventMethod - a simple function is defined for getting the href from a supposed <a> element
-//4. CustomEventMethod - the function is added to the composedEvent as a closure
+//3. DetailsOnDemand - a simple function is defined for getting the href from a supposed <a> element
+//4. DetailsOnDemand - the function is added to the composedEvent as a closure
