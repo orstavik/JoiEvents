@@ -56,38 +56,15 @@ var onSelectstart = function (trigger){
 }
 ```
 
-## GrabMouse jailbreak
+## Example: `long-press` grabbed with both hands
 
-Sometimes, when handling mouse events, the mouse will breakout from your control. 
-When the mouse makes a getaway during one of your EventSequences, you should not attempt to stop it.
-When the mouse wants to break free, you should let it. Instead of trying to impose control on it,
-which is futile, your EventSequence should simply observe the situation and abort.
+To make a safer `long-press` we need to GrabMouse. GrabMouse prevents native text selection 
+behavior from interfering with our custom composed DOM EventSequence. To GrabMouse with both hands we:
+1. initially add the `user-select: none` attribute on the `<html>` element,
+2. add an extra event listener for `selectstart` event and that calls `e.preventDefault()`, and
+3. conclude by resetting the `<html>` element's `user-select` style property.
 
-To illustrate how mouse events get away from your control in the midst of your EventSequence with it,
-we will make a safe `long-press`.
-
-## Example: Safe `long-press`
-
-To make a safe `long-press` we need to GrabMouse first. GrabMouse will prevent native text selection 
-behavior from interfering with our custom composed DOM EventSequence. We grab the mouse by adding
-the `user-select: none` attribute to the `<html>` element while the EventSequence is active and 
-resetting the `<html>` element's `user-select` style property afterwards.
-To make extra certain that no text selection will occur, we add an extra event listener on the 
-`startselect` event and only call `preventDefault()` on it.
-
-In addition, we do damagecontrol on three potential mouse jailbreaks:
-
-1. The mouse pointer is moved out of bounds (outside of the scope of the window object). 
-   An undetected `mouseup` that occurs if the mouse cursor is removed from the viewport of browser window
-   when the user "unclicks". To prevent this accident, an extra secondary trigger event listener is added 
-   for `mouseout`. If the `mouseout` is taken outside of the viewport of the window, this will cancel the `long-press`.
-
-2. The user triggers the primary trigger function twice, before ending the EventSequence.
-   This can happen if the user presses in a second mouse button, after the EventSequence have started. 
-
-3. A script triggers `alert("bad")` while the EventSequence is running.
-
-The resulting composed event trigger function looks like this:
+The resulting `long-press` composed event trigger function is:
 
 ```javascript
 function dispatchPriorEvent(target, composedEvent, trigger) {
@@ -99,34 +76,26 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   return target.dispatchEvent(composedEvent);
 }
 
-var primaryEvent;                                               //[1]
+var primaryEvent;                                               
 var userSelectCache;                                            //[1]
 
-function startSequenceState(e){                                 //[1]
+function startSequenceState(e){                                 
   primaryEvent = e;                                     
   window.addEventListener("mouseup", onMouseup);             
-  window.addEventListener("mouseout", onMouseout);           
-  window.addEventListener("focusin", onFocusin);           
-  window.addEventListener("startselect", onStartselect);           
-  userSelectCache = document.children[0].style.userSelect;
-  document.children[0].style.userSelect = "none";
+  window.addEventListener("selectstart", onSelectstart);        //[2]   
+  userSelectCache = document.children[0].style.userSelect;      //[1]
+  document.children[0].style.userSelect = "none";               //[1]
 }
 
 function resetSequenceState(){
   primaryEvent = undefined;                                     
   window.removeEventListener("mouseup", onMouseup);             
-  window.removeEventListener("mouseout", onMouseout);           
-  window.removeEventListener("focusin", onFocusin);           
-  window.removeEventListener("selectstart", onSelectstart);           
-  document.children[0].style.userSelect = userSelectCache;
+  window.removeEventListener("selectstart", onSelectstart);     //[2]      
+  document.children[0].style.userSelect = userSelectCache;      //[1]
 }
 
 function onMousedown(e){                                        
-  if (primaryEvent)                                             //[2]
-    resetSequenceState();                                       
-  if (e.button !== 0)                                           
-    return;
-  startSequenceState(e);                                        //[1]     
+  startSequenceState(e);                                             
 }
 
 function onMouseup(e){                                          
@@ -137,46 +106,27 @@ function onMouseup(e){
   resetSequenceState();                                         
 }
 
-var onMouseout = function (trigger){                            //[3]
-  //filter to only trigger on the mouse leaving the window
-  if (trigger.clientY > 0 && trigger.clientX > 0 && trigger.clientX < window.innerWidth && trigger.clientY < window.innerHeight)
-    return;                                                     
-  primaryEvent.target.dispatchEvent(new CustomEvent("long-press-cancel", {bubbles: true, composed: true}));
-  resetSequenceState();                                         
-}
-
-var onFocusin = function (trigger){                           //[4]
-  trigger.target.dispatchEvent(new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}));
-  resetSequenceState();                                         
-}
-
-var onSelectstart = function (trigger){                           //[5]
-  trigger.preventDefault();
-  return false;
+function onSelectstart(e){                                       //[2]
+  e.preventDefault();
 }
 
 window.addEventListener("mousedown", onMousedown);              
+
+//1. The initial trigger function caches the value of the CSS `user-select` 
+//   property on the element and sets its value to `none`.
+//   At the end of the EventSequence, the value of the CSS `user-select` is reset. 
+//2. The initial trigger function adds an event listener for `selectstart`.
+//   At the end of the EventSequence, the event listener for `selectstart` is removed again. 
 ```
-1. As the sequence configuration grows in complexity, we create a separate method `startSequenceState(e)`.
-   The `startSequenceState(e)` has the responsibility of both ListenUp and TakeNote: 
-   setting up listeners and initializing the EventSequence state.
- 
-2. If the user presses down two mouse buttons at the same time, the `long-press` EventSequence might
-   try to initialize itself again while it is already running. 
-   This would cause confusion, and so the `long-press` event will cancel itself in such instances.
-   
-3. If the `mouse` cursor moves out of the `window`, this would likely cause confusion, and so will
-   instead also simply cancel the event.
-   
-4. If an `alert(...)` was triggered during the EventSequence, this would trigger a change of focus and a
-   `focusin` event. Any `focusin` event would be considered a disturbance and cancel the EventSequence.
-   
-5. Extra eventlistener that calls `preventDefault()` on `selectstart` events in case CSS property 
-   `user-select` is not supported.
+
+## Demo: `long-press` grabbed with both hands 
 
 ```html
-<div id="one">press me</div>
-<div id="two">press me too</div>
+<div id="one">
+  You can long-press me with the mouse. The long-press is a click longer than 300ms.
+  This long-press is "grabbed with both hands", meaning that you should not be able 
+  to be able to select this text when you press on it.
+</div>
 
 <script>
 document.querySelector("#two").addEventListener("mousedown", function(){
