@@ -1,15 +1,10 @@
 ## Pattern: MouseJailbreak
 
 Sometimes, when trying to handle mouse events, the mouse will behave unexpectedly: 
-it will suddenly make a break for it. This get-away is often highly surprising for the developer and 
-can cause errant behavior run-time. We call this the MouseJailbreak problem.
+it will suddenly make a break for it. This get-away is often highly surprising for the developer.
+Furthermore, while "on the run", the app will neither receive nor control the events from the mouse.
+This will most likely cause run-time errors, and we call this problem MouseJailbreaks.
 The mouse has three cunning plans to escape the grip of the developer.
-
-> and during that time, you will neither receive nor control the mouse events. 
-
-> When the mouse makes a getaway during one of your EventSequences, you should not attempt to stop it.
-When the mouse wants to break free, you should let it. Instead of trying to impose control on it,
-which is futile, your EventSequence should simply observe the situation and abort.
 
 ## MouseJailbreak #1: out of bounds
 
@@ -119,25 +114,25 @@ function onMousedownInitial(e){
 }
 
 function onMousedownSecondary(e){                               //[2]         
-  primaryEvent.target.dispatchEvent(new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}));
+  dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                       
+}
+
+function onMouseleave(e){                                       //[1]
+  dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
+  resetSequenceState();                                         
+}
+
+function onFocusin(e){                                          //[3]
+  dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
+  resetSequenceState();                                         
 }
 
 function onMouseup(e){                                          
   var duration = e.timeStamp - primaryEvent.timeStamp;
   //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
   if (duration > 300 && e.target === primaryEvent.target)       
-    primaryEvent.target.dispatchEvent(new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}));
-  resetSequenceState();                                         
-}
-
-function onMouseleave(e){                                       //[1]
-  primaryEvent.target.dispatchEvent(new CustomEvent("long-press-cancel", {bubbles: true, composed: true}));
-  resetSequenceState();                                         
-}
-
-function onFocusin(e){                                          //[3]
-  primaryEvent.target.dispatchEvent(new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}));
+    dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                         
 }
 
@@ -153,8 +148,6 @@ window.addEventListener("mousedown", onMousedown);
 //3. MouseJailbreak #3: stay alert!
 //   A secondary trigger function for `focusin` is added to cancel the EventSequence if there is any
 //   change of focus during the EventSequence.
-
-
 ```
 
 ## Demo: `long-press` in jail
@@ -193,4 +186,3 @@ window.addEventListener("long-press-cancel", function(e){
 ## References
 
  * 
- 

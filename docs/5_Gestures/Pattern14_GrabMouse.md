@@ -51,8 +51,8 @@ this event. Grabbing the mouse with both hands like this will ensure that no tex
 during your mouse-oriented EventSequence.
 
 ```javascript
-var onSelectstart = function (trigger){                           
-  trigger.preventDefault();
+var onSelectstart = function (e){                           
+  e.preventDefault();
 }
 ```
 
@@ -102,7 +102,7 @@ function onMouseup(e){
   var duration = e.timeStamp - primaryEvent.timeStamp;
   //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
   if (duration > 300 && e.target === primaryEvent.target)       
-    e.target.dispatchEvent(new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}));
+    dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                         
 }
 
