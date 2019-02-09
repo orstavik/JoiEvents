@@ -1,28 +1,5 @@
 # Event: `dragging`
 
-## What is the native `drag` event?
-
-[`drag-and-drop`](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API) is a 
-This is a native gesture/native DOM Event.
-To activate it, one must add an HTML attribute `draggableSection="true"`.
-It is a good native event, but it is hard to control the visuals of this event.
-
-tomax find some good reviews/critiques of this native gesture
-
-## What is the native defaultAction of `drag` event?
-
-Single finger `Drag` is used to:
-* scroll the page/content, 
-* and select text.
-
-## Why make a custom dragging event?
-
-Create a `drag` event that:
-1. is easier to control.
-2. has more methods, such as `fling()`
-3. that maps `.preventDefault()`
-4. can be controlled via HTML attributes
-
 ## `dragging` events and their attributes and properties/custom methods
 
 The following attributes can be added to the elements that should support this custom composed DOM Event.
