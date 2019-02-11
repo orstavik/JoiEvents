@@ -88,6 +88,15 @@ Such disruptions can be discovered using the `focusin` event.
 To illustrate how a MouseJailbreak can be handled during an EventSequence, we put `long-press` in jail.
 
 ```javascript
+function dispatchPriorEvent(target, composedEvent, trigger) {
+  composedEvent.preventDefault = function () {
+    trigger.preventDefault();
+    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
+  };
+  composedEvent.trigger = trigger;
+  return target.dispatchEvent(composedEvent);
+}
+
 var primaryEvent;                                               
 
 function startSequenceState(e){                                 
