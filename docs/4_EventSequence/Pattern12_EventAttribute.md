@@ -175,6 +175,3 @@ window.addEventListener("mousedown", onMousedown);
    EventSequence and then stored in the state of the EventSequence as described in pattern TakeNote.
 
 ## References
-
- * [layout problems with HTML5 drag'n'drop](https://kryogenix.org/code/browser/custom-drag-image.html)
-                                                                            
