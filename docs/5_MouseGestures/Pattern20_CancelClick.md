@@ -49,35 +49,9 @@ The implementation of one-time EarlyBird event-cancelling trigger functions is d
 
 ## HowTo: implement one-time EarlyBird event-cancelling trigger functions
 
-A one-time EarlyBird event-cancelling trigger function can be made in two ways using:
-
-1. The EventListener option `once: true`:
- 
-```javascript
-var cancelEvent = function(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? 
-    e.stopImmediatePropagation() : 
-    e.stopPropagation(); 
-};
-window.addEventListener("click", cancelEvent, {capture: true, once: true});
-```
-   
-2. A self-removing event listener function:
-
-```javascript
-var cancelEvent = function(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? 
-    e.stopImmediatePropagation() : 
-    e.stopPropagation();
-  window.removeEventListener("click", cancelEvent, true);
-};
-
-window.addEventListener("click", cancelEvent, true);
-```
-
-To feature check then combine both can be done like this:
+A one-time EarlyBird event-cancelling trigger function can be made using either
+the EventListener option `once: true` or a self-removing event listener function.
+Below is a setup that feature checks then choose the supported approach.
 
 ```javascript
 var supportsOnce = false;
