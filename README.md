@@ -3,63 +3,63 @@
 
 ## Introduction
 
-1. [HowTo: Compose Events](/docs/1_Intro/HowTo1_composeWithEvents)
-1. [HowTo: Combine Events and JS](/docs/1_Intro/HowTo2_EventsAndJs)
-1. [HowTo: Combine Events and HTML](/docs/1_Intro/HowTo3_EventsAndHTML)
-1. [HowTo: Combine Events and CSS](/docs/1_Intro/HowTo4_EventsAndCss)
+1. [HowTo: Compose Events](doc/1_Intro/HowTo1_composeWithEvents)
+1. [HowTo: Combine Events and JS](doc/1_Intro/HowTo2_EventsAndJs)
+1. [HowTo: Combine Events and HTML](doc/1_Intro/HowTo3_EventsAndHTML)
+1. [HowTo: Combine Events and CSS](doc/1_Intro/HowTo4_EventsAndCss)
 
 ## Event to event composition
 
-5. [HowTo: Listen](/docs/2_EventToEvent/HowTo_listen)
-5. [Pattern: EventComposition](/docs/2_EventToEvent/Pattern1_EventComposition)
-5. [Problem: StopPropagationTorpedo](/docs/2_EventToEvent/Problem1_StopPropagationTorpedo)
-5. [Pattern: EarlyBird](/docs/2_EventToEvent/Pattern2_EarlyBird)
-5. [Pattern: PriorEvent](/docs/2_EventToEvent/Pattern3_PriorEvent)
-5. [Pattern: AfterthoughtEvent](/docs/2_EventToEvent/Pattern4_AfterthoughtEvent)
-5. [Pattern: ReplaceDefaultAction](/docs/2_EventToEvent/Pattern5_ReplaceDefaultAction)
-5. [Pattern: ReverseGlobalization](/docs/2_EventToEvent/Pattern21_ReverseGlobalization)
+5. [HowTo: Listen](doc/2_EventToEvent/HowTo_listen)
+5. [Pattern: EventComposition](doc/2_EventToEvent/Pattern1_EventComposition)
+5. [Problem: StopPropagationTorpedo](doc/2_EventToEvent/Problem1_StopPropagationTorpedo)
+5. [Pattern: EarlyBird](doc/2_EventToEvent/Pattern2_EarlyBird)
+5. [Pattern: PriorEvent](doc/2_EventToEvent/Pattern3_PriorEvent)
+5. [Pattern: AfterthoughtEvent](doc/2_EventToEvent/Pattern4_AfterthoughtEvent)
+5. [Pattern: ReplaceDefaultAction](doc/2_EventToEvent/Pattern5_ReplaceDefaultAction)
+5. [Pattern: ReverseGlobalization](doc/2_EventToEvent/Pattern21_ReverseGlobalization)
 
 ## Event translation
 
-13. [Pattern: AttributeFilteredEvent](/docs/3_EventTranslationAndRouting/Pattern6_AttributeFilteredEvent)
-13. [Pattern: TypeFilteredEvent](/docs/3_EventTranslationAndRouting/Pattern7_TypeFilteredEvent)
-13. [Pattern: DetailsOnDemand](/docs/3_EventTranslationAndRouting/Pattern8_DetailsOnDemand)
-13. [Pattern: MergedEvents](/docs/3_EventTranslationAndRouting/Pattern9_MergedEvents)
-13. [Pattern: SpecializedEventInterface](/docs/3_EventTranslationAndRouting/Pattern18_SpecializedEventInterface)
+13. [Pattern: AttributeFilteredEvent](doc/3_EventTranslationAndRouting/Pattern6_AttributeFilteredEvent)
+13. [Pattern: TypeFilteredEvent](doc/3_EventTranslationAndRouting/Pattern7_TypeFilteredEvent)
+13. [Pattern: DetailsOnDemand](doc/3_EventTranslationAndRouting/Pattern8_DetailsOnDemand)
+13. [Pattern: MergedEvents](doc/3_EventTranslationAndRouting/Pattern9_MergedEvents)
+13. [Pattern: SpecializedEventInterface](doc/3_EventTranslationAndRouting/Pattern18_SpecializedEventInterface)
 
 ## EventSequence patterns
 
-18. [Pattern: TakeNote](/docs/4_EventSequence/Pattern10_TakeNote)
-18. [Pattern: PayAttention](/docs/4_EventSequence/Problem2_PayAttention)
-18. [Pattern: ListenUp](/docs/4_EventSequence/Pattern11_ListenUp)
-18. [Pattern: EventAttribute](/docs/4_EventSequence/Pattern12_EventAttribute)
-18. [Pattern: MarkMyValues](/docs/4_EventSequence/Pattern17_MarkMyValues)
-18. [Pattern: DebounceEvents](/docs/4_EventSequence/Pattern16_DebounceEvents.md) (todo)
+18. [Pattern: TakeNote](doc/4_EventSequence/Pattern10_TakeNote)
+18. [Pattern: PayAttention](doc/4_EventSequence/Problem2_PayAttention)
+18. [Pattern: ListenUp](doc/4_EventSequence/Pattern11_ListenUp)
+18. [Pattern: EventAttribute](doc/4_EventSequence/Pattern12_EventAttribute)
+18. [Pattern: MarkMyValues](doc/4_EventSequence/Pattern17_MarkMyValues)
+18. [Pattern: DebounceEvents](doc/4_EventSequence/Pattern16_DebounceEvents.md) (todo)
 
 ## Gestures: mouse
 
-24. [HowTo: drag'n'drop](/docs/5_MouseGestures/HowTo_DragNDrop)
-24. [Pattern: GrabTarget](/docs/5_MouseGestures/Pattern13_GrabTarget)
-24. [Pattern: GrabMouse](/docs/5_MouseGestures/Pattern14_GrabMouse)
-24. [Pattern: MouseJailbreak](/docs/5_MouseGestures/Pattern19_MouseJailbreak)
-24. [Pattern: CancelClick](/docs/5_MouseGestures/Pattern20_CancelClick)
-24. [Event: `long-press`](/docs/5_MouseGestures/Event_long-press)
-24. [Event: mouse `dragging`](/docs/5_MouseGestures/Event_dragFling)
+24. [HowTo: drag'n'drop](doc/5_MouseGestures/HowTo_DragNDrop)
+24. [Pattern: GrabTarget](doc/5_MouseGestures/Pattern13_GrabTarget)
+24. [Pattern: GrabMouse](doc/5_MouseGestures/Pattern14_GrabMouse)
+24. [Pattern: MouseJailbreak](doc/5_MouseGestures/Pattern19_MouseJailbreak)
+24. [Pattern: CancelClick](doc/5_MouseGestures/Pattern20_CancelClick)
+24. [Event: `long-press`](doc/5_MouseGestures/Event_long-press)
+24. [Event: mouse `dragging`](doc/5_MouseGestures/Event_dragFling)
 
 ## Gestures: touch
 
-31. [Problem: SloppyFingers](/docs/6_TouchGestures/Problem1_sloppy_fingers)
-31. [Problem: GestureStuttering](/docs/6_TouchGestures/Problem2_gesture_stuttering)
-31. [Problem: TouchTheMouse](/docs/6_TouchGestures/Problem3_touch_the_mouse)
-31. [Problem: ConflictingGestures](/docs/6_TouchGestures/Problem4_conflicting_gestures)
-31. [Problem: CoarseSensors](/docs/6_TouchGestures/Problem5_coarse_sensors)
-31. [Problem: TapDance](/docs/6_TouchGestures/Problem6_TapDance)
-31. [Pattern: GrabTouch](/docs/6_TouchGestures/Pattern15_GrabTouch)
-31. [Problem: WebDemocracy](/docs/6_TouchGestures/Problem7_WebDemocracy)
-31. [Anti-pattern: RejectionBuildup](/docs/6_TouchGestures/AntipatternX_RejectionBuildup)
-31. [Event: touch `dragging`](/docs/6_TouchGestures/Event_dragFling)
-31. [Event: `swipe`](/docs/6_TouchGestures/Event_swipe)
-31. [Event: `pinch` & `.spin()`](/docs/6_TouchGestures/Event_pinchSpin)
+31. [Problem: SloppyFingers](doc/6_TouchGestures/Problem1_sloppy_fingers)
+31. [Problem: GestureStuttering](doc/6_TouchGestures/Problem2_gesture_stuttering)
+31. [Problem: TouchTheMouse](doc/6_TouchGestures/Problem3_touch_the_mouse)
+31. [Problem: ConflictingGestures](doc/6_TouchGestures/Problem4_conflicting_gestures)
+31. [Problem: CoarseSensors](doc/6_TouchGestures/Problem5_coarse_sensors)
+31. [Problem: TapDance](doc/6_TouchGestures/Problem6_TapDance)
+31. [Pattern: GrabTouch](doc/6_TouchGestures/Pattern15_GrabTouch)
+31. [Problem: WebDemocracy](doc/6_TouchGestures/Problem7_WebDemocracy)
+31. [Anti-pattern: RejectionBuildup](doc/6_TouchGestures/AntipatternX_RejectionBuildup)
+31. [Event: touch `dragging`](doc/6_TouchGestures/Event_dragFling)
+31. [Event: `swipe`](doc/6_TouchGestures/Event_swipe)
+31. [Event: `pinch` & `.spin()`](doc/6_TouchGestures/Event_pinchSpin)
 
 ## Routing
 
