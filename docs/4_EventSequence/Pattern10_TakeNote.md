@@ -74,6 +74,15 @@ and final trigger, the event needs to preserve the state of the previous click e
 
 ## Demo: naive `triple-click`
 
+<script async src="//jsfiddle.net/orstavik/4s5kevd7/8/embed/result,html/"></script>
+
+
+## References
+
+ * 
+
+## trash
+
 ```html
 <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.10/src/gestures/triple-click-TakeNote.js"></script>
 
@@ -103,13 +112,6 @@ document.querySelector("#trouble").addEventListener("triple-click", function(e){
 });
 </script>
 ```
-
-## References
-
- * 
-
-## trash
-
 
 ```javascript
 (function () {
