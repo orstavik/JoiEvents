@@ -128,6 +128,7 @@ try {
     }
   });
   window.addEventListener("test", null, opts);
+  window.removeEventListener("test", null, opts);
 } catch (e) {}
 var thirdArg = supportsPassive ? {passive: true, capture: true}: true;
 window.addEventListener("touchstart", function(e){e.preventDefault();}, thirdArg);

@@ -23,7 +23,9 @@ as one. Except for one thing. Dynamic control. As the merged pointer events do n
 ability to prevent default behavior of its trigger events. To illustrate this, we will look at the 
 TapDance problem.
 
-## Problem: the TapDance
+## Problem: the TapDance murder on the dance floor
+
+## Problem: How to make the browsers listen?
 
 The TapDance arise when you:
 1. wish to use pointer and/or touch events in your app, and
@@ -88,6 +90,34 @@ you must add this one extra listener for `touchstart` because it is the only pla
 block the defaultAction of touch events dynamically.
 
 <script async src="//jsfiddle.net/orstavik/46vhLstn/3/embed/result,html/"></script>
+
+It doesn't work! She is snubbing you.. You hit rock bottom. You have noone. You are nobody.
+You want to go and die in a corner.
+But you don't. Because you have prior experience being shameless. You know how to navigate out of the
+field. Persistance. Stay in the game at all cost. Gravel. Beg!
+
+And, this is how you beg.
+```javascript
+var supportsPassive = false;
+try {
+  var opts = Object.defineProperty({}, 'passive', {
+    get: function() {
+      supportsPassive = true;
+    }
+  });
+  window.addEventListener("test", null, opts);
+  window.removeEventListener("test", null, opts);
+
+} catch (e) {}
+```
+You add this code to the top of your page, and you are up and running again.
+
+How Chrome broke the web. 
+http://tonsky.me/blog/chrome-intervention/
+And the rest of the browsers ganged up and decided to fix it. In a horrible
+way.
+https://github.com/whatwg/dom/issues/491
+
 
 It works! Phew.. Saved by your ex-girlfriend. She isn't that bad after all.. 
 You suddenly get filled with nostalgia and think about how nice you two actually had it.
