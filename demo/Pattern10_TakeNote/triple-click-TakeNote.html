@@ -1,0 +1,23 @@
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.11/src/gestures/triple-click-TakeNote.js"></script>
+
+<div id="one">single
+  <div id="two">double
+    <div id="three">tripple click me</div>
+  </div>
+</div>
+
+<script>
+  var one = document.querySelector("#one");
+  var two = document.querySelector("#two");
+  var three = document.querySelector("#three");
+
+  one.addEventListener("click", function(e){
+    one.style.border = "3px solid red";
+  });
+  two.addEventListener("dblclick", function(e){
+    two.style.border = "3px solid orange";
+  });
+  three.addEventListener("triple-click", function(e){
+    three.style.border = "3px solid green";
+  });
+</script>
