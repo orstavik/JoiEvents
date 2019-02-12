@@ -25,10 +25,10 @@
   }
 
   function onClick(e) {
-    var tripple = updateSequence(e);
-    if (tripple)
+    var triple = updateSequence(e);
+    if (triple)
       return;
-    var click3 = new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple});
+    var click3 = new CustomEvent("triple-click", {bubbles: true, composed: true, detail: triple});
     dispatchPriorEvent(e.target, click3, e);
   }
 

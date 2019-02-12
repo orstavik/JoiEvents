@@ -25,10 +25,10 @@
   }
 
   function onTouchend(e) {
-    var tripple = updateSequence(e);
-    if (!tripple)
+    var triple = updateSequence(e);
+    if (!triple)
       return;
-    dispatchPriorEvent(e.target, new CustomEvent("tripple-tap", {bubbles: true, composed: true, detail: tripple}), e);
+    dispatchPriorEvent(e.target, new CustomEvent("triple-tap", {bubbles: true, composed: true, detail: triple}), e);
   }
 
   function onTouchstart(e) {

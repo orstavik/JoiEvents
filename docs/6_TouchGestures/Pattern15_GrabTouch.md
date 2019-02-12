@@ -140,10 +140,10 @@ Ok. When composing DOM Events dynamically, the rules are:
  * use touch events, not pointer events, and
  * call `preventDefault()` on `touchstart` to block all native touch gestures.
 
-## Example: `tripple-tap`
+## Example: `triple-tap`
 
 <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/trippleTap.js"></pretty-printer>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/triple-tap.js"></pretty-printer>
 
 ## References
 

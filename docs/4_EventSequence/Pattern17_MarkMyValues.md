@@ -21,7 +21,7 @@ but as the state structure of event trigger functions should be so narrow to beg
 
 ## Example: `triple-click`
 
-In this example we extend the `tripple-click` event to take note of the distance between clicks. 
+In this example we extend the `triple-click` event to take note of the distance between clicks. 
 If the combined distance between the `x` and `y` values are above a certain threshold, 
 no `triple-click` will be dispatched.
 
@@ -68,10 +68,10 @@ no `triple-click` will be dispatched.
   }
 
   function onClick(e) {
-    var tripple = updateSequence(e);
-    if (!tripple)
+    var triple = updateSequence(e);
+    if (!triple)
       return;
-    dispatchPriorEvent(e.target, new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple}), e);
+    dispatchPriorEvent(e.target, new CustomEvent("triple-click", {bubbles: true, composed: true, detail: triple}), e);
   }
 
   window.addEventListener("click", onClick, true);
@@ -109,10 +109,10 @@ function updateSequence(e) {
 window.addEventListener(
   "click", 
   function(e) {
-    var tripple = updateSequence(e);
-    if (!tripple)
+    var triple = updateSequence(e);
+    if (!triple)
       return;
-    dispatchPriorEvent(e.target, new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple}), e);
+    dispatchPriorEvent(e.target, new CustomEvent("triple-click", {bubbles: true, composed: true, detail: triple}), e);
   }, 
   true
 );
@@ -120,8 +120,8 @@ window.addEventListener(
 
 <div id="one">single click me</div>
 <div id="two">double click me</div>
-<div id="three">tripple click me</div>
-<div id="trouble">single, double and tripple click me</div>
+<div id="three">triple click me</div>
+<div id="trouble">single, double and triple click me</div>
 
 <script>
 document.querySelector("#one").addEventListener("click", function(e){
@@ -130,7 +130,7 @@ document.querySelector("#one").addEventListener("click", function(e){
 document.querySelector("#two").addEventListener("dblclick", function(e){
   e.target.style.background = "orange";
 });
-document.querySelector("#three").addEventListener("tripple-click", function(e){
+document.querySelector("#three").addEventListener("triple-click", function(e){
   e.target.style.background = "green";
 });
 document.querySelector("#trouble").addEventListener("click", function(e){
@@ -139,7 +139,7 @@ document.querySelector("#trouble").addEventListener("click", function(e){
 document.querySelector("#trouble").addEventListener("dblclick", function(e){
   e.target.style.background = "orange";
 });
-document.querySelector("#trouble").addEventListener("tripple-click", function(e){
+document.querySelector("#trouble").addEventListener("triple-click", function(e){
   e.target.style.background = "green";
 });
 </script>

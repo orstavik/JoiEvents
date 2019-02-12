@@ -70,17 +70,17 @@ It has, of course, three trigger events. All clicks. But, to find out if a click
 and final trigger, the event needs to preserve the state of the previous click events.
 
 <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/naive/tripple-click.js"></pretty-printer>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/naive/tripClick.js"></pretty-printer>
 
-## Demo: naive `tripple-click`
+## Demo: naive `triple-click`
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.10/src/naive/tripple-click.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.10/src/naive/triple-click.js"></script>
 
 <div id="one">single click me</div>
 <div id="two">double click me</div>
-<div id="three">tripple click me</div>
-<div id="trouble">single, double and tripple click me</div>
+<div id="three">triple click me</div>
+<div id="trouble">single, double and triple click me</div>
 
 <script>
 document.querySelector("#one").addEventListener("click", function(e){
@@ -89,7 +89,7 @@ document.querySelector("#one").addEventListener("click", function(e){
 document.querySelector("#two").addEventListener("dblclick", function(e){
   e.target.style.background = "orange";
 });
-document.querySelector("#three").addEventListener("tripple-click", function(e){
+document.querySelector("#three").addEventListener("triple-click", function(e){
   e.target.style.background = "green";
 });
 document.querySelector("#trouble").addEventListener("click", function(e){
@@ -98,7 +98,7 @@ document.querySelector("#trouble").addEventListener("click", function(e){
 document.querySelector("#trouble").addEventListener("dblclick", function(e){
   e.target.style.background = "orange";
 });
-document.querySelector("#trouble").addEventListener("tripple-click", function(e){
+document.querySelector("#trouble").addEventListener("triple-click", function(e){
   e.target.style.background = "green";
 });
 </script>
@@ -137,10 +137,10 @@ document.querySelector("#trouble").addEventListener("tripple-click", function(e)
   }
 
   function onClick(e) {
-    var tripple = updateSequence(e);
-    if (!tripple)
+    var triple = updateSequence(e);
+    if (!triple)
       return;
-    dispatchPriorEvent(e.target, new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple}), e);
+    dispatchPriorEvent(e.target, new CustomEvent("triple-click", {bubbles: true, composed: true, detail: triple}), e);
   }
 
   window.addEventListener("click", onClick, true);

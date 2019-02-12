@@ -55,7 +55,7 @@ In this book, we will present the following EventToEventComposition patterns:
  
 5. **AttributableEvent**: This pattern illustrate how HTML attributes can be used to turn on or off
    a composed event per individual elements.
-   The chapter uses a `tripple-click` event as its example.
+   The chapter uses a `triple-click` event as its example.
 
 6. **FilteredPriorEvent**: This pattern uses a pure function to filter out a composed event
    from a single event of a single event type. The chapter uses the `link-click` event as example
@@ -74,7 +74,7 @@ In this book, we will present the following EventToEventComposition patterns:
    it uses the state from this collection of event in its event composition.
    The chapter uses a `long-press` event as its example.
 
-   1. tripple-click. Illustrate how state for the event is stored and then used in the filter and 
+   1. triple-click. Illustrate how state for the event is stored and then used in the filter and 
       makeEvent phases.
       
    2. naive mouse dragging. Illustrate how additional trigger functions are added once the start of a
