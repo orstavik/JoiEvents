@@ -12,7 +12,7 @@ and not simply the DOM Event object. **MarkMyValues is a pattern of storing rele
 values, not only the trigger event objects**. Exceptions are `timeStamp`, `target` and `type` 
 properties of DOM Events, they will always be available in the trigger DOM Event object.
 
-When storing these values, a good strategy is to create separate arrays for each value.
+> Todo: When storing these values, a good strategy is to create separate arrays for each value.
 This gives more variables for the state, but an efficient structure.
 Using separate arrays to store state like this is not generally recommended as it can quickly
 lead to discrepancies between the sequence and order between the arrays,
