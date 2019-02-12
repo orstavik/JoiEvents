@@ -10,7 +10,6 @@
 
   //event state
   var tripleClickSequence = [];
-
   function updateSequence(e) {
     tripleClickSequence.push(e);
     if (tripleClickSequence.length < 3)
@@ -27,9 +26,10 @@
 
   function onClick(e) {
     var tripple = updateSequence(e);
-    if (!tripple)
+    if (tripple)
       return;
-    dispatchPriorEvent(e.target, new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple}), e);
+    var click3 = new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple});
+    dispatchPriorEvent(e.target, click3, e);
   }
 
   window.addEventListener("click", onClick, true);

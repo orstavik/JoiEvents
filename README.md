@@ -1,6 +1,8 @@
 # JoiEvents
  *compose events like a native!*
 
+<a href="https://orstavik.github.io/JoiEvents/">Read the book and enjoi!</a>
+
 ## Introduction
 
 1. [HowTo: Compose Events](doc/1_Intro/HowTo1_composeWithEvents)
@@ -55,8 +57,8 @@
 31. [Problem: CoarseSensors](doc/6_TouchGestures/Problem5_coarse_sensors)
 31. [Problem: TapDance](doc/6_TouchGestures/Problem6_TapDance)
 31. [Pattern: GrabTouch](doc/6_TouchGestures/Pattern15_GrabTouch)
-31. [Problem: WebDemocracy](doc/6_TouchGestures/Problem7_WebDemocracy)
-31. [Anti-pattern: RejectionBuildup](doc/6_TouchGestures/AntipatternX_RejectionBuildup)
+31. [Problem: WebDemocracy](doc/6_TouchGestures/Problem7_WebDemocracy) (todo)
+31. [Anti-pattern: RejectionBuildup](doc/6_TouchGestures/AntipatternX_RejectionBuildup) (todo)
 31. [Event: touch `dragging`](doc/6_TouchGestures/Event_dragFling)
 31. [Event: `swipe`](doc/6_TouchGestures/Event_swipe)
 31. [Event: `pinch` & `.spin()`](doc/6_TouchGestures/Event_pinchSpin)
@@ -67,6 +69,8 @@
 43. todo add the patterns on hash-based routing
 43. todo add the patterns on slash-based routing
 43. todo move in from chapter on translate events
+43. https://instant.page/ try to use an event listener for mousemove that detects when 
+    the mouse cursor slows down over an element.
 
 ## todo
 

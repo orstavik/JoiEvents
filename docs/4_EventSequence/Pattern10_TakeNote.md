@@ -6,18 +6,18 @@ They put an expectation on the listener to remember it.
 And it is implied the listener will need this particular piece of information to complete some
 future task and/or to fully understand a future statement that builds on this premise.
 
-When composing events that are triggered by multiple events, not only a single, 
-you must remember the *state* of the primary or preceding trigger events.
-In the most basic example, such state can be simply that a previous event has occurred. 
+Many composed events are triggered by multiple events, not only a single event. 
+These composed events must remember the *state* of the primary or preceding trigger events.
+In the most basic example, such state can be simply that a previous event having occurred. 
 In such instances, the state data can often be preserved implicitly.
-However, other data such as previous trigger events' target, timeStamp, pointer coordinates,
-and/or other event details, cannot be preserved implicitly, but require the event triggering function
-to maintain state data.
+But, most often the composed event require other data such as the previous trigger events' target, 
+timeStamp, pointer coordinates, etc. This data cannot be remembered implicitly, but 
+requires that the event triggering function store the EventSequence state.
 
-## TakeNote of the state data
+## TakeNote of EventSequence state
 
-There is one aspect of the TakeNote pattern that is of most interest: it stores state.
-This should raise some red flags, so let us look at them: 
+The composed event must store state. 
+This raises some red flags, so let us look at them:
 
 1. When data is passed out of the TakeNote and EventSequence trigger function, 
    they can be altered on the outside. If the data passed out is an object or an array, 
@@ -29,7 +29,7 @@ This should raise some red flags, so let us look at them:
    remain immutable from the outside.
    **When data leaves the TakeNote trigger function, make sure it is deep cloned.**
    
-2. State stored in a variety of places are a source of bugs. 
+2. State stored in different places are a source of bugs. 
    The state may be changed from many different sources, and 
    changes of that state may alter other functionality.
    
@@ -62,14 +62,54 @@ This should raise some red flags, so let us look at them:
    tomax: we need to check this out! which data are behind getters in events? Is target behind a getter?
 
 
-## Example: `triple-click`
+## Example: naive `triple-click`
 
-As an example of how to kick ass and take notes in event composition, we will implement a simple
-`triple-click` event. A triple click are three clicks done within 600ms, 
-not overlapping another triple click.
+The naive `triple-click` composed event needs to TakeNotes. 
+A `triple-click` are three clicks done within 600ms, not overlapping another triple click.
 It has, of course, three trigger events. All clicks. But, to find out if a click is the third 
 and final trigger, the event needs to preserve the state of the previous click events.
-I do it like this:
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/naive/tripple-click.js"></pretty-printer>
+
+## Demo: naive `tripple-click`
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.10/src/naive/tripple-click.js"></script>
+
+<div id="one">single click me</div>
+<div id="two">double click me</div>
+<div id="three">tripple click me</div>
+<div id="trouble">single, double and tripple click me</div>
+
+<script>
+document.querySelector("#one").addEventListener("click", function(e){
+  e.target.style.background = "red";
+});
+document.querySelector("#two").addEventListener("dblclick", function(e){
+  e.target.style.background = "orange";
+});
+document.querySelector("#three").addEventListener("tripple-click", function(e){
+  e.target.style.background = "green";
+});
+document.querySelector("#trouble").addEventListener("click", function(e){
+  e.target.style.background = "red";
+});
+document.querySelector("#trouble").addEventListener("dblclick", function(e){
+  e.target.style.background = "orange";
+});
+document.querySelector("#trouble").addEventListener("tripple-click", function(e){
+  e.target.style.background = "green";
+});
+</script>
+```
+
+## References
+
+ * 
+
+## trash
+
 
 ```javascript
 (function () {
@@ -106,74 +146,3 @@ I do it like this:
   window.addEventListener("click", onClick, true);
 })();
 ```
-
-Put together in a demo, it looks like this:
-
-```html
-<script>
-function dispatchPriorEvent(target, composedEvent, trigger) {   
-  composedEvent.preventDefault = function () {                  
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;                              
-  target.dispatchEvent(composedEvent);                   
-}
-
-//event state
-var tripleClickSequence = [];
-function updateSequence(e) {
-  tripleClickSequence.push(e);
-  if (tripleClickSequence.length < 3)
-    return;
-  if (tripleClickSequence[2].timeStamp - tripleClickSequence[0].timeStamp <= 600){
-    var result = tripleClickSequence.map(function(e){return e.timeStamp});
-    tripleClickSequence = [];
-    return result;
-  }
-  tripleClickSequence.shift();
-}
-
-
-window.addEventListener(
-  "click", 
-  function(e) {
-    var tripple = updateSequence(e);
-    if (!tripple)
-      return;
-    dispatchPriorEvent(e.target, new CustomEvent("tripple-click", {bubbles: true, composed: true, detail: tripple}), e);
-  }, 
-  true
-);
-</script>
-
-<div id="one">single click me</div>
-<div id="two">double click me</div>
-<div id="three">tripple click me</div>
-<div id="trouble">single, double and tripple click me</div>
-
-<script>
-document.querySelector("#one").addEventListener("click", function(e){
-  e.target.style.background = "red";
-});
-document.querySelector("#two").addEventListener("dblclick", function(e){
-  e.target.style.background = "orange";
-});
-document.querySelector("#three").addEventListener("tripple-click", function(e){
-  e.target.style.background = "green";
-});
-document.querySelector("#trouble").addEventListener("click", function(e){
-  e.target.style.background = "red";
-});
-document.querySelector("#trouble").addEventListener("dblclick", function(e){
-  e.target.style.background = "orange";
-});
-document.querySelector("#trouble").addEventListener("tripple-click", function(e){
-  e.target.style.background = "green";
-});
-</script>
-```
-
-## References
-
- * 
