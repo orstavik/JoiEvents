@@ -1,98 +1,127 @@
 # Pattern: GrabTarget
 
-todo solution 1: when it is using AttributeFilteredEvent or TypeFilteredEvent patterns, the target is usually
-     locked to the target of the initial composed event.
-todo solution 2: alternatively the GrabTarget solution will identify the first shared common parentNode.
-
-
-## What choice?
-
-Ahh! To make decisions early. How good it feels. You're the expert, and as you're
-confronted with dilemma after dilemma you just instinctively make the right choice every time.
-You can trust your gut. Where I go, there is food. Others should trust your gut instinct too! Follow me, 
-I will lead us.
-
-But you are not that guy. You're the guy watching that guy. That reckless idiot. That idiot 
-who is just a serial decider that makes an endless array of choices based on his own pure gut instinct 
-and without any forethought, experience, or rational deliberation. That reckless guy is gut instinct 
-alright, a self deluding gut who dumps his decisions around on others. Right after he has made a choice, 
-he just tells himself it was the correct one. Never mind how it actually turns out, that's irrelevant to him.
-He is wilfully ignorant of the consequences of his decisions, all he craves is the dopamine rush he gets 
-by pulling the lever. And all that decision dopamine just puffs up his ego even more which in turn prods 
-him to make his next reckless decision as quickly and recklessly as he possibly can. Yeah, follow that guy, 
-right! He is 99% likely just spiraling towards catastrophe. I just hope the others don't get fooled by
-his imagined, chemically bolstered self confidence and mistake it for something rooted in reality..
-
-> Questions to the reader: Where do you think my self-confidence comes from?
-> Do I have any basis for these patterns? Do I believe in them myself? And if I do, do you 
-> think that I am fooling myself? And if I don't, would you still be well served by believing in me?
-> Am I for real?
-                                                                  
-## Early decisions in EventSequences
+## When to decide in an EventSequence?
 
 EventSequences often benefit from making early decisions:        
 
-1. By making an early decision, the initial event trigger function can reduce its own workload and 
-   perhaps avoid even registering a myriad of secondary trigger event functions that would greatly
-   tax the system's resources.
-    
-2. Initial event trigger functions (such as `mousedown` event listeners) most often run only once.
-   Secondary event trigger functions (such as `mousemove` event listeners) most often run many times.
-   Making the decision in the initial event trigger function thus greatly reduces the burden of constantly
-   computing and updating the decision in each secondary event trigger functions.
+1. By making a decision early in the initial event trigger function, an EventSequence
+   can reduce its workload. By making a decision up-front, the EventSequence might
+   1. avoid even registering secondary trigger event functions, and
+   2. avoid computing a property or premise during secondary event trigger function calls.
    
-3. To make a decision early and then to stick to it makes the EventSequence as a whole predictable. 
+2. By making a decision early and then sticking to it, the EventSequence becomes much more predictable. 
    There will be no change of heart between the initial and secondary custom DOM Events.
+   Fewer property values dancing around.
    
-4. There will be a clear entry-point from where to debug the decision.
+3. By making a decision in one time, in one place in the code, gives a clear entry-point for debugging
+   the EventSequence.
 
-The browser itself makes its decisions for its native EventSequences early.
-The on `pointerdown` events, it will be too late to set the `pointer-action` CSS property to `none` for
-ensuing `pointermove` events, as the browser will have already decided what the `pointer-action` CSS property
-for those events would be *before* the event listener for `pointerdown` was dispatched.
+This and more is probably why the browsers themselves also makes the decisions for their native 
+EventSequences early. Once the on `pointerdown` event propagates, the decision about the value of the 
+`pointer-action` CSS property is, has already been made.
 
-## CaptureTarget (and EventSettings)
+## When to capture the `target`?
 
-So, in EventSequences, the pattern is to decide early. But what do we need to decide?
- 
-1. `target`. The `target` of secondary composed events (custom composed events that trail the initial 
-   composed event) is commonly "captured" in the initial trigger event function, then stored in the 
-   EventSequence's internal state, and then reused as the `target` in subsequent, secondary composed DOM 
-   Events. This pattern is called CaptureTarget.
-   
-   To lock the `target` element for all the composed events from an EventSequence in the initial
-   trigger event function is the default approach. 
-   For some types of EventSequences, having the target element dance around the DOM, is 
-   at best confusing, at worst evil.
+To find the `target` element for an EventSequence is a small task (cf. the AttributeFilteredEvent and 
+TypeFilteredEvent patterns). 
+When done once in the initial trigger function, this small task is negligible.
+However, if the task is repeated in several fine-grained secondary trigger functions, it can burden the browser.
+Furthermore, changing the `target` between different composed events within the same EventSequence 
+will also likely cause confusions and bugs where the composed EventSequence is used. Therefore, 
+EventSequences should grab the `target` from the initial composed event it dispatches and reuse it, by default.
 
-2. EventSettings are commonly read *once* in the initial trigger event function. This is not a hard rule. 
-   Different custom composed DOM Events have different needs that could encourage a late decision.
-   But, by default, anticipate that custom composed DOM Events reads the EventSettings *once* in the 
-   initial event trigger function.
+If you need to produce a series of events that will should produce different events, akin to `hover`,
+then you are likely looking at a series of fine-grained atomic events or fine-grained independent 
+composed events. An EventSequence that needs the ListenUp or the TakeNote patterns, should most likely 
+grab and lock the `target` in the first trigger function to produce a composed event.
+Note, the first trigger function to produce a composed event can be both an initial and a secondary 
+trigger function:
+ * In the mouse-based `dragging` events, the first trigger function to produce a composed event is 
+   the initial trigger function, while 
+ * In the `single-tap` event, the first trigger function to produce a composed event is 
+   a secondary trigger function.
 
-## `.setPointerCapture()`, a misconception?
+An EventSequence should grab and lock the `target` in 
+**the first trigger function to produce a composed event**.
+
+## When to capture the EventSettings?
+
+EventSettings should not be changed while an EventSequence is active.
+While it is possible to do so, and while this might enable the developer to adjust a gesture to its
+users dynamically, such dynamic adjustments of a gesture should be achieved using a DOMEventController.
+DOMEventControllers are global JS functions that directly alter the state of the DOM Event trigger 
+functions (see below).
+
+EventSettings can therefore be read *once*, when first needed, and 
+then stored and reused for the remainder of the EventSequence.
+EventSettings are most likely needed during the initial trigger function or 
+the first trigger function to produce a composed event. But, this is not a hard rule.
+EventSettings should be grabbed once, when first needed, and then reused.
+
+## Pattern: DOMEventController: `.setPointerCapture()`
 
 [`Element.setPointerCapture()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture)
 and its sibling [`Element.releasePointerCapture()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/releasePointerCapture) 
-is a set of builtin method for HTML elements to tie future `pointer` events (touch and mouse) to a particular 
-target. They form a pattern: via JS global function, lock (cf. "capture") the target of certain type of
-DOM Events ("pointer") to a given element.
+is a pair of DOMEventControllers.
+They are global JS functions that tie future `pointer` events (touch and mouse) to a particular 
+`target` element. They give the JS developer a backdoor into the state controlling his DOM Events.
+ 
+A drawback of the DOMEventController pattern is that it is JS based. 
+You can neither control it from HTML template nor see it in the DOM.
 
-A drawback of this pattern is that it is in JS, not HTML attribute. This makes it impossible to set and 
-view the state of this attribute from the DOM, which is a loss.
+Furthermore, the DOMEventController is a bit messy. Once you use `.setPointerCapture()` to lock down
+the `target`, you must explicitly remember to call `.releasePointerCapture()` to free up future Pointer 
+events. This might not be a problem when things run smoothly, but if somehow the event eludes your control,
+such as via a MouseJailbreak, then the call to `.releasePointerCapture()` might get lost thus causing
+strange Event behavior.
 
-However, when composing custom events using the EarlyBird pattern, the event listener is attached to the 
-global `window` object. This means that we have no need to `setPointerCapture` for our trigger events.
+When composing custom events using the EarlyBird pattern, you do not need the DOMEventController
+pattern to control the `target`: the event trigger functions listen on the global `window` object; 
+they capture all targets. This means that we have no need to `setPointerCapture` for our trigger events.
+
+Thus, when composing events, the use case for DOMEventController is much narrower: self-correcting
+event controllers. Examples might include mouse movements that should or should not snap to an element
+based on the users actions, and controlling the frequency of debounced events as a function of the apps
+resources.
 
 Furthermore, the custom composed events should mostly use the CaptureTarget pattern for EventSequences.
 That more or less covers the use-case for the pattern behind `.setPointerCapture()`. And, if you insisted 
 on controlling the target of an EventSequence dynamically, you should still specify it as an 
 EventSettings as an HTML attribute.
 
-The conclusion is that the pattern behind `.setPointerCapture()` isn't really a good fit for custom 
-composed DOM Events. Use CaptureTarget or EventSettings instead.
+The conclusion is that the DOMEventController pattern behind `.setPointerCapture()` 
+for target control should be specified via EventSettings and HTML attributes, not via global JS functions.
+You might need the DOMEventController pattern in a custom composed event, but that will likely be for
+autocorrecting a highly specialized situation.
 
+## Discussion: What choice!
+
+Ahh.. to make decisions early feels good! You're the expert. 
+And as you're confronted with dilemma after dilemma you just instinctively make the right choice.
+Every time. You can trust your gut. Wherever you go, there is food. 
+Others should trust your gut instinct too! You say "Follow me, I will take us there".
+
+But. You are not that guy. You're the guy watching that guy. That reckless idiot. That idiot 
+who is just a serial decider that makes an endless series of choices based with zero forethought, 
+experience, or rational deliberation. 
+That reckless guy is gut instinct alright! He is a self deluding gut who just dumps decisions all over the place. 
+And his problem is so easy to spot. Right after he has made a choice, he simply tells himself it was a 
+correct decision. He wilfully ignores to wait to see the result and wilfully disregards any consequences.
+All he craves is the dopamine rush he gets by pulling the make-decision-lever.
+And the more and frequent decisions, the more the dopamin fills him. 
+He's like an addict, a decision-maker-junky caught in vicious decision-dopamin-more decisions feedback 
+loop.
+
+Sadly, your problem is not him. Its all the others. Who believe his self-confidence is rooted in reality.
+That he feels good about his decisions because he stuck around to see them into fruition. 
+Who don't recognize that his prime skill is to *avoid* the consequences of his decisions, not to harvest 
+them. Why?? Why can't they recognize it?? Why are people so stupid??
+
+> Questions to the reader: Where do you think my self-confidence comes from?
+> Do I have any basis for these patterns? Do I believe in them myself? And if I do, do you 
+> think that I am fooling myself? And if I don't, would you still be well served by believing in me?
+> Am I for real?
+                                                                  
 ## References
 
- * [](https://www.dailymail.co.uk/sciencetech/article-4297698/Dopamine-brain-shape-decisions-make.html)
  * [](https://www.dailymail.co.uk/sciencetech/article-4297698/Dopamine-brain-shape-decisions-make.html)
