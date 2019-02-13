@@ -1,5 +1,10 @@
 # Pattern: GrabTarget
 
+todo solution 1: when it is using AttributeFilteredEvent or TypeFilteredEvent patterns, the target is usually
+     locked to the target of the initial composed event.
+todo solution 2: alternatively the GrabTarget solution will identify the first shared common parentNode.
+
+
 ## What choice?
 
 Ahh! To make decisions early. How good it feels. You're the expert, and as you're
