@@ -170,8 +170,5 @@ var onMouseout = function (e){
 window.addEventListener("mousedown", onMousedown);              
 ```
 
-1. `long-press-duration` EventSetting is acquired at the end of the EventSequence. This is the simplest
-   way to do it here. However, most often, EventSettings are read from the DOM at the beginning of the 
-   EventSequence and then stored in the state of the EventSequence as described in pattern TakeNote.
 
 ## References
