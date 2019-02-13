@@ -283,7 +283,21 @@ window.addEventListener("browse", function(e){
 </script>
 ```
 
+## Native MergedEvents: Pointer events
+
+Lots have been written about pointer and touch events, and we will not go into the details of it here.
+We will simply state that pointer events is a MergedEvents of both mouse and touch events, and 
+that as most modern browsers (except Safari) now implement support for PointerEvents, the browsers
+dispatch both the triggering touch or mouse event and the pointer merged event.
+
+Pointer events therefore provide an excellent alternative if you need to process touch and mouse events
+as one. Except for one thing. Dynamic control. The merged pointer events do not extend the
+ability to prevent default behavior of its trigger events.
+
+See [Problem: TapDance](../6_TouchGestures/Problem6_TapDance) for more details.
+
 ## References
 
  * [MDN: `baseURI`](https://developer.mozilla.org/en-US/docs/Web/API/Node/baseURI)
+ * todo add references for PeP and Pointer events.
                                                                             
