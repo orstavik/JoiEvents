@@ -4,7 +4,7 @@
 Sloppy fingers is the problem accidentally touching the screen with an additional finger.
 You solve this problem by triggering gestures using both `touchstart` and `touchend` events.
 
-Many of the muscles and nerves that control finger movement are not isolated to one finger, but 
+Most of the muscles and nerves that control finger movement are not isolated to one finger, but 
 affect multiple fingers at the same time.
 The muscles controlling the ring finger in particular are bound to both the pinky and middle finger.
 Adjacent fingers can therefore move unintentionally.
@@ -32,8 +32,10 @@ Another way to solve the problem of "sloppy fingers" is to stop the gesture whil
 touching the screen, but to enable the gesture to restart when the extra finger is removed.
 This method stops the gesture whenever an accidental touch/extra finger gets into contact with the screen,
 but as soon as the extra finger is removed, ie. a `touchend` event is triggered, the multifinger gesture reactivates.
-This pattern we call `TouchEndAlsoStartGesture`, and
-it works by checking and activating/deactiving the gesture from all `touchstart` and `touchend` events.
+
+This pattern we call `TouchEndAlsoStartGesture`.
+The TouchEndAlsoStartGesture works by adding an initial trigger function on both `touchstart` and 
+`touchend` events.
 This simple, general solution both avoids conflict with other events *and* allows users to correct it, 
 thus maximizing gesture ergonomics at minimal cost. 
 
