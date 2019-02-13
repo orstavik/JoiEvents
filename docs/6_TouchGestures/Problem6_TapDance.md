@@ -4,14 +4,14 @@ You are about to add your own touch based gestures. Nice! How your users will be
 fingers to control custom behaviors in your app like if it's a flat screen mechanical apparatus. 
 This is going to be so much fun!
 
-But. There is one little problem we must fix when we do that. And that is the conflict between
+But. There is one little problem we must fix first. And that is the conflict between
 your app's custom interpretation of the your custom gesture and the browsers' builtin interpretation
 of native touch gestures such as drag-to-scroll and double-tap-to-zoom.
 More precisely, your problem is: 
 **how do I control the native touch-based gestures during 
-the creation and interpretation of my custom, touch-based gesture?**
+the dynamic creation and interpretation of my custom, touch-based gesture?**
 
-Its time to learn the TapDance!
+Its time for the TapDance!
 
 ## Step 1: `touch-action`
 
@@ -45,7 +45,7 @@ The first step is concluded, put your right foot forward.
 `touch-action` sounds good. To control native touch gestures *dynamically*, on-demand-only, 
 all we have to do is add `touch-action` restrictions high up in the DOM, 
 such as on the `<body>` element, when our custom trigger function is activated. 
-Except. That doesn't work! 
+Except that it doesn't work! 
 
 <script async src="//jsfiddle.net/orstavik/nheLpx3y/29/embed/result,html/"></script>
 
@@ -74,7 +74,7 @@ However, they don't. When the browsers make their native, merged pointer events,
 `.preventDefault()` in the MergedEvent to the `.preventDefault()` in the trigger event.
 That means that if you want to use a single event listener for both mouse and touch using a pointer event,
 you can do so, but only up to the point when you need to call `.preventDefault()`.
-At that point the native, merged pointer events will fail you.
+At that point native, merged pointer events will fail you.
 
 > Merging events without binding `preventDefault()` is not painful for the browser.
 > However, it is a bit painful for the developers.
@@ -98,8 +98,9 @@ Why, just call `.preventDefault()` on `touchstart`. That should do it!
 
 However, this doesn't work either. In Chrome, event listeners on `touchstart` and 
 `touchmove` are "passive by default". "Passive wtf?!" you might ask. 
-"passive event listeners" is webspeak for "event listeners that disable `.preventDefault()`". 
-"But *why* passive wtf?" you might ask again. I will explain below.
+"Passive event listeners" is webspeak for "event listeners that disable `.preventDefault()`". 
+"But *why* passive wtf?" you might ask again. 
+That is a long story, so I will explain it in a [separate chapter](Problem7_WebDemocracy).
 
 In any case, forth step is to place the left foot forward but *on the right side* of the right foot, 
 crossing your legs.
@@ -109,7 +110,7 @@ crossing your legs.
 We still have no control. Dynamically. But. Maybe there is hope. Can we make `.preventDefault()` 
 work in `touchstart` in Chrome? Dynamically?
 
-Yes, it is simple. In Chrome, we just have to add a `touchstart` event listener with 
+Yes we can. In Chrome, we just have to add a `touchstart` event listener with 
 a `{passive: true}` third argument. 
 ```javascript
 window.addEventListener("touchstart", function(e){e.preventDefault();}, {passive: true, capture: true});
@@ -135,7 +136,8 @@ window.addEventListener("touchstart", function(e){e.preventDefault();}, thirdArg
 ```
 It works!
 
-The last dance move is the pivot 180deg and repeat the other way round.
+The last dance move is the pivot 180deg so as to uncross your legs.
+You now face in the reverse direction, and can repeat the dance from beginning.
 
 ## Summary
 
