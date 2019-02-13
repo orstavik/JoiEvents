@@ -3,7 +3,7 @@
 > TLDR: GestureStuttering occurs because users can place multiple fingers on the screen 
 either simultaneously or in quick succession.
 To tackle this problem gestures relying on `touch` events need to IgnoreThenDoubleCheckAndCancel
-in their `touchstart` listener.
+in their `touchstart` listener. You are not mistaken if you consider this obvious.
 
 Often, when a user initiates a multifinger gesture, 
 he will place all the necessary fingers on the screen at the same time.
@@ -25,27 +25,19 @@ if the potential trigger event (ie. `touchstart` or `touchend`)
 does not correspond with the required number of active fingers/touches.
 
 However, this solution has two consequences:
- 1. The start of the gesture is registered when the last required trigger event occurs.
- 2. The app might need to differentiate between gestures or cancel gestures
- depending on the delay between the triggering events.
+1. The start of the gesture is registered when the last required trigger event occurs.
+2. The app might need to differentiate between gestures or cancel gestures
+   depending on the delay between the triggering events.
 
 In most cases, these consequences are not relevant.
-Thus, to simply ignore irrelevant stutter is works fine, and 
-for mixins and other generalized gesture implementation, 
-gesture stuttering should therefore simply be ignored.
-
+Thus, to simply ignore irrelevant stutter is most often fine.
 But, a few use-cases need more precise timing.
-In such cases, additional event listeners for the gesture triggering events (ie.  `touchstart` and `touchend`)
-can be added that records the time for other trigger events.
-And, if this information about the triggering conditions is used to filter out the gesture,
-a generalized implementation for gesture mixin should therefore provide a `cancelGesture()` method.
+In such cases, the initial trigger functions for `touchstart` and `touchend` should not only ignore
+GestureStuttering, but register its properties for later.
 
-As both the gesture and the timing method listen to the same trigger event,
-the function that cancels the gesture might be invoked before the function that starts the gesture.
-It would be too fragile to base such a mechanism on the order of these event listeners.
-Therefore, `cancelGesture()` needs to pass the trigger event as a parameter to the
-gesture implementation: `cancelGesture(triggerEvent)`.
-This triggerEvent is then cached by the gesture so that later trigger events can be filtered out against it.
+The threshold for how much stuttering should cause the gesture to be canceled, is likely to depend on
+the user of the gesture. Therefore, an EventSetting attribute should be applied to enable the user
+of the gesture to control the amount of accepted stuttering, in addition to a default value.
 
 ## References
 
