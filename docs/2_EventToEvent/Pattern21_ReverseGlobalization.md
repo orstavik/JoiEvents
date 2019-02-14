@@ -47,22 +47,22 @@ then the browser will have to que a JS task every time the event occurs, on all 
 Below is an example that illustrate this.
 
 ```html
-<div id="a" hover-alert>This element should alert you on hover</div>
-<div id="b">This element is normal, no hover alert</div>
+<div id="a" mouseover-alert>This element should alert you on mouseover</div>
+<div id="b">This element is normal, no mouseover alert</div>
 <script>
-  function onHover(type, e){
-    console.log(type, e.id, e.target.hasAttribute("hover-alert"));
+  function onMouseover(type, e){
+    console.log(type, e.id, e.target.hasAttribute("mouseover-alert"));
   }
-  window.addEventListener("hover", function(e){onHover("global", e)}, true);
-  var el = document.querySelector("div[hover-alert]");
-  el.addEventListener("hover", function(e){onHover("local", e)}, true);
+  window.addEventListener("mouseover", function(e){onMouseover("global", e)}, true);
+  var el = document.querySelector("div[mouseover-alert]");
+  el.addEventListener("mouseover", function(e){onMouseover("local", e)}, true);
 </script>
 ```
-## Demo: `hover-echo` on fire everywhere
+## Demo: `mouseover-echo` on fire everywhere
 
-In this demo we make a composed event that echoes the `hover` event.
+In this demo we make a composed event that echoes the `mouseover` event.
 This is a very costly composed events which will cause the browser to que a JS task for every
-native hover event.
+native mouseover event.
 
 ```javascript
 function dispatchPriorEvent(target, composedEvent, trigger) {   
@@ -74,11 +74,11 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   target.dispatchEvent(composedEvent);                   
 }
 
-function onHover(e){
-  dispatchPriorEvent(e.target, new CustomEvent("hover-echo", {bubbles: true, composed: true}), e);
+function onMouseover(e){
+  dispatchPriorEvent(e.target, new CustomEvent("mouseover-echo", {bubbles: true, composed: true}), e);
 }
 
-window.addEventListener("hover", onHover, true);
+window.addEventListener("mouseover", onMouseover, true);
 ```
 
 In the demo below, we use this composed event to put a set of divs on fire.
@@ -88,13 +88,13 @@ In the demo below, we use this composed event to put a set of divs on fire.
 div {
   padding: 10px;
 }
-.hoverOne {
+.mouseoverOne {
   background: red;
 }
-.hoverTwo {
+.mouseoverTwo {
   background: orange;
 }
-.hoverThree {
+.mouseoverThree {
   background: yellow;
 }
 </style>
@@ -107,8 +107,8 @@ div {
   </div>
 </div>
 <script>
-  var items = ["hoverOne", "hoverTwo", "hoverThree"];  
-  window.addEventListener("hover-echo", function(e){
+  var items = ["mouseoverOne", "mouseoverTwo", "mouseoverThree"];  
+  window.addEventListener("mouseover-echo", function(e){
     e.target.classList.toggle(items[Math.floor(Math.random()*items.length)]);
   });
 </script>
@@ -137,7 +137,7 @@ To do this, we need a second function that:
 
 3. add the the initial event trigger listener to the window.
 
-## Example: `localizable-hover-echo`
+## Example: `localizable-mouseover-echo`
 
 ```javascript
 (function(){
@@ -161,85 +161,85 @@ function querySelectorAllDeep(query, doc, res){
 }
 
 //will localize update and 
-window.localizeHoverEcho = function(query){
+window.localizeMouseoverEcho = function(query){
   if (locations) {    //adding more
     var allLocations = querySelectorAllDeep(query, document, []);
     for (var i = 0; i < allLocations.length; i++) {
       var potentiallyNewLocation = allLocations[i];
       if (locations.indexOf(potentiallyNewLocation) < 0)
-        potentiallyNewLocation.addEventListener("hover", onHover, true);
+        potentiallyNewLocation.addEventListener("mouseover", onMouseover, true);
     }
     for (var i = 0; i < locations.length; i++) {
       var oldLocation = locations[i];
       if (allLocations.indexOf(oldLocation) < 0)
-        oldLocation.removeEventListener("hover", onHover, true);
+        oldLocation.removeEventListener("mouseover", onMouseover, true);
     }
     locations = allLocations;    
   } else {            //first time
     locations = querySelectorAllDeep(query, document, []);
     for (var i = 0; i < locations.length; i++) 
-      locations[i].addEventListener("hover", onHover, true);
-    window.removeEventListener("hover", onHover, true);    
+      locations[i].addEventListener("mouseover", onMouseover, true);
+    window.removeEventListener("mouseover", onMouseover, true);    
   }
 }
                                        
-window.globalizeHoverEcho = function(){
+window.globalizeMouseoverEcho = function(){
   if (!locations)   //already global
     return;
   for (var i = 0; i < locations.length; i++) 
-    locations[i].removeEventListener("hover", onHover, true);
+    locations[i].removeEventListener("mouseover", onMouseover, true);
   locations = undefined;
-  window.addEventListener("hover", onHover, true);
+  window.addEventListener("mouseover", onMouseover, true);
 }
 
 
-function onHover(e){
-  dispatchPriorEvent(e.target, new CustomEvent("hover-echo", {bubbles: true, composed: true}), e);
+function onMouseover(e){
+  dispatchPriorEvent(e.target, new CustomEvent("mouseover-echo", {bubbles: true, composed: true}), e);
 }
 
-window.addEventListener("hover", onHover, true);
+window.addEventListener("mouseover", onMouseover, true);
 })();
 ```
 
-## Demo: `hover-echo` on fire
+## Demo: `mouseover-echo` on fire
 
 ```html
-<script src="hover-echo-localizable.js"></script>
+<script src="mouseover-echo-localizable.js"></script>
 
 <style>
 div {
   padding: 10px;
 }
-.hoverOne {
+.mouseoverOne {
   background: red;
 }
-.hoverTwo {
+.mouseoverTwo {
   background: orange;
 }
-.hoverThree {
+.mouseoverThree {
   background: yellow;
 }
 </style>
 
-<div hover-ball>
+<div mouseover-ball>
   <div>
-    <div hover-ball>
+    <div mouseover-ball>
       <div>Fireball!! All elements should be on fire when you move the mouse over them.</div>
     </div>
   </div>
 </div>
 <script>
-  var items = ["hoverOne", "hoverTwo", "hoverThree"];  
-  window.addEventListener("hover-echo", function(e){
+  var items = ["mouseoverOne", "mouseoverTwo", "mouseoverThree"];  
+  window.addEventListener("mouseover-echo", function(e){
     e.target.classList.toggle(items[Math.floor(Math.random()*items.length)]);
   });
   
   var i = 0;
   setInterval(function(){
     if (i++ % 2)
-      localizeHoverEcho("[hover-ball]");
+      localizeMouseoverEcho("[mouseover-ball]");
     else
-      globalizeHoverEcho();
+      globalizeMouseoverEcho();
   }, 5000);
 </script>
 ```
