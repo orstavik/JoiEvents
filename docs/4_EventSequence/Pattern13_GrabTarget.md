@@ -44,6 +44,36 @@ trigger function:
 An EventSequence should grab and lock the `target` in 
 **the first trigger function to produce a composed event**.
 
+## Find common `target` for global EventSequences
+
+Some EventSequences are meant to be global. 
+`click` and `long-press` events are often meant to be applicable across the app, to all elements.
+Unlike the EventSequences that are filtered by either an HTML attribute or the element type,
+these EventSequences need a generic, global mechanism to identify the `target`:
+`firstCommonAncestor(composedPath1, composedPath2)`.
+
+```javascript
+function firstCommonAncestor(composedPath1, composedPath2){
+  for (let i = 0; i < composedPath2.length; i++) {
+    let endEl = composedPath2[i];
+    for (let i = 0; i < composedPath1.length; i++) {
+        let startEl = composedPath1[i];
+        if (endEl === startEl)
+          return endEl;
+      }
+  }
+  throw new Error("Cannot find common ancestor when composing event.");
+}
+```
+the EventSequence can do:
+1. store the start `target` element and the end `target` element, and 
+   then work with the `.parentNode` properties dynamically to find the firstCommonAncestor.
+2. store the `.composedPath` for both EventSequences, and then find the firstCommonAncestor
+   from there.
+3. This becomes relevant if the DOM is changed in such a way that the start target element moves 
+   in between the initial trigger and secondary trigger function is called. I am not sure yet which
+   of these approaches are best. Above is the approach nr2.
+
 ## When to capture the EventSettings?
 
 EventSettings should not be changed while an EventSequence is active.

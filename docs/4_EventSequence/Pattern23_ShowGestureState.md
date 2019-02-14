@@ -1,5 +1,12 @@
 # Pattern: ShowGestureState (UX)
 
+Todo gestures should add html attributes to the target html element so as to signal state.
+Todo add the gesture-name-active to illustrate that the gesture is active.
+Todo add the gesture-name-active-property.
+Todo remove the html property when the gesture has completed, remove all possible attributes.
+Todo if there is no target selected, add the data to the body element. This means that maybe the body, and
+Todo not the root html element should be used as the top most element??
+
 ## Pattern: ShowGestureState
 
 When you use (multifinger) gestures in your app, 
@@ -42,6 +49,9 @@ This is what the browser does too, except a little
 |
 |
 |
+
+3. extend the navigation with a different color/symbol for links that are cached, 
+   that will be fast to navigate to.
 
 ## Problem: Coarse sensors
 

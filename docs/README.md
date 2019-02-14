@@ -19,11 +19,12 @@ Enjoi!
 5. [Pattern: PriorEvent](2_EventToEvent/Pattern3_PriorEvent)
 5. [Pattern: AfterthoughtEvent](2_EventToEvent/Pattern4_AfterthoughtEvent)
 5. [Pattern: ReplaceDefaultAction](2_EventToEvent/Pattern5_ReplaceDefaultAction)
+5. [Problem: PayAttention](2_EventToEvent//Problem2_PayAttention)
 5. [Pattern: ReverseGlobalization](2_EventToEvent/Pattern21_ReverseGlobalization)
 
 ## Event translation
 
-13. [Pattern: AttributeFilteredEvent](3_EventTranslationAndRouting/Pattern6_AttributeFilteredEvent)
+14. [Pattern: AttributeFilteredEvent](3_EventTranslationAndRouting/Pattern6_AttributeFilteredEvent)
 13. [Pattern: TypeFilteredEvent](3_EventTranslationAndRouting/Pattern7_TypeFilteredEvent)
 13. [Pattern: DetailsOnDemand](3_EventTranslationAndRouting/Pattern8_DetailsOnDemand)
 13. [Pattern: MergedEvents](3_EventTranslationAndRouting/Pattern9_MergedEvents)
@@ -31,17 +32,17 @@ Enjoi!
 
 ## EventSequence patterns
 
-18. [Pattern: TakeNote](4_EventSequence/Pattern10_TakeNote)
-18. [Pattern: PayAttention](4_EventSequence/Problem2_PayAttention)
+19. [Pattern: TakeNote](4_EventSequence/Pattern10_TakeNote)
 18. [Pattern: ListenUp](4_EventSequence/Pattern11_ListenUp)
+24. [Pattern: GrabTarget](5_MouseGestures/Pattern13_GrabTarget)
 18. [Pattern: EventAttribute](4_EventSequence/Pattern12_EventAttribute)
 18. [Pattern: MarkMyValues](4_EventSequence/Pattern17_MarkMyValues)
-18. [Pattern: DebounceEvents](4_EventSequence/Pattern16_DebounceEvents.md) (todo)
+18. [Pattern: ShowGestureState](4_EventSequence/Pattern23_ShowGestureState) (todo)
+18. [Pattern: DebounceEvents](4_EventSequence/Pattern16_DebounceEvents) (todo)
 
 ## Gestures: mouse
 
-24. [HowTo: drag'n'drop](5_MouseGestures/HowTo_DragNDrop)
-24. [Pattern: GrabTarget](5_MouseGestures/Pattern13_GrabTarget)
+26. [HowTo: drag'n'drop](5_MouseGestures/HowTo_DragNDrop)
 24. [Pattern: GrabMouse](5_MouseGestures/Pattern14_GrabMouse)
 24. [Pattern: MouseJailbreak](5_MouseGestures/Pattern19_MouseJailbreak)
 24. [Pattern: CancelClick](5_MouseGestures/Pattern20_CancelClick)
@@ -50,11 +51,10 @@ Enjoi!
 
 ## Gestures: touch
 
-31. [Problem: SloppyFingers](6_TouchGestures/Problem1_sloppy_fingers)
-31. [Problem: GestureStuttering](6_TouchGestures/Problem2_gesture_stuttering)
+32. [Problem: SloppyFingers](6_TouchGestures/Problem1_sloppy_fingers) (todo UpIsDown)
+31. [Problem: GestureStuttering](6_TouchGestures/Problem2_gesture_stuttering)  
 31. [Problem: TouchTheMouse](6_TouchGestures/Problem3_touch_the_mouse)
 31. [Problem: ConflictingGestures](6_TouchGestures/Problem4_conflicting_gestures)
-31. [Problem: CoarseSensors](6_TouchGestures/Problem5_coarse_sensors)
 31. [Problem: TapDance](6_TouchGestures/Problem6_TapDance)
 31. [Pattern: GrabTouch](6_TouchGestures/Pattern15_GrabTouch)
 31. [Problem: WebDemocracy](6_TouchGestures/Problem7_WebDemocracy) (todo)
