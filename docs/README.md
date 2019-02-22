@@ -34,7 +34,7 @@ Enjoi!
 
 19. [Pattern: TakeNote](4_EventSequence/Pattern10_TakeNote)
 18. [Pattern: ListenUp](4_EventSequence/Pattern11_ListenUp)
-24. [Pattern: GrabTarget](5_MouseGestures/Pattern13_GrabTarget)
+18. [Pattern: GrabTarget](4_EventSequence/Pattern13_GrabTarget)
 18. [Pattern: EventAttribute](4_EventSequence/Pattern12_EventAttribute)
 18. [Pattern: MarkMyValues](4_EventSequence/Pattern17_MarkMyValues)
 18. [Pattern: ShowGestureState](4_EventSequence/Pattern23_ShowGestureState) (todo)
