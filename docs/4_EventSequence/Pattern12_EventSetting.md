@@ -117,58 +117,7 @@ The example is our custom `long-press` DOM Event, but this time we want to speci
 will first check for a local `long-press-duration`, then a global `long-press-duration`, and then
 simply use 300ms as a default fallback. 
 
-```javascript
-function dispatchPriorEvent(target, composedEvent, trigger) {
-  composedEvent.preventDefault = function () {
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;
-  return target.dispatchEvent(composedEvent);
-}
-
-var primaryEvent;
-
-function resetSequenceState(){
-  primaryEvent = undefined;                                    
-  window.removeEventListener("mouseup", onMouseup);            
-  window.removeEventListener("mouseout", onMouseout);          
-}
-
-function onMousedown(e){                                       
-  if (e.button !== 0)                                    
-    return;
-  if (primaryEvent)                                            
-    resetSequenceState(); 
-  primaryEvent = e;                                            
-  window.addEventListener("mouseup", onMouseup);               
-  window.addEventListener("mouseout", onMouseout);             
-}
-
-function onMouseup(e){                                         
-  if (e.target !== primaryEvent.target)
-    return resetSequenceState();
-  var duration = e.timeStamp - primaryEvent.timeStamp;
-  var longPressDurationSetting = 
-    e.target.getAttribute("long-press-duration") ||             //[1]
-    document.children[0].getAttribute("long-press-duration") ||
-    300;
-  //trigger long-press iff the press duration is more than the long-press-duration EventSetting
-  if (duration > longPressDurationSetting)       //[6]
-    e.target.dispatchEvent(new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}));
-  resetSequenceState();                                         
-}
-
-var onMouseout = function (e){                                  
-  //filter to only trigger on the mouse leaving the window
-  if (trigger.clientY > 0 && trigger.clientX > 0 && trigger.clientX < window.innerWidth && trigger.clientY < window.innerHeight)
-    return;                                                     
-  primaryEvent.target.dispatchEvent(new CustomEvent("long-press-cancel", {bubbles: true, composed: true}));
-  resetSequenceState();                                         
-}
-
-window.addEventListener("mousedown", onMousedown);              
-```
-
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-EventSettings.js"></pretty-printer>
 
 ## References

@@ -3,8 +3,8 @@
 The ListenUp pattern limits your cost by adding event listeners as *late as possible*, and not upfront.
 The pattern is simple. You have a composed event that listens for two or three different types of events.
 These events must occur in a certain order. And therefore you would at first only listen for one primary 
-trigger event, and only when this primary trigger event occurs add the event listeners for the secondary 
-and final trigger events.
+trigger event. Then, and only when this primary trigger event occurs, you add the event listeners for the secondary 
+trigger events.
 
 ## Example: Naive `long-press`
 
