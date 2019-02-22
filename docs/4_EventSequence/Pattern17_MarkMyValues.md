@@ -28,7 +28,7 @@ window.addEventListener("mousemove", function(e){
     first = false;                     
   setTimeout(function(){               
     console.log(e.type);               //mousemove
-    console.log(e.timeStamp);          //23:59:59.31.12.1999
+    console.log(e.timeStamp);          //23:59:59 31.12.1999
     console.log(e.target.typeName);    //first DIV, then undefined
     console.log(e.x);                  //undefined
   });
@@ -51,6 +51,11 @@ Exceptions are the `timeStamp`, `type`, and most often the `target` property.
 The MarkMyValues pattern is most often used in combination with the DetailOnDemand pattern.
 When used with DetailOnDemand, the values should be copied from the trigger event the composed
 event in the construction of the DetailOnDemand object.
+
+## Example: `long-press` with 30px wiggle room
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-MarkMyValues.js"></pretty-printer>
 
 ## Example: `triple-click` with little wiggle room
 
