@@ -62,7 +62,7 @@ function firstCommonAncestor(composedPath1, composedPath2){
           return endEl;
       }
   }
-  throw new Error("Cannot find common ancestor when composing event.");
+  return null;
 }
 ```
 the EventSequence can do:
@@ -123,6 +123,17 @@ The conclusion is that the DOMEventController pattern behind `.setPointerCapture
 for target control should be specified via EventSettings and HTML attributes, not via global JS functions.
 You might need the DOMEventController pattern in a custom composed event, but that will likely be for
 autocorrecting a highly specialized situation.
+
+## Example: `long-press` should really only be made on a specific target
+
+`long-press` should really only occur *within* a specific element. No user of the `long-press`
+event would image that the press either started or ended outside of the boundaries of the element
+that receives the `long-press` event.
+This means that you need to find the `firstCommonAncestor` for both the initial and final `long-press` 
+trigger events (here `mousedown` and `mouseup`).
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-GrabTarget.js"></pretty-printer>
 
 ## Discussion: What choice!
 
