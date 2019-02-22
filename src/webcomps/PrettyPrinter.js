@@ -15,7 +15,6 @@ addSyncScript("https://cdn.rawgit.com/google/code-prettify/master/src/prettify.j
 class PrettyPrinter extends HTMLElement {
   constructor() {
     super();
-    PRready(() => console.log("PR"));
     this.attachShadow({mode: "open"});
     this.shadowRoot.innerHTML = `
 <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/google/code-prettify/master/src/prettify.css">
