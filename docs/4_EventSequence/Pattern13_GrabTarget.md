@@ -74,6 +74,17 @@ the EventSequence can do:
    in between the initial trigger and secondary trigger function is called. I am not sure yet which
    of these approaches are best. Above is the approach nr2.
 
+## Example: `long-press` should really only be made on a specific target
+
+`long-press` should really only occur *within* a specific element. No user of the `long-press`
+event would image that the press either started or ended outside of the boundaries of the element
+that receives the `long-press` event.
+This means that you need to find the `firstCommonAncestor` for both the initial and final `long-press` 
+trigger events (here `mousedown` and `mouseup`).
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-GrabTarget.js"></pretty-printer>
+
 ## When to capture the EventSettings?
 
 EventSettings should not be changed while an EventSequence is active.
@@ -124,17 +135,6 @@ for target control should be specified via EventSettings and HTML attributes, no
 You might need the DOMEventController pattern in a custom composed event, but that will likely be for
 autocorrecting a highly specialized situation.
 
-## Example: `long-press` should really only be made on a specific target
-
-`long-press` should really only occur *within* a specific element. No user of the `long-press`
-event would image that the press either started or ended outside of the boundaries of the element
-that receives the `long-press` event.
-This means that you need to find the `firstCommonAncestor` for both the initial and final `long-press` 
-trigger events (here `mousedown` and `mouseup`).
-
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-GrabTarget.js"></pretty-printer>
-
 ## Discussion: What choice!
 
 Ahh.. to make decisions early feels good! You're the expert. 
@@ -156,7 +156,7 @@ loop.
 Sadly, your problem is not him. Its all the others. Who believe his self-confidence is rooted in reality.
 That he feels good about his decisions because he stuck around to see them into fruition. 
 Who don't recognize that his prime skill is to *avoid* the consequences of his decisions, not to harvest 
-them. Why?? Why can't they recognize it?? Why are people so stupid??
+them. Why?? Why can't they recognize it?? Why are people so gullible??
 
 > Questions to the reader: Where do you think my self-confidence comes from?
 > Do I have any basis for these patterns? Do I believe in them myself? And if I do, do you 
