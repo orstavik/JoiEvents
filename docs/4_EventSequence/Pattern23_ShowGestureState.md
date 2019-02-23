@@ -27,8 +27,18 @@ a specific element might be a good method to signal the state of a gesture.
 
 1. the native scroll -> a bar with a location on the right side
 2. the native a href -> different mouse pointer on hover, different colors depending on history state.
+3. the native drag -> a ghost of the element that is dragged is presented as the cursor moves
 
 ## Custom ShowGestureState patterns
+
+## show custom drag state
+
+## show custom navigation state
+
+1. show which resources are preloaded.
+2. show elements that *will* be preload on hover.
+3. show elements that are deeply preloaded.
+4. show when elements are being preloaded.
 
 ## Example/Demo
 
