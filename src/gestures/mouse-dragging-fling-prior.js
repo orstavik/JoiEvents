@@ -172,10 +172,10 @@
   }
   
   function onFocus(trigger) {
-    const focusInEvent = makeDraggingEvent("cancel", trigger);
+    const focusEvent = makeDraggingEvent("cancel", trigger);
     const target = globalSequence.target;
     globalSequence = stopSequence();
-    dispatchPriorEvent(target, focusInEvent, trigger);
+    dispatchPriorEvent(target, focusEvent, trigger);
   }
   
   function onSelectstart(trigger) {
