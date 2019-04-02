@@ -71,10 +71,10 @@ EventSequence is activated.
 ## MouseJailbreak #3: stay alert!
 
 A script triggers `alert(...)`, `confirm(...)` or similar is triggered. 
-These functions disrupts the browser's focus and event system.
+These functions disrupts the browser's blur and event system.
 
 Such browser disruptions should almost always cancel ongoing EventSequences.
-Such disruptions can be discovered using the `focusin` event.
+Such disruptions can be discovered using the `blur` event.
 
 //todo here we need to test different browsers.
 //todo is it better to use `window.addEventListener("focusout", cancel, true)`?
@@ -103,7 +103,7 @@ function startSequenceState(e){
   primaryEvent = e;                                     
   window.addEventListener("mouseup", onMouseup, true);             
   window.addEventListener("mouseleave", onMouseleave, true);          //[1]
-  window.addEventListener("focus", onFocusin, true);                  //[3]
+  window.addEventListener("blur", onBlur, true);                      //[3]
   window.addEventListener("mousedown", onMousedownSecondary, true);   //[2]
   window.removeEventListener("mousedown", onMousedownInitial, true);  //[2]
 }
@@ -112,7 +112,7 @@ function resetSequenceState(){
   primaryEvent = undefined;                                     
   window.removeEventListener("mouseup", onMouseup, true);             
   window.removeEventListener("mouseleave", onMouseleave, true);       //[1] 
-  window.removeEventListener("focus", onFocusin, true);               //[3]
+  window.removeEventListener("blur", onBlur, true);                   //[3]
   window.removeEventListener("mousedown", onMousedownSecondary, true);//[2]
   window.addEventListener("mousedown", onMousedownInitial, true);     //[2]
 }
@@ -132,7 +132,7 @@ function onMouseleave(e){                                             //[1]
   resetSequenceState();                                         
 }
 
-function onFocusin(e){                                                //[3]
+function onBlur(e){                                                //[3]
   dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                         
 }
@@ -155,7 +155,7 @@ window.addEventListener("mousedown", onMousedownInitial);
 //   A secondary trigger function is added for `mousedown` that will cancel the EventSequence if
 //   the user intentionally or accidentally hits an extra mousebutton.
 //3. MouseJailbreak #3: stay alert!
-//   A secondary trigger function for `focusin` is added to cancel the EventSequence if there is any
+//   A secondary trigger function for `blur` is added to cancel the EventSequence if there is any
 //   change of focus during the EventSequence.
 ```
 
@@ -194,4 +194,4 @@ window.addEventListener("long-press-cancel", function(e){
 
 ## References
 
- * 
+ * [MDN: `blur` event](https://developer.mozilla.org/en-US/docs/Web/API/Element/blur_event)
