@@ -44,7 +44,7 @@ native behavior, we must add the ugly supportsPassive feature check.
     window.addEventListener("test", null, opts);
     window.removeEventListener("test", null, opts);
   } catch (e) {}
-  var thirdArg = supportsPassive ? {passive: true, capture: true}: true;
+  var thirdArg = supportsPassive ? {passive: false, capture: true}: true;
 
   function filterOnAttribute(e, attributeName) {                //1
     var target = e.composedPath ? e.composedPath()[0] : e.target;
