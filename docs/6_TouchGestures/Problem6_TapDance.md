@@ -110,10 +110,10 @@ crossing your legs.
 We still have no control. Dynamically. But. Maybe there is hope. Can we make `.preventDefault()` 
 work in `touchstart` in Chrome? Dynamically?
 
-Yes we can. In Chrome, we just have to add a `touchstart` event listener with 
-a `{passive: true}` third argument. 
+Yes, we can. In Chrome, we just have to add a `touchstart` event listener with 
+a `{passive: false}` third argument. 
 ```javascript
-window.addEventListener("touchstart", function(e){e.preventDefault();}, {passive: true, capture: true});
+window.addEventListener("touchstart", function(e){e.preventDefault();}, {passive: false, capture: true});
 ```
 
 But, wait! That doesn't work in older browsers that only accepts a boolean third argument. 
@@ -131,11 +131,13 @@ try {
   window.addEventListener("test", null, opts);
   window.removeEventListener("test", null, opts);
 } catch (e) {}
-var thirdArg = supportsPassive ? {passive: true, capture: true}: true;
+var thirdArg = supportsPassive ? {passive: false, capture: true}: true;
 window.addEventListener("touchstart", function(e){e.preventDefault();}, thirdArg);
 ```
 It works!
+```html
 
+```
 The last dance move is the pivot 180deg so as to uncross your legs.
 You now face in the reverse direction, and can repeat the dance from beginning.
 
