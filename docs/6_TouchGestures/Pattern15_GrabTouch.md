@@ -62,6 +62,7 @@ native behavior, we must add the ugly supportsPassive feature check.
     composedEvent.trigger = trigger;                              
     target.dispatchEvent(composedEvent);                   
   }
+  
   function onTouchend(e) {
     //no release of dynamically GrabTouch necessary
     dispatchPriorEvent(newTarget, new CustomEvent("single-tap", {bubbles: true, composed: true}), e);    
