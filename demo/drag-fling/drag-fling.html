@@ -1,108 +1,134 @@
 <script src="../../src/gestures/max/dragging-fling.js"></script>
 <style>
-  * {
-    font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
-  }
-
   #elem {
     position: absolute;
-    left: 500px;
-    top: 600px;
+    left: 10px;
+    top: 10px;
     height: 100px;
     width: 100px;
     background-color: red;
     text-align: center;
-    z-index: 1000;
   }
-
   #redzone {
+    position: absolute;
+    left: 300px;
+    top: 10px;
     height: 110px;
     width: 110px;
     border: 2px solid red;
-    float: right;
-  }
-
-  test-case {
-    display: block;
-  }
-
-  span {
-    margin-left: 20px;
-    display: none;
-  }
-
-  button {
-    float: right;
   }
 </style>
 
-<div id="elem" draggable></div>
 <div id="redzone">Drag here</div>
-<button onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
+<div id="elem" draggable></div>
+<button style="float:right" onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
 <script>
 
-  let element = document.querySelector("#elem");
-  let elemX = undefined;
-  let elemY = undefined;
-  let startX = undefined;
-  let startY = undefined;
+  var dragStart = undefined;
 
   window.addEventListener("dragging-start", e => {
-//    var element = e.target;
-    // init coordinate values (We will compare it later)
-    startX = e.x;
-    startY = e.y;
-    if (e.target.id === "elem") {
-      dropzone = document.querySelector("#redzone");
-      dropCoord = {
-        left: dropzone.offsetLeft,
-        top: dropzone.offsetTop
-      };
-    }
-    element.style.transition = undefined;
-    elemX = parseInt(getComputedStyle(element).left);
-    elemY = parseInt(getComputedStyle(element).top);
+    dragStart = {
+      x: e.x - e.target.offsetLeft,
+      y: e.y - e.target.offsetTop
+    };
   });
+
   window.addEventListener("dragging-move", (e) => {
-//    var element = e.target;
-    element.style.left = (e.x - startX + elemX) + "px";
-    element.style.top = (e.y - startY + elemY) + "px";
+    e.target.style.left = (e.x - dragStart.x) + "px";
+    e.target.style.top = (e.y - dragStart.y) + "px";
   });
+
   window.addEventListener("dragging-stop", (e) => {
-//    var element = e.target;
     var dropzone = document.querySelector("#redzone");
     var dropCoord = {
-      left: dropzone.offsetLeft,
-      top: dropzone.offsetTop
+      left: dropzone.offsetLeft - 10,
+      top: dropzone.offsetTop - 10,
+      right: dropzone.offsetLeft + dropzone.offsetWidth + 10,
+      bottom: dropzone.offsetTop + dropzone.clientHeight + 10
     };
-    if (e.x >= dropCoord.left - 10 && e.y >= dropCoord.top - 10 && e.y <= dropCoord.top + dropzone.clientHeight + 10) {
-      element.style.left = dropCoord.left + 7 + "px";
-      element.style.top = dropCoord.top + 7 + "px";
-//      element._dropZoned = true;                                                               //todo keep test b3?
-    }
+    if (e.x < dropCoord.left || e.y < dropCoord.top || e.y > dropCoord.bottom || e.x > dropCoord.right)
+      return;
+    e.target.style.left = dropCoord.left + 17 + "px";
+    e.target.style.top = dropCoord.top + 17 + "px";
   });
+
   window.addEventListener("fling", e => {
-//    var element = e.target;
+    var element = e.target;
+    element.style.left = (e.trigger.x - dragStart.x + e.detail.distX * 1.5) + "px";
+    element.style.top = (e.trigger.y - dragStart.y + e.detail.distY * 1.5) + "px";
     element.style.transition = "all 0.3s cubic-bezier(0.39, 0.58, 0.57, 1)";
-    element.style.left = (e.trigger.x - startX + elemX + e.detail.distX * 1.5) + "px";
-    element.style.top = (e.trigger.y - startY + elemY + e.detail.distY * 1.5) + "px";
+    setTimeout(function () {
+      element.style.transition = undefined;
+    }, 300);
   });
+
   window.addEventListener("dragging-cancel", (e) => {
-    if (e.trigger.type === "focus") {
+    if (e.trigger.type === "blur") {
+      confirm("you just got blurred!");
       alertCancel = true;
     }
     if (e.trigger.type === "mouseout") {
+      confirm("you just got mouseouted!");
       outOfBoundsCancel = true;
     }
     // other mouse buttons triggers cncel event
     if (e.trigger.button && e.trigger.button !== 0) {
+      confirm("you just pressed to many buttons!");
       wrongButtonCancel = true;
     }
   });
 </script>
 
 
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
+<style>
+  #elem {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    height: 100px;
+    width: 100px;
+    background-color: red;
+    text-align: center;
+  }
+  #redzone {
+    position: absolute;
+    left: 300px;
+    top: 10px;
+    height: 110px;
+    width: 110px;
+    border: 2px solid red;
+  }
+  * {
+    font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  test-case {
+    display: block;
+  }
+  span {
+    margin-left: 20px;
+    display: none;
+  }
+</style>
 <test-case id="a1">drag-start event
   <span>Just start the drag event by starting dragging this block</span>
 </test-case>
@@ -208,9 +234,8 @@
   <span>Just try select something after you finished dragging</span>
 </test-case>
 <script>
+  let element = document.querySelector("#elem");
   let body = document.querySelector("body");
-  let dropCoord = {};
-  let dropzone = undefined;
   let endElemDragX = undefined;
   let endElemDragY = undefined;
   let endElemFlingX = undefined;
@@ -227,6 +252,7 @@
   function done(testId) {
     document.querySelector("#" + testId).shadowRoot.querySelector("div").style.backgroundColor = "#66ff69";
   }
+
   class Tests extends HTMLElement {
     constructor() {
       super();
@@ -261,6 +287,7 @@
       });
     };
   }
+
   customElements.define("test-case", Tests);
 
   //TESTS
@@ -339,7 +366,7 @@
     endElemCancelY = element.style.top;
   });
   window.addEventListener("selectstart", e => {
-    if (!startX) done("h1");
+    if (!dragStart) done("h1");
     //be sure that drag end event occurred
     if (endElemDragX) done("h3");
   });
