@@ -1,17 +1,5 @@
 (function () {
   //utilities
-  // let supportsPassive = false;
-  // try {
-  //   const opts = Object.defineProperty({}, "passive", {
-  //     get: function() {
-  //       supportsPassive = true;
-  //     }
-  //   });
-  //   window.addEventListener("test", null, opts);
-  //   window.removeEventListener("test", null, opts);
-  // } catch (e) {}
-  // const thirdArg = supportsPassive ? { passive: false, capture: true } : true;
-
   function captureEvent(e, stopProp) {
     e.preventDefault();
     stopProp && e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
@@ -80,9 +68,10 @@
 
   //custom sequence
   let globalSequence;
+  const mousedownInitialListener = e => onMousedownInitial(e);
+  const mousedownSecondaryListener = e => onMousedownSecondary(e);
   const mousemoveListener = e => onMousemove(e);
   const mouseupListener = e => onMouseup(e);
-  const mouseoutListener = e => onMouseout(e);
   const onBlurListener = e => onBlur(e);
   const onSelectstartListener = e => onSelectstart(e);
 
@@ -97,11 +86,12 @@
       userSelectStart: body.style.userSelect
     };
     body.style.userSelect = "none";
+    window.removeEventListener("mousedown", mousedownInitialListener, true);
+    window.addEventListener("mousedown", mousedownSecondaryListener, true);
     window.addEventListener("mousemove", mousemoveListener, true);
     window.addEventListener("mouseup", mouseupListener, true);
     window.addEventListener("blur", onBlurListener, true);
     window.addEventListener("selectstart", onSelectstartListener, true);
-    !sequence.cancelMouseout && window.addEventListener("mouseout", mouseoutListener, true);
     return sequence;
   }
 
@@ -118,37 +108,33 @@
     window.removeEventListener("mouseup", mouseupListener, true);
     window.removeEventListener("blur", onBlurListener, true);
     window.removeEventListener("selectstart", onSelectstartListener, true);
-    window.removeEventListener("mouseout", mouseoutListener, true);
+    window.removeEventListener("mousedown", mousedownSecondaryListener, true);
+    window.addEventListener("mousedown", mousedownInitialListener, true);
     return undefined;
   }
 
   //custom listeners
-
-  function onMousedown(trigger) {
-    //filter 1
-    if (globalSequence) {
-      const cancelEvent = makeDraggingEvent("cancel", trigger);
-      const target = globalSequence.target;
-      globalSequence = stopSequence();
-      dispatchPriorEvent(target, cancelEvent, trigger);
-      return;
-    }
-    //filter 2
+  function onMousedownInitial(trigger) {
     if (trigger.button !== 0)
       return;
-    //filter 3
     const target = filterOnAttribute(trigger, "draggable");
     if (!target)
       return;
-
     const composedEvent = makeDraggingEvent("start", trigger);
     captureEvent(trigger, false);
     globalSequence = startSequence(target, composedEvent);
     dispatchPriorEvent(target, composedEvent, trigger);
   }
 
+  function onMousedownSecondary(trigger) {
+    const cancelEvent = makeDraggingEvent("cancel", trigger);
+    const target = globalSequence.target;
+    globalSequence = stopSequence();
+    dispatchPriorEvent(target, cancelEvent, trigger);
+  }
+
   function onMousemove(trigger) {
-    if (1 !== (trigger.buttons !== undefined ? trigger.buttons : trigger.nativeEvent.which)) {
+    if (globalSequence.cancelMouseout || mouseJailbreakOne(trigger)) {
       const cancelEvent = makeDraggingEvent("cancel", trigger);
       const target = globalSequence.target;
       globalSequence = stopSequence();
@@ -172,15 +158,8 @@
       dispatchPriorEvent(target, flingEvent, trigger);
   }
 
-  function onMouseout(trigger) {
-    //filter to only trigger on the mouse leaving the window
-    if (trigger.clientY > 0 && trigger.clientX > 0 && trigger.clientX < window.innerWidth && trigger.clientY < window.innerHeight)
-      return;
-    //captureEvent(trigger, false);
-    const cancelEvent = makeDraggingEvent("cancel", trigger);
-    const target = globalSequence.target;
-    globalSequence = stopSequence();
-    dispatchPriorEvent(target, cancelEvent, trigger);
+  function mouseJailbreakOne(trigger) {
+    return !(trigger.clientY > 0 && trigger.clientX > 0 && trigger.clientX < window.innerWidth && trigger.clientY < window.innerHeight);
   }
 
   function onBlur(trigger) {
@@ -192,9 +171,8 @@
 
   function onSelectstart(trigger) {
     trigger.preventDefault();
-    if(window.onSelect(trigger)) window.onSelect(trigger);
+    if (window.onSelect(trigger)) window.onSelect(trigger);
   }
 
-
-  window.addEventListener("mousedown", e => onMousedown(e));
+  window.addEventListener("mousedown", mousedownInitialListener);
 })();

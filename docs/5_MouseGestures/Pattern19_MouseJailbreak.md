@@ -13,8 +13,8 @@ As one might expect, while the mouse is out of bounds of the `window` object,
 the app will not receive any `mousemove` events. Missing mousemoves can be annoying, but 
 will rarely break the app's behavior.
 
-But, what often is a big problem, is that the app does not receive any `mouseup` nor 
-`mousedown` events neither while the mouse is out of bounds. 
+But, what can be a big problem, is if the app does not receive any `mouseup` nor 
+`mousedown` events while the mouse is out of bounds. 
 Many mouse-based, composed events are gestures. 
 Examples of such gestures are `click`, custom long-press events, native drag events, and custom drag events.
 
@@ -34,16 +34,25 @@ There are two ways to guard against the mouse-out-of-bounds Jailbreak:
    necessary buttons are being pressed. This is fairly simple, but it will add a check in every
    secondary `mousemove` trigger function.
    
-2. Add a secondary trigger function to `mouseleave` to the root HTML element: `document.children[0]`.
+2. Add a secondary trigger function to `mouseout` to the root HTML element: `document.children[0]`.
    The purpose of this secondary trigger function is solely to guard against mouse-out-of-bounds 
    Jailbreak. Whenever the mouse leaves the scope of the DOM,
    this function will be called and the ongoing mouse-based gesture can be stopped.
-   
-The second solution is the best one. But sometimes, the app wants to give its users some slack 
-and accept the mouse moving in and out of the browser or iframe window. In such instances, 
-the first solution provides a good alternative.
 
-## MouseJailbreak #2: secret button
+   
+The first solution is preferable: 
+1. `mouseout` event can sometimes simply go missing.
+2. `mousemove` is often already active during the mouse-based gesture. 
+   Therefore, adding a listener for `mouseout` as well as `mousemove` is likely to to tax the system 
+   more than performing an extra arithmetic during in `mousemove`.
+
+```javascript
+function mouseJailbreakOne(e) {
+  return !(e.clientY > 0 && e.clientX > 0 && e.clientX < window.innerWidth && e.clientY < window.innerHeight);
+}
+```
+
+## MouseJailbreak #2: wrong button
 
 Most computer mice has more than three mouse buttons. The second mouse button will most commonly 
 trigger a context menu. What happens if the user either intentionally or by accident presses 
@@ -61,7 +70,6 @@ the mouse-based EventSequence developer has two options:
    then call `.preventDefault()` on the extra `mousedown` event and simply continue the EventSequence.
    This approach require extra attention being made in the secondary `mouseup` event trigger function
    to ensure that the fingers-on-buttons conditions for ending the EventSequence is met.
-   (This also applies to any and the second `mousemove` ) to ensure that not 
 
 A good way to modularize this functionality is to make *two* event trigger functions:
 one initial event trigger function that listens while the EventSequence is inactive, and 
@@ -77,9 +85,8 @@ Such browser disruptions should almost always cancel ongoing EventSequences.
 Such disruptions can be discovered using the `focusin` event.
 
 //todo here we need to test different browsers.
-//todo is it better to use `window.addEventListener("focusout", cancel, true)`?
-//todo is it possible to do `document.children[0].addEventListener("blur", cancel, true)`?
-//todo or `document.children[0].addEventListener("focus", cancel, true)`?
+//todo is it possible to do `blur` or `focusout`?
+//todo or should we use `document.children[0]` or `window`?
 //todo what works in which browsers when alert and confirm is called?
 //todo are there other functions such as selecting a file from a 
 
@@ -102,8 +109,8 @@ var primaryEvent;
 function startSequenceState(e){                                 
   primaryEvent = e;                                     
   window.addEventListener("mouseup", onMouseup, true);             
-  window.addEventListener("mouseleave", onMouseleave, true);          //[1]
-  window.addEventListener("focus", onFocusin, true);                  //[3]
+  window.addEventListener("mousemove", onMousemove, true);            //[1]
+  window.addEventListener("blur", onBlur, true);                      //[3]
   window.addEventListener("mousedown", onMousedownSecondary, true);   //[2]
   window.removeEventListener("mousedown", onMousedownInitial, true);  //[2]
 }
@@ -111,8 +118,8 @@ function startSequenceState(e){
 function resetSequenceState(){
   primaryEvent = undefined;                                     
   window.removeEventListener("mouseup", onMouseup, true);             
-  window.removeEventListener("mouseleave", onMouseleave, true);       //[1] 
-  window.removeEventListener("focus", onFocusin, true);               //[3]
+  window.removeEventListener("mousemove", onMousemove, true);         //[1] 
+  window.removeEventListener("blur", onBlur, true);                   //[3]
   window.removeEventListener("mousedown", onMousedownSecondary, true);//[2]
   window.addEventListener("mousedown", onMousedownInitial, true);     //[2]
 }
@@ -127,12 +134,19 @@ function onMousedownSecondary(e){                                     //[2]
   resetSequenceState();                                       
 }
 
-function onMouseleave(e){                                             //[1]
-  dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
-  resetSequenceState();                                         
+function onMousemove(e){                                              //[1]
+  //filter to only trigger on the mouse leaving the window
+  if (mouseJailbreakOne(e)){
+    dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
+    resetSequenceState();                                             
+  }
 }
 
-function onFocusin(e){                                                //[3]
+function mouseJailbreakOne(e) {
+  return !(e.clientY > 0 && e.clientX > 0 && e.clientX < window.innerWidth && e.clientY < window.innerHeight);
+}
+
+function onBlur(e){                                                   //[3]
   dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                         
 }
@@ -148,7 +162,7 @@ function onMouseup(e){
 window.addEventListener("mousedown", onMousedownInitial);              
 
 //1. MouseJailbreak #1: out of bounds
-//   A secondary trigger function for `mouseleave` on the root HTML element `document.children[0]`
+//   A secondary trigger function for `mouseout` on the root HTML element `document.children[0]`
 //   that when triggered cancels the mouse-based EventSequence.
 //2. MouseJailbreak #2: extra button
 //   The initial trigger function for `mousedown` is disabled while the EventSequence is active.

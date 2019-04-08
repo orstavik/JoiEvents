@@ -283,70 +283,113 @@
 
   customElements.define("test-case", Tests);
 
-  //TEST of sequence
-  var sequence = "stop";
-  window.addEventListener("dragging-start", e => {
-    if (sequence === "stop" || sequence === "cancel" || sequence === "fling"){
-      console.log("dragging-start");
-      sequence = "start";
-    } else {
-      console.warn("starting dragging-start from unfinished sequence state");
+  //TEST1 of defaultPrevented
+  var defaultPrevented = true;
+
+  function testDefaultPrevented(e) {
+    if (e.trigger.defaultPrevented)
+      return true;
+    console.error(e.trigger.type + " not defaultPrevented");
+    defaultPrevented = false;
+    return false;
+  }
+
+  window.addEventListener("dragging-start", testDefaultPrevented);
+  window.addEventListener("dragging-move", testDefaultPrevented);
+  window.addEventListener("dragging-stop", testDefaultPrevented);
+//  window.addEventListener("dragging-cancel", testDefaultPrevented);
+  window.addEventListener("fling", testDefaultPrevented);
+
+
+  //TEST2 
+  var userSelectWorking = true;
+
+  function userSelectShouldBe(e) {
+    let value = (e.type === "dragging-start" || e.type === "dragging-move") ? "none" : "";
+    if (document.querySelector("body").style.userSelect === value)
+      return;
+    console.warn("body.style.userSelect not set to: " + value);
+    userSelectWorking = false;
+  }
+
+  window.addEventListener("dragging-start", userSelectShouldBe);
+  window.addEventListener("dragging-move", userSelectShouldBe);
+  window.addEventListener("dragging-stop", userSelectShouldBe);
+  window.addEventListener("dragging-cancel", userSelectShouldBe);
+  window.addEventListener("fling", userSelectShouldBe);
+
+  //TEST3
+  var targetHasAttribute = true;
+
+  function testDraggableAttribute(e) {
+    if (e.target.hasAttribute("draggable"))
+      return true;
+    console.error(e.target, "Wrong target, lacking attribute draggable");
+    return false;
+  }
+
+  window.addEventListener("dragging-start", testDraggableAttribute);
+
+  //TEST4
+  var sequenceWorking = true;
+  var sequences = [
+    ["dragging-start", "dragging-move", "dragging-move", "dragging-stop", "fling"],
+    ["dragging-start", "dragging-move", "dragging-move", "dragging-cancel"],
+    ["dragging-start", "dragging-cancel"],
+    ["dragging-start", "dragging-stop"]
+  ];
+  var prevEvent = undefined;
+
+  function checkSequence(e) {
+    let prevType = prevEvent? prevEvent.type : undefined;
+    for (let sequence of sequences) {
+      let prevPosition = sequence.indexOf(
+        prevType);
+      let position = sequence.lastIndexOf(e.type);
+      if (prevPosition < position)
+        return prevEvent = e; //true
     }
-  });
-  window.addEventListener("dragging-move", e => {
-    if (sequence === "start"){
-      console.log("dragging-move");
-      sequence = "move";
-    } else if (sequence === "move"){
-      //do nothing
-    } else {
-      console.warn("starting dragging-move without dragging-start");
-    }
-  });
-  window.addEventListener("dragging-stop", e => {
-    if (sequence === "move"){
-      console.log("dragging-stop");
-      sequence = "stop";
-    } else {
-      console.warn("dragging-stop without dragging-move");
-    }
-  });
-  window.addEventListener("dragging-cancel", e => {
-    if (sequence === "move"){
-      console.log("dragging-cancel");
-      sequence = "cancel";
-    } else {
-      console.warn("dragging-cancel without dragging-cancel");
-    }
-  });
-  window.addEventListener("fling", e => {
-    if (sequence === "stop"){
-      console.log("fling");
-      sequence = "fling";
-    } else {
-      console.warn("dragging-stop without dragging-move");
-    }
-  });
-  window.addEventListener("dragging-end", e => {});
+    console.warn(e.type + " is following " + prevType);
+    sequenceWorking = false;
+  }
+
+  window.addEventListener("dragging-start", checkSequence);
+  window.addEventListener("dragging-move", checkSequence);
+  window.addEventListener("dragging-stop", checkSequence);
+  window.addEventListener("dragging-cancel", checkSequence);
+  window.addEventListener("fling", checkSequence);
+
+
+  //Report tests
+  function reportTests() {
+    sequenceWorking ? console.log("OK sequence") : console.warn("ERROR sequence");
+    targetHasAttribute ? console.log("OK draggable") : console.warn("ERROR missing draggable attribute");
+    defaultPrevented ? console.log("OK defaultPrevented") : console.warn("ERROR defaultPrevented");
+    userSelectWorking ? console.log("OK userSelect") : console.warn("ERROR userSelect");
+  }
+
+  window.addEventListener("dragging-stop", reportTests);
+  window.addEventListener("dragging-cancel", reportTests);
+  window.addEventListener("dragging-fling", reportTests);
+
+
 
   window.addEventListener("dragging-start", e => {
-    if (e.target.id !== "elem")
-      console.warn("cannot drag on anything other than a draggable element");
-    done("a1");
-    if (element.style.left === endElemDragX && element.style.top === endElemDragY)
-      done("b1");
-    if (element.style.left === endElemFlingX && element.style.top === endElemFlingY)
-      done("b2");
+//    done("a1");
+//    if (element.style.left === endElemDragX && element.style.top === endElemDragY)
+//      done("b1");
+//    if (element.style.left === endElemFlingX && element.style.top === endElemFlingY)
+//      done("b2");
     // is the coordinates of the block is the same as it was when alert was triggered?
-    if (alertCancel && endElemCancelX === element.style.left) {
-      done("c2");
-      alertCancel = false;
-    }
+//    if (alertCancel && endElemCancelX === element.style.left) {
+//      done("c2");
+//      alertCancel = false;
+//    }
     // new coordinates after wrong button pressing cancel
-    if (wrongButtonCancel && endElemCancelX === element.style.left) {
-      done("c4");
-      wrongButtonCancel = false;
-    }
+//    if (wrongButtonCancel && endElemCancelX === element.style.left) {
+//      done("c4");
+//      wrongButtonCancel = false;
+//    }
     // newcoordinates after out of bounds cancel
     if (outOfBoundsCancel && endElemCancelX === element.style.left) {
       done("c6");
@@ -354,7 +397,7 @@
     }
     if (body.style.userSelect === "none") done("d1");
     if (e.trigger.defaultPrevented) done("e1");
-    if (e.trigger.composed) done("f1");
+//    if (e.trigger.composed) done("f1");
     if (e.trigger.type === "mousedown") done("g1");
   });
   window.addEventListener("dragging-move", (e) => {
@@ -364,7 +407,7 @@
       move = false;
     }
     if (e.trigger.defaultPrevented) done("e2");
-    if (e.trigger.composed) done("f2");
+//    if (e.trigger.composed) done("f2");
     if (e.trigger.type === "mousemove") done("g2");
     //last drag coordinates
     endElemDragX = element.style.left;
@@ -375,13 +418,13 @@
 //    if (element._dropZoned) done("b3");                                     //todo keep this?
     if (body.style.userSelect === "") done("d2");
     if (e.trigger.defaultPrevented) done("e3");
-    if (e.trigger.composed) done("f3");
+//    if (e.trigger.composed) done("f3");
     if (e.trigger.type === "mouseup") done("g3");
   });
   window.addEventListener("fling", e => {
     done("a4");
     if (e.trigger.defaultPrevented) done("e4");
-    if (e.trigger.composed) done("f4");
+//    if (e.trigger.composed) done("f4");
     //last fling coordinates
     endElemFlingX = element.style.left;
     endElemFlingY = element.style.top;
@@ -393,12 +436,12 @@
     if (e.trigger.type === "mouseout") {
       done("c5");
     }
-    if (body.style.userSelect === "") done("d4");
+//    if (body.style.userSelect === "") done("d4");
     // other mouse buttons triggers cncel event
     if (e.trigger.button && e.trigger.button !== 0) {
       done("c3");
     }
-    if (e.trigger.composed) done("f5");
+//    if (e.trigger.composed) done("f5");
     endElemCancelX = element.style.left;
     endElemCancelY = element.style.top;
   });
