@@ -20,7 +20,7 @@
 </style>
 
 <div id="redzone">Drag here</div>
-<div id="elem" draggable></div>
+<div id="elem" draggable>This text should be impossible to select</div>
 <button style="float:right" onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
 <script>
 
@@ -63,19 +63,12 @@
   });
 
   window.addEventListener("dragging-cancel", (e) => {
-    if (e.trigger.type === "blur") {
+    if (e.trigger.type === "blur")
       confirm("you just got blurred!");
-      alertCancel = true;
-    }
-    if (e.trigger.type === "mouseout") {
+    if (e.trigger.type === "mouseout")
       confirm("you just got mouseouted!");
-      outOfBoundsCancel = true;
-    }
-    // other mouse buttons triggers cncel event
-    if (e.trigger.button && e.trigger.button !== 0) {
+    if (e.trigger.type === "mousedown")
       confirm("you just pressed to many buttons!");
-      wrongButtonCancel = true;
-    }
   });
 </script>
 
@@ -290,11 +283,55 @@
 
   customElements.define("test-case", Tests);
 
-  //TESTS
+  //TEST of sequence
+  var sequence = "stop";
   window.addEventListener("dragging-start", e => {
-//    if (e.target.id !== "elem") {
-//      fail("cannot drag on anything other than a draggable element"); todo
-//    }
+    if (sequence === "stop" || sequence === "cancel" || sequence === "fling"){
+      console.log("dragging-start");
+      sequence = "start";
+    } else {
+      console.warn("starting dragging-start from unfinished sequence state");
+    }
+  });
+  window.addEventListener("dragging-move", e => {
+    if (sequence === "start"){
+      console.log("dragging-move");
+      sequence = "move";
+    } else if (sequence === "move"){
+      //do nothing
+    } else {
+      console.warn("starting dragging-move without dragging-start");
+    }
+  });
+  window.addEventListener("dragging-stop", e => {
+    if (sequence === "move"){
+      console.log("dragging-stop");
+      sequence = "stop";
+    } else {
+      console.warn("dragging-stop without dragging-move");
+    }
+  });
+  window.addEventListener("dragging-cancel", e => {
+    if (sequence === "move"){
+      console.log("dragging-cancel");
+      sequence = "cancel";
+    } else {
+      console.warn("dragging-cancel without dragging-cancel");
+    }
+  });
+  window.addEventListener("fling", e => {
+    if (sequence === "stop"){
+      console.log("fling");
+      sequence = "fling";
+    } else {
+      console.warn("dragging-stop without dragging-move");
+    }
+  });
+  window.addEventListener("dragging-end", e => {});
+
+  window.addEventListener("dragging-start", e => {
+    if (e.target.id !== "elem")
+      console.warn("cannot drag on anything other than a draggable element");
     done("a1");
     if (element.style.left === endElemDragX && element.style.top === endElemDragY)
       done("b1");
