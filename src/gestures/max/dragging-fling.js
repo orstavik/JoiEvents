@@ -16,8 +16,6 @@
   }
 
   function dispatchPriorEvent(target, composedEvent, trigger) {
-    // if (!composedEvent || !target)   //todo remove this redundant check? should always be done at the level up?
-    //   return;
     composedEvent.preventDefault = function () {
       trigger.preventDefault();
       trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
@@ -29,6 +27,7 @@
   //custom make events
   function makeDraggingEvent(name, trigger) {
     const composedEvent = new CustomEvent("dragging-" + name, {bubbles: true, composed: true});
+    //todo the dragging-cancel events have a problem with the coordinates.
     composedEvent.x = trigger.x;
     composedEvent.y = trigger.y;
     return composedEvent;
@@ -76,16 +75,15 @@
   const onSelectstartListener = e => onSelectstart(e);
 
   function startSequence(target, e) {
-    const body = document.querySelector("body");
     const sequence = {
       target,
       cancelMouseout: target.hasAttribute("draggable-cancel-mouseout"),
       flingDuration: parseInt(target.getAttribute("fling-duration")) || 50,
       flingDistance: parseInt(target.getAttribute("fling-distance")) || 150,
       recorded: [e],
-      userSelectStart: body.style.userSelect
+      userSelectStart: document.children[0].style.userSelect
     };
-    body.style.userSelect = "none";
+    document.children[0].style.userSelect = "none";
     window.removeEventListener("mousedown", mousedownInitialListener, true);
     window.addEventListener("mousedown", mousedownSecondaryListener, true);
     window.addEventListener("mousemove", mousemoveListener, true);
@@ -103,7 +101,7 @@
   function stopSequence() {
     //release target and event type start
     //always remove all potential listeners, regardless
-    document.querySelector("body").style.userSelect = globalSequence.userSelectStart;
+    document.children[0].style.userSelect = globalSequence.userSelectStart;
     window.removeEventListener("mousemove", mousemoveListener, true);
     window.removeEventListener("mouseup", mouseupListener, true);
     window.removeEventListener("blur", onBlurListener, true);
@@ -134,7 +132,8 @@
   }
 
   function onMousemove(trigger) {
-    if (globalSequence.cancelMouseout || mouseJailbreakOne(trigger)) {
+    if (!globalSequence.cancelMouseout && mouseJailbreakOne(trigger)) {
+      //todo here we need to find the coordinates between the previous (move or start) event and the out of bounds event
       const cancelEvent = makeDraggingEvent("cancel", trigger);
       const target = globalSequence.target;
       globalSequence = stopSequence();
@@ -163,6 +162,7 @@
   }
 
   function onBlur(trigger) {
+    //todo here we need to simply use the coordinates for the previous (move or start) out of bounds event
     const blurInEvent = makeDraggingEvent("cancel", trigger);
     const target = globalSequence.target;
     globalSequence = stopSequence();
@@ -171,6 +171,7 @@
 
   function onSelectstart(trigger) {
     trigger.preventDefault();
+    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
     if (window.onSelect(trigger)) window.onSelect(trigger);
   }
 

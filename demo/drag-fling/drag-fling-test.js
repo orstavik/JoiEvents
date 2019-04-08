@@ -12,13 +12,13 @@ window.addEventListener("dragging-move", testDefaultPrevented);
 window.addEventListener("dragging-stop", testDefaultPrevented);
 window.addEventListener("fling", testDefaultPrevented);
 
-//TEST2
+//TEST2a
 var userSelectWorking = true;
 function userSelectShouldBe(e) {
   let value = (e.type === "dragging-start" || e.type === "dragging-move") ? "none" : "";
-  if (document.querySelector("body").style.userSelect === value)
+  if (document.children[0].style.userSelect === value)
     return;
-  console.warn("body.style.userSelect not set to: " + value);
+  console.warn("html.style.userSelect not set to: " + value);
   userSelectWorking = false;
 }
 window.addEventListener("dragging-start", userSelectShouldBe);
@@ -26,6 +26,18 @@ window.addEventListener("dragging-move", userSelectShouldBe);
 window.addEventListener("dragging-stop", userSelectShouldBe);
 window.addEventListener("dragging-cancel", userSelectShouldBe);
 window.addEventListener("fling", userSelectShouldBe);
+
+//TEST2b
+var dragActive = false;
+window.addEventListener("dragging-start", function(){dragActive = true});
+window.addEventListener("dragging-stop", function(){dragActive = false});
+window.addEventListener("dragging-cancel", function(){dragActive = false});
+window.addEventListener("dragging-cancel", function(){dragActive = false});
+window.addEventListener("selectstart", function() {
+  dragActive ?
+    console.error("UserSelectWorks should never fire during dragging."):
+    console.log("UserSelectWorks in other situations.");
+});
 
 //TEST3
 var targetHasAttribute = true;
@@ -65,6 +77,14 @@ window.addEventListener("dragging-move", checkSequence);
 window.addEventListener("dragging-stop", checkSequence);
 window.addEventListener("dragging-cancel", checkSequence);
 window.addEventListener("fling", checkSequence);
+
+//TEST5
+var beforeCancelEvent = undefined;
+window.addEventListener("dragging-start", function(e){beforeCancelEvent = e;});
+window.addEventListener("dragging-move", function(e){beforeCancelEvent = e;});
+window.addEventListener("dragging-cancel", function(e){
+  debugger;
+});
 
 
 //Report tests

@@ -46,13 +46,14 @@ To dynamically control the actions of mouse events during an EventSequence, we t
 
 `user-select` is only supported by IE10. Thus, if you want to GrabMouse, and you need to include IE9,
 you need to "GrabMouse with both hands". First, you specify the `user-select` property as described above.
-Second, you add a secondary event trigger for the `selectstart` event and call `.preventDefault()` on 
-this event. Grabbing the mouse with both hands like this will ensure that no text selection will occur 
-during your mouse-oriented EventSequence.
+Second, you add a secondary event trigger for the `selectstart` event and call `.preventDefault()` 
+and `stopImmediatePropagation()` on this event. Grabbing the mouse with both hands like this will ensure 
+that no text selection will occur during your mouse-oriented EventSequence.
 
 ```javascript
 var onSelectstart = function (e){                           
   e.preventDefault();
+  e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
 }
 ```
 

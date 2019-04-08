@@ -18,11 +18,21 @@
     width: 110px;
     border: 2px solid red;
   }
+  #guide {
+    position: absolute;
+    left: 10px;
+    top: 300px;
+  }
+  button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+  }
 </style>
 
 <div id="redzone">Drag here</div>
 <div id="elem" draggable>This text should be impossible to select</div>
-<button style="float:right" onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
+<button onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
 <script>
 
   var dragStart = undefined;
@@ -73,298 +83,26 @@
   });
 </script>
 
-                   <!--
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-
-<style>
-  #elem {
-    position: absolute;
-    left: 10px;
-    top: 10px;
-    height: 100px;
-    width: 100px;
-    background-color: red;
-    text-align: center;
-  }
-  #redzone {
-    position: absolute;
-    left: 300px;
-    top: 10px;
-    height: 110px;
-    width: 110px;
-    border: 2px solid red;
-  }
-  * {
-    font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
-  }
-  test-case {
-    display: block;
-  }
-  span {
-    margin-left: 20px;
-    display: none;
-  }
-</style>
-<test-case id="a1">drag-start event
-  <span>Just start the drag event by starting dragging this block</span>
-</test-case>
-<test-case id="a2">drag-move event
-  <span>Move this block in any direction</span>
-</test-case>
-<test-case id="a3">drag-end event
-  <span>Stop moving the block, and take your finger from the mouse</span>
-</test-case>
-<test-case id="a4">fling event
-  <span>Throw the block as if shot from a catapult</span>
-</test-case>
-<hr>
-<test-case id="b1">drag-start event starts from the last coordinates as drag-end ends
-  <span>Move the block - stop moving - release the mouse button - continue moving with a new mouse click</span>
-</test-case>
-<test-case id="b2">drag-start event starts from the last coordinates as fling ends
-  <span>Catapult the block (fling) - stop moving - release the mouse button - continue moving with a new mouse click</span>
-</test-case>
-<hr>
-<test-case id="b3">Just nice feature
-  <span>Drag the block in the direction of the red square</span>
-</test-case>
-<hr>
-<test-case id="c1">Mouse jailbreak 1: Alert canceling
-  <span>Press "Alert" button and drag the block until alert will be trigger</span>
-</test-case>
-<test-case id="c2">Mouse jailbreak 1: The same coordinates after alert canceling
-  <span>Press "Alert" button and drag the block until alert will be trigger, confirm alert message and repeat dropping</span>
-</test-case>
-<test-case id="c3">Mouse jailbreak 2: Wrong mouse button
-  <span>Try to click right mouse button when you drag the block</span>
-</test-case>
-<test-case id="c4">Mouse jailbreak 2: The same coordinates after wrong mouse button canceling
-  <span>Press "Alert" button and drag the block until alert will be trigger, confirm alert message and repeat dropping</span>
-</test-case>
-<test-case id="c5">Mouse jailbreak 3: Out of bounds
-  <span>Try capturing the block and moving it off the page (for example, toward the top of the display)</span>
-</test-case>
-<test-case id="c6">Mouse jailbreak 3: The same coordinates after out of bounds canceling
-  <span>Press "Alert" button and drag the block until alert will be trigger, confirm alert message and repeat dropping</span>
-</test-case>
-<hr>
-<test-case id="d1">Grab mouse: user select: none with drag-start event
-  <span>Just activate drag-start event</span>
-</test-case>
-<test-case id="d2">Grab mouse: user select: back to default value with drag-stop event
-  <span>Just activate drag-end event</span>
-</test-case>
-<test-case id="d3">Grab mouse: user select: none with drag-move event
-  <span>Just activate drag-move event</span>
-</test-case>
-<test-case id="d4">Grab mouse: user select: back to default value with drag-cancel event
-  <span>Just activate drag-cancel event</span>
-</test-case>
-<hr>
-<test-case id="e1">PreventDefault() : drag-start prevented trigger event
-  <span>Just activate drag-start event</span>
-</test-case>
-<test-case id="e2">PreventDefault() : drag-move prevented trigger event
-  <span>Just activate drag-move event</span>
-</test-case>
-<test-case id="e3">PreventDefault() : drag-stop prevented trigger event
-  <span>Just activate drag-move event</span>
-</test-case>
-<test-case id="e4">PreventDefault() : fling prevented trigger event
-  <span>Just activate drag-move event</span>
-</test-case>
-<hr>
-<test-case id="f1">Composed event : drag-start
-  <span>Just activate drag-start event</span>
-</test-case>
-<test-case id="f2">Composed event : drag-move
-  <span>Just activate drag-move event</span>
-</test-case>
-<test-case id="f3">Composed event : drag-end
-  <span>Just activate drag-end event</span>
-</test-case>
-<test-case id="f4">Composed event : fling
-  <span>Just activate fling event</span>
-</test-case>
-<test-case id="f5">Composed event : drag-cancel
-  <span>Just activate drag-cancel event</span>
-</test-case>
-<hr>
-<test-case id="g1">Trigger event : drag-start triggered by mousedown event
-  <span>Just activate drag-start event</span>
-</test-case>
-<test-case id="g2">Trigger event : drag-move triggered by mousemove event
-  <span>Just activate drag-move event</span>
-</test-case>
-<test-case id="g3">Trigger event : drag-stop triggered by mouseup event
-  <span>Just activate drag-stop event</span>
-</test-case>
-<hr>
-<test-case id="h1">Selection 2: normal selection before dragging
-  <span>Just try select something before you start dragging</span>
-</test-case>
-<test-case id="h2">Selection 1: prevented selectstart event when dragging
-  <span>Just activate selectstart event when dragging (Ctrl+A)</span>
-</test-case>
-<test-case id="h3">Selection 2: normal selection after dragging
-  <span>Just try select something after you finished dragging</span>
-</test-case>
-<script>
-  let element = document.querySelector("#elem");
-  let body = document.querySelector("body");
-  let endElemDragX = undefined;
-  let endElemDragY = undefined;
-  let endElemFlingX = undefined;
-  let endElemFlingY = undefined;
-  let endElemCancelX = undefined;
-  let endElemCancelY = undefined;
-  // to avoid accident checking. Will be true if some conditionwill be done
-  alertCancel = false;
-  wrongButtonCancel = false;
-  outOfBoundsCancel = false;
-  // avoid trigger done() each time when drag-move event activated
-  let move = true;
-
-  function done(testId) {
-    document.querySelector("#" + testId).shadowRoot.querySelector("div").style.backgroundColor = "#66ff69";
-  }
-
-  class Tests extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({
-        mode: "open"
-      });
-      this.shadowRoot.innerHTML = `
-      <style>
-      #indicator{
-        height: 10px;
-        width: 10px;
-        background-color: red;
-        border-radius: 50%;
-        display: inline-block;
-      }
-
-      #info{
-        width: 12px;
-        height: 12px;
-        border: 1px solid blue;
-        border-radius: 50%;
-        display: inline-block;
-        text-align: center;
-        color: blue;
-        }
-      </style>
-      <div id="indicator"></div>
-      <slot></slot>
-      <div id="info">i</div>`;
-      this.shadowRoot.querySelector("#info").addEventListener("click", () => {
-        element.innerText = this.querySelector("span").innerText;
-      });
-    };
-  }
-
-  customElements.define("test-case", Tests);
-
-
-
-
-  window.addEventListener("dragging-start", e => {
-//    done("a1");
-//    if (element.style.left === endElemDragX && element.style.top === endElemDragY)
-//      done("b1");
-//    if (element.style.left === endElemFlingX && element.style.top === endElemFlingY)
-//      done("b2");
-    // is the coordinates of the block is the same as it was when alert was triggered?
-//    if (alertCancel && endElemCancelX === element.style.left) {
-//      done("c2");
-//      alertCancel = false;
-//    }
-    // new coordinates after wrong button pressing cancel
-//    if (wrongButtonCancel && endElemCancelX === element.style.left) {
-//      done("c4");
-//      wrongButtonCancel = false;
-//    }
-    // newcoordinates after out of bounds cancel
-    if (outOfBoundsCancel && endElemCancelX === element.style.left) {
-      done("c6");
-      outOfBoundsCancel = false;
-    }
-    if (body.style.userSelect === "none") done("d1");
-    if (e.trigger.defaultPrevented) done("e1");
-//    if (e.trigger.composed) done("f1");
-    if (e.trigger.type === "mousedown") done("g1");
-  });
-  window.addEventListener("dragging-move", (e) => {
-    if (move && body.style.userSelect === "none") done("d3");
-    if (move) {
-      done("a2");
-      move = false;
-    }
-    if (e.trigger.defaultPrevented) done("e2");
-//    if (e.trigger.composed) done("f2");
-    if (e.trigger.type === "mousemove") done("g2");
-    //last drag coordinates
-    endElemDragX = element.style.left;
-    endElemDragY = element.style.top;
-  });
-  window.addEventListener("dragging-stop", (e) => {
-    done("a3");
-//    if (element._dropZoned) done("b3");                                     //todo keep this?
-    if (body.style.userSelect === "") done("d2");
-    if (e.trigger.defaultPrevented) done("e3");
-//    if (e.trigger.composed) done("f3");
-    if (e.trigger.type === "mouseup") done("g3");
-  });
-  window.addEventListener("fling", e => {
-    done("a4");
-    if (e.trigger.defaultPrevented) done("e4");
-//    if (e.trigger.composed) done("f4");
-    //last fling coordinates
-    endElemFlingX = element.style.left;
-    endElemFlingY = element.style.top;
-  });
-  window.addEventListener("dragging-cancel", (e) => {
-    if (e.trigger.type === "focus") {
-      done("c1");
-    }
-    if (e.trigger.type === "mouseout") {
-      done("c5");
-    }
-//    if (body.style.userSelect === "") done("d4");
-    // other mouse buttons triggers cncel event
-    if (e.trigger.button && e.trigger.button !== 0) {
-      done("c3");
-    }
-//    if (e.trigger.composed) done("f5");
-    endElemCancelX = element.style.left;
-    endElemCancelY = element.style.top;
-  });
-  window.addEventListener("selectstart", e => {
-    if (!dragStart) done("h1");
-    //be sure that drag end event occurred
-    if (endElemDragX) done("h3");
-  });
-
-  function onSelect(e) {
-    if (e.defaultPrevented) done("h2");
-  }
-</script>
+<ol id="guide">
+  <lh>Test this:</lh>
+  <li>
+    <ol>
+      <lh>Selecting of texts while you drag</lh>
+      <li>Select this text using the mouse.</li>
+      <li>Start dragging and click Ctrl+A _while_ you are still dragging.</li>
+      <li>Try to select the text on the draggable entity.</li>
+      <li>Todo. It might be possible that selection of text is allowed while dragging as a choice.</li>
+    </ol>
+  </li>
+  <li>
+    <ol>
+      <lh>Test jailbreaks</lh>
+      <li>click the wrong mousebutton, and no drag starts.</li>
+      <li>try to drag the element out of the window</li>
+      <li>try to press more than one mouse button on the element</li>
+      <li>drag the element after having pressed the 2s alert, and see what happens when you drag something and
+        the browser interrupts the gesture.</li>
+      <li>todo. find the correct coordinates when there are errors.</li>
+    </ol>
+  </li>
+</ol>
