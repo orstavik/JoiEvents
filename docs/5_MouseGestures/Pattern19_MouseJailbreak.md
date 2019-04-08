@@ -103,7 +103,7 @@ function startSequenceState(e){
   primaryEvent = e;                                     
   window.addEventListener("mouseup", onMouseup, true);             
   window.addEventListener("mouseleave", onMouseleave, true);          //[1]
-  window.addEventListener("focusin", onFocusin, true);                //[3]
+  window.addEventListener("focus", onFocusin, true);                  //[3]
   window.addEventListener("mousedown", onMousedownSecondary, true);   //[2]
   window.removeEventListener("mousedown", onMousedownInitial, true);  //[2]
 }
@@ -112,27 +112,27 @@ function resetSequenceState(){
   primaryEvent = undefined;                                     
   window.removeEventListener("mouseup", onMouseup, true);             
   window.removeEventListener("mouseleave", onMouseleave, true);       //[1] 
-  window.removeEventListener("focusin", onFocusin, true);             //[3]
+  window.removeEventListener("focus", onFocusin, true);               //[3]
   window.removeEventListener("mousedown", onMousedownSecondary, true);//[2]
   window.addEventListener("mousedown", onMousedownInitial, true);     //[2]
 }
 
 function onMousedownInitial(e){                                        
-  if (e.button === 0)                                           //[2]
+  if (e.button === 0)                                                 //[2]
     startSequenceState(e);                                             
 }
 
-function onMousedownSecondary(e){                               //[2]         
+function onMousedownSecondary(e){                                     //[2]         
   dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                       
 }
 
-function onMouseleave(e){                                       //[1]
+function onMouseleave(e){                                             //[1]
   dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                         
 }
 
-function onFocusin(e){                                          //[3]
+function onFocusin(e){                                                //[3]
   dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration}), e);
   resetSequenceState();                                         
 }
@@ -145,7 +145,7 @@ function onMouseup(e){
   resetSequenceState();                                         
 }
 
-window.addEventListener("mousedown", onMousedown);              
+window.addEventListener("mousedown", onMousedownInitial);              
 
 //1. MouseJailbreak #1: out of bounds
 //   A secondary trigger function for `mouseleave` on the root HTML element `document.children[0]`
