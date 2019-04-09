@@ -27,6 +27,7 @@
 13. [Pattern: AttributeFilteredEvent](docs/3_EventTranslationAndRouting/Pattern6_AttributeFilteredEvent)
 13. [Pattern: TypeFilteredEvent](docs/3_EventTranslationAndRouting/Pattern7_TypeFilteredEvent)
 13. [Pattern: DetailsOnDemand](docs/3_EventTranslationAndRouting/Pattern8_DetailsOnDemand)
+13. [Event: `link-click`](docs/3_EventTranslationAndRouting/Event_linkClick)
 13. [Pattern: MergedEvents](docs/3_EventTranslationAndRouting/Pattern9_MergedEvents)
 13. [Pattern: SpecializedEventInterface](docs/3_EventTranslationAndRouting/Pattern18_SpecializedEventInterface)
 

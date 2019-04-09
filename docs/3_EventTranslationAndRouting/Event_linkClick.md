@@ -64,7 +64,7 @@ When we combine the PriorEvent, EarlyBird, TypeFilteredEvent and DetailsOnDemand
 edge cases above, we get the following custom, composed `link-click` DOM Event.
 This `link-click` event takes much of the headache out of controlling the template based navigation.
 
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/link-click.js"></pretty-printer>
+<pretty-printer href="../../src/link-click.js"></pretty-printer>
 
 ## Demo: `link-click` 
 
@@ -92,4 +92,4 @@ arise from the composed event before the trigger event.
 
 ## References
 
- * 
+ * dunno
