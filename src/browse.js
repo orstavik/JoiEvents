@@ -27,6 +27,10 @@
     return url.href;
   }
 
+  function getLinkClickHref(){
+    return this.trigger.getHref();
+  }
+
   function resolvedURL() {
     return new URL(this.getHref(), this.target.baseURI);
   }
@@ -57,10 +61,7 @@
 
   function mergeEvents(trigger) {
     var browse = new CustomEvent("browse", {bubbles: true, composed: true});
-    if (trigger.type === "link-click")
-      browse.getHref = trigger.getHref;
-    else
-      browse.getHref = getFormHref;
+    browse.getHref = trigger.type === "submit" ? getFormHref : getLinkClickHref;
     browse.resolvedURL = resolvedURL;
     browse.isExternal = isExternal;
     dispatchPriorEvent(trigger.target, browse, trigger);
