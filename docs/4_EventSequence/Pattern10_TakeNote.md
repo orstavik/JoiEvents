@@ -70,7 +70,7 @@ It has, of course, three trigger events. All clicks. But, to find out if a click
 and final trigger, the event needs to preserve the state of the previous click events.
 
 <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/triple-click-TakeNote.js"></pretty-printer>
+<pretty-printer href="./demo/triple-click-TakeNote.js"></pretty-printer>
 
 ## Demo: naive `triple-click`
 

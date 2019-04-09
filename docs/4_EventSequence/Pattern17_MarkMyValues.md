@@ -63,73 +63,14 @@ In this example we extend the `triple-click` event to take note of the distance 
 If the combined distance between the `x` and `y` values are above a certain threshold, 
 no `triple-click` will be dispatched.
 
-```javascript
-(function () {
-  function dispatchPriorEvent(target, composedEvent, trigger) {
-    composedEvent.preventDefault = function () {
-      trigger.preventDefault();
-      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-    };
-    composedEvent.trigger = trigger;
-    target.dispatchEvent(composedEvent);
-  }
-
-  //event state
-  var clicks = [];
-
-  function updateSequence(e) {
-    var myValues = {click: e, x: e.x, y: e.y};
-    clicks.push(myValues);
-    if (clicks.length < 3)
-      return;
-    var duration = clicks[2].click.timeStamp - clicks[0].click.timeStamp;
-    var wiggle = Math.abs(clicks[2].x-clicks[0].x) + Math.abs(clicks[2].y-clicks[0].y);
-    if (duration <= 600 && wiggle < 20) {
-      clicks = [];
-      return {duration: duration, wiggle: wiggle};
-    }
-    clicks.shift();
-  }
-
-  function onClick(e) {
-    var detail = updateSequence(e);
-    if (!detail)
-      return;
-    new CustomEvent("triple-click", {bubbles: true, composed: true, detail: detail});
-    dispatchPriorEvent(e.target, triple, e);
-  }
-
-  window.addEventListener("click", onClick, true);
-})();
-```
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<pretty-printer href="./demo/triple-click-MarkMyValues.js"></pretty-printer>
 
 ## Demo: `triple-click` with little wiggle room
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.11/src/gestures/triple-click-MarkMyValues.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.12/src/webcomps/CodeDemo.js"></script>
+<code-demo src="./demo/triple-click-MarkMyValues.html"></code-demo>
 
-<div id="one">single
-  <div id="two">double
-    <div id="three">tripple click me</div>
-  </div>
-</div>
-
-<script>
-  var one = document.querySelector("#one");
-  var two = document.querySelector("#two");
-  var three = document.querySelector("#three");
-
-  one.addEventListener("click", function (e) {
-    one.style.border = "3px solid red";
-  });
-  two.addEventListener("dblclick", function (e) {
-    two.style.border = "3px solid orange";
-  });
-  three.addEventListener("triple-click", function (e) {
-    three.style.border = "3px solid green";
-  });
-</script>
-```
 ## References
 
  * 
