@@ -43,13 +43,14 @@
 
   function makeNavigateFromSubmit(e) {
     const browse = makeBasicNavigateEvent();
-    browse.getHref = function (e) {
-      const url = new URL(e.target.action);
+    const target = e.target;
+    browse.getHref = function () {
+      const url = new URL(target.action);
       if (this.method.toUpperCase() === "GET") {
         //2. Test show that: if you have a <form action="index.html?query=already#hash" method="get">,
         //the query, but not the hash, will be overwritten by the values in the form when Chrome interprets the link.
         url.search = "";
-        let elements = e.target.elements;
+        let elements = target.elements;
         for (let el of elements) {
           if (el.hasAttribute("name"))
             url.searchParams.append(el.name, el.value);

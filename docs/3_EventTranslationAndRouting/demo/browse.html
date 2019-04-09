@@ -1,0 +1,37 @@
+<script src="../../../src/link-click-es6.js"></script>
+<script src="../../../src/browse.js"></script>
+
+<ul>
+  <li><a href="https://i.am.normal.com/">normal link</a></li>
+  <li>not a link</li>
+  <li><a href="https://ismap.dirtylittlesecret.com/"><img ismap src="some picture" alt=""></a></li>
+  <li>
+    <svg><a href="https://svg.dirtylittlesecret.com/"></a></svg>
+  </li>
+  <li>
+    <form method="get" action="https://submit.isalsoalinkclick.com">
+      <input type="text" name="hello" value="world">
+      <button type="submit">form-a-link!</button>
+    </form>
+  </li>
+</ul>
+
+<script>
+  window.addEventListener("click", function (e) {
+    alert(e.type + ": " + e.target.id);
+  });
+  window.addEventListener("link-click", function (e) {
+    alert(e.type + ": " + e.getHref());
+  });
+  window.addEventListener("browse", function (e) {
+    alert(e.type + ": " + e.getHref());
+  });
+
+  //micro router that just blocks everything
+  window.addEventListener("browse", function (e) {
+    e.trigger.preventDefault();
+    //the below methods also will block the browsing.
+    //e.preventDefault();
+    //e.trigger.type === "link-click" ? e.trigger.trigger.preventDefault() : e.trigger.preventDefault();
+  });
+</script>
