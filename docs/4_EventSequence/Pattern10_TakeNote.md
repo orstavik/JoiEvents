@@ -69,16 +69,17 @@ A `triple-click` are three clicks done within 600ms, not overlapping another tri
 It has, of course, three trigger events. All clicks. But, to find out if a click is the third 
 and final trigger, the event needs to preserve the state of the previous click events.
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
 <pretty-printer href="./demo/triple-click-TakeNote.js"></pretty-printer>
 
 ## Demo: naive `triple-click`
 
 <!--<script async src="//jsfiddle.net/orstavik/4s5kevd7/8/embed/result,html/"></script>-->
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.12/src/webcomps/CodeDemo.js"></script>
 <code-demo src="./demo/triple-click-TakeNote.html"></code-demo>
 
 ## References
 
  * 
+
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.12/src/webcomps/CodeDemo.js"></script>

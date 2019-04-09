@@ -14,11 +14,12 @@ The primary trigger event of the `long-press` event is the `mousedown` event.
 The `long-press` only has a secondary trigger event, `mouseup`, and 
 the `mouseup` is also the final trigger event that concludes a series.    
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-ListenUp.js"></pretty-printer>
+<pretty-printer href="./demo/long-press-ListenUp.js"></pretty-printer>
 
 To make the example simple to read, the target pressed must be a leaf DOM element. 
 
 ## References
 
  * 
+ 
+ <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
