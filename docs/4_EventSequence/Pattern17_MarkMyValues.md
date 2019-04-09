@@ -68,7 +68,4 @@ event in the construction of the DetailOnDemand object.
 
 ## References
 
- * 
-
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.14/src/webcomps/CodeDemo.js"></script>
+ * dunno

@@ -20,6 +20,4 @@ To make the example simple to read, the target pressed must be a leaf DOM elemen
 
 ## References
 
- * 
- 
- <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
+ * dunno
