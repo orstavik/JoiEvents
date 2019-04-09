@@ -1,8 +1,8 @@
-<script src="../../src/gestures/max/dragging-fling.js"></script>
+<script src="../../src/gestures/max/mouse-dragging-fling.js"></script>
 <script src="./drag-fling-test.js"></script>
 <style>
-  #elem {
-    position: absolute;
+  #one, #two {
+    position: fixed;
     left: 10px;
     top: 10px;
     height: 100px;
@@ -10,8 +10,12 @@
     background-color: red;
     text-align: center;
   }
+  #two {
+    left: 150px;
+    background-color: orange;
+  }
   #redzone {
-    position: absolute;
+    position: fixed;
     left: 300px;
     top: 10px;
     height: 110px;
@@ -31,7 +35,8 @@
 </style>
 
 <div id="redzone">Drag here</div>
-<div id="elem" draggable>This text should be impossible to select</div>
+<div id="one" draggable>This text should be impossible to select.</div>
+<div id="two" draggable draggable-cancel-mouseout>You can drag me outside the window.</div>
 <button onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
 <script>
 

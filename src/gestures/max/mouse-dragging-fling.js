@@ -132,7 +132,7 @@
   }
 
   function onMousemove(trigger) {
-    if (!globalSequence.cancelMouseout && mouseJailbreakOne(trigger)) {
+    if (!globalSequence.cancelMouseout && mouseOutOfBounds(trigger)) {
       //todo here we need to find the coordinates between the previous (move or start) event and the out of bounds event
       const cancelEvent = makeDraggingEvent("cancel", trigger);
       const target = globalSequence.target;
@@ -157,8 +157,8 @@
       dispatchPriorEvent(target, flingEvent, trigger);
   }
 
-  function mouseJailbreakOne(trigger) {
-    return !(trigger.clientY > 0 && trigger.clientX > 0 && trigger.clientX < window.innerWidth && trigger.clientY < window.innerHeight);
+  function mouseOutOfBounds(trigger) {
+    return trigger.clientY < 0 || trigger.clientX < 0 || trigger.clientX > window.innerWidth || trigger.clientY > window.innerHeight;
   }
 
   function onBlur(trigger) {

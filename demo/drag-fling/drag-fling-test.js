@@ -14,8 +14,9 @@ window.addEventListener("fling", testDefaultPrevented);
 
 //TEST2a
 var userSelectWorking = true;
+var userSelectStartValue = document.children[0].style.userSelect;
 function userSelectShouldBe(e) {
-  let value = (e.type === "dragging-start" || e.type === "dragging-move") ? "none" : "";
+  let value = (e.type === "dragging-start" || e.type === "dragging-move") ? "none" : userSelectStartValue;
   if (document.children[0].style.userSelect === value)
     return;
   console.warn("html.style.userSelect not set to: " + value);

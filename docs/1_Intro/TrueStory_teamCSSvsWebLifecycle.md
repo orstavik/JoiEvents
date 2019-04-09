@@ -4,7 +4,7 @@
 
 In the red corner, weighing in at a total of about 253kg, stands team CSS! Team CSS is made up
 of Ada the Kick-Ass-Designer, BigMess Bob and Feeeeeeel-the-Pain Cloe! Behind them, their coach, 
-Mr. Big Company, we already see is getting ready to simultaneously throw in the white towel and yell at
+Mr. Big Company, is getting ready to simultaneously throw in the white towel and yell at
 them furiously. How about this guy, ha?! He loves to give up early just so he can yell a little.
 
 In the black corner, weighing nothing at all, stands the guy we love to hate, Miiiiiister Weeeeb Chronotope!
@@ -13,7 +13,7 @@ jitters in anticipation of digging his teeth into Ada's ass, Bob's man-boobs and
 forehead. Miiiiister Weeeeb Chronotope everybody, maybe this time somebody finally will understand what
 that man is all about and TAKE... HIM... DOWN!!!
 
-## start of the match
+## Start of the match
 
 "Yeah!! Wooah!" The crowd roars, but before they can really let it all loose the bell rings and the 
 fight starts.
@@ -30,7 +30,7 @@ This aaaaaalways leads to such chaos in the end and fights we gladly to pay to w
 Out from the black corner, Mr. Web Chrontope formally storms out and immediately starts
 circling the whole arena. He is a scary monster that one, black masked, inhumanly fast and with his
 constant unpredictable motions in seemingly odd directions that just seem utterly impossible to predict. 
-Mr. Web Chronotope sure now how to entertain.
+Mr. Web Chronotope sure knows how to entertain.
 
 ## round one!
 
@@ -52,7 +52,7 @@ of the CSS rules from BigMess Bob had left behind, and as she fell she got ramme
 again circling in from the right. Woooah. What a spin of that girls head! She never saw neither the CSS
 rules nor Web Chronotope coming AT ALL, and just got thrown up straight into the ropes! 
 
-## round two
+## Round two
 
 But what is Feel-the-Pain Cloe doing?! Has she retreated to her corner? 
 She is definitively leaning into the ropes, but now she lifts her left leg and stretches it out. 
@@ -97,5 +97,5 @@ have much less control of the DOM Events happening in the arena.
 
 ## References
 
- * 
+ * [Team CSS at the Guardian](https://www.theguardian.com/info/2019/apr/04/revisiting-the-rendering-tier)
                                                          -                  
