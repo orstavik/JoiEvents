@@ -19,6 +19,7 @@
 5. [Pattern: PriorEvent](doc/2_EventToEvent/Pattern3_PriorEvent)
 5. [Pattern: AfterthoughtEvent](doc/2_EventToEvent/Pattern4_AfterthoughtEvent)
 5. [Pattern: ReplaceDefaultAction](doc/2_EventToEvent/Pattern5_ReplaceDefaultAction)
+5. [Problem: PayAttention](2_EventToEvent//Problem2_PayAttention)
 5. [Pattern: ReverseGlobalization](doc/2_EventToEvent/Pattern21_ReverseGlobalization)
 
 ## Event translation
@@ -36,6 +37,7 @@
 18. [Pattern: ListenUp](doc/4_EventSequence/Pattern11_ListenUp)
 18. [Pattern: EventAttribute](doc/4_EventSequence/Pattern12_EventAttribute)
 18. [Pattern: MarkMyValues](doc/4_EventSequence/Pattern17_MarkMyValues)
+18. [Pattern: ShowGestureState](4_EventSequence/Pattern23_ShowGestureState) (todo)
 18. [Pattern: DebounceEvents](doc/4_EventSequence/Pattern16_DebounceEvents.md) (todo)
 
 ## Gestures: mouse

@@ -93,7 +93,7 @@ window.addEventListener("mousedown", onMousedown);
 <script>
 document.querySelector("#two").addEventListener("mousedown", function(){
   setTimeout(function(){
-    alert("MouseJailbreak! Stay on the alert!");
+    alert("AlertBlurCancel!");
   }, 600);
 });
 

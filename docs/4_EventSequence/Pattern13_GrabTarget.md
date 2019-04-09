@@ -113,7 +113,7 @@ You can neither control it from HTML template nor see it in the DOM.
 Furthermore, the DOMEventController is a bit messy. Once you use `.setPointerCapture()` to lock down
 the `target`, you must explicitly remember to call `.releasePointerCapture()` to free up future Pointer 
 events. This might not be a problem when things run smoothly, but if somehow the event eludes your control,
-such as via a MouseJailbreak, then the call to `.releasePointerCapture()` might get lost thus causing
+such as via an AlertBlurCancel, then the call to `.releasePointerCapture()` might get lost thus causing
 strange Event behavior.
 
 When composing custom events using the EarlyBird pattern, you do not need the DOMEventController
