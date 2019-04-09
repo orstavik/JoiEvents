@@ -1,0 +1,30 @@
+<script src="./link-click-TypeFiltered.js"></script>
+
+<ul>
+  <li><a href="https://letmepass.com/">not blocked</a></li>
+  <li><a href="https://justalittle.blocked.com/">only navigation blocked</a></li>
+  <li><a href="https://fully.blocked.com/">both click event and navigation blocked</a></li>
+  <li>you can click me too, if you'd like</li>
+</ul>
+
+<script>
+  window.addEventListener("click", function (e) {
+    alert(e.type + ": " + e.target.innerText);
+  });
+  window.addEventListener("link-click", function (e) {
+    alert(e.type + ": " + e.target.innerText);
+  });
+
+  //micro router
+  window.addEventListener("link-click", function (e) {
+    if (e.target.href.endsWith("letmepass.com/")) {
+      alert("This link I will let pass");
+    } else if (e.target.href.endsWith("fully.blocked.com/")) {
+      e.preventDefault();
+    } else if (e.target.href.endsWith("justalittle.blocked.com/")) {
+      e.trigger.preventDefault();
+    } else {
+      //let it pass
+    }
+  });
+</script>

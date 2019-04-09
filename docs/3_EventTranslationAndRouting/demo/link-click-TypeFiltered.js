@@ -19,7 +19,7 @@
   function onClick(e) {
     var newTarget = filterOnType(e, "A");             //[2] TypeFilteredEvent
     if (newTarget)                                    //[4] PriorEvent
-      dispatchPriorEvent(newTarget, new CustomEvent("link-click-1", {bubbles: true, composed: true}), e);
+      dispatchPriorEvent(newTarget, new CustomEvent("link-click", {bubbles: true, composed: true}), e);
   }
 
   window.addEventListener("click", onClick, true);    //[1] EarlyBird
