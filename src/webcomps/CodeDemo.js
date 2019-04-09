@@ -197,7 +197,6 @@ class CodeRunner extends HTMLElement {
     const iframeWin = iframe.contentWindow || iframe;
     this._iframeDoc = iframe.contentDocument || iframeWin.document;
     this._iframeDoc.open();
-    debugger;
     this._iframeDoc.write("<base href='"+base+"'/>\n" + code);
     this._iframeDoc.close();
   }

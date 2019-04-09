@@ -29,7 +29,7 @@
     var detail = updateSequence(e);
     if (!detail)
       return;
-    new CustomEvent("triple-click", {bubbles: true, composed: true, detail: detail});
+    var triple = new CustomEvent("triple-click", {bubbles: true, composed: true, detail: detail});
     dispatchPriorEvent(e.target, triple, e);
   }
 
