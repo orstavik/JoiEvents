@@ -79,7 +79,4 @@ and final trigger, the event needs to preserve the state of the previous click e
 
 ## References
 
- * 
-
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.14/src/webcomps/CodeDemo.js"></script>
+ * dunno
