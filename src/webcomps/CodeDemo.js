@@ -22,7 +22,7 @@ class CodeDemo extends HTMLElement {
     if (name === "src"){
       const code = await getText(newValue);
       this.shadowRoot.querySelector("code-mirror-view").setAttribute("src", code);
-      this.shadowRoot.querySelector("code-runner").loadHTMLSync(code);
+      this.shadowRoot.querySelector("code-runner").loadHTMLSync(code, newValue);
     }
   }
 }
@@ -192,12 +192,13 @@ class CodeRunner extends HTMLElement {
     this._iframeDoc.close();
   }
 
-  loadHTMLSync(code) {
+  loadHTMLSync(code, base) {
     const iframe = this.shadowRoot.children[1];
     const iframeWin = iframe.contentWindow || iframe;
     this._iframeDoc = iframe.contentDocument || iframeWin.document;
     this._iframeDoc.open();
-    this._iframeDoc.write(code);
+    debugger;
+    this._iframeDoc.write("<base href='"+base+"'/>\n" + code);
     this._iframeDoc.close();
   }
 
@@ -210,7 +211,7 @@ class CodeRunner extends HTMLElement {
         code += file.content;
       // else ignore
     }
-    this.loadHTMLSync(code);
+    this.loadHTMLSync(code/*, todo which base*/);
   }
 }
 customElements.define("code-runner", CodeRunner);
