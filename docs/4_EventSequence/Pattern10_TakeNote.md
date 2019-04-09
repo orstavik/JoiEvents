@@ -77,7 +77,7 @@ and final trigger, the event needs to preserve the state of the previous click e
 <!--<script async src="//jsfiddle.net/orstavik/4s5kevd7/8/embed/result,html/"></script>-->
 
 <script src="https://cdn.jsdelivr.net/npm/joievents@1.0.12/src/webcomps/CodeDemo.js"></script>
-<code-demo src="https://raw.githubusercontent.com/orstavik/JoiEvents/master/demo/Pattern10_TakeNote/triple-click-TakeNote.html"></code-demo>
+<code-demo src="./demo/triple-click-TakeNote.html"></code-demo>
 
 ## References
 
