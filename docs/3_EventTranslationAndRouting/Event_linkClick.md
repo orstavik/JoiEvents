@@ -64,15 +64,14 @@ When we combine the PriorEvent, EarlyBird, TypeFilteredEvent and DetailsOnDemand
 edge cases above, we get the following custom, composed `link-click` DOM Event.
 This `link-click` event takes much of the headache out of controlling the template based navigation.
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/browse/link-click.js"></pretty-printer>
+<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/link-click.js"></pretty-printer>
 
 ## Demo: `link-click` 
 
 In the demo below we use `link-click` to control navigation. It is in a sense a micro, binary router, 
 a router that blocks or let pass different navigation events.
 
-<script async src="//jsfiddle.net/orstavik/7vgnbq21/2/embed/html,result/"></script>
+<code-demo src="demo/link-click.html"></code-demo>
 
 ## Discussion: `link-click`, `preventDefault()` and PriorEvent
 
