@@ -82,8 +82,7 @@ that receives the `long-press` event.
 This means that you need to find the `firstCommonAncestor` for both the initial and final `long-press` 
 trigger events (here `mousedown` and `mouseup`).
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-GrabTarget.js"></pretty-printer>
+<pretty-printer href="./demo/long-press-GrabTarget.js"></pretty-printer>
 
 ## When to capture the EventSettings?
 
@@ -165,4 +164,4 @@ them. Why?? Why can't they recognize it?? Why are people so gullible??
                                                                   
 ## References
 
- * [](https://www.dailymail.co.uk/sciencetech/article-4297698/Dopamine-brain-shape-decisions-make.html)
+ * [Decisions and dopamine](https://www.dailymail.co.uk/sciencetech/article-4297698/Dopamine-brain-shape-decisions-make.html)

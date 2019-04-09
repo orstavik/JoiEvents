@@ -117,7 +117,6 @@ The example is our custom `long-press` DOM Event, but this time we want to speci
 will first check for a local `long-press-duration`, then a global `long-press-duration`, and then
 simply use 300ms as a default fallback. 
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-EventSettings.js"></pretty-printer>
+<pretty-printer href="./demo/long-press-EventSettings.js"></pretty-printer>
 
 ## References
