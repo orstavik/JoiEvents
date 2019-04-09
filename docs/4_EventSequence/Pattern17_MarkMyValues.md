@@ -63,7 +63,7 @@ no `triple-click` will be dispatched.
 
 ## Demo: `triple-click` with little wiggle room
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.12/src/webcomps/CodeDemo.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.13/src/webcomps/CodeDemo.js"></script>
 <code-demo src="./demo/triple-click-MarkMyValues.html"></code-demo>
 
 ## References
