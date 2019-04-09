@@ -2,7 +2,7 @@
 
 ## Pattern: CustomEvent.detail
 
-DOM Events have a `.detail` property. The `.detail` property is the assumed place for 
+`CustomEvent`s have a `.detail` property. The `.detail` property is the assumed place for 
 added information about the event outside of the event's `type` name and `target` element.
 Thus, the first choice is to add information about a custom event as data under its `.detail` property.
 

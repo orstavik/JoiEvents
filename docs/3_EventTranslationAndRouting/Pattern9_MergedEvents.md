@@ -59,79 +59,81 @@ Its main purpose is to unify the interface of these two events, mainly by offeri
 Put together, and based on the `link-click`, the full `browse` event trigger function becomes:
    
 ```javascript
-//polyfill the baseURI property if needed
-if (!('baseURI' in Node.prototype)) {
-  Object.defineProperty(Node.prototype, 'baseURI', {
-    get: function() {
-      var base = (this.ownerDocument || this).querySelector('base[href]');
-      return (base || window.location).href;
-    },
-    configurable: true,   //todo verify this polyfill and the configuration.
-    enumerable: true
-  });
-}
-
-function getFormHref(form) {
-  var href = form.getAttribute("action");
-  if (form.method === "POST")
-    return href;
-  //2. Test show that: if you have a <form action="index.html?query=already#hash" method="get">,
-  //the query, but not the hash, will be overwritten by the values in the form when Chrome interprets the link.
-  var url = new URL(href);
-  url.search = "";
-  for (let el of form.elements) {
-    if (el.hasAttribute("name"))
-      url.searchParams.append(el.name, el.value);
+(function () {
+  //polyfill the baseURI property if needed
+  if (!('baseURI' in Node.prototype)) {
+    Object.defineProperty(Node.prototype, 'baseURI', {
+      get: function() {
+        var base = (this.ownerDocument || this).querySelector('base[href]');
+        return (base || window.location).href;
+      },
+      configurable: true,   //todo verify this polyfill and the configuration.
+      enumerable: true
+    });
   }
-  return url.href;
-}
-
-function resolvedURL(e) {
-  return new URL(e.getHref(), e.target.baseURI);
-}
-
-function isExternal(e) {
-  var href = e.getHref();
-  if (!(new URL(href, e.target.baseURI).href.startsWith(href)))
-    return false;
-  if (e.target.hasAttribute("download"))
-    return false;                                                  //todo polyfill relList too??
-  if ((e.target.nodeName === "A" || e.target.nodeName === "AREA") && e.target.relList.contains("external"))
-    return false;
-  var targetTarget = e.target.getAttribute("target");
-  if (targetTarget && targetTarget !== "_self")
-    return false;
-  return true;
-}
-
-function dispatchPriorEvent(target, composedEvent, trigger) {
-  composedEvent.preventDefault = function () {
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;
-  return target.dispatchEvent(composedEvent);
-}
-
-function makeBrowseEvent(trigger){
-  var browse = new CustomEvent("browse", {bubbles: true, composed: true});
-  browse.getHref = function (){trigger.getHref();};
-  browse.resolvedURL = function (){resolvedURL(browse);};
-  browse.isExternal = function (){isExternal(browse);};
-  return browse;
-}
-
-window.addEventListener(
-  "submit", 
-  function(e){ 
-    e.getHref = function(){ 
-      getFormHref(e.target); 
+  
+  function getFormHref(form) {
+    var href = form.getAttribute("action");
+    if (form.method === "POST")
+      return href;
+    //2. Test show that: if you have a <form action="index.html?query=already#hash" method="get">,
+    //the query, but not the hash, will be overwritten by the values in the form when Chrome interprets the link.
+    var url = new URL(href);
+    url.search = "";
+    for (let el of form.elements) {
+      if (el.hasAttribute("name"))
+        url.searchParams.append(el.name, el.value);
+    }
+    return url.href;
+  }
+  
+  function resolvedURL(e) {
+    return new URL(e.getHref(), e.target.baseURI);
+  }
+  
+  function isExternal(e) {
+    var href = e.getHref();
+    if (!(new URL(href, e.target.baseURI).href.startsWith(href)))
+      return false;
+    if (e.target.hasAttribute("download"))
+      return false;                                                  //todo polyfill relList too??
+    if ((e.target.nodeName === "A" || e.target.nodeName === "AREA") && e.target.relList.contains("external"))
+      return false;
+    var targetTarget = e.target.getAttribute("target");
+    if (targetTarget && targetTarget !== "_self")
+      return false;
+    return true;
+  }
+  
+  function dispatchPriorEvent(target, composedEvent, trigger) {
+    composedEvent.preventDefault = function () {
+      trigger.preventDefault();
+      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
     };
-    dispatchPriorEvent(e.target, makeBrowseEvent(e), e);
-  }, 
-  true);
-
-window.addEventListener("link-click", function(e){dispatchPriorEvent(e.target, makeBrowseEvent(e), e);}, true);
+    composedEvent.trigger = trigger;
+    return target.dispatchEvent(composedEvent);
+  }
+  
+  function makeBrowseEvent(trigger){
+    var browse = new CustomEvent("browse", {bubbles: true, composed: true});
+    browse.getHref = function (){trigger.getHref();};
+    browse.resolvedURL = function (){resolvedURL(browse);};
+    browse.isExternal = function (){isExternal(browse);};
+    return browse;
+  }
+  
+  window.addEventListener(
+    "submit", 
+    function(e){ 
+      e.getHref = function(){ 
+        getFormHref(e.target); 
+      };
+      dispatchPriorEvent(e.target, makeBrowseEvent(e), e);
+    }, 
+    true);
+  
+  window.addEventListener("link-click", function(e){dispatchPriorEvent(e.target, makeBrowseEvent(e), e);}, true);
+})();
 ``` 
 
 ## Demo: one `browse` event to route them all
