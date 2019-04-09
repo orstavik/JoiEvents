@@ -1,0 +1,30 @@
+<script src="echo-click.js"></script>
+
+<div id="a1">
+  no echo here
+</div>
+
+<div id="b1" echo-click>
+  echo here
+</div>
+
+<div id="c1">
+  <div id="c2" echo-click>
+    echo here too
+  </div>
+</div>
+
+<div id="d1" echo-click>
+  <div id="d2" echo-click>
+    only a single echo here too
+  </div>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + ": " + e.target.id);
+  }
+
+  document.addEventListener("click", log);
+  document.addEventListener("echo-click", log);
+</script>

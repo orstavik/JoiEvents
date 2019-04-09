@@ -73,32 +73,7 @@ on that element.
 
 ## Demo: `echo-click` event filtered on `echo-click` attribute
    
-```javascript
-function filterOnAttribute(e, attributeName) {                //1
-  var target = e.composedPath ? e.composedPath()[0] : e.target;
-  for (var el = target; el; el = el.parentNode) {
-    if (el.hasAttribute && el.hasAttribute(attributeName))
-      return el;
-  }
-}
-
-function dispatchPriorEvent(target, composedEvent, trigger) {   
-  composedEvent.preventDefault = function () {                  
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;                              
-  target.dispatchEvent(composedEvent);                   
-}
-function onClick(e) {
-  var newTarget = filterOnAttribute(e, "echo-click");
-  if (!newTarget)                                           //2
-    return;
-  dispatchPriorEvent(newTarget, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
-}
-  
-window.addEventListener("click", onClick, true);
-```
+<pretty-printer href="./demo/echo-click.js"></pretty-printer>
 
 1. The `filterOnAttribute(e, attributeName)` finds the first target in the target-chain with the
    specified `attributeName`. If no such element exists, it returns `undefined`.
@@ -107,60 +82,7 @@ window.addEventListener("click", onClick, true);
 Put into action, the events can be filtered on attribute. Below is a demo of the filtered `echo-click`
 in action.
 
-```html
-<script>
-function filterOnAttribute(e, attributeName) {                //1
-  var target = e.composedPath ? e.composedPath()[0] : e.target;
-  for (var el = target; el; el = el.parentNode) {
-    if (el.hasAttribute && el.hasAttribute(attributeName))
-      return el;
-  }
-}
-
-function dispatchPriorEvent(target, composedEvent, trigger) {   
-  composedEvent.preventDefault = function () {                  
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;                              
-  target.dispatchEvent(composedEvent);                   
-}
-function onClick(e) {
-  var newTarget = filterOnAttribute(e, "echo-click");
-  if (!newTarget)                                           //2
-    return;
-  dispatchPriorEvent(newTarget, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
-}
-  
-window.addEventListener("click", onClick, true);
-</script>
-
-<div id="a1">
-  no echo here
-</div>
-
-<div id="b1" echo-click>
-  echo here
-</div>
-
-<div id="c1">
-  <div id="c2" echo-click>
-    echo here too
-  </div>
-</div>
-
-<div id="d1" echo-click>
-  <div id="d2" echo-click>
-    only a single echo here too
-  </div>
-</div>
-
-<script>
-document.addEventListener("click", function(e){alert(e.type +": "+ e.target.id);});
-document.addEventListener("echo-click", function(e){alert(e.type +": "+ e.target.id);});
-</script>
-```
-
+<code-demo src="demo/echo-click.html"></code-demo>
 ## References
 
  * 
