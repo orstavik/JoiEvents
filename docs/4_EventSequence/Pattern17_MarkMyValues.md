@@ -54,11 +54,6 @@ event in the construction of the DetailOnDemand object.
 
 ## Example: `long-press` with 30px wiggle room
 
-<script src="https://cdn.jsdelivr.net/npm/joievents@1.0.0/src/webcomps/PrettyPrinter.js"></script>
-<pretty-printer href="https://raw.githubusercontent.com/orstavik/JoiEvents/master/src/gestures/long-press-MarkMyValues.js"></pretty-printer>
-
-## Example: `triple-click` with little wiggle room
-
 In this example we extend the `triple-click` event to take note of the distance between clicks. 
 If the combined distance between the `x` and `y` values are above a certain threshold, 
 no `triple-click` will be dispatched.
