@@ -1,0 +1,21 @@
+<script src="./link-click-DetailsOnDemand-es6.js"></script>
+
+<ul>
+  <li><a href="https://i.am.normal.com/">normal link</a></li>
+  <li>not a link</li>
+  <li><a href="https://ismap.dirtylittlesecret.com/"><img ismap src="some picture" alt=""></a></li>
+  <li><svg><a href="https://svg.dirtylittlesecret.com/"></a></svg></li>
+</ul>
+
+<script>
+  window.addEventListener("click", function(e){alert(e.type + ": " + e.target.id);});
+  window.addEventListener("link-click", function(e){alert(e.type + ": " + e.getHref());});
+
+  //micro router that just blocks everything
+  window.addEventListener("link-click", function(e){
+    e.trigger.preventDefault();
+  });
+</script>
+<!--
+<script async src="//jsfiddle.net/orstavik/at1e7opd/1/embed/html,result/"></script>
+-->

@@ -13,7 +13,7 @@ function filterOnType(e, typeName) {
 }                            
 ```
 
-## Example: `link-click`
+## Example: `link-click` with TypeFilter
 
 Custom, composed TypeFilteredEvent is extremely useful for link clicks.
 When the user clicks on an element within a page and that element is a child of a `<a href>`,
@@ -25,9 +25,9 @@ custom, TypeFiltered PriorEvent `link-click`:
 
 <pretty-printer href="./demo/link-click-TypeFiltered.js"></pretty-printer>
 
-## Demo: `link-click-1` 
+## Demo: `link-click` with TypeFilter
 
-In the demo below we use `link-click-1` to control navigation. 
+In the demo below we use `link-click` to control navigation. 
 It is in a sense a micro, binary router, 
 a router that blocks or let pass different navigation events.
 
