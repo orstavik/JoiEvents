@@ -73,8 +73,6 @@ and final trigger, the event needs to preserve the state of the previous click e
 
 ## Demo: naive `triple-click`
 
-<!--<script async src="//jsfiddle.net/orstavik/4s5kevd7/8/embed/result,html/"></script>-->
-
 <code-demo src="./demo/triple-click-TakeNote.html"></code-demo>
 
 ## References

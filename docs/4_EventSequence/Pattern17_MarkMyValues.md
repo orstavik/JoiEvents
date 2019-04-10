@@ -1,56 +1,42 @@
 # Pattern: MarkMyValues
 
-## Fact 1: Event data gets Garbage collected early
+## Fact: Event data gets lost
 
-Some browsers, such as Chrome, delete (garbage collect) underlying data of native event objects
-*before* they delete the Event object itself.
+If you store an Event, it might not contain the needed information when you ask for it from the
+Event object:
+
+1. Data such as `composedPath()` is generated from the DOM *request time*. 
+   If the DOM has been mutated *after* an event having occured, but *before* the event data is 
+   requested, then the result from `composedPath()` *can* change.
+
+2. The browser can garbage collect and delete *underlying* data of native event objects,
+   at the end of an event's propagation, but *before* the event object itself is deleted.
+   //todo do some tests to find good examples of such data, likely touch event data.
+
 This means that some properties on an Event object might no longer be available 
-if you try to read it asynchronously, such as from a `setTimeout` or rAF callback.
-For example, even thought the DOM Event object of a mouse event still exists, 
+if you try to read it asynchronously in a `setTimeout` or rAF callback.
+
+<code-demo src="demo/LoosingEventData.html"></code-demo>
+
+//todo find a good example of 
+For example, even thought the DOM Event object of a touch event still exists, 
 its `x` and `y` properties can become undefined at a later point.
-Once the setTimeout is invoked, the DOM Event object that represent the trigger event *only*
-safely contains the `timeStamp` and `type`, plus the `target` if it has not been removed. 
-
-```html
-<div width="100%" height="100%">move the mouse to remove me</div>
-
-<script>
-var first = true;
-
-window.addEventListener("mousemove", function(e){
-  console.log(e.type);                 //mousemove
-  console.log(e.timeStamp);            //23:59:59.31.12.1999
-  console.log(e.target);               //div
-  console.log(e.x);                    //42
-  if (!first)                          
-    e.target.remove();                 //e.target is kept the first time the mousemove event listener
-  else                                 //is called, but then deleted
-    first = false;                     
-  setTimeout(function(){               
-    console.log(e.type);               //mousemove
-    console.log(e.timeStamp);          //23:59:59 31.12.1999
-    console.log(e.target.typeName);    //first DIV, then undefined
-    console.log(e.x);                  //undefined
-  });
-});
-</script>
-```
+Once the setTimeout is invoked, the DOM Event object that represent the trigger event
+safely contains data such as the `timeStamp`, `type` and `target`, but might loose other data
+such as `composedPath()` and //todo. 
 
 ## HowTo: avoid loosing event data
 
 Both the ReplaceDefaultAction and AfterthoughtEvent patterns delay
 the dispatch of the composed event asynchronously using `setTimeout(...)`. 
 This means that if your composed event needs to use values from the trigger event object such as
-such as the `x` and `y` properties of mouse events, then these values must be stored *specifically, 
-up front*.
+`composedPath()` at the time when the event occured, then these values must be stored *specifically, 
+up front*. 
 
-Doing so is called **MarkMyValues**. **MarkMyValues** is the pattern of storing relevant trigger 
-event values up-front. It is often not enough to simply store the DOM Event object. 
-Exceptions are the `timeStamp`, `type`, and most often the `target` property.
-
+**MarkMyValues** is the pattern of storing relevant trigger event values up-front. 
 The MarkMyValues pattern is most often used in combination with the DetailOnDemand pattern.
-When used with DetailOnDemand, the values should be copied from the trigger event the composed
-event in the construction of the DetailOnDemand object.
+When used with DetailOnDemand, the required values should be copied from the trigger event to the 
+composed event during the construction of the DetailOnDemand object.
 
 ## Example: `long-press` with 30px wiggle room
 

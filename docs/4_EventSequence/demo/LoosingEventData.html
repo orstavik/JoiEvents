@@ -1,0 +1,25 @@
+<div width="100%" height="100%">move the mouse over me to delete me. And you will see what is left </div>
+
+<script>
+  function logEvent(e){
+    console.log("-----------");
+    console.log(e.type);                 //mousemove, mousemove
+    console.log(e.timeStamp);            //23:59:59.31.12.1999, 23:59:59.31.12.1999
+    console.log(e.target);               //div, div
+    console.log(e.x);                    //42, 43
+    console.log(e.composedPath());       //[div, body, html, document, Window], []
+  }
+
+  var ev;
+  document.querySelector("div").addEventListener("mousemove", function(e){
+    if (!ev)
+      return ev = e;
+    logEvent(e);
+    e.target.remove();          //DOM mutation causes event data to get lost
+    setTimeout(function(){
+      logEvent(ev);
+    },100);
+  });
+
+  //todo I think touch events gets GC earlier, are placed behind getters. Find out which event data gets lost due to GC
+</script>

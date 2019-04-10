@@ -44,6 +44,7 @@
 ## Gestures: mouse
 
 24. [HowTo: drag'n'drop](docs/5_MouseGestures/HowTo_DragNDrop)
+24. [Pattern: InvadeAndRetreat](docs/5_MouseGestures/Pattern4_InvadeAndRetreat)
 24. [Pattern: GrabTarget](docs/5_MouseGestures/Pattern13_GrabTarget)
 24. [Pattern: GrabMouse](docs/5_MouseGestures/Pattern14_GrabMouse)
 24. [Pattern: MouseMoveTrap](docs/5_MouseGestures/Pattern19_MouseMoveTrap)
