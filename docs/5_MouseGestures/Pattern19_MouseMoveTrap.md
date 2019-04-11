@@ -139,6 +139,31 @@ event can have coordinated such as `x: -47, y: -123`. Thus, when a mouse-based g
 cancelled, the coordinates of the last mouse event that was successfully part of the gesture should be 
 used, and not the coordinates of the event that disrupts the mouse-based gesture.
 
+## Calculate Point of Exit
+
+If you really want the guesstimate where the mouse left the window (ie. calculate its point of 
+exit), use this method:
+
+```javascript
+//todo untested
+function pointOfExit(x1, y1, x2, y2, left, top, right, bottom){
+  const distX = Math.min(x2-left, right-x2, 0);   //if both are inside, then 0 is chosen  
+  const distY = Math.min(y2-top, bottom-y2, 0);
+  const distBorder = !distX ? distY * -1 :        //if one of the distances is inside, then simplify
+                     !distY ? distX * -1 : 
+                     Math.sqrt(distX*distX + distY*distY);
+  const moveX = x2-x1;
+  const moveY = y2-y1;
+  const distMove = Math.sqrt(moveX*moveX + moveY*moveY);
+  const proportionOutside = distBorder / distMove;  //this is the proportion of the distance the mouse travelled outside the window
+  //return the nearest point of exit. One of the values should equal either left, top, right, bottom
+  return [Math.round(x2-(moveX*proportionOutside)), Math.round(y2-(moveY*proportionOutside))];
+}
+//insideMove is the last known position inside the window
+//outsideMove is the first known position outside the window
+const [x,y] = pointOfExit(insideMove.x, insideMove.y, outsideMove.x, outsideMove.y, 0, 0, window.innerWidth, window.innerHeight);
+``` 
+
 ## References
 
  * 
