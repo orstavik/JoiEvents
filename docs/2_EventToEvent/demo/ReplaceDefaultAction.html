@@ -1,0 +1,37 @@
+<script>
+  function replaceDefaultAction(target, composedEvent, trigger) {
+    composedEvent.trigger = trigger;
+    trigger.stopTrailingEvent = function(){
+      composedEvent.stopImmediatePropagation ?
+        composedEvent.stopImmediatePropagation() :
+        composedEvent.stopPropagation();
+    }
+    trigger.preventDefault();
+    return setTimeout(function(){target.dispatchEvent(composedEvent)}, 0);
+  }
+
+  function onClick(e){
+    if (e.defaultPrevented || e.customPrevented)
+      return;
+    replaceDefaultAction(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+  }
+
+  document.addEventListener("click", onClick, true);
+</script>
+
+<p>
+  This demo below illustrate how the ReplaceDefaultAction works, and how it always blocks the defaultAction.
+</p>
+<ul>
+  <li>click me, i will echo click</li>
+  <li><a href="https://bbc.com">click me, i will echo, but not navigate</a></li>
+  <li><a id="prevented" href="https://bbc.com">click me, I will neither echo nor navigate</a></li>
+</ul>
+
+<script>
+  window.addEventListener("click", function(e){alert("click event");});
+  window.addEventListener("echo-click", function(e){alert("echo-click event");});
+  document.querySelector("#prevented").addEventListener("click", function(e){
+    e.stopTrailingEvent();
+  });
+</script>

@@ -31,6 +31,7 @@ function cancelEventOnce(type) {
 
 ## Example 1: CancelClickOnce
 
+<code-demo src="demo/CancelClickOnce.html"></code-demo>
 ```html
 <div id="test">
   <div id="box">

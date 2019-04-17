@@ -30,6 +30,7 @@ document.addEventListener("click", onClick, true);
 This pattern is safe, but limited. Use this pattern only when you desire to capture all the 
 triggering events.
 
+<code-demo src="demo/ReplaceDefaultAction.html"></code-demo>
 ```html
 <script>
 function replaceDefaultAction(target, composedEvent, trigger) {               

@@ -32,6 +32,7 @@ document.addEventListener("click", onClick, true);
 
 Below is an implementation of the `echo-click` using the AfterthoughtEvent pattern.
 
+<code-demo src="demo/AfterthoughtSunshine.html"></code-demo>
 ```html
 <script>
 function dispatchAfterthoughtEvent(target, composedEvent, trigger) {               
@@ -89,6 +90,8 @@ event propagates, but that the defaultAction becomes *unstoppable* while the cus
 propagates.
                       
 Below is a demo that illustrates the problem in more detail.
+
+<code-demo src="demo/AfterthoughtProblems.html"></code-demo>
 ```html
 <script>
 function dispatchAfterthoughtEvent(target, composedEvent, trigger) {               

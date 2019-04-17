@@ -1,0 +1,40 @@
+<script>
+  function dispatchPriorEvent(target, composedEvent, trigger) {   //1
+    composedEvent.preventDefault = function () {                  //2
+      trigger.preventDefault();
+      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
+    };
+    composedEvent.trigger = trigger;                              //3
+    target.dispatchEvent(composedEvent);                          //4
+  }
+
+  function onClick(e){
+    if (e.defaultPrevented || e.customPrevented)
+      return;
+    dispatchPriorEvent(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+  }
+
+  document.addEventListener("click", onClick, true);
+</script>
+
+<p>
+  The demo below illustrate how the PriorEvent works.
+  It uses three different event listeners on different elements to control the behavior of
+  the composed and triggering event and their default actions.
+</p>
+<ul>
+  <li>you can click me</li>
+  <li><a id="a" href="https://normal.com">normal link, will navigate</a></li>
+  <li><a id="b" href="https://click-prevented.com">prevented on click, will not navigate</a></li>
+  <li><a id="c" href="https://echo-click-prevented.com">prevented on echo-click, will not propagate "click" nor navigate</a></li>
+  <li><a id="d" href="https://echo-click-prevented-via-trigger.com">prevented on echo-click via trigger property, propagates click but will not navigate</a></li>
+</ul>
+
+<script>
+  window.addEventListener("click", function(e){alert("click event")});
+  window.addEventListener("echo-click", function(e){alert("echo-click event")});
+
+  document.querySelector("#b").addEventListener("click", e => e.preventDefault());
+  document.querySelector("#c").addEventListener("echo-click", e => e.preventDefault());
+  document.querySelector("#d").addEventListener("echo-click", e => e.trigger.preventDefault());
+</script>

@@ -55,40 +55,6 @@ while some are not, ie. `click` on links. We will return to these issues in late
 
 <code-demo src="demo/StopPropagation.html"></code-demo>
 
-```html
-<div id="box">
-  <h1 id="sunshine">Hello sunshine!</h1>
-</div>
-
-<script>
-  function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type);
-  }
-
-  const box = document.querySelector("#box");
-  const sunshine = document.querySelector("#sunshine");
-
-  //click listeners
-  box.addEventListener("click", log);
-  sunshine.addEventListener("click", log);
-  box.addEventListener("click", log, true);
-
-  //mouseup listeners
-  box.addEventListener("mouseup", log);
-  sunshine.addEventListener("mouseup", function(e){e.stopPropagation();});
-  sunshine.addEventListener("mouseup", log);
-  box.addEventListener("mouseup", log, true);
-
-  //touchend listeners
-  box.addEventListener("touchend", log);
-  sunshine.addEventListener("touchend", function(e){e.stopImmediatePropagation();});
-  sunshine.addEventListener("touchend", log);
-  box.addEventListener("touchend", log, true);
-
-</script>
-```
 1. `stopPropagation()` stops the *medium* level propagation, but still prints the `log` for the
    sunshine element for the `mouseup` event.
    
@@ -102,50 +68,6 @@ while some are not, ie. `click` on links. We will return to these issues in late
 ## Example 2: PreventDefault stops domino events and `defaultActions`
 
 <code-demo src="demo/PreventDefault.html"></code-demo>
-
-```html
-preventDefault on touchend: <input id="touchend" type="checkbox" checked><br>
-preventDefault on mouseup: <input id="mouseup" type="checkbox" checked><br>
-preventDefault on click: <input id="click" type="checkbox" checked><br>
-preventDefault on submit: <input id="submit" type="checkbox" checked><br>
-
-<div id="test">
-  <div id="box">
-    <h1 id="sunshine">Hello sunshine!</h1>
-  </div>
-  <form action="HelloSunshine">
-    <input value="click for sunshine!" type="submit">
-  </form>
-
-  <a href="#helloWorld">hello world</a>
-</div>
-
-<script>
-  function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type);
-  }
-
-  const test = document.querySelector("#test");
-  //logs
-  test.addEventListener("click", log);
-  test.addEventListener("mouseup", log);
-  test.addEventListener("touchend", log);
-  test.addEventListener("submit", log);
-
-  function prevent(e) {
-    if (document.querySelector("input#" + e.type).checked)
-      e.preventDefault();
-  }
-
-  //prevent
-  test.addEventListener("click", prevent);
-  test.addEventListener("mouseup", prevent);
-  test.addEventListener("touchend", prevent);
-  test.addEventListener("submit", prevent);
-</script>
-```
 
 The example above illustrate the behavior and problems with `preventDefault()`.
 
@@ -168,61 +90,7 @@ The example above illustrate the behavior and problems with `preventDefault()`.
 ## Example 3: StopPropagation for nested events
 
 <code-demo src="demo/StopEcho.html"></code-demo>
-```html
-stop on click: <input id="click" type="checkbox" checked><br>
-stop on echo-click: <input id="echo-click" type="checkbox" checked><br>
-stop on echo-echo-click: <input id="echo-echo-click" type="checkbox" checked><br>
-<hr>
 
-<div id="box">
-  <h1 id="sunshine">Hello sunshine!</h1>
-</div>
-
-<script>
-  function echo(e){
-    const echo = new CustomEvent("echo-" + e.type, {bubbles: true, composed: true});
-    e.target.dispatchEvent(echo);
-  }
-
-  function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type);
-  }
-
-  const box = document.querySelector("#box");
-  const sunshine = document.querySelector("#sunshine");
-
-  sunshine.addEventListener("click", echo);
-  sunshine.addEventListener("echo-click", echo);
-
-  //click listeners
-  box.addEventListener("click", log);
-  sunshine.addEventListener("click", log);
-  box.addEventListener("click", log, true);
-
-  //echo-click listeners
-  box.addEventListener("echo-click", log);
-  sunshine.addEventListener("echo-click", log);
-  box.addEventListener("echo-click", log, true);
-
-  //echo-echo-click listeners
-  box.addEventListener("echo-echo-click", log);
-  sunshine.addEventListener("echo-echo-click", log);
-  box.addEventListener("echo-echo-click", log, true);
-
-
-  function stop(e) {
-    if (document.querySelector("input#" + e.type).checked)
-      e.stopPropagation();
-  }
-
-  box.addEventListener("click", stop, true);
-  box.addEventListener("echo-click", stop, true);
-  box.addEventListener("echo-echo-click", stop, true);
-
-</script>
-```
 In the example above we see how custom events that are triggered by an event lister on another event 
 is exposed and can be prevented by other event listeners that `stopPropagation()` on the triggering
 event. This behavior is important to keep in mind when one uses event listeners to dispatch custom

@@ -5,7 +5,7 @@ This chapter uses examples to explain event propagation.
 
 ## Example 1: Capture vs. Bubble phase
 
-<code-demo src="/demo/BubbleCapture.html"></code-demo>
+<code-demo src="demo/BubbleCapture.html"></code-demo>
    
 ```html
 <div id="box">
@@ -69,7 +69,7 @@ called in the following sequence:
 
 The domino-effect.
 
-<code-demo src="/demo/TouchendMouseupClick.html"></code-demo>
+<code-demo src="demo/TouchendMouseupClick.html"></code-demo>
 
 ```html
 <div id="box">

@@ -35,6 +35,9 @@ document.addEventListener("click", onClick, true);
 4. And the composed event is dispatched synchronously, 
    so that it will start propagating immediately and thus *precede* the triggering event.
 
+## Example: PriorEvent
+
+<code-demo src="demo/PriorEvent.html"></code-demo>
 ```html
 <script>
 function dispatchPriorEvent(target, composedEvent, trigger) {   //1
