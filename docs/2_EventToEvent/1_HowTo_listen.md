@@ -1,10 +1,10 @@
 # HowTo: be a good Listener?
 
 To be a good listener is a craft. Not an art. When people say it is an art, it is mostly either
-to excuse themselves or someone else for not being very good at it and/or not trying to practice it. 
+to excuse themselves or someone else for not being very good and not practicing at it. 
 But don't be fooled. To be a good listener is a craft. It is just a set of some basic skills. 
 Once learned, practiced and employed, all of us *can* be good listeners. And you should not make 
-excuses for yourself when you are not listening well, even though it happens to all of us, all the time.
+excuses for yourself when you are not listening well, even though it happens to us all, all the time.
 
 The skills needed to be a good listener, are:
 
@@ -13,19 +13,19 @@ The skills needed to be a good listener, are:
    to give room for the other, his thoughts and his emotions.
    
    Your event listeners should not be overloaded with state details or bindings to other parts of your app.
-   Try to keep your trigger event functions as pure as possible (apap), and establish transparent, 
+   Try to keep your trigger event functions As pure As Possible ("APAP"), and establish transparent, 
    concise and predictable exit points for when you leave your listener function and start some other 
    app function.
    
 2. Process what is being said, when it is being said. Don't veer off topic and digress when it is not 
-   appropriate. Take one thing at a time, and allow others also to conclude topics before you jump 
-   into the next one.
+   appropriate. Take one thing at a time, and allow others also to complete their topics before you 
+   jump into the next one.
    
    In JS, different events often come in quick concession. Try to anticipate such event order, and
-   tackle different tasks one by one in different event listeners. When you see that you packing many 
+   tackle different tasks one by one in different event listeners. When you see that you pack many 
    different steps of a task in one event listener, then pause, take a step back, and think. 
-   Event listeners that respond to the current event only and that do neither try to catch up to or 
-   preempt other events, will help you avoid *both* conflicts with other event listeners for the same event
+   Event listeners that respond to the current event only and that do not relate to nor block other 
+   events, will help you avoid *both* conflicts with other event listeners for the same event
    and keep your current event listener pure and simple.
 
 3. Don't interrupt. Wait your turn. 
@@ -35,8 +35,8 @@ The skills needed to be a good listener, are:
    Events propagate in a certain order. And many event listeners can be attached and triggered by the 
    same event. Therefore, don't call `stopPropagation()` nor `preventDefault()` on a whim.
    Others might have important things to say and are just dutifully waiting their turn.
-   Sometimes, you might need to close a topic, but when you do, do so with clear intent and a only after
-   consideration of the other's whose turn you void.
+   Sometimes, you might need to close a topic, but when you do, do so with clear intent and a only 
+   after consideration of the other's whose turn you void.
  
 4. Read between the lines. The unspoken can be just as important as the spoken. 
    Anticipate that important things might be left out, either inadvertantly or intentionally. 
@@ -85,7 +85,7 @@ The skills needed to be a good listener, are:
 
 ## References
 
- * 
+ * [Wikipedia: Confirmation bias](https://en.wikipedia.org/wiki/Confirmation_bias)
 
 ## old drafts
 
@@ -100,4 +100,3 @@ The skills needed to be a good listener, are:
  To just wait your turn accomplishes a lot.
  Do not judge.
  Help the speaker evolve his/her narrative.
-
