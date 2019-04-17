@@ -1,8 +1,8 @@
-<script src="../../src/mouse-dragging-fling.js"></script>
-<script src="./drag-fling-test.js"></script>
+<script src="dragFlingTouchTest.js"></script>
+<script src="../../../src/touch-dragging-fling.js"></script>
 <style>
-  #one, #two {
-    position: fixed;
+  #elem {
+    position: absolute;
     left: 10px;
     top: 10px;
     height: 100px;
@@ -10,34 +10,18 @@
     background-color: red;
     text-align: center;
   }
-  #two {
-    left: 150px;
-    background-color: orange;
-  }
   #redzone {
-    position: fixed;
+    position: absolute;
     left: 300px;
     top: 10px;
     height: 110px;
     width: 110px;
     border: 2px solid red;
   }
-  #guide {
-    position: absolute;
-    left: 10px;
-    top: 300px;
-  }
-  button {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-  }
 </style>
-
 <div id="redzone">Drag here</div>
-<div id="one" draggable>This text should be impossible to select.</div>
-<div id="two" draggable draggable-cancel-mouseout>You can drag me outside the window.</div>
-<button onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
+<div id="elem" draggable>This text should be impossible to select</div>
+<button style="float:right" onclick="setTimeout(function(){alert('boo!')}, 2000)">Alert after 2s</button>
 <script>
 
   var dragStart = undefined;
@@ -87,27 +71,3 @@
       confirm("you just pressed to many buttons!");
   });
 </script>
-
-<ol id="guide">
-  <lh>Test this:</lh>
-  <li>
-    <ol>
-      <lh>Selecting of texts while you drag</lh>
-      <li>Select this text using the mouse.</li>
-      <li>Start dragging and click Ctrl+A _while_ you are still dragging.</li>
-      <li>Try to select the text on the draggable entity.</li>
-      <li>Todo. It might be possible that selection of text is allowed while dragging as a choice.</li>
-    </ol>
-  </li>
-  <li>
-    <ol>
-      <lh>Test jailbreaks</lh>
-      <li>click the wrong mousebutton, and no drag starts.</li>
-      <li>try to drag the element out of the window</li>
-      <li>try to press more than one mouse button on the element</li>
-      <li>drag the element after having pressed the 2s alert, and see what happens when you drag something and
-        the browser interrupts the gesture.</li>
-      <li>todo. find the correct coordinates when there are errors.</li>
-    </ol>
-  </li>
-</ol>
