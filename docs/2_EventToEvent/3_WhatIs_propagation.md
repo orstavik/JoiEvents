@@ -154,7 +154,7 @@ has completed their propagation. Thus, propagation spans three levels:
    
 ## Example 3: Custom events (echo-click)
 
-<code-demo src="/demo/EchoClick.html"></code-demo>
+<code-demo src="demo/EchoClick.html"></code-demo>
 
 ```html
 <div id="box">
