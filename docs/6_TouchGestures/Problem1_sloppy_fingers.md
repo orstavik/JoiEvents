@@ -14,7 +14,8 @@ They might try to perform gestures at strange angles or with one hand or partial
 
 Thus, both human biology, human psychology and life in general should indicate that
 users often will touch the screen accidentally with an extra finger.
-When this occurs, most will simply try to remove the extra, erroneous finger again to correct the mistake.
+When this occurs, most will simply try to remove the extra, erroneous finger again to correct 
+the mistake.
 
 ## Anti-pattern: IgnoreExtraFingers
 
@@ -40,3 +41,5 @@ This simple, general solution both avoids conflict with other events *and* allow
 thus maximizing gesture ergonomics at minimal cost. 
 
 ## References
+
+ * [Stackoverflow: TouchEvent `.touches` vs. `.changedTouches` vs. `.targetTouches`](https://stackoverflow.com/questions/7056026/variation-of-e-touches-e-targettouches-and-e-changedtouches#answer-7236327)
