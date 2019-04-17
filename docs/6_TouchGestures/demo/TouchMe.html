@@ -1,0 +1,35 @@
+<pre>Touch me, please!</pre>
+
+<script>
+  var supportsPassive = false;
+  try {
+    var opts = Object.defineProperty({}, 'passive', {
+      get: function() {
+        supportsPassive = true;
+      }
+    });
+    window.addEventListener("test", null, opts);
+    window.removeEventListener("test", null, opts);
+  } catch (e) {}
+  var thirdArg = supportsPassive ? {passive: false, capture: true}: true;
+
+  function log(e){
+    e.target.innerText += "\n"+ e.type + ": " + (new Date().getTime()-time);
+  }
+
+  var time;
+  var pre = document.querySelector("pre");
+
+  pre.addEventListener("touchstart", function(){
+    e.preventDefault();
+  }, thirdArg);
+  pre.addEventListener("touchstart", function(){
+    time = new Date().getTime();
+  });
+
+  pre.addEventListener("touchstart", log);
+  pre.addEventListener("touchend", log);
+  pre.addEventListener("mousedown", log);
+  pre.addEventListener("mouseup", log);   //Chrome bug: when mouseup is active, then click will not trigger.
+  pre.addEventListener("click", log);     //Chrome bug: when mouseup is inactive, then click triggers.
+</script>

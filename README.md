@@ -86,7 +86,7 @@
 
 31. [Problem: SloppyFingers](docs/6_TouchGestures/Problem1_sloppy_fingers)
 31. [Problem: GestureStuttering](docs/6_TouchGestures/Problem2_gesture_stuttering)
-31. [Problem: TouchTheMouse](docs/6_TouchGestures/Problem3_touch_the_mouse)
+31. [Pattern: TouchendPreventDefault](docs/6_TouchGestures/Pattern_TouchendPreventDefault)
 31. [Problem: ConflictingGestures](docs/6_TouchGestures/Problem4_conflicting_gestures)
 31. [Problem: CoarseSensors](docs/6_TouchGestures/Problem5_coarse_sensors)
 31. [Problem: TapDance](docs/6_TouchGestures/Problem6_TapDance)

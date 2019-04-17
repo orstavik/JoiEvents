@@ -1,0 +1,23 @@
+<pre>Touch me again, please!</pre>
+
+<script>
+  function log(e){
+    e.target.innerText += "\n"+ e.type + ": " + (new Date().getTime()-time);
+  }
+
+  var time;
+  var pre = document.querySelector("pre");
+
+  document.addEventListener("touchend", function(e){
+    e.preventDefault();
+  }, true);
+  pre.addEventListener("touchstart", function(){
+    time = new Date().getTime();
+  });
+
+  pre.addEventListener("touchstart", log);
+  pre.addEventListener("touchend", log);
+  pre.addEventListener("mousedown", log);
+  pre.addEventListener("mouseup", log);
+  pre.addEventListener("click", log);
+</script>
