@@ -135,6 +135,7 @@ To do this, we need a second function that:
 
 ## Example: `localizable-mouseover-echo`
 
+<pretty-printer href="demo/mouseover-echo-localizable.js"></pretty-printer>
 ```javascript
 (function(){
 function dispatchPriorEvent(target, composedEvent, trigger) {   
@@ -199,6 +200,7 @@ window.addEventListener("mouseover", onMouseover, true);
 
 ## Demo: `mouseover-echo` on fire
 
+<code-demo src="demo/MouseoverOnFire.html"></code-demo>
 ```html
 <script src="mouseover-echo-localizable.js"></script>
 

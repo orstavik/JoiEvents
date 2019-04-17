@@ -1,0 +1,38 @@
+<script src="mouseover-echo-localizable.js"></script>
+
+<style>
+  div {
+    padding: 10px;
+  }
+  .mouseoverOne {
+    background: red;
+  }
+  .mouseoverTwo {
+    background: orange;
+  }
+  .mouseoverThree {
+    background: yellow;
+  }
+</style>
+
+<div mouseover-ball>
+  <div>
+    <div mouseover-ball>
+      <div>Fireball!! All elements should be on fire when you move the mouse over them.</div>
+    </div>
+  </div>
+</div>
+<script>
+  var items = ["mouseoverOne", "mouseoverTwo", "mouseoverThree"];
+  window.addEventListener("mouseover-echo", function(e){
+    e.target.classList.toggle(items[Math.floor(Math.random()*items.length)]);
+  });
+
+  var i = 0;
+  setInterval(function(){
+    if (i++ % 2)
+      localizeMouseoverEcho("[mouseover-ball]");
+    else
+      globalizeMouseoverEcho();
+  }, 5000);
+</script>
