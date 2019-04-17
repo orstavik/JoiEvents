@@ -32,45 +32,6 @@ function cancelEventOnce(type) {
 ## Example 1: CancelClickOnce
 
 <code-demo src="demo/CancelClickOnce.html"></code-demo>
-```html
-<div id="test">
-  <div id="box">
-    <h1 id="sunshine">Hello sunshine!</h1>
-  </div>
-  <form action="#HelloSunshine">
-    <input value="click for sunshine!" type="submit">
-  </form>
-
-  <a href="#helloWorld">hello world</a>
-</div>
-
-<script>
-  function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type);
-  }
-
-  const test = document.querySelector("#test");
-  //logs
-  test.addEventListener("submit", log);
-  test.addEventListener("click", log);
-  test.addEventListener("mouseup", log);
-  test.addEventListener("touchend", log);
-
-  function cancelEventOnce(type) {
-    const oneTimer = function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      window.removeEventListener(type, oneTimer, true);
-    };
-    window.addEventListener(type, oneTimer, true);
-  }
-
-  test.addEventListener("mouseup", function () { cancelEventOnce("click"); });
-
-</script>
-```
 
 > Other approaches such as setting a temporary `pointer-events: none` somewhere in the DOM during the 
 > `mousedown` event, doesn't work. Your best and simplest bet is to `cancelClickOnce()` during the 

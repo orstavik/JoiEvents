@@ -7,47 +7,6 @@ This chapter uses examples to explain event propagation.
 
 <code-demo src="demo/BubbleCapture.html"></code-demo>
    
-```html
-<div id="box">
-  <h1 id="sunshine">Hello sunshine!</h1>
-</div>
-<div id="outside">think</div>
-
-<script>
-  function log(e, extra) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type, extra || "");
-  }
-
-  const root = document.children[0];
-  const body = root.children[1];
-  const box = document.querySelector("#box");
-  const outside = document.querySelector("#outside");
-  const sunshine = document.querySelector("#sunshine");
-
-  //bubble phase listeners
-  window.addEventListener("click", log);
-  root.addEventListener("click", log);
-  body.addEventListener("click", log);
-  box.addEventListener("click", log);
-  outside.addEventListener("click", log);
-  sunshine.addEventListener("click", function(e){log(e, "bubble");});
-
-  //capture phase listeners
-  window.addEventListener("click", log, true);
-  root.addEventListener("click", log, true);
-  body.addEventListener("click", log, true);
-  box.addEventListener("click", log, true);
-  outside.addEventListener("click", log, true);
-  sunshine.addEventListener("click", function(e){log(e, "capture");}, true);
-
-  //event listeners added last
-  window.addEventListener("click", function(e){log(e, "added last");});
-  window.addEventListener("click", function(e){log(e, "added last");}, true);
-</script>
-```
-
 In the example above, you have a small DOM with a couple of elements. 
 To these elements, there are added some click listeners.
 If you click on "Hello sunshine!", you will see in the log that the event listeners will be 
@@ -70,62 +29,6 @@ called in the following sequence:
 The domino-effect.
 
 <code-demo src="demo/TouchendMouseupClick.html"></code-demo>
-
-```html
-<div id="box">
-  <h1 id="sunshine">Hello sunshine!</h1>
-</div>
-
-<script>
-  function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type);
-  }
-
-  const root = document.children[0];
-  const body = root.children[1];
-  const box = document.querySelector("#box");
-  const sunshine = document.querySelector("#sunshine");
-
-  //click listeners
-  window.addEventListener("click", log);
-  root.addEventListener("click", log);
-  body.addEventListener("click", log);
-  box.addEventListener("click", log);
-  sunshine.addEventListener("click", log);
-  window.addEventListener("click", log, true);
-  root.addEventListener("click", log, true);
-  body.addEventListener("click", log, true);
-  box.addEventListener("click", log, true);
-  sunshine.addEventListener("click", log, true);
-
-  //mouseup listeners
-  window.addEventListener("mouseup", log);
-  root.addEventListener("mouseup", log);
-  body.addEventListener("mouseup", log);
-  box.addEventListener("mouseup", log);
-  sunshine.addEventListener("mouseup", log);
-  window.addEventListener("mouseup", log, true);
-  root.addEventListener("mouseup", log, true);
-  body.addEventListener("mouseup", log, true);
-  box.addEventListener("mouseup", log, true);
-  sunshine.addEventListener("mouseup", log, true);
-
-  //touchend listeners
-  window.addEventListener("touchend", log);
-  root.addEventListener("touchend", log);
-  body.addEventListener("touchend", log);
-  box.addEventListener("touchend", log);
-  sunshine.addEventListener("touchend", log);
-  window.addEventListener("touchend", log, true);
-  root.addEventListener("touchend", log, true);
-  body.addEventListener("touchend", log, true);
-  box.addEventListener("touchend", log, true);
-  sunshine.addEventListener("touchend", log, true);
-
-</script>
-```
 
 The browser will automatically spawn a `mousedown`/`mouseup` events from 
 `touchstart`/`touchend` events on mobile to support legacy web pages that only implement support for
@@ -155,52 +58,6 @@ has completed their propagation. Thus, propagation spans three levels:
 ## Example 3: Custom events (echo-click)
 
 <code-demo src="demo/EchoClick.html"></code-demo>
-
-```html
-<div id="box">
-  <h1 id="sunshine">Hello sunshine!</h1>
-</div>
-
-<script>
-  function echo(e){
-    const echo = new CustomEvent("echo-" + e.type, {bubbles: true, composed: true});
-    e.target.dispatchEvent(echo);
-  }
-
-  function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
-    const name = e.currentTarget.tagName || "window";
-    console.log(phase, name, e.type);
-  }
-
-  const box = document.querySelector("#box");
-  const sunshine = document.querySelector("#sunshine");
-
-  sunshine.addEventListener("click", echo);
-  sunshine.addEventListener("echo-click", echo);
-
-  //click listeners
-  window.addEventListener("click", log);
-  box.addEventListener("click", log);
-  sunshine.addEventListener("click", log);
-  window.addEventListener("click", log, true);
-  box.addEventListener("click", log, true);
-  
-  //echo-click listeners
-  window.addEventListener("echo-click", log);
-  box.addEventListener("echo-click", log);
-  sunshine.addEventListener("echo-click", log);
-  window.addEventListener("echo-click", log, true);
-  box.addEventListener("echo-click", log, true);
-  
-  //echo-echo-click listeners
-  window.addEventListener("echo-echo-click", log);
-  box.addEventListener("echo-echo-click", log);
-  sunshine.addEventListener("echo-echo-click", log);
-  window.addEventListener("echo-echo-click", log, true);
-  box.addEventListener("echo-echo-click", log, true);
-</script>
-```
 
 When events are dispatched from JS via methods such as `.dispatchEvent(..)` or `.click()`,
 then they do *not* propagate one-by-one, but propagate *nested one-inside-another*.
