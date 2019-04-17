@@ -1,22 +1,88 @@
 # Pattern: CancelClick
 
-## Preventable native composed events
+`click` is an event that can be composed from a `mousedown`+`mouseup` or `touchstart`+`touchend` 
+pair on the same DOM element. To cancel the trailing, composed `click` event from a 
+`touchstart`+`touchend` pair is simple: call `.preventDefault()` on the `touchend` event.
 
-Some native composed events are preventable. 
-For example, the native composed `submit` event can be prevented from its triggering `click` event.
-If you:
+But. To call `.preventDefault()` on the `mouseup` event does not work: the `click` event cannot
+be cancelled from the mouse events. Therefore, we need a different technique to prevent the 
+`click` event from `mouseup`.
 
-1. click on a `<button type="submit">` inside a `<form>`, 
-2. call `.preventDefault()` on the ensuing `click` event, then 
-3. the `submit` event will *not* be dispatched.
+## HowTo: `cancelClickOnce()`
 
-## Unpreventable native composed events
+The next best thing to be able to prevent the `click` event from occurring, is to stop its propagation
+and defaultAction as soon as possible. We do this by adding an event listener for the next `click` 
+that *first* calls `stopPropagation()` and `.preventDefault()` on the event, and *then* removes itself.
 
-However, some native composed events such as `click` are *unpreventable*.
-`click`s can be created by the user `mousedown` and then `mouseup` within the same `target`. 
-`click` is a mini-gesture. One might imagine that calling `preventDefault()` on the `mouseup` event 
-would prevent the `click` event from being dispatched. 
-But it doesn't. The `click` cannot be prevented.
+```javascript
+const cancelClickOnce = function(){
+  window.addEventListener("click", function(e){
+    e.stopPropagation();                //*
+    e.preventDefault();
+    window.removeEventListener("click", cancelClickOnce, true);
+  }, true);
+};
+
+```
+ * Use `stopPropagation()`, not `stopImmediatePropagation()`. 
+   If, for some reason, this `cancelClickOnce()` is called twice, 
+   `stopPropagation()` will work just fine, while `stopImmediatePropagation()` will cause the two or 
+   more `click`s to be canceled. 
+
+## Example 1: CancelClickOnce
+
+```html
+<div id="test">
+  <div id="box">
+    <h1 id="sunshine">Hello sunshine!</h1>
+  </div>
+  <form action="#HelloSunshine">
+    <input value="click for sunshine!" type="submit">
+  </form>
+
+  <a href="#helloWorld">hello world</a>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  const test = document.querySelector("#test");
+  //logs
+  test.addEventListener("submit", log);
+  test.addEventListener("click", log);
+  test.addEventListener("mouseup", log);
+  test.addEventListener("touchend", log);
+
+  const cancelClickOnce = function(){
+    window.addEventListener("click", function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      window.removeEventListener("click", cancelClickOnce, true);
+    }, true);
+  };
+
+
+  test.addEventListener("mouseup", cancelClickOnce);
+
+</script>
+```
+
+> Other approaches such as setting a temporary `pointer-events: none` somewhere in the DOM during the 
+> `mousedown` event, doesn't work. Your best and simplest bet is to `cancelClickOnce()` during the 
+> `mouseup` event.
+
+## Why CancelClick?
+
+Mouse-based gestures such as a drag'n'drop can be active on an element that is a descendant of 
+an element that listens for `click` event. The ancestor element might desire to listen for 
+`click` events on several of its other children elements, thus listening for the same `click` event 
+at a higher level. If you are making a mouse-based gesture that you know will conflict with `click`
+events and therefore should cancel them, you need to somehow cancel the trailing, domino `click`
+events. 
 
 This can cause conflict. Lets look at an example with an imagined, custom composed event called 
 "custom-draggable":
@@ -46,69 +112,24 @@ This confusion would lead to bugs or alternatively highly complex code in both s
 and the best way to avoid these problems would be to have the custom-draggable mouse-based gesture
 cancel the click event. But, how to do that? How to prevent an unpreventable event?
 
-## HowTo: cancel `click`
+## Example: `long-press` with `cancelClickOnce()` and `do-click` attribute
 
-To cancel unpreventable `click`s in a mouse-based EventSequence you should:
+> todo move this back to the mouse chapter?
 
-1. in the **last** trigger function for the **`mouseup`**,
-2. add a one-time EarlyBird event listener for the next `click` that
-3. calls both `.preventDefault()` and `stopImmediatePropagation()` to cancel this event.
-4. If the custom mouse-based gesture is cancelled for other reasons, 
-   the custom event must evaluate if it should or should not cancel the next `click`.
-   
 When a mouse-based gestures needs to cancel subsequent, unpreventable `click` events, 
 they most likely need to do so most of the time. You should therefore expect CancelClick to be 
 the default behavior of custom composed mouse-based events that need it.
-However, it would yield good develer ergonomics to provide an EventAttribute called `do-click` 
+However, it would yield good developer ergonomics to provide an EventAttribute called `do-click` 
 that enables the user of the event to let the `click` event be dispatched anyway. 
 `do-click` would prevent the prevention of the unpreventable `click` so to speak.
 
 The implementation of the `do-click` attribute is straight-forward and follows the EventAttribute pattern.
 The implementation of one-time EarlyBird event-cancelling trigger functions is described below.
 
-## HowTo: implement one-time EarlyBird event-cancelling trigger functions
-
-A one-time EarlyBird event-cancelling trigger function can be made using either
-a) the EventListener option `once: true` or b) a self-removing event listener function.
-Below is a setup that feature checks for a), and then if so chooses a), and if not b).
-
-```javascript
-var supportsOnce = false;
-try {
-  var opts = Object.defineProperty({}, 'once', {
-    get: function() {
-      supportsOnce = true;
-    }
-  });
-  window.addEventListener("test", null, opts);
-  window.removeEventListener("test", null, opts);
-} catch (e) {}
-
-var cancelEvent = function(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? 
-    e.stopImmediatePropagation() : 
-    e.stopPropagation();
-};
-
-var cancelEventSelfRemoving = function(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? 
-    e.stopImmediatePropagation() : 
-    e.stopPropagation();
-  window.removeEventListener("click", cancelEventSelfRemoving, true);
-};
-
-supportsOnce ? 
-  window.addEventListener("click", cancelEvent, {capture: true, once: true}):
-  window.addEventListener("click", cancelEventSelfRemoving, true);
-```   
-
-## Example: `long-press` with CancelClick
-
 In this example we add the CancelClick pattern to our naive, composed `long-press` event.
 
-```javascript
+```html
+<script >
 function dispatchPriorEvent(target, composedEvent, trigger) {
   composedEvent.preventDefault = function () {
     trigger.preventDefault();
@@ -118,30 +139,12 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   return target.dispatchEvent(composedEvent);
 }
 
-var supportsOnce = false;                                              //[1] start
-try {
-  var opts = Object.defineProperty({}, 'once', {
-    get: function() {
-      supportsOnce = true;
-    }
-  });
-  window.addEventListener("test", null, opts);
-  window.removeEventListener("test", null, opts);
-} catch (e) {}
-
-var cancelEvent = function(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? 
-    e.stopImmediatePropagation() : 
+const cancelClickOnce = function(){
+  window.addEventListener("click", function(e){
     e.stopPropagation();
-};
-
-var cancelEventSelfRemoving = function(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? 
-    e.stopImmediatePropagation() : 
-    e.stopPropagation();
-  window.removeEventListener("click", cancelEventSelfRemoving, true);  //[1] ends
+    e.preventDefault();
+    window.removeEventListener("click", cancelClickOnce, true);
+  }, true);
 };
 
 var primaryEvent;                                               
@@ -154,11 +157,8 @@ function startSequenceState(e){
 function resetSequenceState(doClick){
   primaryEvent = undefined;                                     
   window.removeEventListener("mouseup", onMouseup, true);             
-  if (doClick)                                                         //[3]
-    return;
-  supportsOnce ?                                                       //[2]
-    window.addEventListener("click", cancelEvent, {capture: true, once: true}):
-    window.addEventListener("click", cancelEventSelfRemoving, true);
+  if (!doClick)                                                        
+    cancelClickOnce();
 }
 
 function onMousedown(e){
@@ -170,21 +170,14 @@ function onMouseup(e){
   //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
   if (duration > 300 && e.target === primaryEvent.target)       
     dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}), e);
-  var doClick =                                                        //[3]
+  var doClick =                                                       
     e.target.getAttribute("do-click") || 
     document.children[0].getAttribute("do-click");
   resetSequenceState(doClick);                                         
 }
 
 window.addEventListener("mousedown", onMousedown);              
-
-//1. Set up the cancelEvent(e) function.
-//2. Add the cancelEvent(e) function as a one-time EarlyBird secondary trigger.
-//3. Check for the do-click attribute on the target or the root element.
-```
-
-## Demo: `long-press` cancels `click`
-```html
+</script>
 <div id="one">
   Press me more than 300ms for a long-press.
   This will cancel the ensuing click function.
@@ -207,4 +200,5 @@ window.addEventListener("long-press", function(e){
 
 ## References
 
- * 
+ * [Stackoverflow: cancelClick](https://stackoverflow.com/questions/17441810/pointer-events-none-does-not-work-in-ie9-and-ie10#answer-17441921)
+ * [MDN: pointer-events: none](https://css-tricks.com/almanac/properties/p/pointer-events/)

@@ -1,0 +1,38 @@
+<div id="box">
+  <h1 id="sunshine">Hello sunshine!</h1>
+</div>
+<div id="outside">think</div>
+
+<script>
+  function log(e, extra) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type, extra || "");
+  }
+
+  const root = document.children[0];
+  const body = root.children[1];
+  const box = document.querySelector("#box");
+  const outside = document.querySelector("#outside");
+  const sunshine = document.querySelector("#sunshine");
+
+  //bubble phase listeners
+  window.addEventListener("click", log);
+  root.addEventListener("click", log);
+  body.addEventListener("click", log);
+  box.addEventListener("click", log);
+  outside.addEventListener("click", log);
+  sunshine.addEventListener("click", function(e){log(e, "bubble");});
+
+  //capture phase listeners
+  window.addEventListener("click", log, true);
+  root.addEventListener("click", log, true);
+  body.addEventListener("click", log, true);
+  box.addEventListener("click", log, true);
+  outside.addEventListener("click", log, true);
+  sunshine.addEventListener("click", function(e){log(e, "capture");}, true);
+
+  //event listeners added last
+  window.addEventListener("click", function(e){log(e, "added last");});
+  window.addEventListener("click", function(e){log(e, "added last");}, true);
+</script>

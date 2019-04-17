@@ -4,6 +4,13 @@ EventToEventComposition is the act of making a new event from one or more other 
 EventToEventComposition is implemented as a single JS function added as a global, capture event listener.
 When composing events, one relies on a series of strategic choices, that put together form different
 design patterns for EventToEventCompositions. 
+
+The EventToEventComposition patterns described here only applies to native DOM Events that always 
+propagate to the `window` and `document` node in the DOM (ie. that has `{bubble: true, composed: true}`). 
+Events that are either only dispatched to a single DOM node (`bubbles: false`) can be handled quite 
+similarly, but are restricted to a single document scope and all their listeners must be attached to
+the single target node. Composed events for native or custom events that are `composed: false` should 
+look to JoiComponents EventRecorder pattern instead. 
       
 ## EventToEventComposition strategies
 The strategic choices the developer needs to consider when composing events are:

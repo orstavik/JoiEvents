@@ -1,0 +1,42 @@
+preventDefault on touchend: <input id="touchend" type="checkbox" checked><br>
+preventDefault on mouseup: <input id="mouseup" type="checkbox" checked><br>
+preventDefault on click: <input id="click" type="checkbox" checked><br>
+preventDefault on submit: <input id="submit" type="checkbox" checked><br>
+<hr>
+
+<div id="test">
+  <div id="box">
+    <h1 id="sunshine">Hello sunshine!</h1>
+  </div>
+  <form action="#HelloSunshine">
+    <input value="click for sunshine!" type="submit">
+  </form>
+
+  <a href="#helloWorld">hello world</a>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  const test = document.querySelector("#test");
+  //logs
+  test.addEventListener("click", log);
+  test.addEventListener("mouseup", log);
+  test.addEventListener("touchend", log);
+  test.addEventListener("submit", log);
+
+  function prevent(e) {
+    if (document.querySelector("input#" + e.type).checked)
+      e.preventDefault();
+  }
+
+  //prevent
+  test.addEventListener("click", prevent);
+  test.addEventListener("mouseup", prevent);
+  test.addEventListener("touchend", prevent);
+  test.addEventListener("submit", prevent);
+</script>

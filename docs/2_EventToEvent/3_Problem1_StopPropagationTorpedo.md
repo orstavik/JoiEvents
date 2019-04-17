@@ -4,7 +4,7 @@
 
 The platform makes two important strategic choices about event propagation:
  
- * All native events *propagate completely and in isolation, one by one*.
+ * All native events triggered by the browser *propagate completely and in isolation, one by one*.
    The browser will never trigger an event listener for a native, trailing event before *all* 
    the event listeners for a native, preceding event has been executed.
    This is true for all phases of event propagation (capture, target, and bubble).
@@ -15,9 +15,13 @@ The platform makes two important strategic choices about event propagation:
    event, via `preventDefault()`. We will return to that later.)
 
 Combined, these two platform practices have an important consequence for custom events:
-**the propagation of a triggering event *should never affect/stop* the propagation of a composed event**. 
+**the propagation of a triggering event *should not affect/stop* the propagation of a composed event**. 
 This affects *both* native atomic and composed events. 
 And this principle of isolated propagation should also follow our custom, composed events.
+
+> If you in JS trigger another event by calling a method such as `.click()` or `.dispatchEvent(...)`,
+  then these events will propagate immediately, *before* any other ongoing propagation
+  is completed. Triggered from JS, *events can propagate recursively, nested inside each other*.
 
 Thus. We need to see how and when stopping the propagation of a trigger event can torpedo and sink
 the dispatch and propagation of a composed event. We call such situations for StopPropagationTorpedo problems.

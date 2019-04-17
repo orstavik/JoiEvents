@@ -1,0 +1,53 @@
+<div id="box">
+  <h1 id="sunshine">Hello sunshine!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  const root = document.children[0];
+  const body = root.children[1];
+  const box = document.querySelector("#box");
+  const sunshine = document.querySelector("#sunshine");
+
+  //click listeners
+  window.addEventListener("click", log);
+  root.addEventListener("click", log);
+  body.addEventListener("click", log);
+  box.addEventListener("click", log);
+  sunshine.addEventListener("click", log);
+  window.addEventListener("click", log, true);
+  root.addEventListener("click", log, true);
+  body.addEventListener("click", log, true);
+  box.addEventListener("click", log, true);
+  sunshine.addEventListener("click", log, true);
+
+  //mouseup listeners
+  window.addEventListener("mouseup", log);
+  root.addEventListener("mouseup", log);
+  body.addEventListener("mouseup", log);
+  box.addEventListener("mouseup", log);
+  sunshine.addEventListener("mouseup", log);
+  window.addEventListener("mouseup", log, true);
+  root.addEventListener("mouseup", log, true);
+  body.addEventListener("mouseup", log, true);
+  box.addEventListener("mouseup", log, true);
+  sunshine.addEventListener("mouseup", log, true);
+
+  //touchend listeners
+  window.addEventListener("touchend", log);
+  root.addEventListener("touchend", log);
+  body.addEventListener("touchend", log);
+  box.addEventListener("touchend", log);
+  sunshine.addEventListener("touchend", log);
+  window.addEventListener("touchend", log, true);
+  root.addEventListener("touchend", log, true);
+  body.addEventListener("touchend", log, true);
+  box.addEventListener("touchend", log, true);
+  sunshine.addEventListener("touchend", log, true);
+
+</script>

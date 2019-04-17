@@ -1,0 +1,32 @@
+<div id="box">
+  <h1 id="sunshine">Hello sunshine!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  const box = document.querySelector("#box");
+  const sunshine = document.querySelector("#sunshine");
+
+  //click listeners
+  box.addEventListener("click", log);
+  sunshine.addEventListener("click", log);
+  box.addEventListener("click", log, true);
+
+  //mouseup listeners
+  box.addEventListener("mouseup", log);
+  sunshine.addEventListener("mouseup", function(e){e.stopPropagation();});
+  sunshine.addEventListener("mouseup", log);
+  box.addEventListener("mouseup", log, true);
+
+  //touchend listeners
+  box.addEventListener("touchend", log);
+  sunshine.addEventListener("touchend", function(e){e.stopImmediatePropagation();});
+  sunshine.addEventListener("touchend", log);
+  box.addEventListener("touchend", log, true);
+
+</script>

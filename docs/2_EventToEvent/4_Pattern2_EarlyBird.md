@@ -1,10 +1,15 @@
 # Pattern: EarlyBird
 
-To make a custom, composed event, you *must* listen for a triggering event during its propagation.
+To make a custom, composed event, you *must* listen for a triggering event.
 You simply have no choice: how else can you be alerted about its occurrence?
-This means that if some event listener in your app happens to a) be triggered 
-before your event trigger function and b) call `.stopPropagation()` on the triggering event, 
-then your composed event will never propagate. 
+
+But, this means that if some other event listener in your app happens to:
+1. listen for the same event, 
+2. intercept the event before you get it, and
+3. call `.stopPropagation()` on it, 
+
+then your composed event will never hear about it.
+
 This breaks with established protocol that triggering event propagation should not stop composed event,
 creates a StopPropagationTorpedo that can cause great confusion and hard to discover bugs in your code.
 
@@ -112,6 +117,118 @@ Thus, to CallShotgun with the EarlyBird, the app gracefully avoids the EarlyBird
 > A custom, composed event should be created using the EarlyBird event listener.
 > The EarlyBird pattern avoids StopPropagationTorpedoes.
 > If you really need, you can CallShotgun also.
+
+## TODO how to block a natively spawned event
+
+> what if? 
+
+If the EarlyBird is added to `document`, and not `window`, then it would be possible 
+for listeners added to the window to *block and stop* the composed events. 
+For example, `touchstart` events might want to block preceding `mousedown` events, but
+if the browser has added a composed event for the `mousedown` event in capture mode on the 
+window already, there is no good way to stop the `mousedown` event.
+
+Example: 
+```html
+<pre>
+If you touch me, there will be no mouse events.
+</pre>
+
+<script>
+  const log = function(e){
+      e.target.innerText += e.type + " - ";    
+    };
+  
+  /*as long as the log listeners are added on the document capture phase or later, 
+    everything will work*/
+  var pre = document.querySelector("pre");
+  pre.addEventListener("mousedown", log);
+  pre.addEventListener("mousemove", log);
+  pre.addEventListener("mouseup", log);
+  pre.addEventListener("touchstart", log);
+  pre.addEventListener("touchmove", log);
+  pre.addEventListener("touchend", log);
+    
+  /*anticipate that the killer functions will be registered /after/ the listeners 
+    you want to block*/
+  const killer = function(e){
+    e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
+    e.preventDefault();
+  };
+  window.addEventListener("touchstart", function(){
+    window.addEventListener("mousedown", killer, true);
+    window.addEventListener("mousemove", killer, true);
+    window.addEventListener("mouseup", killer, true);
+  });
+  window.addEventListener("touchend", function(){
+    window.removeEventListener("mousedown", killer, true);
+    window.removeEventListener("mousemove", killer, true);
+    window.removeEventListener("mouseup", killer, true);
+  });
+  
+  
+</script>
+```
+
+demo!!
+
+pros:
+ * if the composed event is added on document, then the window can be used for blocking the 
+   composed event.
+   the drag can cancel any click based events. any mouse based events. the CancelClick and 
+   the conflict between composed events for navigation and dragging will be cleared and
+   the conflict between mouse and touch based dragging will be cleared.
+   
+   I do not see any other way to do that without leaving the window capture open for blocking.
+   
+cons:
+ * what if some other event is added on the window that stops propagation for your composed 
+   event?
+   if the composed event is added on document, then the window can be used for blocking the 
+   composed event.
+
+```html
+<pre>
+  When you touch me, I will spawn many events.
+</pre>
+
+<script>
+  const log = function(e){
+      e.target.innerText += e.type + " - ";    
+    };
+  
+  /*as long as the log listeners are added on the document capture phase or later, 
+    everything will work*/
+  var pre = document.querySelector("pre");
+  pre.addEventListener("mousedown", log);
+  pre.addEventListener("mousemove", log);
+  pre.addEventListener("mouseup", log);
+  pre.addEventListener("touchstart", log);
+  pre.addEventListener("touchmove", log);
+  pre.addEventListener("touchend", log);
+    
+  /*anticipate that the killer functions will be registered /after/ the listeners 
+    you want to block*/
+  const killer = function(e){
+    e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
+    e.preventDefault();
+  };
+  window.addEventListener("touchstart", function(){
+    window.addEventListener("mousedown", killer, true);
+    window.addEventListener("mousemove", killer, true);
+    window.addEventListener("mouseup", killer, true);
+  });
+  window.addEventListener("touchend", function(){
+    window.removeEventListener("mousedown", killer, true);
+    window.removeEventListener("mousemove", killer, true);
+    window.removeEventListener("mouseup", killer, true);
+  });
+  
+  
+</script>
+```
+
+   
 
 ## References
 

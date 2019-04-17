@@ -1,0 +1,43 @@
+<div id="box">
+  <h1 id="sunshine">Hello sunshine!</h1>
+</div>
+
+<script>
+  function echo(e){
+    const echo = new CustomEvent("echo-" + e.type, {bubbles: true, composed: true});
+    e.target.dispatchEvent(echo);
+  }
+
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  const box = document.querySelector("#box");
+  const sunshine = document.querySelector("#sunshine");
+
+  sunshine.addEventListener("click", echo);
+  sunshine.addEventListener("echo-click", echo);
+
+  //click listeners
+  window.addEventListener("click", log);
+  box.addEventListener("click", log);
+  sunshine.addEventListener("click", log);
+  window.addEventListener("click", log, true);
+  box.addEventListener("click", log, true);
+  
+  //echo-click listeners
+  window.addEventListener("echo-click", log);
+  box.addEventListener("echo-click", log);
+  sunshine.addEventListener("echo-click", log);
+  window.addEventListener("echo-click", log, true);
+  box.addEventListener("echo-click", log, true);
+  
+  //echo-echo-click listeners
+  window.addEventListener("echo-echo-click", log);
+  box.addEventListener("echo-echo-click", log);
+  sunshine.addEventListener("echo-echo-click", log);
+  window.addEventListener("echo-echo-click", log, true);
+  box.addEventListener("echo-echo-click", log, true);
+</script>

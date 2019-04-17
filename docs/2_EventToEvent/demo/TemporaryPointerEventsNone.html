@@ -1,0 +1,45 @@
+<div id="test">
+  <div id="box">
+    <h1 id="sunshine">Hello sunshine!</h1>
+  </div>
+  <form action="#HelloSunshine">
+    <input value="click for sunshine!" type="submit">
+  </form>
+
+  <a href="#helloWorld">hello world</a>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  const test = document.querySelector("#test");
+  //logs
+  test.addEventListener("submit", log);
+  test.addEventListener("click", log);
+  test.addEventListener("mouseup", log);
+  test.addEventListener("touchend", log);
+
+  let cachedPointerEvents = false;
+
+  function mouseDown(e) {
+    if (cachedPointerEvents === false){
+      cachedPointerEvents = e.target.style.pointerEvents;
+      e.target.style.pointerEvents = "none";
+    }
+  }
+
+  function mouseUp(e) {
+    if (e.buttons !== 0)
+      return;
+    e.target.style.pointerEvents = cachedPointerEvents;
+    cachedPointerEvents = false;
+  }
+
+  test.addEventListener("mousedown", mouseDown);
+  test.addEventListener("mouseup", mouseUp);
+
+</script>
