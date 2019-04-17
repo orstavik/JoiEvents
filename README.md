@@ -1,6 +1,30 @@
 # JoiEvents
  *compose events like a native!*
 
+## Vocabulary
+
+ * **event**: something happening in the browser. DOM Events being dispatched is an event, of course,
+   but a callback triggered or native system task executed are also generally speaking an event.
+ * **DOM Event**: an event that is triggered by one or more other events. Some native system tasks
+   such as browser navigation, (cf. defaultAction or native behavior) can often be considered an
+   invisible DOM Event.
+ * **Composed event**: a DOM Event that is triggered by one or more other DOM Events.
+ * **Triggering event**: a DOM Event that will initiate the dispatch a new composed event.
+ * **Atomic event**: a DOM event that is not triggered by any other DOM events.
+ * **Event sequence**: a series of triggering events that when following a specific order 
+   will dispatch a composed event.
+ * **Preceding event**: a DOM Event that propagates before another DOM Event.
+ * **Trailing event**: a DOM Event that propagates after another DOM Event.
+ * **Event listener**: a JS function that is triggered by a DOM Event.
+ * **defaultAction**: a native function in the browser that is triggered by a DOM Event.
+   DefaultActions are commonly preceded by a triggering event.
+ * **Event Triggering function**: a (set of) functions that capture DOM events and dispatch composed events.
+   The triggering function is at the very start of a triggering event's propagation: 
+   added a) globally (ie. to `window`) and b) in the capture phase of the propagation.
+ * **Native events**: DOM Events created by the browser.
+ * **Custom events**: DOM Events created by a script.
+ * **Global events**: DOM Events that can apply to HTML elements in the entire DOM.
+
 <a href="https://orstavik.github.io/JoiEvents/">Read the book and enjoi!</a>
 
 ## Introduction
@@ -16,6 +40,7 @@
 5. [Pattern: EventComposition](docs/2_EventToEvent/Pattern1_EventComposition)
 5. [Problem: StopPropagationTorpedo](docs/2_EventToEvent/Problem1_StopPropagationTorpedo)
 5. [Pattern: EarlyBird](docs/2_EventToEvent/Pattern2_EarlyBird)
+24. [Pattern: CancelClick](docs/2_EventToEvent/Pattern20_CancelClick)
 5. [Pattern: PriorEvent](docs/2_EventToEvent/Pattern3_PriorEvent)
 5. [Pattern: AfterthoughtEvent](docs/2_EventToEvent/Pattern4_AfterthoughtEvent)
 5. [Pattern: ReplaceDefaultAction](docs/2_EventToEvent/Pattern5_ReplaceDefaultAction)
@@ -50,7 +75,6 @@
 24. [Pattern: MouseMoveTrap](docs/5_MouseGestures/Pattern19_MouseMoveTrap)
 24. [Pattern: MouseDoubleDown](docs/5_MouseGestures/Pattern26_MouseDoubleDown)
 24. [Pattern: AlertBlurCall](docs/5_MouseGestures/Pattern25_AlertBlurCall)
-24. [Pattern: CancelClick](docs/5_MouseGestures/Pattern20_CancelClick)
 24. [Event: `long-press`](docs/5_MouseGestures/Event_long-press)
 24. [Event: mouse `dragging`](docs/5_MouseGestures/Event_dragFling)
 
@@ -83,29 +107,6 @@
 99. add chapters on proposals for the platform: add a `queJsTaskBeforeNextEventOrDefaultAction()` 
     or `addTailEvent()`. This should be in 2 along side ReplaceDefaultAction.
 99. fix the different long-press events so they are source code.
-
-## Vocabulary
-
-In this project/book, we use the following definitions.
-
- * **event**: something happening in the browser. DOM Events being dispatched is an event, of course,
-   but a callback triggered or native system task executed are also generally speaking an event.
- * **DOM Event**: an event that is triggered by one or more other events. Some native system tasks
-   such as browser navigation, (cf. defaultAction or native behavior) can often be considered an
-   invisible DOM Event.
- * **Composed event**: a DOM Event that is triggered by one or more other DOM Events.
- * **Triggering event**: a DOM Event that will initiate the dispatch a new composed event.
- * **Atomic event**: a DOM event that is not triggered by any other DOM events.
- * **Event sequence**: a series of triggering events that when following a specific order 
-   will dispatch a composed event.
- * **Preceding event**: a DOM Event that propagates before another DOM Event.
- * **Trailing event**: a DOM Event that propagates after another DOM Event.
- * **Event Triggering function**: a (set of) functions that capture DOM events and dispatch composed events.
-   The triggering function is at the very start of a triggering event's propagation: 
-   added a) globally (ie. to `window`) and b) in the capture phase of the propagation.
- * **Native events**: DOM Events created by the browser.
- * **Custom events**: DOM Events created by a script.
- * **Global events**: DOM Events that can apply to HTML elements in the entire DOM.
 
 ## Personal comment
 I was surprised to find how rarely EventToEventComposition is used. 
