@@ -1,5 +1,18 @@
 (function () {
   //utilities
+  let supportsPassive = false;
+  try {
+    const opts = Object.defineProperty({}, "passive", {
+      get: function () {
+        supportsPassive = true;
+      }
+    });
+    window.addEventListener("test", null, opts);
+    window.removeEventListener("test", null, opts);
+  } catch (e) {
+  }
+  const thirdArg = supportsPassive ? {capture: true, passive: false} : true;
+
   function captureEvent(e, stopProp) {
     e.preventDefault();
     stopProp && e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
@@ -7,10 +20,8 @@
 
   function filterOnAttribute(e, attributeName) {
     for (let el = e.target; el; el = el.parentNode) {
-      if (!el.hasAttribute)
-        return null;
-      if (el.hasAttribute(attributeName))
-        return el;
+      if (!el.hasAttribute) return null;
+      if (el.hasAttribute(attributeName)) return el;
     }
     return null;
   }
@@ -26,70 +37,72 @@
 
   //custom make events
   function makeDraggingEvent(name, trigger) {
-    const composedEvent = new CustomEvent("dragging-" + name, {bubbles: true, composed: true});
-    //todo the dragging-cancel events have a problem with the coordinates.
-    composedEvent.x = trigger.x;
-    composedEvent.y = trigger.y;
+    const composedEvent = new CustomEvent("dragging-" + name, {
+      bubbles: true,
+      composed: true
+    });
+    composedEvent.x = trigger.changedTouches ? parseInt(trigger.changedTouches[0].clientX) : trigger.x;
+    composedEvent.y = trigger.changedTouches ? parseInt(trigger.changedTouches[0].clientY) : trigger.y;
     return composedEvent;
   }
 
   function makeFlingEvent(trigger, sequence) {
     const flingTime = trigger.timeStamp - sequence.flingDuration;
     const flingStart = findLastEventOlderThan(sequence.recorded, flingTime);
-    if (!flingStart)
-      return null;
+    if (!flingStart) return null;
     const detail = flingDetails(trigger, flingStart);
-    if (detail.distDiag < sequence.flingDistance)
-      return null;
+    if (detail.distDiag < sequence.flingDistance) return null;
     detail.angle = flingAngle(detail.distX, detail.distY);
     return new CustomEvent("fling", {bubbles: true, composed: true, detail});
   }
 
   function findLastEventOlderThan(events, timeTest) {
     for (let i = events.length - 1; i >= 0; i--) {
-      if (events[i].timeStamp < timeTest)
-        return events[i];
+      if (events[i].timeStamp < timeTest) return events[i];
     }
     return null;
   }
 
   function flingDetails(flingEnd, flingStart) {
-    const distX = flingEnd.x - flingStart.x;
-    const distY = flingEnd.y - flingStart.y;
+    const distX = parseInt(flingEnd.changedTouches[0].clientX) - flingStart.x;
+    const distY = parseInt(flingEnd.changedTouches[0].clientY) - flingStart.y;
     const distDiag = Math.sqrt(distX * distX + distY * distY);
     const durationMs = flingEnd.timeStamp - flingStart.timeStamp;
     return {distX, distY, distDiag, durationMs};
   }
 
   function flingAngle(x = 0, y = 0) {
-    return ((Math.atan2(y, -x) * 180 / Math.PI) + 270) % 360;
+    return (Math.atan2(y, -x) * 180 / Math.PI + 270) % 360;
   }
 
   //custom sequence
   let globalSequence;
-  const mousedownInitialListener = e => onMousedownInitial(e);
-  const mousedownSecondaryListener = e => onMousedownSecondary(e);
-  const mousemoveListener = e => onMousemove(e);
-  const mouseupListener = e => onMouseup(e);
+
+  const touchInitialListener = e => onTouchInitial(e);
+  const touchdownSecondaryListener = e => onTouchdownSecondary(e);
+  const touchmoveListener = e => onTouchmove(e);
+  const touchendListener = e => onTouchend(e);
   const onBlurListener = e => onBlur(e);
   const onSelectstartListener = e => onSelectstart(e);
 
   function startSequence(target, e) {
     const sequence = {
       target,
-      cancelMouseout: target.hasAttribute("draggable-cancel-mouseout"),
       flingDuration: parseInt(target.getAttribute("fling-duration")) || 50,
-      flingDistance: parseInt(target.getAttribute("fling-distance")) || 150,
+      flingDistance: parseInt(target.getAttribute("fling-distance")) || 100,
       recorded: [e],
-      userSelectStart: document.children[0].style.userSelect
+      userSelectStart: document.children[0].style.userSelect,
+      touchActionStart: document.children[0].style.touchAction
     };
     document.children[0].style.userSelect = "none";
-    document.removeEventListener("mousedown", mousedownInitialListener, true);
-    window.addEventListener("mousedown", mousedownSecondaryListener, true);
-    window.addEventListener("mousemove", mousemoveListener, true);
-    window.addEventListener("mouseup", mouseupListener, true);
-    window.addEventListener("blur", onBlurListener, true);
-    window.addEventListener("selectstart", onSelectstartListener, true);
+    document.children[0].style.touchAction = "none";
+    window.removeEventListener("touchstart", touchInitialListener, thirdArg);
+    window.removeEventListener("touchend", touchInitialListener, thirdArg);
+    window.addEventListener("touchstart", touchdownSecondaryListener, thirdArg);
+    window.addEventListener("touchmove", touchmoveListener, thirdArg);
+    window.addEventListener("touchend", touchendListener, thirdArg);
+    window.addEventListener("blur", onBlurListener, thirdArg);
+    window.addEventListener("selectstart", onSelectstartListener, thirdArg);
     return sequence;
   }
 
@@ -102,18 +115,22 @@
     //release target and event type start
     //always remove all potential listeners, regardless
     document.children[0].style.userSelect = globalSequence.userSelectStart;
-    window.removeEventListener("mousemove", mousemoveListener, true);
-    window.removeEventListener("mouseup", mouseupListener, true);
-    window.removeEventListener("blur", onBlurListener, true);
-    window.removeEventListener("selectstart", onSelectstartListener, true);
-    window.removeEventListener("mousedown", mousedownSecondaryListener, true);
-    document.addEventListener("mousedown", mousedownInitialListener, true);
+    document.children[0].style.touchAction = globalSequence.touchActionStart;
+    window.removeEventListener("touchmove", touchmoveListener, thirdArg);
+    window.removeEventListener("touchend", touchendListener, thirdArg);
+    window.removeEventListener("blur", onBlurListener, thirdArg);
+    window.removeEventListener("selectstart", onSelectstartListener, thirdArg);
+    window.removeEventListener("touchstart", touchdownSecondaryListener, thirdArg);
+    window.addEventListener("touchdown", touchInitialListener, thirdArg);
+    window.addEventListener("touchend", touchInitialListener, thirdArg);
     return undefined;
   }
 
   //custom listeners
-  function onMousedownInitial(trigger) {
-    if (trigger.button !== 0)
+  function onTouchInitial(trigger) {
+    if(trigger.defaultPrevented)
+      return;
+    if (trigger.touches.length !== 1)           //support sloppy finger
       return;
     const target = filterOnAttribute(trigger, "draggable");
     if (!target)
@@ -124,29 +141,22 @@
     dispatchPriorEvent(target, composedEvent, trigger);
   }
 
-  function onMousedownSecondary(trigger) {
+  function onTouchdownSecondary(trigger) {
     const cancelEvent = makeDraggingEvent("cancel", trigger);
     const target = globalSequence.target;
     globalSequence = stopSequence();
     dispatchPriorEvent(target, cancelEvent, trigger);
   }
 
-  function onMousemove(trigger) {
-    if (!globalSequence.cancelMouseout && mouseOutOfBounds(trigger)) {
-      //todo here we need to find the coordinates between the previous (move or start) event and the out of bounds event
-      const cancelEvent = makeDraggingEvent("cancel", trigger);
-      const target = globalSequence.target;
-      globalSequence = stopSequence();
-      dispatchPriorEvent(target, cancelEvent, trigger);
-      return;
-    }
+  function onTouchmove(trigger) {
     const composedEvent = makeDraggingEvent("move", trigger);
     captureEvent(trigger, false);
     globalSequence = updateSequence(globalSequence, composedEvent);
     dispatchPriorEvent(globalSequence.target, composedEvent, trigger);
   }
 
-  function onMouseup(trigger) {
+  function onTouchend(trigger) {
+    trigger.preventDefault();                             //TouchendPreventDefault
     const stopEvent = makeDraggingEvent("stop", trigger);
     const flingEvent = makeFlingEvent(trigger, globalSequence);
     captureEvent(trigger, false);
@@ -157,12 +167,7 @@
       dispatchPriorEvent(target, flingEvent, trigger);
   }
 
-  function mouseOutOfBounds(trigger) {
-    return trigger.clientY < 0 || trigger.clientX < 0 || trigger.clientX > window.innerWidth || trigger.clientY > window.innerHeight;
-  }
-
   function onBlur(trigger) {
-    //todo here we need to simply use the coordinates for the previous (move or start) out of bounds event
     const blurInEvent = makeDraggingEvent("cancel", trigger);
     const target = globalSequence.target;
     globalSequence = stopSequence();
@@ -174,5 +179,5 @@
     trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
   }
 
-  document.addEventListener("mousedown", mousedownInitialListener);
+  document.addEventListener("touchstart", touchInitialListener, thirdArg);
 })();

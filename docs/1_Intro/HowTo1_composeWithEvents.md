@@ -1,5 +1,7 @@
 # HowTo: Event composition
 
+> todo rename old events to "OS Events" and "DOM Events" to just "events".
+
 ## What does it mean "to compose" HTML, JS, and CSS?
 
 > "It's a beautiful thing, the Destruction of words. Of course the great wastage is in the verbs and 

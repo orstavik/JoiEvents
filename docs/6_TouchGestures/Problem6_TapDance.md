@@ -5,7 +5,7 @@ fingers to control custom behaviors in your app like if it's a flat screen mecha
 This is going to be so much fun!
 
 But. There is one little problem we must fix first. And that is the conflict between
-your app's custom interpretation of the your custom gesture and the browsers' builtin interpretation
+your app's custom interpretation of your custom gesture and the browsers' builtin interpretation
 of native touch gestures such as drag-to-scroll and double-tap-to-zoom.
 More precisely, your problem is: 
 **how do I control the native touch-based gestures during 
@@ -44,8 +44,8 @@ The first step is concluded, put your right foot forward.
 
 `touch-action` sounds good. To control native touch gestures *dynamically*, on-demand-only, 
 all we have to do is add `touch-action` restrictions high up in the DOM, 
-such as on the `<body>` element, when our custom trigger function is activated. 
-Except that it doesn't work! 
+such as on the root `<html>` element (ie. `document.children[0]`), when our custom trigger function 
+is activated. Except that it doesn't work! 
 
 <script async src="//jsfiddle.net/orstavik/nheLpx3y/29/embed/result,html/"></script>
 
@@ -57,16 +57,17 @@ changing `touch-action` properties will have no effect on the ensuing `touchmove
 events until *after* the native gesture potentially triggered has ended. 
 So, CSS `touch-action` is useless for dynamic control of touch events.
 
+> `pointer-events: none` does not work neither.
+
 Second step: right foot back again.
 
 ## Step 3: no `.preventDefault()` in `pointerdown`
 
 [Pointer events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events)
-is a native MergedEvent of touch and mouse. It is not supported by Safari, but
-using the PeP polyfill it provides the developer with a viable alternative for writing
-pointer management seamlessly for both mobile and desktop.
+is a native MergedEvent of touch and mouse. 
+(It is not supported by Safari, but there you can use the PeP polyfill).
 As the pointer events are doubling for their triggering touch events, one should expect that
-calling `.preventDefault()` on the pointer events would block their corresponding native gestures.
+calling `.preventDefault()` on the pointer events might block their corresponding native gestures.
 
 <script async src="//jsfiddle.net/orstavik/L0fr2nuh/5/embed/result,html/"></script>
 
@@ -74,19 +75,6 @@ However, they don't. When the browsers make their native, merged pointer events,
 `.preventDefault()` in the MergedEvent to the `.preventDefault()` in the trigger event.
 That means that if you want to use a single event listener for both mouse and touch using a pointer event,
 you can do so, but only up to the point when you need to call `.preventDefault()`.
-At that point native, merged pointer events will fail you.
-
-> Merging events without binding `preventDefault()` is not painful for the browser.
-> However, it is a bit painful for the developers.
->  * First the developer is told he can control mouse and touch from a single event;
->  * then he makes a single pointer event listener function;
->  * then he finds out that the pointer event is not really encompassing the triggering touch event as it
->    lacks access to the touch event's `.preventDefault()`; and 
->  * so then the developer must backtrack again and add additional event listeners for the triggering 
->    touch events again.
-> MergedEvents should map to the trigger event's `.preventDefault()`, not only their other values.
-> Not mapping `.preventDefault()` in MergedEvents will set the developer up for disappointment.
-
 Third step is left foot back.
 
 ## Step 4: passive-aggressive `touchstart` in Chrome
@@ -136,7 +124,7 @@ window.addEventListener("touchstart", function(e){e.preventDefault();}, thirdArg
 ```
 It works!
 ```html
-
+todo add demo
 ```
 The last dance move is the pivot 180deg so as to uncross your legs.
 You now face in the reverse direction, and can repeat the dance from beginning.
