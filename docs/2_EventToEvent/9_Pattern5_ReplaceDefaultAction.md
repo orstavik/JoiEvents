@@ -2,7 +2,7 @@
 
 Another possibility is to *always block* the defaultAction of the triggering event.
 This gives us the clear benefit of a consistent event sequence, but 
-the clear benefit of always loosing the native composed events or the native default action.
+the drawback of always loosing native composed events / native defaultActions.
 
 ```javascript
 function replaceDefaultAction(target, composedEvent, trigger) {               
@@ -16,14 +16,16 @@ function replaceDefaultAction(target, composedEvent, trigger) {
   return setTimeout(function(){target.dispatchEvent(composedEvent)}, 0);
 }
 
-window.addEventListener(
-  "click", 
-  function(e) {
-    replaceDefaultAction(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
-  }, 
-  true
-);
+function onClick(e){
+  if (e.defaultPrevented || e.customPrevented)
+    return;
+  replaceDefaultAction(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+}
+
+document.addEventListener("click", onClick, true);
 ```
+
+## Example: `echo-click` as ReplaceDefaultAction
 
 This pattern is safe, but limited. Use this pattern only when you desire to capture all the 
 triggering events.
@@ -41,13 +43,13 @@ function replaceDefaultAction(target, composedEvent, trigger) {
   return setTimeout(function(){target.dispatchEvent(composedEvent)}, 0);
 }
 
-window.addEventListener(                                       
-  "click", 
-  function(e) {
-    replaceDefaultAction(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
-  }, 
-  true
-);
+function onClick(e){
+  if (e.defaultPrevented || e.customPrevented)
+    return;
+  replaceDefaultAction(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+}
+
+document.addEventListener("click", onClick, true);
 </script>
 
 <p>

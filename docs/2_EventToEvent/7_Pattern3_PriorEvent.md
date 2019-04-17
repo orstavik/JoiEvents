@@ -1,54 +1,5 @@
 # Pattern: PriorEvent
 
-## WhatIs: `preventDefault()`
-
-Events that occur in the DOM can often have a default action associated with them:
-`touch` the screen to scroll down; and `click` inside a link to browse. 
-To control and block these actions in the app, the browser has added a specialized method
-on the events that precede these actions: `preventDefault()`.
-
-However, the default action of browsers is often associated with their own specialized event.
-Before the browser actually will scroll, it will dispatch a native, composed `scroll` event
-*after* the `touchmove` event and *before* the task of actually scrolling the viewport.
-The event order is touchmove (event) -> scroll (event) -> scroll (task).
-To call `preventDefault()` on the `scroll` event will cancel the scroll task.
-To call `preventDefault()` on the `touchmove` event will cancel the `scroll` event 
-which in turn will cancel the scroll task.
-
-> If you don't like the defaultAction of events, you're not alone. This is how the spec itself
-> describes it:
-> "\[Activation behavior\] exists because user agents perform certain actions for certain EventTarget 
-> objects, e.g., the area element, in response to synthetic MouseEvent events whose type attribute is 
-> click. Web compatibility prevented it from being removed and it is now the enshrined way of defining 
-> an activation of something. "
-> [spec](https://dom.spec.whatwg.org/#eventtarget-activation-behavior)
-
-## Native event sequence
-
-Native, composed events always propagate *after* the native triggering event:
-`click` propagates *after* `mouseup`; `submit` propagates after `click`.
-This order is also intuitive from the point of the developer and app, 
-as the trigger event *must* have occured to cause the dispatch of the composed event.
-We would therefore like to have the same sequence and causality for custom events.
-
-But, the EarlyBird pattern illustrate how the event triggering functions for custom, composed events 
-must be added *before* (as in at the very beginning of) the propagation of the triggering event
-to avoid StopPropagationTorpedoes. This creates a tension in custom composed events:
- * how can we make sure that custom composed events propagate *after* their triggering event, 
-   while still employing the EarlyBird pattern? 
- * how can we implement the functionality of `preventDefault()` to control
-   both trailing, composed events *and* the browsers default actions?
-
-The short answer is: we can't. Not fully. We have to compromise.
-
-This chapter explains why we need to compromise, and what that compromise looks like.
-To illustrate the alternatives' pros and cons, we will compose a `click-echo` event.
-The `click` event is a good candidate for this discussion as its default action of 
-navigating to a new page when a link is clicked, is hard to miss.
-All these patterns build on the EarlyBird pattern.
-
-## Pattern: PriorEvent
-
 The PriorEvent pattern propagates the custom composed event *before* the triggering event.
 
 The obvious drawback of this pattern is that it reverses the propagation order of the triggering 
@@ -63,16 +14,16 @@ function dispatchPriorEvent(target, composedEvent, trigger) {   //1
     trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
   };
   composedEvent.trigger = trigger;                              //3
-  target.dispatchEvent(composedEvent);                   //4
+  target.dispatchEvent(composedEvent);                          //4
 }
 
-window.addEventListener(
-  "click", 
-  function(e) {
-    dispatchPriorEvent(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
-  }, 
-  true
-);
+function onClick(e){
+  if (e.defaultPrevented || e.customPrevented)
+    return;
+  dispatchPriorEvent(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+}
+
+document.addEventListener("click", onClick, true);
 ```
 
 1. To make the pattern easier to reuse, the `dispatchPriorEvent(target, composedEvent, trigger)` 
@@ -92,16 +43,16 @@ function dispatchPriorEvent(target, composedEvent, trigger) {   //1
     trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
   };
   composedEvent.trigger = trigger;                              //3
-  target.dispatchEvent(composedEvent);                   //4
+  target.dispatchEvent(composedEvent);                          //4
 }
 
-window.addEventListener(
-  "click", 
-  function(e) {
-    dispatchPriorEvent(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
-  }, 
-  true
-);
+function onClick(e){
+  if (e.defaultPrevented || e.customPrevented)
+    return;
+  dispatchPriorEvent(e.target, new CustomEvent("echo-click", {bubbles: true, composed: true}), e);
+}
+
+document.addEventListener("click", onClick, true);
 </script>
 
 <p>
@@ -131,6 +82,19 @@ This example illustrate how a fully functional composedEvent->triggerEvent->defa
 sequence can be constructed. The benefit of this pattern is all the events can control the default action,
 the drawback of this pattern is that event listeners on the triggerEvent cannot be called 
 upon to cancel the composedEvent.
+
+## PriorEvent reverses event sequence
+
+Native, composed events always propagate *after* the native triggering event:
+`mouseup` then `click`; `click` then `submit`.
+This order is intuitive: the trigger event *comes* before the triggered, composed event.
+
+We would like to have the same causal sequence for custom composed events. We would like to postpone
+our custom composed events so they run after their trigger event has completed their propagation,
+while still employing the EarlyBird pattern so it cannot be blocked from another event listener
+accidentally calling `.stopPropagation()`. In the next chapter we will look at how we can composed 
+such custom events, AfterthoughtEvents, and their main, big limitation:
+no control of the defaultAction from the custom composed event.
 
 ## References
 

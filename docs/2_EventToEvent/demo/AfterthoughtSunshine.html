@@ -1,0 +1,41 @@
+<script>
+  function dispatchAfterthoughtEvent(target, composedEvent, trigger) {
+    composedEvent.trigger = trigger;
+    return setTimeout(function(){target.dispatchEvent(composedEvent);}, 0);
+  }
+
+  function onClick(e){
+    if (e.defaultPrevented || e.customPrevented)
+      return;
+    const echo = new CustomEvent("echo-click", {bubbles: true, composed: true});
+    dispatchAfterthoughtEvent(e.target, echo, e);
+  }
+
+  document.addEventListener("click", onClick, true);
+</script>
+
+<h1>Hello sunshine!</h1>
+
+<script>
+
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+  const sunshine = document.querySelector("h1");
+  const root = document.children[0];
+  //click listeners
+  window.addEventListener("click", log);
+  root.addEventListener("click", log);
+  sunshine.addEventListener("click", log);
+  root.addEventListener("click", log, true);
+  window.addEventListener("click", log, true);
+
+  //echo-click listeners
+  window.addEventListener("echo-click", log);
+  root.addEventListener("echo-click", log);
+  sunshine.addEventListener("echo-click", log);
+  root.addEventListener("echo-click", log, true);
+  window.addEventListener("echo-click", log, true);
+</script>

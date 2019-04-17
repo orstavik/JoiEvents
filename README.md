@@ -42,11 +42,11 @@
 5. [HowTo: StopPropagation](docs/2_EventToEvent/4_HowTo_StopPropagation)
 5. [Pattern: CancelClick](docs/2_EventToEvent/5_Pattern20_CancelClick)
 5. [Pattern: EarlyBird](docs/2_EventToEvent/6_Pattern2_EarlyBird)
-5. [Pattern: PriorEvent](docs/2_EventToEvent/Pattern3_PriorEvent)
-5. [Pattern: AfterthoughtEvent](docs/2_EventToEvent/Pattern4_AfterthoughtEvent)
-5. [Pattern: ReplaceDefaultAction](docs/2_EventToEvent/Pattern5_ReplaceDefaultAction)
-5. [Problem: PayAttention](docs/2_EventToEvent//Problem2_PayAttention)
-5. [Pattern: ReverseGlobalization](docs/2_EventToEvent/Pattern21_ReverseGlobalization)
+5. [Pattern: PriorEvent](docs/2_EventToEvent/7_Pattern3_PriorEvent)
+5. [Pattern: AfterthoughtEvent](docs/2_EventToEvent/7_Pattern4_AfterthoughtEvent)
+5. [Pattern: ReplaceDefaultAction](docs/2_EventToEvent/9_Pattern5_ReplaceDefaultAction)
+5. [Problem: PayAttention](docs/2_EventToEvent//10_Problem2_PayAttention)
+5. [Pattern: ReverseGlobalization](docs/2_EventToEvent/11_Pattern21_ReverseGlobalization)
 <!--
 5. [Problem: StopPropagationTorpedo](docs/2_EventToEvent/Problem1_StopPropagationTorpedo)
 -->

@@ -42,15 +42,14 @@ To stop *macro* level propagation of an event, use `preventDefault()`.
 `preventDefault()` does *not* work on neither the *micro* nor the *medium* level. 
 It *only* blocks other domino events that might be preceded and triggered by another event.
 
-
 Att! `preventDefault()` is idiomatic. For example, calling `.preventDefault()` on `mouseup` event will 
 not prevent `click`. `preventDefault()` can also block `defaultActions`, ie. native functions the 
 browser associates with a particular event such as:
  * navigating to a new web page when you `click` on a link or 
  * scrolling when you roll the `wheel` on your mouse.
 
-Some of this behavior is in turn associated with their own native event such as `submit`, while some are
-not, ie. `click` on links. We will return indepth to these issues in later chapters.
+Some of this behavior is in turn associated with their own native event such as `submit`, 
+while some are not, ie. `click` on links. We will return to these issues in later chapters.
 
 ## Example 1: StopPropagation
 

@@ -208,6 +208,29 @@ You see this in the example above that as soon as `.dispatchEvent(...)` for `ech
 and `echo-echo-click` are called, they start to propagate down in the capture phase *before*
 their trigger `click` and `echo-click` events have completed.
 
+## Discussion: `preventDefault()`
+
+Events that occur in the DOM can often have a default action associated with them:
+`touch` the screen to scroll down; and `click` inside a link to browse. 
+To control and block these actions in the app, the browser has added a specialized method
+on the events that precede these actions: `preventDefault()`.
+
+However, the default action of browsers is often associated with their own specialized event.
+Before the browser actually will scroll, it will dispatch a native, composed `scroll` event
+*after* the `touchmove` event and *before* the task of actually scrolling the viewport.
+The event order is touchmove (event) -> scroll (event) -> scroll (task).
+To call `preventDefault()` on the `scroll` event will cancel the scroll task.
+To call `preventDefault()` on the `touchmove` event will cancel the `scroll` event 
+which in turn will cancel the scroll task.
+
+> If you don't like the defaultAction of events, you're not alone. This is how the spec itself
+> describes it:
+> "\[Activation behavior\] exists because user agents perform certain actions for certain EventTarget 
+> objects, e.g., the area element, in response to synthetic MouseEvent events whose type attribute is 
+> click. Web compatibility prevented it from being removed and it is now the enshrined way of defining 
+> an activation of something. "
+> [spec](https://dom.spec.whatwg.org/#eventtarget-activation-behavior)
+
 ## References
 
  * [MDN: Event bubbling and capture](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Event_bubbling_and_capture)

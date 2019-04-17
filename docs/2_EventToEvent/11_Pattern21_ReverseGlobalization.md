@@ -1,16 +1,11 @@
 # Pattern: ReverseGlobalization
 
-Speed and efficiency matters. Especially in event management.
+> Speed and efficiency matters. Especially in event management.
  
-I must share a dirty little secret. At the time I am writing this chapter, 
-I am not 100% sure the strategies presented here will scale to fill every nook and cranny of 
-composing events. I am sure it will cover 90%. And I hope that this chapter will make me sure that it 
-will cover 98%. Because this chapter is powerful. I will let you know how it turns out.
-
 ## Ergonomics of global event listeners
     
-The EarlyBird is a **global** event listener. It attaches itself on the topmost global object `window`
-and thus will capture all events that bubble/propagate within that frame. 
+The EarlyBird is a **global** event listener. It attaches itself the top `document` node
+and will capture all events that bubble/propagate globally. 
 
 The biggest benefit of global event listeners is that you can process multiple target elements 
 using a single function. This benefit is mostly associated with developer ergonomics, ie. how easy 
@@ -20,13 +15,13 @@ a) a clear overview, b) a clear point of interception when pursuing bugs and c) 
 event composition from JS state management and HTML content construction.
 
 Another huge benefit of the composed events based on the EarlyBird pattern is that they are modular 
-and DOM independent. Unless you have done something wrong. 
-This both makes them extremely **reusable** and **modular**.
+and DOM independent. 
+This makes them both extremely **reusable** and **modular**.
 Their reusability makes them highly worth while for the developer to invest in.
 Their extremely low couplings to anything other than their triggering events makes them
-simple to specialize and gives room for edge case management. These two aspects combined just makes 
-them super cool. You can make them highly specialized and efficient and still remain confident 
-that when you just drop them into your app, they will work as smooth as silk.
+simple to specialize and gives room for edge case management. They are super cool. 
+You can make them highly specialized and efficient and still remain confident 
+that when you just drop them into your app, they will work as intended.
 
 A third benefit of EarlyBird composed events is that they are dynamic. 
 Add any element to the DOM, and the composed event will automatically be applied to that element. 
@@ -58,11 +53,12 @@ Below is an example that illustrate this.
   el.addEventListener("mouseover", function(e){onMouseover("local", e)}, true);
 </script>
 ```
+
 ## Demo: `mouseover-echo` on fire everywhere
 
 In this demo we make a composed event that echoes the `mouseover` event.
 This is a very costly composed events which will cause the browser to que a JS task for every
-native mouseover event.
+native `mouseover` event.
 
 ```javascript
 function dispatchPriorEvent(target, composedEvent, trigger) {   

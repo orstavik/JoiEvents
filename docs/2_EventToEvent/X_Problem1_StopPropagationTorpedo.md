@@ -74,6 +74,67 @@ propagation, and to do so, we will use the EarlyBird pattern.
 Later, we will return to how custom, composed events *can be* controlled in coordination with the
 triggering event's `.preventDefault()` method.
 
+## Old drafts
+
+```javascript
+window.addEventListener("trigger-event", function(e){eventTriggerFunction(e)}, true);
+//window.addEventListener("trigger-event", e => eventTriggerFunction(e), true); //works, but not everywhere
+//window.addEventListener("trigger-event", eventTriggerFunction, true); cannot be used with the CallShotgun pattern.
+```
+
+The above example adds an event listener to the window object for a certain trigger event.
+The first trick here is the third argument, `true`.
+This `true` specifies that the event listener will be executed during the little-known "capture phase"
+(when events propagate *down* the DOM), as opposed to the "normal, bubble phase" 
+(when events propagate *up* the DOM).
+This means that the `eventTriggerFunction` will be executed during the first stage of 
+the trigger event's propagation.
+
+## Demo: `click-echo`
+
+Below is a demo that echoes the demo in StopPropagationTorpedo. 
+In this demo however, the `click-echo` event is added at the very beginning of the propagation chain.
+This makes it precede and escape the StopPropagationTorpedos.
+
+```html
+<h1>hello <a href="#oOo__ps">world</a></h1>
+<p>
+To test this out, you can comment out all the three torpedo listeners. 
+Only then will you get the composed h1-click event.
+</p>
+
+<script>
+document.querySelector("h1").addEventListener("click", function(e){
+  e.stopImmediatePropagation();
+  alert("StopPropagationTorpedo 1");
+});
+</script>
+
+<script>
+function clickEcho(e){
+  e.target.dispatchEvent(new CustomEvent("click-echo", {composed: true, bubbles: true}));
+}
+document.querySelector("h1").addEventListener("click", clickEcho);
+
+window.addEventListener("h1-click", function(e){alert("h1-click");}, true);
+</script>
+
+<script>
+document.querySelector("a").addEventListener("click", function(e){
+  e.stopPropagation();
+  alert("StopPropagationTorpedo 2");
+});
+</script>
+
+<script>
+window.addEventListener("click", function(e){
+  e.stopPropagation();
+  alert("StopPropagationTorpedo 3");
+}, true);
+</script>
+```
+
+
 ## References
 
  * tores
