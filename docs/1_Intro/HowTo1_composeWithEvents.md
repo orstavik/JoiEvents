@@ -17,7 +17,7 @@
 
 In web-speak, "to compose" means to combine stuff to make a web page. When you "compose" your web page, 
 you must use a little HTML. And you do not *have to* use neither JS nor CSS nor any events to make a
-web page. So, strictly speaking, you can "compose" a web page using only by writing HTML.
+web page. So, strictly speaking, you can "compose" a web page using only HTML.
 
 But, nowadays most web pages are small web apps. The web page include both JS and CSS and have events 
 flying around like mad. So, when we "compose" a web page today, we think of it as combining HTML and
