@@ -36,16 +36,20 @@
 
 ## Event to event composition
 
-5. [HowTo: Listen](docs/2_EventToEvent/HowTo_listen)
-5. [Pattern: EventComposition](docs/2_EventToEvent/Pattern1_EventComposition)
-5. [Problem: StopPropagationTorpedo](docs/2_EventToEvent/Problem1_StopPropagationTorpedo)
-5. [Pattern: EarlyBird](docs/2_EventToEvent/Pattern2_EarlyBird)
-24. [Pattern: CancelClick](docs/2_EventToEvent/Pattern20_CancelClick)
+5. [HowTo: Listen](docs/2_EventToEvent/1_HowTo_listen)
+5. [Intro: EventComposition](docs/2_EventToEvent/2_Intro_EventComposition)
+5. [WhatIs: propagation](docs/2_EventToEvent/3_WhatIs_propagation)
+5. [HowTo: StopPropagation](docs/2_EventToEvent/4_HowTo_StopPropagation)
+5. [Pattern: CancelClick](docs/2_EventToEvent/5_Pattern20_CancelClick)
+5. [Pattern: EarlyBird](docs/2_EventToEvent/6_Pattern2_EarlyBird)
 5. [Pattern: PriorEvent](docs/2_EventToEvent/Pattern3_PriorEvent)
 5. [Pattern: AfterthoughtEvent](docs/2_EventToEvent/Pattern4_AfterthoughtEvent)
 5. [Pattern: ReplaceDefaultAction](docs/2_EventToEvent/Pattern5_ReplaceDefaultAction)
 5. [Problem: PayAttention](docs/2_EventToEvent//Problem2_PayAttention)
 5. [Pattern: ReverseGlobalization](docs/2_EventToEvent/Pattern21_ReverseGlobalization)
+<!--
+5. [Problem: StopPropagationTorpedo](docs/2_EventToEvent/Problem1_StopPropagationTorpedo)
+-->
 
 ## Event translation
 
