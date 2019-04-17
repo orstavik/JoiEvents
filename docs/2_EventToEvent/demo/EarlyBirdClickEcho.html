@@ -1,0 +1,54 @@
+<div>
+  <h1 id="world">Hello world</h1>
+  <h1 id="sunshine">Hello sunshine!</h1>
+</div>
+
+<script>
+
+  const div = document.querySelector("div");
+  const sunshine = document.querySelector("#sunshine");
+  const world = document.querySelector("#world");
+
+  function echo(e){
+    if (e.defaultPrevented || e.customPrevented)
+      return;
+    const echo = new CustomEvent("echo-" + e.type, {bubbles: true, composed: true});
+    e.target.dispatchEvent(echo);
+  }
+
+  function cancelEventOnce(type) {
+    const oneTimer = function (e) {
+      e.cancelable ? e.preventDefault() : e.customPrevented = true;
+      window.removeEventListener(type, oneTimer, true);
+    };
+    window.addEventListener(type, oneTimer, true);
+  }
+
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  //echoes all click events
+  document.addEventListener("click", echo, true);
+
+  //cancel the click event for #world to prevent the echo from occurring
+  world.addEventListener("mouseup", function(){ cancelEventOnce("click"); });
+
+  //click listeners
+  window.addEventListener("click", log);
+  div.addEventListener("click", log);
+  sunshine.addEventListener("click", log);
+  world.addEventListener("click", log);
+  div.addEventListener("click", log, true);
+  window.addEventListener("click", log, true);
+
+  //echo-click listeners
+  window.addEventListener("echo-click", log);
+  div.addEventListener("echo-click", log);
+  sunshine.addEventListener("echo-click", log);
+  world.addEventListener("echo-click", log);
+  div.addEventListener("echo-click", log, true);
+  window.addEventListener("echo-click", log, true);
+</script>

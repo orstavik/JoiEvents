@@ -1,23 +1,161 @@
 # Pattern: EarlyBird
 
-To make a custom, composed event, you *must* listen for a triggering event.
-You simply have no choice: how else can you be alerted about its occurrence?
+To compose an event, we need one or more original, *trigger events* to make it from.
+And to get hold of these trigger events, we *must* listen for them.
 
-But, this means that if some other event listener in your app happens to:
-1. listen for the same event, 
-2. intercept the event before you get it, and
-3. call `.stopPropagation()` on it, 
+But, what if:
+1. some other function in your app
+2. listens for the same event, 
+3. receives and processes the event *before* your trigger function, and
+4. calls `.stopPropagation()` or `.stopImmediatePropagation()` on it?
 
-then your composed event will never hear about it.
+As we saw in the last example in [HowTo: StopPropagation](4_HowTo_StopPropagation), this
+will mute your trigger function. So, to avoid being blocked like this, we want
+to add our event listener as early as possible. We want an EarlyBird event listener.
 
-This breaks with established protocol that triggering event propagation should not stop composed event,
-creates a StopPropagationTorpedo that can cause great confusion and hard to discover bugs in your code.
+## HowTo: block an EarlyBird
 
-The only way to ensure that your composed event triggering function is not torpedoed, 
-is to make sure that your triggering function captures the triggering event *before* 
-any other event listener that might inadvertently call `stopPropagation()`.
-As you never with certainty know exactly where and when that might happen,
-your best bet is to get there *first*:
+The earliest possible moment we can listen for an event is in the *capture* phase on the `window`.
+But. This is *too* early. If we *capture* the event on the `window`, we cannot deliberately cancel 
+the trigger function afterwards if the trigger event is dispatched. Even when we desperately need to. 
+Therefore, we *capture* trigger events on the `document` instead.
+
+```javascript
+document.addEventListener("some-event", function(e){
+  someFunction(e);
+}, true);
+```
+
+As we saw in the previous chapter [Pattern: CancelClick](5_Pattern20_CancelClick), 
+the `click` event cannot be prevented when it is composed from `mousedown` and `mouseup` events.
+To prevent the native composed `click` event from the `mouseup` event, we therefore called
+`cancelEventOnce("click")`.
+
+A similar problem applies to all our custom composed events that we create with the EarlyBird pattern. 
+In order to *prevent* a custom composed event, we need to be able to call `preventDefault()` on the
+triggering event *before* it is captured by the EarlyBird trigger function. And since we have
+added the EarlyBird on the `document`, we can now do this on the `window`.
+
+Furthermore. Custom composed events can be composed from all types of native events. This means that
+some of the triggering events might not be `cancellable`. In such cases, we set a custom property 
+called `customPrevented`.
+
+## Implementation: EarlyBird
+
+The EarlyBird pattern consists of two parts:
+
+1. The primary trigger function is added on the `document` node in the capture phase for a 
+   trigger event. The first thing this function checks is to see if either `defaultPrevented` 
+   or `customPrevented` is `true` on the trigger event.
+
+2. To block an EarlyBird trigger function, you add call `preventDefault()` on the triggering event
+   (or set `customPrevented` to `true` instead if the triggering event is not cancellable).
+   This triggering event must *captured* on the `window` node so that it is registered before
+   the EarlyBird primary trigger is captured on the `document`.
+   
+## Example: `click-echo` EarlyBird
+
+```html
+<div>
+  <h1 id="world">Hello world</h1>
+  <h1 id="sunshine">Hello sunshine!</h1>
+</div>
+
+<script>
+
+  const div = document.querySelector("div");
+  const sunshine = document.querySelector("#sunshine");
+  const world = document.querySelector("#world");
+
+  function echo(e){
+    if (e.defaultPrevented || e.customPrevented)
+      return;
+    const echo = new CustomEvent("echo-" + e.type, {bubbles: true, composed: true});
+    e.target.dispatchEvent(echo);
+  }
+
+  function cancelEventOnce(type) {
+    const oneTimer = function (e) {
+      e.cancelable ? e.preventDefault() : e.customPrevented = true;
+      window.removeEventListener(type, oneTimer, true);
+    };
+    window.addEventListener(type, oneTimer, true);
+  }
+
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : (e.eventPhase === 3 ? "bubble" : "target");
+    const name = e.currentTarget.tagName || "window";
+    console.log(phase, name, e.type);
+  }
+
+  //echoes all click events
+  document.addEventListener("click", echo, true);
+
+  //cancel the click event for #world to prevent the echo from occurring
+  world.addEventListener("mouseup", function(){ cancelEventOnce("click"); });
+
+  //click listeners
+  window.addEventListener("click", log);
+  div.addEventListener("click", log);
+  sunshine.addEventListener("click", log);
+  world.addEventListener("click", log);
+  div.addEventListener("click", log, true);
+  window.addEventListener("click", log, true);
+
+  //echo-click listeners
+  window.addEventListener("echo-click", log);
+  div.addEventListener("echo-click", log);
+  sunshine.addEventListener("echo-click", log);
+  world.addEventListener("echo-click", log);
+  div.addEventListener("echo-click", log, true);
+  window.addEventListener("echo-click", log, true);
+</script>
+```   
+
+## Pattern: CallShotgun
+
+In almost all cases, the EarlyBird pattern is enough in itself. 
+But, *if* for some mysterious reason:
+ * another EarlyBird event listener that 
+ * also calls `stopImmediatePropagation()` 
+ * is added *before* your event trigger function and
+ * you do not want to move your event listener scripts up top as it will delay first meaningful paint,
+ 
+then you can employ another pattern: CallShotgun.
+
+```html
+<script>
+window.addEventListener("click", function(e){clickEcho(e);}, true);    //1. calling shotgun
+</script>
+<script >/*Here is the bad, but unavoidable library with an EarlyBirdStopPropagationTorpedo*/
+window.addEventListener("click", function(e){e.stopImmediatePropagation();}, true);
+</script>
+
+<h1>hello world</h1>
+
+<script >/*Here is your composed event that you would like to load as late as possible.*/
+function clickEcho(e){                                                //2. taking a seat
+  e.target.dispatchEvent(new CustomEvent("click-echo", {composed: true, bubbles: true}));
+}
+window.addEventListener("click-echo", function(e){alert("click-echo");}, true);
+</script>
+```
+
+In the above example the EarlyBird listener function is added *before*
+the function is loaded. It "calls shotgun". Later, when it is good and ready, 
+the app loads and defines the actual function and takes a seat.
+Now, if the shotgun happens to be triggered before the event listener function is loaded, 
+it would still only result in a silent error / nothing happening.
+And as soon as the function is defined, the trigger function would work as intended.
+
+> Create custom, composed event with the EarlyBird pattern.
+> If you really need, you can CallShotgun too.
+
+## References
+
+ * tores
+
+## Old drafts
 
 ```javascript
 window.addEventListener("trigger-event", function(e){eventTriggerFunction(e)}, true);
@@ -76,160 +214,3 @@ window.addEventListener("click", function(e){
 }, true);
 </script>
 ```
-
-## Pattern: CallShotgun
-
-In almost all cases, the EarlyBird pattern is enough in itself. 
-But, *if* for some mysterious reason:
- * another EarlyBird event listener that 
- * also calls `stopImmediatePropagation()` 
- * is added *before* your event trigger function and
- * you do not want to move your event listener scripts up top as it will delay first meaningful paint,
- 
-then you can employ another pattern: CallShotgun.
-
-```html
-<script>
-window.addEventListener("click", function(e){clickEcho(e);}, true);    //1. calling shotgun
-</script>
-<script >/*Here is the bad, but unavoidable library with an EarlyBirdStopPropagationTorpedo*/
-window.addEventListener("click", function(e){e.stopImmediatePropagation();}, true);
-</script>
-
-<h1>hello world</h1>
-
-<script >/*Here is your composed event that you would like to load as late as possible.*/
-function clickEcho(e){                                                //2. taking a seat
-  e.target.dispatchEvent(new CustomEvent("click-echo", {composed: true, bubbles: true}));
-}
-window.addEventListener("click-echo", function(e){alert("click-echo");}, true);
-</script>
-```
-
-In the above example the EarlyBird listener function is added *before*
-the function is loaded. It calls shotgun. Later, when it is good and ready, 
-the app loads and defines the actual function and takes a seat.
-Now, if the shotgun happens to be triggered before the event listener function is loaded, 
-it would still only result in a silent error / nothing happening.
-And as soon as the function is defined, the trigger function would work as intended.
-Thus, to CallShotgun with the EarlyBird, the app gracefully avoids the EarlyBird-StopPropagationTorpedo.
-
-> A custom, composed event should be created using the EarlyBird event listener.
-> The EarlyBird pattern avoids StopPropagationTorpedoes.
-> If you really need, you can CallShotgun also.
-
-## TODO how to block a natively spawned event
-
-> what if? 
-
-If the EarlyBird is added to `document`, and not `window`, then it would be possible 
-for listeners added to the window to *block and stop* the composed events. 
-For example, `touchstart` events might want to block preceding `mousedown` events, but
-if the browser has added a composed event for the `mousedown` event in capture mode on the 
-window already, there is no good way to stop the `mousedown` event.
-
-Example: 
-```html
-<pre>
-If you touch me, there will be no mouse events.
-</pre>
-
-<script>
-  const log = function(e){
-      e.target.innerText += e.type + " - ";    
-    };
-  
-  /*as long as the log listeners are added on the document capture phase or later, 
-    everything will work*/
-  var pre = document.querySelector("pre");
-  pre.addEventListener("mousedown", log);
-  pre.addEventListener("mousemove", log);
-  pre.addEventListener("mouseup", log);
-  pre.addEventListener("touchstart", log);
-  pre.addEventListener("touchmove", log);
-  pre.addEventListener("touchend", log);
-    
-  /*anticipate that the killer functions will be registered /after/ the listeners 
-    you want to block*/
-  const killer = function(e){
-    e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
-    e.preventDefault();
-  };
-  window.addEventListener("touchstart", function(){
-    window.addEventListener("mousedown", killer, true);
-    window.addEventListener("mousemove", killer, true);
-    window.addEventListener("mouseup", killer, true);
-  });
-  window.addEventListener("touchend", function(){
-    window.removeEventListener("mousedown", killer, true);
-    window.removeEventListener("mousemove", killer, true);
-    window.removeEventListener("mouseup", killer, true);
-  });
-  
-  
-</script>
-```
-
-demo!!
-
-pros:
- * if the composed event is added on document, then the window can be used for blocking the 
-   composed event.
-   the drag can cancel any click based events. any mouse based events. the CancelClick and 
-   the conflict between composed events for navigation and dragging will be cleared and
-   the conflict between mouse and touch based dragging will be cleared.
-   
-   I do not see any other way to do that without leaving the window capture open for blocking.
-   
-cons:
- * what if some other event is added on the window that stops propagation for your composed 
-   event?
-   if the composed event is added on document, then the window can be used for blocking the 
-   composed event.
-
-```html
-<pre>
-  When you touch me, I will spawn many events.
-</pre>
-
-<script>
-  const log = function(e){
-      e.target.innerText += e.type + " - ";    
-    };
-  
-  /*as long as the log listeners are added on the document capture phase or later, 
-    everything will work*/
-  var pre = document.querySelector("pre");
-  pre.addEventListener("mousedown", log);
-  pre.addEventListener("mousemove", log);
-  pre.addEventListener("mouseup", log);
-  pre.addEventListener("touchstart", log);
-  pre.addEventListener("touchmove", log);
-  pre.addEventListener("touchend", log);
-    
-  /*anticipate that the killer functions will be registered /after/ the listeners 
-    you want to block*/
-  const killer = function(e){
-    e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
-    e.preventDefault();
-  };
-  window.addEventListener("touchstart", function(){
-    window.addEventListener("mousedown", killer, true);
-    window.addEventListener("mousemove", killer, true);
-    window.addEventListener("mouseup", killer, true);
-  });
-  window.addEventListener("touchend", function(){
-    window.removeEventListener("mousedown", killer, true);
-    window.removeEventListener("mousemove", killer, true);
-    window.removeEventListener("mouseup", killer, true);
-  });
-  
-  
-</script>
-```
-
-   
-
-## References
-
- * tores
