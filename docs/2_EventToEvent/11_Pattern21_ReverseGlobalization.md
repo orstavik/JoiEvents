@@ -58,57 +58,9 @@ Below is an example that illustrate this.
 
 In this demo we make a composed event that echoes the `mouseover` event.
 This is a very costly composed events which will cause the browser to que a JS task for every
-native `mouseover` event.
+native `mouseover` event. We use this composed event to put a set of divs on fire.
 
-```javascript
-function dispatchPriorEvent(target, composedEvent, trigger) {   
-  composedEvent.preventDefault = function () {                  
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;                              
-  target.dispatchEvent(composedEvent);                   
-}
-
-function onMouseover(e){
-  dispatchPriorEvent(e.target, new CustomEvent("mouseover-echo", {bubbles: true, composed: true}), e);
-}
-
-window.addEventListener("mouseover", onMouseover, true);
-```
-
-In the demo below, we use this composed event to put a set of divs on fire.
-
-```html
-<style>
-div {
-  padding: 10px;
-}
-.mouseoverOne {
-  background: red;
-}
-.mouseoverTwo {
-  background: orange;
-}
-.mouseoverThree {
-  background: yellow;
-}
-</style>
-
-<div>
-  <div>
-    <div>
-      <div>Fireball!! All elements should be on fire when you move the mouse over them.</div>
-    </div>
-  </div>
-</div>
-<script>
-  var items = ["mouseoverOne", "mouseoverTwo", "mouseoverThree"];  
-  window.addEventListener("mouseover-echo", function(e){
-    e.target.classList.toggle(items[Math.floor(Math.random()*items.length)]);
-  });
-</script>
-```
+<code-demo src="demo/MouseoverOnFire.html"></code-demo>
 
 ## HowTo: speed up global event listeners
 
@@ -136,111 +88,10 @@ To do this, we need a second function that:
 ## Example: `localizable-mouseover-echo`
 
 <pretty-printer href="demo/mouseover-echo-localizable.js"></pretty-printer>
-```javascript
-(function(){
-function dispatchPriorEvent(target, composedEvent, trigger) {   
-  composedEvent.preventDefault = function () {                  
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;                              
-  target.dispatchEvent(composedEvent);                   
-}
-
-var locations;
-
-function querySelectorAllDeep(query, doc, res){
-  res = res.concat(doc.querySelectorAll(query));
-  var all = doc.querySelectorAll(query);
-  for (var i = 0; i < all.length; i++)
-    all[i].shadowRoot && querySelectorAllDeep(query, all[i].shadowRoot, res);
-  return res;
-}
-
-//will localize update and 
-window.localizeMouseoverEcho = function(query){
-  if (locations) {    //adding more
-    var allLocations = querySelectorAllDeep(query, document, []);
-    for (var i = 0; i < allLocations.length; i++) {
-      var potentiallyNewLocation = allLocations[i];
-      if (locations.indexOf(potentiallyNewLocation) < 0)
-        potentiallyNewLocation.addEventListener("mouseover", onMouseover, true);
-    }
-    for (var i = 0; i < locations.length; i++) {
-      var oldLocation = locations[i];
-      if (allLocations.indexOf(oldLocation) < 0)
-        oldLocation.removeEventListener("mouseover", onMouseover, true);
-    }
-    locations = allLocations;    
-  } else {            //first time
-    locations = querySelectorAllDeep(query, document, []);
-    for (var i = 0; i < locations.length; i++) 
-      locations[i].addEventListener("mouseover", onMouseover, true);
-    window.removeEventListener("mouseover", onMouseover, true);    
-  }
-}
-                                       
-window.globalizeMouseoverEcho = function(){
-  if (!locations)   //already global
-    return;
-  for (var i = 0; i < locations.length; i++) 
-    locations[i].removeEventListener("mouseover", onMouseover, true);
-  locations = undefined;
-  window.addEventListener("mouseover", onMouseover, true);
-}
-
-
-function onMouseover(e){
-  dispatchPriorEvent(e.target, new CustomEvent("mouseover-echo", {bubbles: true, composed: true}), e);
-}
-
-window.addEventListener("mouseover", onMouseover, true);
-})();
-```
 
 ## Demo: `mouseover-echo` on fire
 
-<code-demo src="demo/MouseoverOnFire.html"></code-demo>
-```html
-<script src="mouseover-echo-localizable.js"></script>
-
-<style>
-div {
-  padding: 10px;
-}
-.mouseoverOne {
-  background: red;
-}
-.mouseoverTwo {
-  background: orange;
-}
-.mouseoverThree {
-  background: yellow;
-}
-</style>
-
-<div mouseover-ball>
-  <div>
-    <div mouseover-ball>
-      <div>Fireball!! All elements should be on fire when you move the mouse over them.</div>
-    </div>
-  </div>
-</div>
-<script>
-  var items = ["mouseoverOne", "mouseoverTwo", "mouseoverThree"];  
-  window.addEventListener("mouseover-echo", function(e){
-    e.target.classList.toggle(items[Math.floor(Math.random()*items.length)]);
-  });
-  
-  var i = 0;
-  setInterval(function(){
-    if (i++ % 2)
-      localizeMouseoverEcho("[mouseover-ball]");
-    else
-      globalizeMouseoverEcho();
-  }, 5000);
-</script>
-```
+<code-demo src="demo/MouseoverOnFireLocalizable.html"></code-demo>
 
 ## References
 

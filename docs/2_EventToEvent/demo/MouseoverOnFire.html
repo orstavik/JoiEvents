@@ -1,4 +1,19 @@
-<script src="mouseover-echo-localizable.js"></script>
+<script>
+  function dispatchPriorEvent(target, composedEvent, trigger) {
+    composedEvent.preventDefault = function () {
+      trigger.preventDefault();
+      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
+    };
+    composedEvent.trigger = trigger;
+    target.dispatchEvent(composedEvent);
+  }
+
+  function onMouseover(e){
+    dispatchPriorEvent(e.target, new CustomEvent("mouseover-echo", {bubbles: true, composed: true}), e);
+  }
+
+  window.addEventListener("mouseover", onMouseover, true);
+</script>
 
 <style>
   div {
@@ -15,9 +30,9 @@
   }
 </style>
 
-<div mouseover-ball>
+<div>
   <div>
-    <div mouseover-ball>
+    <div>
       <div>Fireball!! All elements should be on fire when you move the mouse over them.</div>
     </div>
   </div>
@@ -27,12 +42,4 @@
   window.addEventListener("mouseover-echo", function(e){
     e.target.classList.toggle(items[Math.floor(Math.random()*items.length)]);
   });
-
-  var i = 0;
-  setInterval(function(){
-    if (i++ % 2)
-      localizeMouseoverEcho("[mouseover-ball]");
-    else
-      globalizeMouseoverEcho();
-  }, 5000);
 </script>
