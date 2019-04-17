@@ -8,21 +8,21 @@ But. To call `.preventDefault()` on the `mouseup` event does not work: the `clic
 be cancelled from the mouse events. Therefore, we need a different technique to prevent the 
 `click` event from `mouseup`.
 
-## HowTo: `cancelClickOnce()`
+## HowTo: `cancelEventOnce("click")`
 
 The next best thing to be able to prevent the `click` event from occurring, is to stop its propagation
 and defaultAction as soon as possible. We do this by adding an event listener for the next `click` 
 that *first* calls `stopPropagation()` and `.preventDefault()` on the event, and *then* removes itself.
 
 ```javascript
-const cancelClickOnce = function(){
-  window.addEventListener("click", function(e){
-    e.stopPropagation();                //*
-    e.preventDefault();
-    window.removeEventListener("click", cancelClickOnce, true);
-  }, true);
-};
-
+function cancelEventOnce(type) {
+    const oneTimer = function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      window.removeEventListener(type, oneTimer, true);
+    };
+    window.addEventListener(type, oneTimer, true);
+  }
 ```
  * Use `stopPropagation()`, not `stopImmediatePropagation()`. 
    If, for some reason, this `cancelClickOnce()` is called twice, 
@@ -57,16 +57,16 @@ const cancelClickOnce = function(){
   test.addEventListener("mouseup", log);
   test.addEventListener("touchend", log);
 
-  const cancelClickOnce = function(){
-    window.addEventListener("click", function(e){
+  function cancelEventOnce(type) {
+    const oneTimer = function (e) {
       e.stopPropagation();
       e.preventDefault();
-      window.removeEventListener("click", cancelClickOnce, true);
-    }, true);
-  };
+      window.removeEventListener(type, oneTimer, true);
+    };
+    window.addEventListener(type, oneTimer, true);
+  }
 
-
-  test.addEventListener("mouseup", cancelClickOnce);
+  test.addEventListener("mouseup", function () { cancelEventOnce("click"); });
 
 </script>
 ```

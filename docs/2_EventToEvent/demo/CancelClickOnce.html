@@ -23,15 +23,15 @@
   test.addEventListener("mouseup", log);
   test.addEventListener("touchend", log);
 
-  const cancelClickOnce = function(){
-    window.addEventListener("click", function(e){
+  function cancelEventOnce(type) {
+    const oneTimer = function (e) {
       e.stopPropagation();
       e.preventDefault();
-      window.removeEventListener("click", cancelClickOnce, true);
-    }, true);
-  };
+      window.removeEventListener(type, oneTimer, true);
+    };
+    window.addEventListener(type, oneTimer, true);
+  }
 
-
-  test.addEventListener("mouseup", cancelClickOnce);
+  test.addEventListener("mouseup", function () { cancelEventOnce("click"); });
 
 </script>

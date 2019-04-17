@@ -37,7 +37,7 @@ This confusion would lead to bugs or alternatively highly complex code in both s
 and the best way to avoid these problems would be to have the custom-draggable mouse-based gesture
 cancel the click event. But, how to do that? How to prevent an unpreventable event?
 
-## Example: `long-press` with `cancelClickOnce()` and `do-click` attribute
+## Example: `long-press` with `cancelEventOnce("click")` and `do-click` attribute
 
 When a mouse-based gestures needs to cancel subsequent, unpreventable `click` events, 
 they most likely need to do so most of the time. You should therefore expect CancelClick to be 
@@ -51,6 +51,8 @@ The implementation of one-time EarlyBird event-cancelling trigger functions is d
 
 In this example we add the CancelClick pattern to our naive, composed `long-press` event.
 
+> todo untested
+
 ```html
 <script >
 function dispatchPriorEvent(target, composedEvent, trigger) {
@@ -62,13 +64,14 @@ function dispatchPriorEvent(target, composedEvent, trigger) {
   return target.dispatchEvent(composedEvent);
 }
 
-const cancelClickOnce = function(){
-  window.addEventListener("click", function(e){
+function cancelEventOnce(type) {
+  const oneTimer = function (e) {
     e.stopPropagation();
     e.preventDefault();
-    window.removeEventListener("click", cancelClickOnce, true);
-  }, true);
-};
+    window.removeEventListener(type, oneTimer, true);
+  };
+  window.addEventListener(type, oneTimer, true);
+}
 
 var primaryEvent;                                               
 
@@ -81,7 +84,7 @@ function resetSequenceState(doClick){
   primaryEvent = undefined;                                     
   window.removeEventListener("mouseup", onMouseup, true);             
   if (!doClick)                                                        
-    cancelClickOnce();
+    cancelEventOnce("click");
 }
 
 function onMousedown(e){
