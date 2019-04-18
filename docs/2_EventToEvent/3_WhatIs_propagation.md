@@ -26,6 +26,10 @@ called in the following sequence:
 
 ## Example 2: Native composed events (touchend -> mouseup -> click)
 
+> todo should I rename "composed events" to "DominoEvents" or "SyntheticEvents" something similar?
+> The composed events term is already associated with shadowDOM transgression (which is off),
+> but at the same time ComposedEvents is a good concept.
+
 The domino-effect.
 
 <code-demo src="demo/TouchendMouseupClick.html"></code-demo>
@@ -53,7 +57,8 @@ has completed their propagation. Thus, propagation spans three levels:
    2. target phase (on `target`, `capture: true/false` ignored)
    3. bubble phase (from `target.parentNode` to `window`)
 
-3. Micro level: Event listeners are then triggered in the order they were added in the script.
+3. Micro level: Event listeners connected to the same DOM node and in the same propagation phase are 
+   triggered in registration order.
    
 ## Example 3: Custom events (echo-click)
 
