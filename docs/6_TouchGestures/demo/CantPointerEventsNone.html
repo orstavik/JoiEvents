@@ -1,0 +1,25 @@
+<script>
+  window.addEventListener("pointerdown", function(e){
+    e.preventDefault();
+    document.children[0].style.pointerEvents = "none";
+  });
+  window.addEventListener("pointermove", function(e){
+    e.preventDefault();
+    document.children[0].style.pointerEvents = "none";
+  });
+  window.addEventListener("pointerup", function(e){
+    e.preventDefault();
+    document.children[0].style.pointerEvents = "none";
+    setTimeout(function(){document.children[0].style.pointerEvents = "";}, 0);
+  });
+</script>
+
+<div>
+  Try to scroll or double tap. 
+</div>
+<div style="pointer-events: none; height: 100vh;">
+  The problem is that .preventDefault() in pointer events
+  doesn't control the native gestures for touch events,
+  and that it is too late to set "pointer-events: none" same as
+  "touch-action: none".
+</div>

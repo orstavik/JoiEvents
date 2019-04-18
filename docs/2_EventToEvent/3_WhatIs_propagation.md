@@ -91,3 +91,4 @@ which in turn will cancel the scroll task.
 ## References
 
  * [MDN: Event bubbling and capture](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Event_bubbling_and_capture)
+ * [Lauke: event sequences](https://patrickhlauke.github.io/touch/tests/results/)

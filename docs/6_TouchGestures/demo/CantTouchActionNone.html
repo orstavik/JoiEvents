@@ -1,0 +1,22 @@
+<script>
+  window.addEventListener("touchstart", function(){
+    document.children[0].style.pointerAction = "none";
+    document.children[0].style.touchActions = "none";
+  });
+  window.addEventListener("touchend", function(){
+    document.children[0].style.pointerAction = undefined;
+    document.children[0].style.touchActions = undefined;
+  });
+</script>
+
+<div>
+  Try to scroll or double tap.
+</div>
+<div>
+  The problem is that it is too late to set
+  touch-action or pointer-action for the native gesture
+  once the initial touchstart event is dispatched.
+  This is always evident for drag-to-scroll, and
+  can also be illustrated with doubletap-to-zoom
+  in Chrome android desktop view.
+</div>

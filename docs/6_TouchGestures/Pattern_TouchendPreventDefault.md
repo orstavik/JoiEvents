@@ -34,7 +34,7 @@ the `touchend` event.
 
 ## References 
 
- * 
+ * [Lauke: event sequences](https://patrickhlauke.github.io/touch/tests/results/)
 
 
 

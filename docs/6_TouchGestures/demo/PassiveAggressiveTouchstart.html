@@ -1,0 +1,22 @@
+<script>
+  var supportsPassive = false;
+  try {
+    var opts = Object.defineProperty({}, 'passive', {
+      get: function() {
+        supportsPassive = true;
+      }
+    });
+    window.addEventListener("test", null, opts);
+    window.removeEventListener("test", null, opts);
+  } catch (e) {}
+  var thirdArg = supportsPassive ? {passive: false, capture: true}: true;
+  window.addEventListener("touchstart", function(e){e.preventDefault();}, thirdArg);
+</script>
+
+<div>
+  Try to scroll or double tap.
+</div>
+<div style="height: 100vh;">
+  This works. You can stop native gestures
+  using .preventDefault() on the touchstart event.
+</div>

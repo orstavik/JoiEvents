@@ -89,7 +89,7 @@
 31. [Pattern: TouchendPreventDefault](docs/6_TouchGestures/Pattern_TouchendPreventDefault)
 31. [Problem: ConflictingGestures](docs/6_TouchGestures/Problem4_conflicting_gestures)
 31. [Problem: CoarseSensors](docs/6_TouchGestures/Problem5_coarse_sensors)
-31. [Problem: TapDance](docs/6_TouchGestures/Problem6_TapDance)
+31. [Pattern: PassiveAggressiveTouchstart](docs/6_TouchGestures/Pattern_PassiveAggressiveTouchstart)
 31. [Pattern: GrabTouch](docs/6_TouchGestures/Pattern15_GrabTouch)
 31. [Problem: WebDemocracy](docs/6_TouchGestures/Problem7_WebDemocracy) (todo)
 31. [Anti-pattern: RejectionBuildup](docs/6_TouchGestures/AntipatternX_RejectionBuildup) (todo)
