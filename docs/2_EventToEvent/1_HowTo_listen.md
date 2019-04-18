@@ -77,7 +77,7 @@ The skills needed to be a good listener, are:
    be careful not to become too reactive. When needed, stay in control, and don't let the events push the 
    rest of your app around. That can cause problems.
  
-8. Avoid judgement. First intend to understand the other, then intend to reply and react.
+8. Don't judge. First intend to understand the other, then intend to reply and react.
    Try to avoid making judgements and corrections of the other along the way.
    
    Events should mostly be considered immutable. You should avoid correcting or changing the data of the
@@ -98,5 +98,5 @@ The skills needed to be a good listener, are:
  To give your emotional response after you have sensed theirs.
  
  To just wait your turn accomplishes a lot.
- Do not judge.
+ 
  Help the speaker evolve his/her narrative.

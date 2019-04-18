@@ -1,31 +1,39 @@
 # JoiEvents
  *compose events like a native!*
 
+<a href="https://orstavik.github.io/JoiEvents/">Read the book and enjoi!</a>
+
 ## Vocabulary
 
- * **event**: something happening in the browser. DOM Events being dispatched is an event, of course,
+ * **OS Event**: something happening in the browser. DOM Events being dispatched is an event, of course,
    but a callback triggered or native system task executed are also generally speaking an event.
- * **DOM Event**: an event that is triggered by one or more other events. Some native system tasks
-   such as browser navigation, (cf. defaultAction or native behavior) can often be considered an
-   invisible DOM Event.
- * **Composed event**: a DOM Event that is triggered by one or more other DOM Events.
- * **Triggering event**: a DOM Event that will initiate the dispatch a new composed event.
- * **Atomic event**: a DOM event that is not triggered by any other DOM events.
- * **Event sequence**: a series of triggering events that when following a specific order 
-   will dispatch a composed event.
- * **Preceding event**: a DOM Event that propagates before another DOM Event.
- * **Trailing event**: a DOM Event that propagates after another DOM Event.
- * **Event listener**: a JS function that is triggered by a DOM Event.
- * **defaultAction**: a native function in the browser that is triggered by a DOM Event.
-   DefaultActions are commonly preceded by a triggering event.
- * **Event Triggering function**: a (set of) functions that capture DOM events and dispatch composed events.
-   The triggering function is at the very start of a triggering event's propagation: 
-   added a) globally (ie. to `window`) and b) in the capture phase of the propagation.
- * **Native events**: DOM Events created by the browser.
- * **Custom events**: DOM Events created by a script.
- * **Global events**: DOM Events that can apply to HTML elements in the entire DOM.
-
-<a href="https://orstavik.github.io/JoiEvents/">Read the book and enjoi!</a>
+ * **Event**: a DOM event that is either triggered by an OS Event or dispatched by a JS script.
+ * **Global events** begin their propagation on the `window` object (capture phase).
+   Global events commonly have `{bubble: true, composed: true}`, but they can also be dispatched 
+   directly on the `window` object.
+ * **Local events** are all events that do *not* begin their propagation on the `window` (capture phase).
+ * **Native events** are created by the browser.
+ * **Custom events** are created by a script.
+ * **Preceding event** propagates *before* another event.
+ * **Trailing event** propagates *after* another event.
+ * **Composed event** is triggered by one or more other events.
+ * **Trigger event** is an event that initiates a new composed event.
+ * **Atomic event** is not triggered by any other events, but something else.
+ * **Event sequence**: a series of ordered trigger events that combine to dispatch a composed event.
+ * **Event listener**: a JS function that is triggered by the occurrence of an event.
+ * **defaultAction**: a native function built into the browser that is triggered when an event 
+   completes propagation.
+ * **Composed event function**: a group of functions that together implement a composed event.
+ * **Trigger function**: one of many event listener functions that make up a composed event function.
+   Trigger functions capture events, processes them, and most often dispatch a new composed event.
+ * **Initial trigger function**: a trigger function that initiates a composed event sequence and can 
+   register a group of secondary trigger functions for other events. The initial trigger functions are
+   active when the composed event function is listening and not yet activated, and the initial trigger
+   functions activate the composed event function.
+   Initial trigger functions are commonly added to the `document` in the capture phase.
+ * **Secondary trigger function**: trigger functions that are activated when a composed event 
+   function is activated, and deactivated when the composed event function is deactivated. 
+   Secondary trigger functions are commonly added to the `window` in the capture phase.
 
 ## Introduction
 
@@ -48,7 +56,8 @@
 5. [Problem: PayAttention](docs/2_EventToEvent//10_Problem2_PayAttention)
 5. [Pattern: ReverseGlobalization](docs/2_EventToEvent/11_Pattern21_ReverseGlobalization)
 <!--
-5. [Problem: StopPropagationTorpedo](docs/2_EventToEvent/Problem1_StopPropagationTorpedo)
+99. chapter 2 proposals for the platform: `postPropagationCallback(cb(e))`. 
+5. Problem: StopPropagationTorpedo - docs/2_EventToEvent/Problem1_StopPropagationTorpedo
 -->
 
 ## Event translation
@@ -102,34 +111,32 @@
 43. todo add navigation control freak
 43. todo add the patterns on hash-based routing
 43. todo add the patterns on slash-based routing
-43. todo move in from chapter on translate events
+43. todo move in from chapter on translate events     
 43. https://instant.page/ try to use an event listener for mousemove that detects when 
     the mouse cursor slows down over an element.
 
 ## todo
 
-99. add chapters on proposals for the platform: add a `queJsTaskBeforeNextEventOrDefaultAction()` 
-    or `addTailEvent()`. This should be in 2 along side ReplaceDefaultAction.
 99. fix the different long-press events so they are source code.
 
 ## Personal comment
-I was surprised to find how rarely EventToEventComposition is used. 
+I was surprised to find how rarely EventComposition is used. 
 It made me second guess my self.
-And, while I pursued these second guesses, I became even more surprised. 
+And, while I pursue these second guesses, I became even more surprised. 
 
-Firstly, many native events follow the EventToEventComposition pattern. 
-Through its actions, the platform implicitly, but still quite strongly, advocates using this pattern. 
+First, many native events follow the EventComposition pattern. 
+Through its actions, the platform advocates *for* this pattern, implicitly, but strongly. 
 
 Second, pursuing this pattern reveals several flaws in other approaches and several large benefits 
-for EventToEventComposition: 
+for EventComposition: 
  * extreme ease of reuse, both across apps and within apps; 
  * extremely low coupling to other parts of the code;
  * super clear interfaces yielding less confusion, misuse and general anxiety;
- * and lightDOM composeability, ie. you can combine events from the same vantage point as you can native elements. 
+ * and lightDOM composeability, ie. you can combine events from the same vantage point as you can 
+   native elements. 
 
-Yet, for some reason, almost no one uses this approach! Why is that? 
+Yet, for some reason, few use this approach! Why is that? 
 I really don't know. ¯\\\_(ツ)\_/¯
-
 
 ## Test
 

@@ -100,7 +100,7 @@ four legged chair you are sitting on. I promise, you will find it there;).)
 
 This chapter will discuss how we can combine with DOM Events with JS, HTML, and/or CSS.
 In the next chapter, we will dive deep into EventToEventComposition.
-The patterns described in EventToEventComposition are the true value of this project.
+The patterns described in EventComposition are the true value of this project.
 However, in order to understand *how* a custom DOM Event should behave, we need also 
 to understand *how* and *why* DOM Events can and do interact with HTML, JS, and CSS in certain ways.
 

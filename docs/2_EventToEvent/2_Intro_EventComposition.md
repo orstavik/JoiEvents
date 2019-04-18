@@ -1,19 +1,19 @@
-# Pattern: EventToEventComposition
+# Into: EventComposition
 
-EventToEventComposition is the act of making a new event from one or more other events.
-EventToEventComposition is implemented as a single JS function added as a global, capture event listener.
-When composing events, one relies on a series of strategic choices, that put together form different
-design patterns for EventToEventCompositions. 
+EventComposition is the act of making a new event from one or more other events.
+EventComposition is implemented as *a single, global event listener function in JS*.
 
-The EventToEventComposition patterns described here only applies to native DOM Events that always 
-propagate to the `window` and `document` node in the DOM (ie. that has `{bubble: true, composed: true}`). 
-Events that are either only dispatched to a single DOM node (`bubbles: false`) can be handled quite 
-similarly, but are restricted to a single document scope and all their listeners must be attached to
-the single target node. Composed events for native or custom events that are `composed: false` should 
-look to JoiComponents EventRecorder pattern instead. 
-      
-## EventToEventComposition strategies
-The strategic choices the developer needs to consider when composing events are:
+The EventComposition patterns described here only applies to *global events* that begin their
+propagation on the `window` DOM node. 
+Local events can often be processed quite similarly, but are restricted to a single document scope.
+If you make web components, you can use many of the strategies described here, and combine them 
+with the JoiComponents EventRecorder pattern.
+
+## EventComposition patterns
+
+The best way to compose events is to follow a set of established patterns/best practices.
+These patterns give you a clear guide as to the strategic choices you need to make and the pros and
+cons of solving them in different manners.
 
 1. Should the composed event propagate independently of other events, 
    and if so, how can this be achieved?
@@ -38,9 +38,9 @@ The strategic choices the developer needs to consider when composing events are:
    do the composed event never need to prevent the default behavior of the triggering event?
    
 
-## EventToEventComposition patterns
+## EventComposition patterns
 
-In this book, we will present the following EventToEventComposition patterns:
+In this book, we will present the following EventComposition patterns:
 
 0. Problem: **StopPropagationTorpedo**. (BubbleEventTorpedo)
    Show how a) you can turn off the triggering and propagation of a composed event 

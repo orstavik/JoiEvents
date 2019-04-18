@@ -235,7 +235,7 @@ However, I will try to summarize some clearer guidelines from the above:
    and do get triggered not only by other DOM Events.
    
 3. Avoid the EventComposer and EventHelper patterns.
-   If you need another global event, use EventToEventComposition and then direct them via HTML attributes.
+   If you need another global event, use EventComposition and then direct them via HTML attributes.
    If you really need to create a local DOM Event, you are feeling the need for the EventOrchestra pattern,
    not only the need for an EventComposer.
 
