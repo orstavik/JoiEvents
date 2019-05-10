@@ -25,6 +25,18 @@
  */
 (function () {
 
+  var supportsPassive = false;
+  try {
+    var opts = Object.defineProperty({}, 'passive', {
+      get: function() {
+        supportsPassive = true;
+      }
+    });
+    window.addEventListener("test", null, opts);
+    window.removeEventListener("test", null, opts);
+  } catch (e) {}
+  var thirdArg = supportsPassive ? {passive: false, capture: true}: true;
+
   var relatedTarget = undefined;
   var initialUserSelect = undefined;
 
@@ -97,7 +109,7 @@
     document.addEventListener("touchend", end);
     document.addEventListener("touchstart", cancel);
     window.addEventListener("blur", cancel);
-    document.addEventListener("touchmove", onTouchmove, {passive: false});   //[2a]
+    document.addEventListener("touchmove", onTouchmove, thirdArg);           //[2a]
 
     initialUserSelect = document.children[0].style.userSelect;               //[2b]
     document.children[0].style.userSelect = "none";                          //[2c]
@@ -117,6 +129,8 @@
     relatedTarget = touchHoverTarget;
   }
 
-  document.addEventListener("touchstart", start);
+  document.addEventListener("touchstart", start);        //thirdArg here too?? or tell the user to add touch-action none at the appropriate place? i think touch-action: none is best!
+  //problem 2: not making this one passive. This means that scrolling and context menu default actions can enter
+  //before we start our activities, which will block our activities.
   document.addEventListener("touchend", start);                                 //[1]
 })();
