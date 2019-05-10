@@ -37,11 +37,9 @@
   }
 
   function dispatchTouchHover(target, name) {
-    if (target) {
-      setTimeout(function () {
-        target.dispatchEvent(new CustomEvent("touch-" + name, {bubbles: true, composed: true}));
-      }, 0);
-    }
+    setTimeout(function () {
+      target.dispatchEvent(new CustomEvent("touch-" + name, {bubbles: true, composed: true}));
+    }, 0);
   }
 
   function getTarget(e) {                                                     //[3a]
@@ -53,33 +51,35 @@
   function onTouchmove(e) {
     e.preventDefault();                                                        //[3]
     let touchHoverTarget = getTarget(e);
-    if (!touchHoverTarget || touchHoverTarget === relatedTarget)               //[3c]
+    if (touchHoverTarget === relatedTarget)
       return;
-    dispatchTouchHover(relatedTarget, "leave");                         //[4]
-    dispatchTouchHover(touchHoverTarget, "hover");
+    if (relatedTarget)
+      dispatchTouchHover(relatedTarget, "leave");                         //[4]
     relatedTarget = touchHoverTarget;
+    if (touchHoverTarget)
+      dispatchTouchHover(touchHoverTarget, "hover");
   }
 
   function end() {
     setBackEventListeners();
-    if (relatedTarget) {
-      dispatchTouchHover(relatedTarget, "leave");                      //[5a]
-      if (relatedTarget.getAttribute("touch-hover") === "click")
-        setTimeout(relatedTarget.click.bind(relatedTarget), 0);               //[5b]
-    }
+    if (!relatedTarget)
+      return;
+    dispatchTouchHover(relatedTarget, "leave");                      //[5a]
+    if (relatedTarget.getAttribute("touch-hover") === "click")
+      setTimeout(relatedTarget.click.bind(relatedTarget), 0);               //[5b]
     relatedTarget = undefined;
   }
 
   function cancel() {                                                          //[6]
     setBackEventListeners();
-    if (relatedTarget){
-      dispatchTouchHover(relatedTarget, "leave");
-      dispatchTouchHover(relatedTarget, "cancel");
-    }
+    if (!relatedTarget)
+      return;
+    dispatchTouchHover(relatedTarget, "leave");
+    dispatchTouchHover(relatedTarget, "cancel");
     relatedTarget = undefined;
   }
 
-  function setBackEventListeners () {
+  function setBackEventListeners() {
     document.removeEventListener("touchmove", onTouchmove);
     window.removeEventListener("blur", cancel);
     document.removeEventListener("touchend", end);
