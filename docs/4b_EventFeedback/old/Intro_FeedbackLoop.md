@@ -1,16 +1,18 @@
-# Intro: FeedbackLoop
+# Intro: Feedback
 
-Most systems make a noice, change visual appearance or give another physical response when a user interacts with it. For example, when you flip a light switch, it makes a click sound, you can see a light coming on and the flipped switch, and you the spring snapping as the switch flips under your fingertips. The sound, visual change, or reactive motion from the system we call **feedback**. 
+Most systems make a noice, change visual appearance or give another physical response when a user interacts with it. For example, when you flip a light switch, it makes a click sound, you can see a light coming on plus the switched switch, and you can feel the spring snapping as the switch flips under your fingertips. The sound, visual change, or reactive motion from the system we call **feedback**.
 
-In UX feedback is critical. For example, if a key or switch is so soft or hard that a user doesn't feel it move, then he/she might press too hard or too long. If a car backing is too silent, then people behind it might not react to it before it is too late. And if a switch looks the same in both on/off, then how would you know if the lightbulb is broken or the switch is off?
+In UX feedback is critical. If you enter a room with the light switched on, you don't flip the switch to turn the light on. Obviously. But, there are other subtle design requirements for UX feedback too. For example, if a key or switch is so soft or hard that a user doesn't feel it move, then he/she might press too hard, too long, or simply give up. If a car backing is too silent, then people behind it might not react to it before it is too late. And if a switch looks the same in both on/off, and you can't turn the light on, then how can you tell which is broken: the lightbulb or the switch?
 
-A user relies on such feedback ques from a system when he/she interacts with it. He/she uses these feedback queues to decide what to do. The visual, auditive, or tactile feedback from the system is part of the control process for the user, when he controls the system. When the response of a system is part of controlling the future running of the system in this way, it is called a **feedback loop**.
+A user relies on feedback ques from a system when he/she interacts with it. The feedback from the system is input in his/her decision making process. The system being controlled gives feedback such as sounds, visuals and motion back to the control process; the control process uses these feedback queues to assess the state of the system, and based on this state, the control process makes a decision about how to direct the system further.
 
-## Humans as part of feedback loops
+## Feedback loops
 
-The concept of feedback loops comes from machine mechanics. The feedback from the system is directly involved in controlling the system itself. Examples of this might be automatic regulation of air inflow to a combustion engine or the keel on a sailboat righting it after it having capsized.
+In machine mechanics, many systems integrate feedback about the state of the system into automatic controls. For example, a lawn mower can automatically regulate the influx of fuel based on the rpm that in turn reflect the amount of gras resistance.
+https://www.briggsandstratton.com/eu/en_gb/support/faqs/browse/governor-system.html
+Even simpler, some keel designs can automatically right a boat, even when the boat has capsized.
 
-At first, it might make less sense to think of feedback loops as automatic when a human is controlling the system. After all, human decisions are not "automatic". But, that is only partly true. Think of a car with a manual gearbox. Such a car can go for many miles, changing gears many times, without its driver ever being conscious about its gears. Changing gears is "automated" in the mind of the driver. He instinctively both register the sounds of the engine, the response to the gas pedal, the rpm dial, and his right arm/left foot swing into action with the same amount of consciousness as if he was bending his knee during a walk.
+Such "automatic" feedback loops also exists when humans actively control a machine. At first, it might make less sense to think of feedback loops as automatic when a human is controlling the system. After all, human decisions are not "automatic". But, that is only partly true. Think of a car with a manual gearbox. Such a car can go for many miles, changing gears many times, without its driver ever being conscious about its gears. Changing gears is "automated" in the mind of the driver. He instinctively both register the sounds of the engine, the response to the gas pedal, the rpm dial, and his right arm/left foot swing into action with the same amount of consciousness as if he was bending his knee during a walk.
 
 So, humans often observe system feedback subconsciously. And humans often control parts of a system subconsciously. 
 
