@@ -2,28 +2,31 @@
 
 VisualFeedback is a pattern for adding a visual response to a gesture. VisualFeedback works by adding and updating a set of HTML elements (feedback element) to the DOM when the gesture is active that illustrate its state.
 
-## HowTo: add visual feedback in an unknown DOM?
+## Trick: BlindManDOM
 
-The composed event implementation behind the gesture does not know anything about the state of the DOM, except that it exists. Therefore, the VisualFeedback pattern must ensure that the feedback element is visible and behaves the same in all situations:
+> Even when you know *nothing* about the DOM, you can still *add* to it, *temporarily*.
+
+The composed event implementation behind the gesture does not know anything about the state of the DOM. Except that it exists. Still, the VisualFeedback pattern needs to add something to the DOM, something that is visible and behaves consistently in all situations. So, how to do that?
  
-1. The feedback element is appended at the end of the `body` element in the main `document`. The feedback element  is added when the gesture is activated (or surpasses a particular threshold); it can be updated and mutated during the active gesture if need be; and it is removed when the gesture is completed or ends.
+1. The DOM *always* has a main `document`, and the main `document` *always* has one `<body>` element. Thus, the feedback element can be appended this `<body>` element. The feedback element can be added when the gesture is activated (or surpasses a particular threshold in the gesture state); it can be updated and mutated during the active gesture if need be; and it can be removed when the gesture ends.
  
-2. The feedback element is given `position: fixed` with a set of coordinates and dimensions relevant for the gesture. This ensures that the positioning of the feedback element can be adjusted to the state data (including the HTML `target` element), and is not subject to any other style in the DOM context.
+2. The feedback element is given `position: fixed` with a set of coordinates and dimensions relevant for the gesture. This ensures that the positioning of the feedback element can be adjusted to the state data (including the HTML `target` element), and is not influenced by the DOM context.
  
-3. The feedback element is given the `z-index: 2147483647` value. This is the maximum integer value on 32 bit systems (tested Chrome 77), and this `z-index` combined with the feedback elements position as last on the main `document` should ensure that the feedback element is displayed in all situations.
+3. The feedback element is given the `z-index: 2147483647` value. 2147483647 is the maximum z-index value (please, prove me wrong! :), and this `z-index` combined with the feedback elements position as last on the main `document` ensures that the feedback element is displayed in all situations.
  
-4. The feedback element is explicitly marked `pointer-events: none` to prevent it from interfering with user input. The feedback element is not intended for user interaction, only as a visual que to users.
+4. The feedback element has `pointer-events: none`. This makes the feedback element invisible for touch and mouse interaction. Any BlindManDOM element should do this, so the visual feedback doesn't conflict with any ongoing user interaction.
 
 ## Demo: Naive `long-press` with a bulls-eye
 
-In this demo, we add a bulls-eye to a naive implementation of the `long-press` event described in the ListenUp chapter. The feedback element is a circle border that grows from where the initial `mousedown` is registered, which then gets doubled as the time requirement for the press is met.
+In this demo, we add a bulls-eye to a naive implementation of the `long-press` event. The feedback element is a circle border that grows from where the initial `mousedown` is registered, which then gets doubled as the time requirement for the press is met.
 
-The feedback element is made up of two HTML elements: a `<style>` and a `<div>`. The feedback element uses CSS animation to visualize the time that passes during the press, and adds a second ring as the duration criterion of the `long-press` event is fulfilled. The `long-press` event also adds a check to see if the pointer has moved outside the border when it is let go. This enables the user to see the `long-press` event activting, and then decide whether to do or cancel the event.
+The feedback element is made up of two HTML elements: a `<style>` and a `<div>`. The feedback element uses CSS animation to visualize the time that passes during the press, and adds a second ring as the duration criterion of the `long-press` event is fulfilled. The `long-press` event also adds a check to see if the pointer has moved outside the border when it is let go. This enables the user to see the `long-press` event is activated, and then decide whether to do or cancel the event.
 
 ```javascript
 (function () {
-  const feedbackStyle = document.createElement("style");
-  feedbackStyle.innerText = `
+  const feedbackElement = document.createElement("span");
+  feedbackElement.innerHTML = `
+<style>
 .long-press-feedback-ring {
   position: fixed; 
   z-index: 2147483647; 
@@ -48,15 +51,18 @@ The feedback element is made up of two HTML elements: a `<style>` and a `<div>`.
     transform: scale(2);
     border: 4px double rgba(9, 9, 9, 0.1);
   }
-}`;
-  const feedbackElement = document.createElement("div");
-  feedbackElement.classList.add("long-press-feedback-ring");
-  
+}
+</style>
+<div class="long-press-feedback-ring"></div>`;
+
   function addVisualFeedback(x, y){
-    feedbackElement.style.left = x + "px";
-    feedbackElement.style.top = y + "px";
-    document.body.appendChild(feedbackStyle);    
+    feedbackElement.children[1].style.left = x + "px";
+    feedbackElement.children[1].style.top = y + "px";
     document.body.appendChild(feedbackElement);    
+  }
+  
+  function removeVisualFeedback(){
+    feedbackElement.remove();    
   }
   
   function isInside(start, stop){
@@ -93,8 +99,7 @@ The feedback element is made up of two HTML elements: a `<style>` and a `<div>`.
     }
     primaryEvent = undefined;                               
     window.removeEventListener("mouseup", onMouseup);
-    feedbackElement.remove();
-    feedbackStyle.remove();
+    removeVisualFeedback();
   }
 
   window.addEventListener("mousedown", onMousedown, true);  
