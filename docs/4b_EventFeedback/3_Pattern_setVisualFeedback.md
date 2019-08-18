@@ -117,16 +117,22 @@ The consequence of `StartEvent.setVisualFeedback()` strategy is that a start eve
 
 ## Conclusion
 
-Start with `StartEvent.setVisualFeedback()`. If highly desirable, implement a custom CSS property `--event-name-visuals: templateId`. In my hitherto opinion, the JS strategy suffices and I will therefore adhere to it.
+As a general solution to allow developers to set their own visual feedback element, the `StartEvent.setVisualFeedback()` is the best. It requires good housekeeping in gesture events, ie. that a start event be dispatched upon where the developer can add the altered visual.
+
+If the visual feedback for an event should be fixed to only one in a group (cf. `cursor: crosshair`), then using a custom CSS property would be best. However, this use-case, establishing a fixed group of feedback symbols is not considered very relevant.
 
 ## Demo: `long-press` squared
 
-In this demo, we return to our naive `long-press` event from the previous chapter and extend it with a) `long-press-start` event that b) contains a `setVisualFeedback()` method. The `setVisualFeedback()` will replace the builtin feedback element with an alternative version.
+In this demo, we return to our naive `long-press` event from the previous chapter. We extend it with a) `long-press-start` event that b) contains a `setVisualFeedback()` method. The `setVisualFeedback()` will replace the builtin feedback element with an alternative version for the current gesture.
+
+The `long-press-setvisual` composed event:
 
 ```javascript
 (function () {
-  const builtinFeedbackElement = document.createElement("span");
-  feedbackElement.innerHTML = `
+
+  const builtinFeedbackElement = document.createElement("div");
+  builtinFeedbackElement.classList.add("long-press-feedback-ring");
+  builtinFeedbackElement.innerHTML = `
 <style>
 .long-press-feedback-ring {
   position: fixed; 
@@ -153,17 +159,20 @@ In this demo, we return to our naive `long-press` event from the previous chapte
     border: 4px double rgba(9, 9, 9, 0.1);
   }
 }
-</style>
-<div class="long-press-feedback-ring"></div>`;
+</style>`;
+
+  var feedbackElement;
 
   function addVisualFeedback(x, y){
-    feedbackElement.children[1].style.left = x + "px";
-    feedbackElement.children[1].style.top = y + "px";
+    const style = feedbackElement.style;
+    style.left = x + "px";
+    style.top = y + "px";
+    style.animationDuration = "300ms";
     document.body.appendChild(feedbackElement);    
   }
   
   function removeVisualFeedback(){
-    feedbackElement.remove();    
+    document.body.removeChild(feedbackElement);    
   }
   
   function isInside(start, stop){
@@ -182,7 +191,6 @@ In this demo, we return to our naive `long-press` event from the previous chapte
   }
 
   var primaryEvent;
-  var feedbackElement;
 
   function onMousedown(e) {                                 
     if (e.button !== 0)                                     
@@ -190,7 +198,7 @@ In this demo, we return to our naive `long-press` event from the previous chapte
     primaryEvent = e;                                       
     window.addEventListener("mouseup", onMouseup);
     feedbackElement = builtinFeedbackElement;
-    let longPressStart = new CustomEvent("long-press-start", {bubbles: true, composed: true, detail: duration});
+    let longPressStart = new CustomEvent("long-press-start", {bubbles: true, composed: true});
     longPressStart.setVisualFeedback = function(el){
       feedbackElement = el;
     };
@@ -218,22 +226,47 @@ In HTML
 
 ```html
 <script src="demo/naive-long-press-setvisual.js"></script>
-<template>
-<div class="long-press-heart"></div>
+<template id="heart">
+<div class="long-press-heart">&#9829
 <style>
 .long-press-heart {
+  position: fixed; 
+  z-index: 2147483647; 
+  pointer-events: none; 
+  margin: -7px 0 0 -7px;
+  box-sizing: border-box;
+  width: 10px; 
+  height: 10px; 
+  border-radius: 50%; 
+  animation: long-press 300ms forwards;
   color: rgba(0,0,0,0);
-  -webkit-text-stroke: 1px red; 
+  -webkit-text-stroke: 1px rgba(0,0,0,0.1); 
+}
+  @keyframes long-press {
+  0% {
+    font-size: 0px;
+    -webkit-text-stroke: 1px rgba(0,0,0,0.1); 
+  }
+  99% {
+    font-size: 30px;
+    margin: -18px 0 0 -10px;
+    -webkit-text-stroke: 1px rgba(0,0,0,0.4); 
+  }
+  100% {
+    font-size: 30px;
+    margin: -18px 0 0 -10px;
+    -webkit-text-stroke: 2px rgba(255,0,0,0.4); 
+  }
 }
 </style>
+  </div>
 </template>
-<a href="https://elizabethwarren.com/">Try to click me quick</a>
-<hr>
-<a href="https://time.com/5622374/donald-trump-climate-change-hoax-event/">The right thing to do is to press me hard and long</a>
+<div>press me</div>
 <script >
-  window.addEventListener("long-press", e => {e.preventDefault(); console.log(e)});  
+  const feedbackEl = document.querySelector("#heart").content.children[0].cloneNode(true);
+  document.addEventListener("long-press-start", e => {e.setVisualFeedback(feedbackEl)});  
+  window.addEventListener("long-press", e => {console.log(e)});  
 </script>
-
 ```
 
 
