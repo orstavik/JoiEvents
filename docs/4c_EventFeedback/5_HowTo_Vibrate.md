@@ -1,4 +1,4 @@
-# Pattern: setAudioFeedback
+# HowTo: Vibrate
 
 ## Why use audio?
 

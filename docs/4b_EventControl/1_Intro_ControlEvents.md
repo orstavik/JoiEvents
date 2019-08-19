@@ -1,13 +1,20 @@
-# Pattern: setVisualFeedback
+# HowTo: ControlEvents
 
-There is not a single use-case for setting the visual feedback. A developer might need to set the visual feedback for:
+There is not a single use-case for setting the feedback. A developer might need to set the feedback for:
 1. all events,
 2. all events on a certain type of elements,
 3. some events, depending on the state of the app.
 
+Also, there are many ways to provide feedback:
+1. Visual feedback.
+2. Audio feedback.
+3. Vibration feedback.
+
+There are several strategies one can use to control the feedback given from a gesture/composed event sequence: CSS, HTML, and JS. Each strategy has its benefits and drawbacks, and in this introducing chapter, we discuss these strategies merits.
+
 ## Strategy 1: CSS
 
-Use-case 1 and 2 would best be accomplished in CSS. CSS already enables setting visual feedback for different elements such as changing the mouse cursor icon, e.g. `cursor: crosshair`.
+There are several examples of how CSS properties are used to control visual feedback for different gestures. For example, the icon of the mouse cursor can be changed when the mouse travels over an element using the `cursor: crosshair` CSS property. Adding custom CSS properties such as `--long-press-duration: 500ms` and/or `--tripple-click-target: bullseye`
 
 Use-case 3 can also be accomplished via CSS. If the developer reflect the application state in the DOM via attributes or classes on relevant elements, CSS rules could be selected depending on app state. 
 
