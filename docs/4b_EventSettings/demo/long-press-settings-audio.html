@@ -1,0 +1,11 @@
+<script src="long-press-settings-audio.js"></script>
+
+<audio id="ding" src="ding.mp3"></audio>
+
+<h1 id="a" use-long-press-audio="#ding">PRESS ME and I ding after 1000ms</h1>
+
+<h1 id="b">you can PRESS ME too, but I don't ding</h1>
+
+<script>
+  window.addEventListener("long-press", e=> console.log(e));
+</script>
