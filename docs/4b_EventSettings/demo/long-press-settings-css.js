@@ -9,23 +9,36 @@
   }
 
   var primaryEvent;
-  var setDuration;
+  var duration;
 
   function onMousedown(e) {
     if (e.button !== 0)
       return;
     primaryEvent = e;
-    const durationText = getComputedStyle(e.target)["--long-press-duration"];
-    if (durationText)
-      setDuration = parseInt(durationText);
+    let durationText = getComputedStyle(e.target).getPropertyValue("--long-press-duration");
+    if (!durationText)
+      duration = 300;
+    else {
+      durationText = durationText.trim();
+      const num = parseInt(durationText);
+      if (num < 0)
+        return;
+      if (durationText === (num + "ms")){
+        duration = num;
+      }else if (durationText === (duration  + "s")){
+        duration *= 1000;
+      } else { //illegal value
+        return;
+      }
+    }
     window.addEventListener("mouseup", onMouseup);
   }
 
   function onMouseup(e) {
-    var duration = e.timeStamp - primaryEvent.timeStamp;
+    const timePressed = e.timeStamp - primaryEvent.timeStamp;
     //trigger long-press iff the press duration is more than the --long-press-duration EventSetting
-    if (duration > (setDuration || 300)){
-      let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration});
+    if (timePressed > duration){
+      let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: {duration: timePressed}});
       dispatchPriorEvent(e.target, longPress, e);
     }
     primaryEvent = undefined;

@@ -1,16 +1,13 @@
-# HowTo: ControlEvents
+# Intro: EventSettings
 
-There is not a single use-case for setting the feedback. A developer might need to set the feedback for:
-1. all events,
-2. all events on a certain type of elements,
-3. some events, depending on the state of the app.
+The browsers and standard implement many different strategies to control the behavior of events and gestures. These strategies are implemented from *both* HTML template, HTML attributes, CSS properties, CSS pseudo-classes, and JS(!). This variety makes controlling event settings quite complex for the developer, and in this introduction chapter I will therefore run through these strategies and their pros and cons.
 
-Also, there are many ways to provide feedback:
-1. Visual feedback.
-2. Audio feedback.
-3. Vibration feedback.
+## Native
 
-There are several strategies one can use to control the feedback given from a gesture/composed event sequence: CSS, HTML, and JS. Each strategy has its benefits and drawbacks, and in this introducing chapter, we discuss these strategies merits.
+
+These strategies vary from HTML template (cf. `<map>` and `<area>`), HTML attributes (cf. `onclick`), CSS properties (cf. `pointer-events` and `cursor`), CSS pseudo-classes (cf. `:hover` and `:visited`) and JS (cf. `addEventListener()`, `stopPropagation()`,  Native events and gestures The behavior of native events can be controlled from both HTML, CSS, and JS(!).  First of all, from JS, in event listeners, their propagation, `defaultAction`, appear
+
+There are several strategies one can use to control a gesture and composed event.  CSS, HTML, and JS. Each strategy has its benefits and drawbacks, and in this introducing chapter, we discuss these strategies merits.
 
 ## Strategy 1: CSS
 

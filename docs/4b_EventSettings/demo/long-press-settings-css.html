@@ -1,0 +1,23 @@
+<script src="long-press-settings-css.js"></script>
+
+<style>
+  body {
+    --long-press-duration: 1000ms;
+  }
+  #b {
+    --long-press-duration: 3000ms;
+  }
+  #c {
+    --long-press-duration: -1ms;
+  }
+</style>
+
+<h1 id="a">PRESS ME for more than 1000ms</h1>
+
+<h1 id="b">PRESS ME for more than 3000ms</h1>
+
+<h1 id="c">PRESS ME won't work</h1>
+
+<script>
+  window.addEventListener("long-press", e=> console.log(e));
+</script>

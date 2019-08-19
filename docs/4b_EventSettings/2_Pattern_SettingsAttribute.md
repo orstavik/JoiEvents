@@ -6,6 +6,8 @@
 > DetailsOnDemand can be also be used with an underlying EventSequence state to give a 
 > specific view for each composed event.
 
+todo `disabled` on `<input>` elements. The attributes lie in the cross section between the element and the event. Not clearly belonging only to the event, but still possible to view as event property..
+
 A big benefit of EarlyBird composed events is that they are global. You can add one event listener per
 event type, and then apply that event to as many DOM elements as you would like.
 However, sometimes, you need make adjustments to the event. You need to describe some EventSettings.
