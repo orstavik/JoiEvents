@@ -11,19 +11,7 @@ There are several strategies one can use to control a gesture and composed event
 
 ## Strategy 1: CSS
 
-There are several examples of how CSS properties are used to control visual feedback for different gestures. For example, the icon of the mouse cursor can be changed when the mouse travels over an element using the `cursor: crosshair` CSS property. Adding custom CSS properties such as `--long-press-duration: 500ms` and/or `--tripple-click-target: bullseye`
 
-Use-case 3 can also be accomplished via CSS. If the developer reflect the application state in the DOM via attributes or classes on relevant elements, CSS rules could be selected depending on app state. 
-
-But, there are two counter arguments against using CSS to set visual feedback:
-
-1. CSS mainly support choosing between pre-existing template: the `cursor` property only let the developer choose one of a set of pre-existing icons. CSS doesn't support declaring additional HTML template: the only(?) CSS property that enable developers to add content to the DOM from CSS, ie. `content: "some text"`, is both very limited (it only allows text content) and messy (conceptually, CSS comes *after* HTML template, and thus should not itself *add* HTML template to the DOM). This makes CSS a bad choice if the developer wishes to add complex custom visual feedback, which it definitively will be.
-
-2. Most developers think about events with their JS thinking-hat on. They "process" events with event listeners, and then in the JS code inside the event listener a) check to see if the app/DOM is in a certain state, and if so b) add some bells and whistles. Although similar objectives can be accomplished declaratively in the reverse order, by first reflecting the app state in the DOM as classes and attributes, and then declaratively turn on/off bells and whistles in CSS based on those attributes/classes, event processing most often require a) manipulation of application state (which needs JS 95% of the time) and b) heavier DOM manipulation, which might not easily lend itself to declarative programming.
-
-Thus, CSS is not well suited to setVisualFeedback. VisualFeedback elements are likely small bits of HTML template that include custom style and elements. Furthermore, the developer would likely consider a CSS solution for setVisualFeedback as convoluted and strange.
-
-CSS is therefore considered a bad place to control the more complex template needed for custom visual feedback.
 
 ## Strategy 2: HTML
 
