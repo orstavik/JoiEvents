@@ -3,21 +3,13 @@
 EventComposition is the act of making a new event from one or more other events.
 EventComposition is implemented as *a single, global event listener function in JS*.
 
-The EventComposition patterns described here only applies to *global events* that begin their
-propagation on the `window` DOM node. 
-Local events can often be processed quite similarly, but are restricted to a single document scope.
-If you make web components, you can use many of the strategies described here, and combine them 
-with the JoiComponents EventRecorder pattern.
+The EventComposition patterns described here only applies to *global events* that begin their propagation on the `window` DOM node. Local events can often be processed quite similarly, but are restricted to a single document scope. If you make web components, you can use many of the strategies described here, and combine them with the JoiComponents EventRecorder pattern.
 
 ## EventComposition patterns
 
-The best way to compose events is to follow a set of established patterns/best practices.
-These patterns give you a clear guide as to the strategic choices you need to make and the pros and
-cons of solving them in different manners.
+The best way to compose events is to follow a set of established patterns/best practices. These patterns give you a clear guide as to the strategic choices you need to make and the pros and cons of solving them in different manners.
 
-1. Should the composed event propagate independently of other events, 
-   and if so, how can this be achieved?
-   [The EarlyBird pattern](Pattern2_EarlyBird.md).
+1. Should the composed event propagate independently of other events, and if so, how can this be achieved? [The EarlyBird pattern](Pattern2_EarlyBird.md).
 
 2. Should I dispatch the composed event so that it propagates the DOM *prior to* the triggering event; or 
    should I dispatch the composed event so that it propagates *after* (trailing) the triggering event?
