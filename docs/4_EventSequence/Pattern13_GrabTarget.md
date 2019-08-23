@@ -2,23 +2,17 @@
 
 ## When to decide in an EventSequence?
 
-EventSequences often benefit from making early decisions:        
+Native EventSequences make their decisions up front. For example, *before* the `touchstart` event begins to propagate, the value of the `touch-action` and `pointer-action` has already been fixed. Thus, it makes no difference to the *current* touch gesture if you for example set `touch-action: none` in a `touchstart` event listener: if `touch-action` did allow `scroll` before the `touchstart` event was dispatched, then the browser will not change that decision until the gesture ends with a `touchend`.
 
-1. By making a decision early in the initial event trigger function, an EventSequence
-   can reduce its workload. By making a decision up-front, the EventSequence might
+Why make decisions up front :        
+
+1. By making decisions up front early in the initial event trigger function, an EventSequence can reduce its workload. By making a decision up-front, the EventSequence might
    1. avoid even registering secondary trigger event functions, and
    2. avoid computing a property or premise during secondary event trigger function calls.
    
-2. By making a decision early and then sticking to it, the EventSequence becomes much more predictable. 
-   There will be no change of heart between the initial and secondary custom DOM Events.
-   Fewer property values dancing around.
+2. By making a decision early and then sticking to it, the EventSequence becomes much more predictable. There will be no change of heart between the initial and secondary custom DOM Events. Fewer property values dancing around.
    
-3. By making a decision in one time, in one place in the code, gives a clear entry-point for debugging
-   the EventSequence.
-
-This and more is probably why the browsers themselves also makes the decisions for their native 
-EventSequences early. Once the on `pointerdown` event propagates, the decision about the value of the 
-`pointer-action` CSS property is, has already been made.
+3. By making a decision in one time, in one place in the code, gives a clear entry-point for debugging the EventSequence.
 
 ## When to capture the `target`?
 

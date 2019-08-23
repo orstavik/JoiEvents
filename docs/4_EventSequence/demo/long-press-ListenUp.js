@@ -18,6 +18,8 @@
   }
 
   function onMouseup(e) {                                   //[5]
+    if (e.button !== 0)                                     //[3]
+      return;
     var duration = e.timeStamp - primaryEvent.timeStamp;
     //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
     if (duration > 300){                                    //[6]
@@ -33,7 +35,7 @@
 //1. The event trigger function for the primary event is set up.
 //2. The event trigger function for the primary event is registered. This subscription runs always.
 //   Every time there is a `mousedown`, there will be a cost for processing the long-press event.
-//3. The initial event trigger function filters out `mousedown` events that are not left-clicks.
+//3. The trigger functions filters out `mousedown`/`mouseup events that are not left-clicks.
 //4. In normal circumstances, the primary event trigger function (`onMousedown(e)`) will store the
 //   trigger event and then add the trigger event functions for the secondary trigger events.
 //5. The secondary trigger event function is set up.
