@@ -60,26 +60,16 @@ In this book, we will present the following EventComposition patterns:
 4. Pattern: **ReplaceDefaultAction**: 
    The chapter uses an `echo-click` event as its example.
  
-5. **AttributableEvent**: This pattern illustrate how HTML attributes can be used to turn on or off
-   a composed event per individual elements.
-   The chapter uses a `triple-click` event as its example.
+5. **AttributableEvent**: This pattern illustrate how HTML attributes can be used to turn on or off a composed event per individual elements. The chapter uses a `triple-click` event as its example.
 
 6. **FilteredPriorEvent**: This pattern uses a pure function to filter out a composed event
    from a single event of a single event type. The chapter uses the `link-click` event as example
    (ie. `click` events on DOM elements within an `<a>` or `<area>` element that will trigger browsing).
    [cf. "What is a pure function?"](https://medium.com/javascript-scene/master-the-javascript-interview-what-is-a-pure-function-d1c076bec976)
 
-7. **MergedEvents**(UnitedEvents) : This pattern also uses a pure function to 
-   compose a single event from single events of two or more event types.
-   This chapter uses the `navigate` event as an example to illustrate how all events which eventually
-   will yield in the browser browsing can simply be united into a single event to control routing.
+7. **MergedEvents**(UnitedEvents) : This pattern also uses a pure function to compose a single event from single events of two or more event types. This chapter uses the `navigate` event as an example to illustrate how all events which eventually will yield in the browser browsing can simply be united into a single event to control routing.
 
-
-
-8. **EventSequence**: This pattern illustrate how gestures can be implemented as ComposedEvents.
-   EventSequence pattern listens for a sequence of events from one or more different types, and
-   it uses the state from this collection of event in its event composition.
-   The chapter uses a `long-press` event as its example.
+8. **EventSequence**: This pattern illustrate how gestures can be implemented as ComposedEvents. EventSequence pattern listens for a sequence of events from one or more different types, and it uses the state from this collection of event in its event composition. The chapter uses a `long-press` event as its example.
 
    1. triple-click. Illustrate how state for the event is stored and then used in the filter and 
       makeEvent phases.
