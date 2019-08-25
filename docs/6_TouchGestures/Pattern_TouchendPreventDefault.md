@@ -54,4 +54,4 @@ Gestures would like to *capturePointer* for all pointers sometimes. If the touch
 the mouse must wait too. How to do that?
  
 Gestures should have a visible state. The `capturePointer` concept should maybe be a `captureInteractionFocus`
-too. This is related to [Pattern23_ShowGestureState](../4_EventSequence/Pattern23_ShowGestureState.md)
+too. This is related to [Pattern23_ShowGestureState](../4b_EventFeedback/Pattern23_ShowGestureState.md)

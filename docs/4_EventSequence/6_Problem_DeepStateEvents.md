@@ -36,6 +36,8 @@ Now, you know how to:
 
 But, wait. That is not too hard. I write my CSS rules to be activated/deactivated based on the presence of for example CSS classes in the DOM.
 
+> todo maybe I should add a Global variable for EventSequences, so that others can read the values? And write protect them?
+
 ## Further reading
 
 In the next chapters, I will focus on how to add 

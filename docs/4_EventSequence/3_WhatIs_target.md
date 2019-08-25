@@ -2,8 +2,8 @@
 
 Native events and EventSequences uses one of several strategies to identify their `target`:
 
-1. **`target`-less events** use the `window` as their target. They do *not* select out any particular element in the `document` because it would make no sense and *add no value*. Examples of such events are `resize`, `message`, and `offline`.
-2. **User targeted events** select their target during the course of the event or EventSequence itself. Mouse- and touch-based events are good examples of such targeting.
+1. **`target`-less events** use the `window` as their target. They do *not* select out any particular element in the `document` because it would make no sense and *add no value*. Examples of such events are `beforeprint`, `message`, and `offline`.
+2. **User targeted events** select a DOM element as their target during the course of the event or EventSequence itself. Mouse- and touch-based events are good examples of such targeting.
 3. **State targeted events** use elements that have already been marked as being the active target in the DOM. `keydown` for example uses as their target the element marked as having `focus`.
 
 ## One event, one target 

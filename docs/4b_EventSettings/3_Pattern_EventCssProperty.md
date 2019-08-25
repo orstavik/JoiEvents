@@ -10,6 +10,26 @@ Several CSS properties control native events and gestures:
 
 > CSS pseudo-classes such as `:hover` and `:visited` also interact with events to control the style of elements. But, as pseudo-classes cannot yet be custom made, we only focus on CSS properties in this chapter. 
 
+## When to decide in an EventSequence?
+
+> todo this section is about event control.
+
+Native EventSequences make their decisions up front. For example, *before* the `touchstart` event begins to propagate, the value of the `touch-action` and `pointer-action` is a) read by the browser and b) fixed. This means that if `touch-action` did allow `scroll` before the `touchstart` event was dispatched, then setting `touch-action: none` in a `touchstart` event listener will not immediately stop the scrolling.
+
+This is limiting. The native EventSequences touch-drag-to-scroll uses the CSS properties `touch-action` and `pointer-action` to specify its behavior. Thus, if you wanted to alter the behavior of this EventSequence while it is going on, for example in a `touchstart` event listener, the most natural thing to do would be to change these controls. Right? So why is the native EventSequence *ignoring* my changes to these CSS properties until the *next* EventSequence?
+
+There is a practical reason for this decision. CSS properties such as `touch-action` can a) be delegated to an element via various CSS rules from different stylesheets, and b) will also propagate down from ancestor elements if not specified directly on the element by a rule or in the `style` attribute. This means that to find out what the `touch-action`, the native EventSequence must check the CSSOM value of the CSS property on the element, it cannot simply check the `style` property of the DOM element: it must call `getComputedStyle()`. And this takes time. Now, to do this efficiently, the browser ensures that it processes the start of native EventSequences that needs to check such settings from CSS (ie. `touchstart`) right after it has already calculated the CSSOM. But, querying the CSSOM is still costly, so the browser does not read these CSS properties for all the secondary event triggers. Thus, to stay fast, the browsers read the CSS settings for its native EventSequences *once*, at the very beginning of the EventSequence, and then sticks by these same settings until the current EventSequence ends. 
+
+Why make decisions up front :        
+
+1. By making decisions up front early in the initial event trigger function, an EventSequence can reduce its workload. By making a decision up-front, the EventSequence might
+   1. avoid even registering secondary trigger event functions, and
+   2. avoid computing a property or premise during secondary event trigger function calls.
+   
+2. By making a decision early and then sticking to it, the EventSequence becomes much more predictable. There will be no change of heart between the initial and secondary custom DOM Events. Fewer property values dancing around.
+   
+3. By making a decision in one time, in one place in the code, gives a clear entry-point for debugging the EventSequence.
+
 ## Controlling custom, composed events from CSS
 
 Custom CSS properties can be used to control custom, composed events. For example can the required duration for a `long-press` event be set on specific elements using a CSS variable: `--long-press-duration: 500ms`. 

@@ -4,11 +4,9 @@
 
 A gesture is made up of a series of actions. For example, dragging an element around the screen require a series of three different actions: the user must a) press down on an element with a finger or a mouse, b) move said finger or mouse around while pressing down, and then c) releasing the mouse button or lifting the finger.
 
-To capture a gesture, a composed event must therefore capture all of the actions that comprise it. These actions are represented by events dispatched by the browser, and so when we make composed events for gestures, we need to record the sequences of events that represent them. These types of composed events that listen for *two or more* types of trigger events are EventSequences.
+To capture a gesture, a composed event must therefore capture all of the actions that comprise it. These actions are represented by events dispatched by the browser, and so when we make composed events for gestures, we need to record the sequences of events that represent them. These types of composed events that listen for *two or more* trigger events we call EventSequences.
 
-But. EventSequences are *not* defined by listening for more than one *type of* event. In fact, an EventSequence *can be* implemented listening for *multiple events of the same type*. The `tripple-click` demo below demonstrate such an EventSequence. 
-
-Instead, EventSequences are defined by **having state**. Even the utmost naive EventSequences go through different stages (states) during their execution. And, because an EventSequence can switch into a state, that means implicitly that it always has a state to switch from - even if the state it switches from is just an initial "nothing"-state. Thus, the state of EventSequences is *always present*: once a composed event for an EventSequence is started, it always has a state, even if that state is "empty" or "inactive".
+EventSequences are defined by **having state**. Even the most naive EventSequences go through different stages (states) during their execution. And, because an EventSequence can switch into a state, that means implicitly that it always has a state to switch from - even if the state it switches from is just an initial "nothing"-state. Thus, EventSequences' always has a state.
 
 ## Demo: a basic `long-press`
 
@@ -28,9 +26,11 @@ The simplest way to store such data is to use a JS variable inside the composed 
 
 This basic `long-press` implementation tackles situations where the user presses the wrong buttons or the `mouseup` being dispatched without a corresponding `mousedown` being registered (cf. [1] and [2]). But, it does not implement support for cancelling the press when the user moves the mouse between `mousedown` and `mouseup`.
 
-## Demo: `tripple-click`
+## Single type EventSequences
 
-As mentioned above, an EventSequence can be made using only a single *type* of triggering events, and the `tripple-click` is a good example of such an event.
+EventSequences are *not* defined by listening for more than one *type of* event. In fact, an EventSequence *can be* implemented listening for *multiple events of the same type*. The `tripple-click` is a good example of such an event. A `tripple-click` is made up of a sequence of three `click`s. Three events need to occur, but they are all of one and the same event type.
+
+## Demo: `tripple-click`
 
 Simply put, we can describe the `tripple-click` as also having two states:
 

@@ -9,9 +9,13 @@ These strategies vary from HTML template (cf. `<map>` and `<area>`), HTML attrib
 
 There are several strategies one can use to control a gesture and composed event.  CSS, HTML, and JS. Each strategy has its benefits and drawbacks, and in this introducing chapter, we discuss these strategies merits.
 
-## Strategy 1: CSS
+## Strategy 1: custom CSS pseudo-class
 
+Events can make their own "Css pseudo classes" like :hover. The only difference is that they are normal classes. With a single dot. 
 
+The events will add them, and then remove them. It can add a class on just the target or the target and all its ancestor elements. There are two problems adding it to the entire target ancestor chain. The first is cost. It will need to alter and recalculate style for lots of elements. So adding a custom CSS pseudo-class to the target's ancestor chain should only be done when truly needed. Second is element conflict. If the `:visited` pseudo-class were added to all ancestors, then if one ancestor included a link that was visited, and another which wasn't visited, then there would be a conflict. 
+
+Some Pseudo-classes, such as `:visited`, should *only* be added to target. Other pseudo-classes, such as `:hover`, should be added to the target and all its ancestors.
 
 ## Strategy 2: HTML
 
