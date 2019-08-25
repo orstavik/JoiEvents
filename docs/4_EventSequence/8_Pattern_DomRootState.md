@@ -1,11 +1,45 @@
 # Pattern: DomRootState
 
-2. "Deep state" is state data that is hidden and/or inaccessible to other parts of the app. The inner variables in the EventSequence SIF are deep state. The `long-press` EventSequence hides both a) its current state (inactive/active/end) and b) the relevant data from its previous state (the timestamp and potentially x/y-position of the mouse).
+## How to open up?
 
-   Again, it might seem problematic for a simple `long-press` EventSequence to use deep state. But, to add deep state to an app is conceptually and architecturally problematic: when you add deep state data, you cannot imagine another component ever needing to know about that data. but then, suddenly, a new use-case emerges and you need to access that data anyway. Now, having first pushed this state data deep into somewhere, you can't get it out, and so you instead retrieve it again. And presto! You have created a redundancy that is inefficient and very likely to later cause you headaches.
+
+
+The question becomes: if we need to *read* and *use* the state information from an EventSequence from both JS and CSS, then where should we put it?
+
+The short answer is:
+ * on the root element on the main document as
+ * attributes and
+ * custom CSS properties.
+ 
+However, such a short answer is so obviously no trustworthy, it needs a more thorough explanation.
+
+### Why should the state of an EventSequence be read from CSS?
+
+The use-case of "reading state from an EventSequence directly from CSS" is quite complex. In fact, I have devoted an entire chapter on the subject. The short answer is that to give the user audio, visual, and vibration feedback require three steps:
+1. constructing a view model,
+2. decorating the view model, and
+3. assigning the view model to a branch in the DOM in a certain context.
+
+Constructing 
+ 
+/declaring particularly visual feedback, but also audio and vibration feedback, from an EventSequence can benefit greatly from the declarative structure of HTML and CSS. Web developers know HTML and CSS best when it comes to making views, and so to use HTML and CSS directly to produce views driven by an EventSequence is both efficient, ergonomic and its complexity scales.
+In the later chapter on feedback, it will become clear why, when, how, and where feedback from EventSequences and composed events needs to happen. These feedback use-cases and patterns illustrate the benefits of preserving the state data from EventSequences as HTML attributes and CSS custom properties on the root element (`<HTML>`) in the DOM.
+
+
+To make data available from both various JS contexts, HTML, and CSS the data needs to be preserved in the DOM (and to a certain degree in CSSOM, since `attr()` in CSS is not well supported). 
+
+ 
+in the state data needs to be presented EventSequences needs to be accessed from HTML, CSS, and JS. In this chapter, we will pre-summarize this situation and simply give some guidelines as to what goes where.
    
-   And, this is exactly the story with deep state in EventSequences. At first, I thought it was ok. And I built my composed events with it. But then I realized I needed to make visual and other feedback for the same events. And then I realized I needed to access the state data from the events from HTML and CSS. And then I (yet again) realized how bad deep state is and why one should try to avoid it.
-   
+
+, neither from HTML, CSS, nor JS. 
+
+This means that there is no way for the a developer who includes a `long-press` EventSequence from the previous chapters to read its state. There is no way to neither from HTML, CSS, nor JS to directly assess if for example:
+* if the `long-press` event is active or inactive, and if active, 
+* when and where on screen or in the DOM the press is occuring. 
+
+
+   Again, 
    The ListenUp should not alter which event listeners are active without altering the state information in the DOM root node. 
    
 
@@ -39,3 +73,7 @@ There are two alternatives for controlling the default visualization.
 2. add a method on the start-event `.preventDefaultVisualization()`. That is nice and simple.
 
 3. On the custom visualisations, add a css class `.long-press-visualisation`. The composed event SIF could then a) `document.querySelectorAll(".long-press-visualisation")`, 2) then check to see if any of these element where not `display: none`, and 3) if there is an element that is shown, then it wont run the default visualization, and if there is not, it will run the default visualization. This method is very intricate and convoluted and require lots of implicit knowing. 
+
+## References
+
+ * [MDN: CSS `attr()`](https://developer.mozilla.org/en-US/docs/Web/CSS/attr)
