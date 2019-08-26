@@ -2,6 +2,35 @@
 
 We know that some events target elements in the DOM (cf. WhatIs: the target). We know that events propagate and can trigger JS functions. But, we havn't yet discussed how events can influence CSS and turn CSS rules on/off. Its time to talk about CSS pseudo-classes.
 
+## How does pseudo-classes work?
+
+Let's start with normal CSS classes. We know that:
+1. Normal CSS classes are added to HTML elements by simply putting their name in the element's `class` attribute. 
+2. In a stylesheet, CSS rules can then reference elements with a normal CSS class by writing `.classname`.
+3. The general idea is: add a normal CSS class to an element, and you turn *on* a CSS rule; remove a CSS class from an element, and you turn *off* the CSS rule. (We are obviously disregarding `:not()` and other combinations of CSS selectors at this point. You get the idea.) 
+
+But, what if you wanted a CSS rule to be turned on when it played a particular role in an EventSequence's state, and *off* when it no longer did? For example, what if you wanted a CSS rule to only apply to an element when the mouse cursor hovers over it?
+
+We could do that with a) lots of event listeners and b) a normal CSS class. We could:
+1. add an event listener for `mouseenter` to *all* elements, and then 
+2. have this event listener add a normal CSS class `.hover` to that element, and then
+3. add a similar event listener for `mouseleave` that
+4. removed the `.hover` class again. 
+
+But, there are a couple of drawbacks to this approach.
+1. To add these event listeners in JS would both be extremely costly to mousemove performance *and* produce lots of boilerplate code as many apps would re-implement it again and again.
+2. The `.hover` class name is not protected. The developer might accidentally remove or add it to an element's `classList`. 
+
+Enter CSS pseudo-class. We already know that native EventSequence that observes a group of underlying events will dispatch event objects to JS event listeners. But, the same native EventSequence will also, depending on its state:
+1. add and remove special `:`-pseudo-classes 
+2. to a protected pseudo-classList on DOM elements, 
+3. *automatically*. 
+
+For example, the native EventSequence observing mousemoves will both:
+1. dispatch `mouseenter` and `mouseleave` events to JS, and
+2. add and remove the `:hover` pseudo-class to DOM elements, that can be
+3. queried from CSS selectors as `:hover`. 
+
 ## Pseudo-classes and EventSequences
 
 When a sequence of native events progresses, we can imagine an underlying native EventSequences keeping track of its state. For example, when you move the mouse around on screen, the mouse cursor position changes. The `mousemove`s form a native EventSequence with the mouse position as its state.
@@ -17,53 +46,6 @@ And. There is more evidence of the close relationship between pseudo-classes and
  * The `:hover` pseudo-class bubbles.
  * The `:visited` does not bubble.
  * The `:focus` does not bubble, but it has a sibling pseudo-class `:focus-within` that is applied to its ancestors.
- 
-## What do pseudo-classes do?
-
-Let's start with the basics: normal CSS classes. We know that:
-1. CSS classes are added to HTML elements by simply putting their name in the element's `class` attribute. 
-2. In a stylesheet, CSS rules can then reference elements with a CSS class by writing `.classname`.
-3. The general idea is: add a CSS class to an element, and you turn *on* a CSS rule; remove a CSS class from an element, and you turn *off* the CSS rule. (Of course, this can be morphed using `:not()` and other CSS selectors, but you get the idea.) 
-
-Now, what if you want a CSS rule to *only* apply to an element when that element plays a particular role in an EventSequence's state? For example, what if you wanted a CSS rule to only apply to an element when the mouse cursor hovers over it?
- 
-The obvious thing the EventSequence would then do would be to automatically add a CSS class to an element when it entered a certain state, and then automatically remove that CSS class again when its state changed again.
-
-The nice thing with class names, is that apart from CSS rules, it makes no difference if we take them away from an element. The only thing that happens if we remove a class name from an element, is that we can turn off (or on) different styles on that element. CSS class names are on/off buttons for CSS rules.
-
-Pseudo-classes are used in CSS selectors. CSS selectors are the head of CSS rules. When a CSS selector matches an element, all the CSS properties and values in the CSS rule body is applied to that element.
-
-When an EventSequence changes state, it essentially adds a class to an invisible `pseudo-class` attribute next to the `class` attribute on the element. adds a CSS pse
-
-## Why view pseudo-classes as reflecting EventSequences' state?
-
-It is not common to talk about CSS pseudo-classes as driven by EventSequences' state. Usually, we describe CSS pseudo-classes as associated with an element's state (only). However, I would argue that seeing many CSS pseudo-classes as event-regulated, and not element regulated, is necessary when you make composed events. Here's why.
-
-HTML elements don't suddenly change state on their own. In order for the DOM and its elements to change state, an event must occur. Thus, when an element's state change, we usually think of this change first as an event. And therefore, when an element goes through as series of state changes, these changes can be viewed as driven by a sequence of events.
-
-* One event can cause one state change in an element.
-* One event sequence can cause an element to switch between several different states.
-
-But, one event might affect more than one element. Some of the 
-This means that the state of an EventSequence is *translated* into a set of states in DOM elements. *And*, some of the nuances and details of the EventSequence's state might be lost in translation. When you look at the translated, still result in the element's state in the DOM, you might not see the entire state of the EventSequence, only the aspect of the EventSequence that was relevant to this one element. On the other hand, if you focus clearly on the sequence of events that has occured to produce a certain state, then you are more likely to see a fuller picture. Thus, parts of the "logic behind" the altered DOM state might elude you if you view pseudo-classes in terms of individual elements. 
-
-### Have I learned from other's mistakes? `:checked`
-
-For me, the `:checked` pseudo-class is a good example of why and when seeing CSS pseudo-classes from the perspective of EventSequence state. 
-
-`:checked` is a CSS pseudo-class that can query the state of a checkbox or radiobox. (I skip `:checked` as an option for `<option>`s as it doesn't work well.) However, there are several issues with `:checked`. 
-
-1. The `checked` attribute in HTML is not updated. If you mark an unchecked checkbox with the `checked` attribute either in the HTML template or using `.setAttribute("checked", true)`, it becomes checked on screen. The same goes if you remove the `checked` attribute. But if you uncheck the checkbox using a mouse on screen, the `checked` attribute remains in the HTML version of the DOM. The JS property `.checked` changes, but the HTML template version remains unchanged. Thus, the DOM has a *static* `checked` HTML attribute and a *dynamic* `.checked` JS object property. Horrible. 
-                                                                                         
-2. In CSS you can therefore not use the attribute selector `[checked]` to query check- and radioboxes that are checked. Confusing. Instead, CSS uses a pseudo-class `:checked` selector to "fix" the problem of the broken DOM `checked` attribute. This gives us three(!) partially overlapping properties to contend with: the `checked` HTML attribute, the `.checked` JS property, and the `:checked` pseudo-class. Talk about redundancy. 
-
-So, how *should* `checked` have been implemented? How should we solve a similar problem if we were to make a similar custom element and/or EventSequence today? 
-
-First, it is clear that the `checked` attribute is broken. The DOM attributes (the HTML view) should be just as dynamic as the DOM properties (the JS view). With a dynamic `checked` attribute, you could *skip* both the current `:checked` pseudo-class and the separate `.checked` JS property as `.getAttribute("checked")` from JS and `[checked]` in CSS would serve the same purposes. 
-
-Second, we can also make some custom CSS pseudo-classes for an EventSequence for `input` events. When a checkbox, radiobox, and any other `<input>`/`<textarea>` element is *altered*, they would dispatch an `input` event. These `input` events should be registered by the EventSequence, so that elements that has been altered once could be marked with an `:altered` pseudo-class. Similarly, every element whose current value differs from its initial value could be marked with a `:changed` pseudo-class.
-
-This setup has many benefits. First, it does *not* provide redundant properties in JS and HTML. Second, it gives *more* information about the state of the users events than the current `:checked` debacle. For example would it be much simpler to give the user feedback about which inputs he has not yet answered, and which inputs he has answered and reset or answered and changed. And finally, such a pseudo-class would *be in line* with other pseudo-classes such as `:hover` and `:visited` that *also* reflect native EventSequences' state.
 
 ## References
 
