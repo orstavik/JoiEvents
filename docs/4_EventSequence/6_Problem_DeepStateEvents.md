@@ -1,4 +1,4 @@
-# Problem: DeepStateEvents
+# Problem: DeepStateEventDetails
 
 ## What is "deep state"?
 
@@ -41,6 +41,10 @@ But, wait. That is not too hard. I write my CSS rules to be activated/deactivate
 ## Further reading
 
 In the next chapters, I will focus on how to add 
+
+And the simplest data to store is the triggering event objects themselves. 
+
+
 
 ## References
 

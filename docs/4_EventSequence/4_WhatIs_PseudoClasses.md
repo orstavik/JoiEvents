@@ -47,6 +47,10 @@ And. There is more evidence of the close relationship between pseudo-classes and
  * The `:visited` does not bubble.
  * The `:focus` does not bubble, but it has a sibling pseudo-class `:focus-within` that is applied to its ancestors.
 
+## Demo: `.hover` EventSequence
+
+todo. It is possible to add an example of an EventSequence that adds `.hover` to the element.
+
 ## References
 
  * [MDN: CSS pseudo-classes](https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes)

@@ -10,6 +10,10 @@
 
 ## Discussion: Which lessons can `checked` teach us?
 
+## Demo: How `checked` should have been implemented
+
+> todo turn the paragraphs below into a demo about how checked should have been implemented.
+
 If we need to make a similar attribute like `checked` in a web component or EventSequence today, how should we do it? 
 
 1. It is clear that the `checked` attribute is broken. The DOM attributes (the HTML view) should be just as dynamic as the DOM properties (the JS view). With a dynamic `checked` attribute, you could *skip* both the current `:checked` pseudo-class and the separate `.checked` JS property as `.getAttribute("checked")` from JS and `[checked]` in CSS would serve the same purposes. 

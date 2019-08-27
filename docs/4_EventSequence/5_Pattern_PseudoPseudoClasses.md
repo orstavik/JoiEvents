@@ -1,19 +1,25 @@
 # Pattern: PseudoPseudoClasses
 
-In WhatIs: PseudoClasses we saw how CSS pseudo-classes can be understood as reflecting the state of native EventSequences. In this chapter we look at how we can implement our own pseudo pseudo-classes.
+CSS pseudo-classes can reflect the state of native EventSequences. In this chapter we look at how we can implement our own pseudo pseudo-classes.
 
-CSS pseudo-classes are essentially:
+## HowTo: implement CSS classes
 
-1. CSS classes, that
-2. are *not* directly visible in the normal DOM, and that
-3. instead of being queried using a single dot `.` are queried using a colon `:`, and that
-4. are automatically added and removed on an element by a native EventSequence of some kind.
+A native CSS pseudo-class is:
+
+1. a weird CSS class
+2. attached to different HTML elements
+3. *not* directly visible in the normal DOM, but can be imagined as added to an invisible pseudo-class attribute
+4. can be selected using the colon `:pseudo-class-name`, instead of the normal class prefix `.`.
+5. automatically added and removed to and from an element by a native EventSequence.
  
-The browsers do not allow us to custom, authentic CSS pseudo-classes: we cannot make a) invisible CSS classes that b) can be queried using a `:`. But. The rest we can do:
+Currently, we cannot create custom CSS pseudo-classes. We cannot add classes to the invisible list of pseudo-class, and so we cannot query such a class using the `:`. 
 
-1. We can automatically add and remove CSS classes from custom EventSequences.
-2. These CSS classes will be visible in the DOM, as they are normal CSS classes.
-3. And we can query these CSS classes using `.`-selectors.
+But. We can *fake it* with normal CSS classes. We can:
+
+1. make EventSequences that automatically add and remove normal CSS classes from elements in the DOM.
+2. query these CSS classes using the normal `.`-selectors.
+
+EventSequences that automatically adds and removes normal CSS classes to DOM elements we call PseudoPseudoClass.
 
 ## Demo: `.long-press` PseudoPseudoClass
 
@@ -25,6 +31,7 @@ When the EventSequence adds the `.long-press` PseudoClass to the target element 
 1. The name of the PseudoPseudoClass, here `.long-press`, preserves the EventSequence's type and stage.
 2. The lowest element in the DOM given this PseudoPseudoClasses represent the `target` of the EventSequence.
  
+todo add this demo
 
 ## References
 

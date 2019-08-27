@@ -2,19 +2,19 @@
 
 Native events and EventSequences uses one of several strategies to identify their `target`:
 
-1. **`target`-less events** use the `window` as their target. They do *not* select out any particular element in the `document` because it would make no sense and *add no value*. Examples of such events are `beforeprint`, `message`, and `offline`.
+1. **`target`-less events** use the `window` as their target. They do *not* select out any particular element in the `document` because it makes no sense and adds no value. Examples of such events are `beforeprint`, `message`, and `offline`.
 2. **User targeted events** select a DOM element as their target during the course of the event or EventSequence itself. Mouse- and touch-based events are good examples of such targeting.
-3. **State targeted events** use elements that have already been marked as being the active target in the DOM. `keydown` for example uses as their target the element marked as having `focus`.
+3. **State targeted events** use elements that a different event has already marked as being the active target in the DOM. `keydown` for example uses as their target the element marked as having `focus`.
 
 ## One event, one target 
 
-An event can only have a single target (which can be `window`). If your event needs to target a group of elements, then it should either a) look up the DOM to find a single, common ancestor, b) skip some targets, or c) dispatch multiple events, one for each targeted element.
+*One* event can only have *one* target. If your event needs to target a group of elements, then it must either:
+ 
+1. **skip targets**. An example of this is the `click` event. If *two* or more elements overlap the same screen space, then only the top-most element is `click`ed. Any `click` event on elements positioned "behind" the topmost element are simply discarded, even when the topmost element is fully transparent. 
 
-An example of a) an event that goes up the DOM to find the nearest ancestor is the `change` event. As the user selects an `<option>` in a `<select>`, a `change` event is fired. The `change` event can be seen as affecting *two* targets: a previously selected `<option>` now being deselected, and the `<option>` being selected now. If the `change` event were to be fired from the `<option>` elements, then you would either have fire *two* events or set *two* targets to capture the change of state.
+2. **dispatch multiple events, one for each target**. An example of this strategy is the `mouseenter` and `mouseleave` events. A single `mousemove` event can cause the mouse cursor to enter the screen space of one element and leave the screen space of another. In other words, as the mouse moves the state of `hover` can change for *two* or more elements at the same time. Now, if only a `mousemove` event was fired, its target would likely be the element over which the cursor *enters* or floats *over*. To avoid forcing the developer to remember the state of previously hovered elements, the browser dispatches *two* events, in addition to `mousemove`: `mouseenter` and `mouseleave`.
 
-An example of b) is the `click` event. If *two* or more elements overlap the same screen space, then only the top-most element is `click`ed. Any `click` event on elements positioned "behind" the topmost element are simply discarded, even when the topmost element is fully transparent. 
-
-An example of c) is the `mouseenter` and `mouseleave` events. A single `mousemove` can cause the mouse cursor to enter the screen space of one element and leave the screen space of another. In other words, as the mouse moves the state of `hover` can change for *two* or more elements at the same time. Now, if only a `mousemove` event was fired, its target would be the element over which the cursor *enters* or floats *over*. To avoid forcing the developer to remember the state of previously hovered elements, the browser dispatches *two* additional events, `mouseenter` and `mouseleave`, that can apply to both possible targets. 
+3. **dispatch from a common ancestor up the DOM**. The `change` event is dispatched from a shared ancestor. When a user selects an `<option>` in a `<select>`, a `change` event is fired on the `<select>` parent, not the `<option>` child. This is because the `change` event affects *two* targets: a) the previously selected `<option>` now being deselected, and  b) the `<option>` now being selected. If the `change` event were to be fired from the `<option>` elements, then you would either need *two* different events or skip firing an event for the `<option>` being deselected.
 
 ## Targets in EventSequences
 
@@ -23,6 +23,15 @@ Drag'n'drop is a native EventSequence. Using the mouse, it registers a sequence 
 To solve this issue of *two* different targets, the native drag'n'drop EventSequence dispatches *two* different sets of events:
 1. The `dragend`, `drag`, `dragend` events targets the dragged element. During the drag'n'drop EventSequence, this target remains fixed and immutable from beginning till end.
 2. The `dragenter`, `dragover`, `dragleave`, and `drop` targets different elements, similar to `mouseenter`, `mousemove`, and `mouseleave`.  
+
+## Why event diversity?
+
+The browser dispatch many and diverse events that often more or less overlap each other. 
+
+ * the `mousemove` event could well be used to extract info about which elements are currently hovered, and which are not. Still, the browser dispatches five(!) closely related events: `mousemove`, `mouseenter`, `mouseleave`, `mouseover`, `mouseout`. 
+ * The drag'n'drop events `dragenter`, `dragover`, `dragleave`, and `drop` also overlap `mouseenter`, `mousemove`, and `mouseleave` closely. One could easily assume that for example `dragenter` and `dragleave` could be implemented using listeners for `dragstart` initiating listeners for `mouseenter` and `mouseleave` instead.
+ 
+The reason for this event diversity in the browser is both efficiency and developer ergonomics. The cursor does not enter the space of a new element for every `mousemove`. Therefore, the events `mouseenter` does not need to be dispatched as often as `mousemove`, triggering the JS event listener more rarely. Second, if the same event type was used for all purposes, the beginning of event listeners would quickly fill up with boilerplate if-else-if's. As the browser easily and quickly can distinguish between common states, the end code becomes much clearer with diverse event types (such as `mousemove`, `mouseenter`, `mouseleave`) that all essentially reflect the same underlying event (the user moving the mouse a single pixel).
 
 ## Targets, `bubble` and propagation
 
