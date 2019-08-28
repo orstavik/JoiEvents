@@ -1,4 +1,4 @@
-# Pattern: GlobalEventDetails
+# Pattern: CssEventDetails
 
 We want the details of an EventSequence's state to be readable from JS. To do so, we simply add a global object on the `window`, such as `EventLongPress` and populate it when needed.
 
