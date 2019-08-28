@@ -1,0 +1,47 @@
+<script>
+
+  //1. HowTo declare a CustomEvent
+  var detail = {
+    one: "something",
+    two: function(){
+      return "something else";
+    }
+  };
+  var customEvent1 = new CustomEvent(
+    "basic-custom-event",
+    {bubbles: true, composed: true, cancelable: false, detail: detail}
+  );
+
+  //2. HowTo listen for a CustomEvent
+  window.addEventListener("basic-custom-event", function(e){
+    console.log(e);
+    console.log(e.detail.one);
+    console.log(e.detail.two());
+  });
+
+  //3. HowTo dispatch a CustomEvent ("var customEvent1" was declared in step 1).
+  window.dispatchEvent(customEvent1);
+
+
+  //1. Alternative declaration of a CustomEvent
+  var customEvent2 = new CustomEvent(
+    "extended-custom-event",
+    {bubbles: true, composed: true, cancelable: false}
+  );
+
+  customEvent2.one = "something";
+  customEvent2.two = function(){
+    //"this" is the object (ie. customEvent2) to which the function belongs to
+    return this.one + " else";
+  };
+
+  //2. HowTo listen for a CustomEvent
+  window.addEventListener("extended-custom-event", function(e){
+    console.log(e);
+    console.log(e.one);     //no `.detail`
+    console.log(e.two());   //no `.detail`
+  });
+
+  //3. HowTo dispatch a CustomEvent
+  window.dispatchEvent(customEvent2);
+</script>
