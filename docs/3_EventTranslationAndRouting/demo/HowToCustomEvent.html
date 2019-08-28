@@ -44,4 +44,24 @@
 
   //3. HowTo dispatch a CustomEvent
   window.dispatchEvent(customEvent2);
+
+  class SpecialEvent extends Event {
+    constructor(type, props = {bubbles: true, composed: true}){
+      super(type, props);
+      this.one = "something";
+    }
+    two(){
+      return this.one + " else";
+    }
+  }
+  var customEvent3 = new SpecialEvent("special-event");
+
+  window.addEventListener("special-event", function(e){
+    console.log(e);
+    console.log(e.one);
+    console.log(e.two());
+  });
+
+  window.dispatchEvent(customEvent3);
+
 </script>
