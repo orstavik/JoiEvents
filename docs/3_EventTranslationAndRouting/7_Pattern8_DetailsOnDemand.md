@@ -1,33 +1,44 @@
 # Pattern: DetailsOnDemand
 
-In the Pattern: ExtendsEvent and HowTo: new CustomEvent we discussed how and where we can add properties and methods to custom events. In this chapter we discuss *how* and *why* you can delay processing custom events data.
+In the Pattern: ExtendsEvent and HowTo: new CustomEvent we looked at *where* we can add properties and methods to custom events. In this chapter we discuss *when* we should process custom events' data.
 
 ## Up-front vs. on-demand processing
 
-There are two different *times* you can process an event's details: up-front or on-demand.
+An event's details can be processed at two *times*: up-front or on-demand.
 
-## Details up-front
+## Process details up-front
 
 When an event occurs, the use-case for certain events likely need some recurring details from the event. The most direct approach would therefore be to:
+
 1. process the event details *up-front* when the event is first triggered, and 
+
 2. add the resulting values as properties on the event object that is dispatched.
 
 The benefit of such an approach is that its simple, intuitive, and produce clean code.
 But. There are two problems with this approach:
 
-1. Not *all* event listeners end up using *all* the event's details. This means that the composed event function might end up processing event details in vain. For fin-grained events such as `touchmove` and `mousemove`, such inefficiency is bad.
+ * **Not all event listeners use all event details**. This means that the composed event function might end up calculating event details in vain. For fin-grained events such as `touchmove` and `mousemove`, such inefficiency is bad.
 
-2. Sometimes, the data an event refers to change *while* the event propagates. If this data is "owned" by another entity than the event itself, then the details the event has processed and locked up front are at minimum redundant and at worst out-dated and wrong.
+ * **Event data can change during event propagation**. If this data is "owned" by another entity than the event itself, then the details the event has processed and locked up front are at minimum redundant and at worst out-dated and wrong.
 
-   For example, `submit` events process form data. But the `submit` event doesn't "own" the form data; form data are ordered under `<form>` elements. As a `submit` event propagates, a `submit` event listener may very well "clean up" data in that `<form>`. But, if the `submit` event has locked its details to the state of the form data when the `submit` was first triggered, then an error has occured.
+That all event listeners doesn't need all the event's details is an easy concept to grasp. But, event data changing during propagation van be a bit tricky to see at first. So, let's look at an example of that.
+
+`submit` events process form data. But the `submit` event doesn't "own" the form data: `<form>` elements "own" form data. As a `submit` event propagates, a `submit` event listener may very well adjust and alter data in that `<form>`. But, if the `submit` event has made a copy of these details and present them to the user of the event "as the details", then changing these copied data will not have any affect to the end result. 
+
+Even when you delay the processing of event details, it is tempting to *change the ownership* of the data too. For example, try to dictate for example that *the event owns the data while it propagates*. But. Don't do this. It doesn't work because:
+ * In principle, `Event`s are **immutable messages**. Sure, they have methods such as `.stopPropagation()` and `.preventDefault()`, but these methods alter the state of the events propagation cycle, not the message itself.
+ * other functions running asynchronously might also need to access the same data. An example of such an async function is the default action for `submit` events that has already been added to the task que when the `submit` event starts to propagate.
+ * there is no way to ensure that the changes of the event's data do not simply vanish once the event stops propagating. (There is no `postPropataion` callback on events, so there is no way to safely and at the right time ensure that the changed data can be transmitted back to for example the DOM or a waiting default action task.)
+
+So, event details are to be considered either *immutable* or *not owned by the event*.
     
-## Details on-demand
+## Process details on-demand
   
 So, we want to:
  * process as few details as possible up-front and
  * avoid having the users of our custom events write the same boilerplate to hash out the same details for frequently recurring problems. 
 
-The solution to this dilemma is to process the data *on-demand*. Instead of adding to the custom event object with a finished-calculated property value, we add a method that *can* calculate the detail for the user, upon request. This hides all the arithmetic for the user, but avoids all the up-front problems.
+The solution to this dilemma is to process the data *on-demand*. Instead of adding to the custom event object with a finished-calculated property value, we add a method that *can* calculate or retrieve the detail for the user, upon request. This hides all the arithmetic for the user, but avoids all the up-front problems.
 
 ## Demo: `browse` with `getQueryString()` from `submit` 
 
@@ -78,42 +89,3 @@ To solve this dilemma, we will echo the `submit` event as another custom event w
 ## References
 
  * 
-
-
-# OLD
-
-## Example 1: `link-click` with naive `getHref()` method
-
-To illustrate this practice we expand our `link-click` event from [Pattern: TypeFilteredEvent](Pattern7_TypeFilteredEvent). 
-We create a function `getLinkHref(element)` that given a target element returns 
-the `href` property of that element.
-As a `getHref` property to the `new CustomEvent` object, 
-we then add a closure that calls `getLinkHref(element)` using the `newTarget` as argument.
-
-<pretty-printer href="demo/link-click-DetailsOnDemand.js"></pretty-printer>
-
-## Example 2: `link-click` with DetailsOnDemand es6
-                                                                    
-A drawback with the `link-click` implementation above is that it creates a closure for each event.
-As we only have both a single closure and non-frequent event click, this is slight inefficiency
-is not problematic. But, if we provide DetailsOnDemand to fine-grained composed events, 
-then we would like to avoid creating similar functions each time. 
-And to avoid that we can create our own `Event` subclass.
-
-<pretty-printer href="demo/link-click-DetailsOnDemand-es6.js"></pretty-printer>
-
-## Example 3: `link-click` with DetailsOnDemand es5
-
-Not all browsers support es6 (ie. IE). If you need to support older browsers, 
-the same effect can be achieved with this similar, but less readable es5 alternative.
-
-<pretty-printer href="demo/link-click-DetailsOnDemand-es5.js"></pretty-printer>
-
-In this book we will base our explanations on es6 code. If you need to convert DetailsOnDemand to es5,
-simply return to this chapter and convert the code manually.
-
-## Demo: `link-click` with DetailsOnDemand navigation
-
-<code-demo src="demo/link-click-DetailsOnDemand.html"></code-demo>
-
-                                                                            
