@@ -1,6 +1,6 @@
 # Pattern: EventControls
 
-Once a custom, composed event is deployed, it can be nice to `start()`, `stop()`, and otherwise control it. These methods are not particularly hard to implement, but we desire a nice interface for them. And the `class` created in the ExtendsEvent pattern is a good place to add these control methods.
+Once a custom, composed event is added to the app, it would be nice to have some control over it, for example to `start()` and `stop()` it. These methods are not particularly hard to implement, the only question is how we would like to expose them? The `class` created in the ExtendsEvent pattern is a good place to add these control methods.
 
 ## Demo: `browse` with `start()` and `stop()` 
 
@@ -25,39 +25,39 @@ Once a custom, composed event is deployed, it can be nice to `start()`, `stop()`
     static start(){
       if (state !== "dead")
         return;
-      window.addEventListener("submit", onSubmit, true);
+      window.addEventListener("submit", BrowseEvent.onSubmit, true);
       state = "listening";
     }
     static stop(){
       if (state !== "listening")
         return;
-      window.removeEventListener("submit", onSubmit, true);
+      window.removeEventListener("submit", BrowseEvent.onSubmit, true);
       state = "dead";
     }
   }
   
   window.BrowseEvent = BrowseEvent;
+  BrowseEvent.start();
 })();
 ```
 
 ## Implementation details
 
-In the example above we have chose to let the class definition remain in the composed event SIF, and then explicitly link the class definition to the window object after the fact. The reason we want this explicit link is so that:
- * *if* the class name has already been registered, the whole SIF will fail, giving the developer both an error message *and* possibly letting the developer reuse the same event from a different source if another similar/same event has already been registered,
- * we can use variables in the SIF as static private properties in the BrowseEvent class. There is no syntactic structure for this in JS at the moment. 
- * The static methods also needs to be able to reference the composed event functions in order to function.
+Methods to control the BrowseEvent that we want to expose externally, we:
+1. add as static methods on the BrowseEvent, and then we
+2. expose the BrowseEvent class by adding it to the `window` object.
 
-For *single-trigger* composed events, the `start()` and `stop()` methods are very simple. As there is only a single state for the methods to consider, they only need to control one boolean state variable and one event listener function. However, when EventSequences and touch and mouse gestures enter with many more states, functions, and complexity, the logic of such global control functions for events become quite complex.
+We keep the SIF intact to preserve the composed event's *private* functions and state variables from being accessible from outside the composed event. The SIF is essentially a mechanism to create a `private static` scope for the composed event; static methods + exposing the class on the `window` creates the `public static` scope for the composed event. Unfortunately, there is no `private static` scope syntax in JS, such as in Java.
 
-The event object that propagates should be considered *immutable*. An event listener receiving an event object should *not* need to consider if the data of that event object has been altered by another event listener earlier in the propagation path. Thus, the *setter* methods do *not* alter details regarding the event itself, but are convenience methods that alter structures associated with the event.
+An added bonus from this set-up is that the `BrowseEvent` isn't started until the developer has attempted to add it to the `window`. If something else named "BrowseEvent" had already been registered on the `window`, then the SIF will fail at this point. This means that the composed event in essence will stop working and no events will be dispatched nor listened for. And produce an error message. This is good as having already a `window.BrowseEvent` would likely mean that an identical or similar function has already been actived, and then you do *not* want to produce *two* identical events. The `class` name features as an implied feature check.
 
-Thus far we have only described composed events that need only a single underlying, trigger event to be dispatched. The setter methods in **single-trigger events** alters:
- * propagation state such as `.stopPropagation()` and `.preventDefault()`,
- * elements in **the DOM** such as the `<form>` in the `browse` event,
- * **browser state**, such as `window.location` for generic, reusable events, and
- * **app state** for app-specific events.
+If you want an explicit feature check, simply add the following check at the very beginning of the composed event SIF:
+```javascript
+if (/*window.*/BrowseEvent)
+  return;
+```
 
-But. Setter methods on Events becomes even more important in the next chapter about EventSequences. EventSequences are necessary for *multi-triggered events* and gestures. The composed event functions that realize these events has their own internal state. And when the user of these EventSequences need to guide the course of an ongoing EventSequence, using *getter* methods on initializing events dispatched from the EventSequence is the best strategy to do so.
+For *single-trigger* composed events, the `start()` and `stop()` methods are very simple. As there is only a single state for the methods to consider, they only need to control one boolean state variable and one event listener function. However, EventSequences and gestures for touch and mouse have more states, more functions, and therefor will have more complex public and private static functions in the composed event SIF.
 
 ## References
 
