@@ -1,7 +1,13 @@
 # WhatIs: Propagation
 
 For an introduction to event propagation and bubbling, see: [MDN: Event bubbling and capture](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Event_bubbling_and_capture).
-This chapter uses examples to explain event propagation.
+
+Almost **all events bubble**, except:
+ * `window` events (`load`, `error`). But, it really makes very little difference if `window` events bubble or not.
+ * a few (legacy?) events. However, these non-bubbling DOM events have either been duplicated by identical events that *do* bubble or replaced by `MutationObserver`:
+    * `focus`/`blur` -> `focusin`/`focusout` 
+    * `mouseenter`/`mouseleave` -> `mouseover`/`mouseout`
+    * `DOMNodeRemovedFromDocument`/`DOMNodeInsertedIntoDocument` -> `MutationObserver`.
 
 ## Example 1: Capture vs. Bubble phase
 
@@ -26,9 +32,7 @@ called in the following sequence:
 
 ## Example 2: Native composed events (touchend -> mouseup -> click)
 
-> todo should I rename "composed events" to "DominoEvents" or "SyntheticEvents" something similar?
-> The composed events term is already associated with shadowDOM transgression (which is off),
-> but at the same time ComposedEvents is a good concept.
+> todo should I rename "composed events" to "DominoEvents" or "SyntheticEvents" something similar? The composed events term is already associated with shadowDOM transgression (which is off), but at the same time ComposedEvents is a good concept.
 
 The domino-effect.
 
@@ -85,13 +89,8 @@ To call `preventDefault()` on the `scroll` event will cancel the scroll task.
 To call `preventDefault()` on the `touchmove` event will cancel the `scroll` event 
 which in turn will cancel the scroll task.
 
-> If you don't like the defaultAction of events, you're not alone. This is how the spec itself
-> describes it:
-> "\[Activation behavior\] exists because user agents perform certain actions for certain EventTarget 
-> objects, e.g., the area element, in response to synthetic MouseEvent events whose type attribute is 
-> click. Web compatibility prevented it from being removed and it is now the enshrined way of defining 
-> an activation of something. "
-> [spec](https://dom.spec.whatwg.org/#eventtarget-activation-behavior)
+> If you don't like the defaultAction of events, you're not alone. This is how the spec itself describes it: 
+> > "\[Activation behavior\] exists because user agents perform certain actions for certain EventTarget objects, e.g., the area element, in response to synthetic MouseEvent events whose type attribute is click. Web compatibility prevented it from being removed and it is now the enshrined way of defining an activation of something. " [Whatwg.org](https://dom.spec.whatwg.org/#eventtarget-activation-behavior)
 
 ## References
 
