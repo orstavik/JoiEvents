@@ -1,4 +1,4 @@
-# Pattern: AttributeFilteredEvent
+# WhatIs: EventFilters
 
 ## DOM-universal events
 
@@ -49,40 +49,11 @@ However, sometimes events are not global. The `submit` event for example is only
 Many events are thus not universal to all elements in the DOM (DOM-universal), but specific to a select
 group of DOM elements (element-specific).
 
-There are three types of element-specific custom, composed events:
- * Events specific to certain instances of elements (AttributeFilteredEvents).
- * Events specific to a certain type of elements (TypeFilteredEvents).
- * Events specific to both certain instances of a certain type of elements (simply the union of the 
- AttributableEvents and FilteredEvents patterns).
+There are three ways methods to activate/deactivate custom, composed events:
+1. element type (TypeSpecificEvents).
+2. element attribute (AttributeSpecificEvents).
+3. CSS property applied to an element (StyleSpecificEvents).
  
-## AttributeFilteredEvents
-
-To make an event specific to certain element instances, two things must happen:
-
-1. The element must be marked as having this event. This is done by adding an attribute to that element.
-   (Attributes is the inter-linguistic marker for HTML elements available to both HTML, JS and CSS.
-   If you want an aspect of an HTML element to be accessible in a universal context, you use attributes.)
-
-2. The originally DOM-universal event trigger function must be restricted to be applied only to the 
-   marked elements.
-   This is done by filtering out only the events which include a target marked with the given attribute. 
-
-To implement the AttributeFilteredEvents pattern is simple. You need a pure `filterOnAttribute` function 
-that finds the first target with the required attribute, and then dispatching the custom, composed event
-on that element.
-
-## Demo: `echo-click` event filtered on `echo-click` attribute
-   
-<pretty-printer href="./demo/echo-click.js"></pretty-printer>
-
-1. The `filterOnAttribute(e, attributeName)` finds the first target in the target-chain with the
-   specified `attributeName`. If no such element exists, it returns `undefined`.
-2. If no new target is filtered out, the trigger function simply aborts.
-
-Put into action, the events can be filtered on attribute. Below is a demo of the filtered `echo-click`
-in action.
-
-<code-demo src="demo/echo-click.html"></code-demo>
 ## References
 
  * 

@@ -90,6 +90,12 @@ Once the event listeners are localized, the composed event is no longer dynamic:
 
 <code-demo src="demo/MouseoverOnFireLocalizable.html"></code-demo>
 
+## TypeSpecificEvent and AttributeSpecificEvent
+
+Often, LocalizeListeners is combined with the TypeSpecificEvent and AttributeSpecificEvent patterns. In such instances, the `localize()` function likely will not need a query selector, as this is implicitly provided by the other patterns. 
+
+> Tips: If you need the LocalizeListeners pattern, you likely need/will benefit from TypeSpecificEvent and AttributeSpecificEvent, and vice versa.
+
 ## References
 
  * 
