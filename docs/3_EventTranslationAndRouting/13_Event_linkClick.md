@@ -2,7 +2,7 @@
 
 ## Filter all link type elements
 
-The chapter on TypeFilteredEvent pattern illustrates how we can filter link clicks on `<a>` elements.
+The chapter on TypedEvent pattern illustrates how we can filter link clicks on `<a>` elements.
 However, there are two other link elements that can be `click`ed in an HTML page:
 `<area>` (with nodeName "AREA") and inline SVG `<a>` elements (with nodeName "a").
 In addition, a `click` will not navigate if a `metaKey` was pressed at the same time.
@@ -60,7 +60,7 @@ function getLinkHref(link, click){
 
 ## Event: Complete `link-click` ES6
 
-When we combine the PriorEvent, EarlyBird, TypeFilteredEvent and DetailsOnDemand patterns with the
+When we combine the PriorEvent, EarlyBird, TypedEvent and DetailsOnDemand patterns with the
 edge cases above, we get the following custom, composed `link-click` DOM Event.
 This `link-click` event takes much of the headache out of controlling the template based navigation.
 

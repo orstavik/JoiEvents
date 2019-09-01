@@ -38,7 +38,7 @@ And so, we crank up our pattern machine and employ a new pattern MergedEvents to
 The MergedEvents pattern is simple. It listens for two events, and then dispatch a new custom, composed 
 event every time one of these trigger events occur. This new composed event is likely extended with 
 one or more DetailsOnDemand that harmonize the different events and their input. That is it.
-The MergedEvents pattern can also be combined with the TypeFilteredEvents or AttributeFilteredEvents pattern.
+The MergedEvents pattern can also be combined with the TypedEvents or AttributeFilteredEvents pattern.
 And other event patterns.
 
 ## Example: `browse` event

@@ -2,7 +2,7 @@
 
 ## Example 1: `link-click` with naive `getHref()` method
 
-To illustrate this practice we expand our `link-click` event from [Pattern: TypeFilteredEvent](Pattern7_TypeFilteredEvent). 
+To illustrate this practice we expand our `link-click` event from [Pattern: TypedEvent](Pattern7_TypedEvent). 
 We create a function `getLinkHref(element)` that given a target element returns 
 the `href` property of that element.
 As a `getHref` property to the `new CustomEvent` object, 

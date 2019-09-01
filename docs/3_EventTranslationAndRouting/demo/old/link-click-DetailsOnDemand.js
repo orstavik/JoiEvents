@@ -33,6 +33,6 @@
 })();
 
 //1. EarlyBird
-//2. TypeFilteredEvent
+//2. TypedEvent
 //3. DetailsOnDemand - a simple function is defined for getting the href from a supposed <a> element
 //4. DetailsOnDemand - the function is added to the composedEvent as a closure

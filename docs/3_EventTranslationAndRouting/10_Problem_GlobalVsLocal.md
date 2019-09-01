@@ -1,4 +1,4 @@
-# Problem: PlaceOrientation
+# Problem: GlobalVsLocal
 
 > Fortune cookie: Simplicity leads to efficiency, while efficiency leads to complexity.
 
