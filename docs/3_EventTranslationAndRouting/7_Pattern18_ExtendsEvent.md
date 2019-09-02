@@ -39,7 +39,7 @@ window.dispatchEvent(customEvent3);
 
 A *main purpose* for the `class` syntax is to clarify the scope for `this`. When you make a class, you frame `this` with a pair of `{ ... }`. And via `extends` you can include already established scopes for `this`. The confusion of seemingly independent functions with abstract `this` becoming intertwined methods with a bound `this` can be solved using a `class` that `extends Event`.
 
-A `class` would also solve the API issues *users* of the custom event face. Strong-type-tools can check their methods and properties, and `instanceof` works.
+A `class` would also solve the API issues *users* of the custom event face. Strong-type-tools can check their methods and properties, and `instanceof` works. The presence of a global object itself can be used to assess whether or not you need to load a `long-press` library or not.
 
 Native events such as `MouseEvent` and `KeyboardEvent` provide this interface. They implement/inherit the `Event` interface and attach their properties and methods *directly* to the event object (*no* `.detail` there).
 
