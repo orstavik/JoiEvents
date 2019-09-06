@@ -7,23 +7,27 @@ First, three core principles:
 
 ## API 1: `[checked]` is in, `:checked` and `defaultChecked` is out
 
-When the `<input type="checkbox">` and `<input type="radiobox">` is really and truly checked (on screen, etc.), then this checked state should be reflected in the DOM. We therefore expropriate the existing `checked` attribute and declare that under the DefaultCheckedOG pattern, the `checked` HTML attribute will always reflect the current state of the DOM and change to the same value as the `checked` JS property whenever this changes.
+When an `<input type="checkbox">` or `<input type="radiobox">` is "really" checked (on screen, etc.), then its checked state should be reflected in the DOM. We therefore expropriate the existing `checked` attribute. Under the OriginalGangster pattern the `checked` HTML attribute will always mirror the `checked` JS property which reflects the current, real state of the DOM.
 
-This change will have some consequences:
-1. The CSS `[checked]` selector will now *equal* the `:checked` pseudo-class selector. Both should always produce the same result, rendering the `:checked` pseudo-class pointless.
-2. Changing the `checked` attribute will also change the `defaultChecked` attribute accordingly. This means that if the `checked` attribute is always the same as the `checked` property, then the `checked` property will also always be the same as the `defaultChecked` property. `defaultChecked` is pointless.
+This policy will eliminate the *external* need for the:
+1. `:checked` pseudo-class: `[checked]` will now always *equal* `:checked`. 
+2. `defaultChecked` and `checked` properties: in this setup, the `checked` attribute, and the `checked` and `defaultChecked` properties are always equal. Thus, the `checked` and `defaultChecked` properties are redundant.
 
 ## API 2: We make pseudo-classes for `:altered`, `:reset`, and `:submitted`
 
-When the `<input type="checkbox">` and `<input type="radiobox">` is altered by the user, or a script, then this state is remembered by the browser. Any checkbox or radiobox whose value has been changed after it was first initialized, can be queried from CSS using pseudo-class `:altered`.
+When the `<input type="checkbox">` and `<input type="radiobox">` is first altered by the user or a script, then each element's initial, "original" state is remembered by the browser. This historic value is preserved as a `initialChecked` property on the `<input>` element. 
+
+Any checkbox or radiobox whose value has been changed after it was first initialized, is marked with a CSS pseudo-class `:altered`.
 
 When a checkbox or radiobox is altered back to their initial state, they are no longer `:altered`, but instead `:reset`.
 
-If a `<form>` is submitted, then all the `<form>`'s checkboxes and radioboxes have been `:submitted`. They are no longer considered untouched, nor `:altered`, nor `:reset`.
+If a `<form>` is submitted, then *all* the `<form>`'s checkboxes and radioboxes are marked as `:submitted`.
+
+The three pseudo-classes `:altered`, `:reset`, and `:submitted` are exclusive, there is only one such class active on a checkbox and radiobox at any time.
 
 ## Implementation
 
-To implement such a pattern we use an EventSequence that:
+To implement the OG pattern we use an EventSequence that:
 1. listens for all `input` events from checkbox and radiobox `<input>` elements,
 2. remembers the `original` state of all checkboxes and radioboxes by storing a `defaultCheckedOG` JS property on the elements,
 3. sets a `.checked-altered` pseudo-pseudo-class on the `<input>` element when their value has been altered,

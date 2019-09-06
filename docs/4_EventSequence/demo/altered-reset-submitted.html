@@ -23,18 +23,29 @@
   }
 
 </style>
-
+<input type="radio" name="group1">a<br>
+<input type="radio" name="group1" checked>b<br>
+<input type="radio" name="group1">c<br>
+<hr>
 <form name="test">
   <input type="radio" name="group1">a<br>
   <input type="radio" name="group1" checked>b<br>
   <input type="radio" name="group1">c<br>
-  <hr>
+  <br>
+  <br>
   <input type="radio" name="group2">radio-lonesome<br>
-  <hr>
-  <input type="checkbox" value="d">checkbox 1<br>
+  <br>
+  <input type="checkbox" value="d">checkbox 1 /
   <input type="checkbox" value="d" checked>checkbox 2<br>
-  <hr>
+  <br>
   <input type="submit" name="case" value="Submit">
+</form>
+<hr>
+<form name="test2">
+  <input type="radio" name="group1">a<br>
+  <input type="radio" name="group1" checked>b<br>
+  <input type="radio" name="group1">c<br>
+  <input type="submit" value="Submit">
 </form>
 <script>
   //this is an app that manages form submit via xhr.

@@ -1,5 +1,13 @@
 (function () {
 
+  function radioGroup(target){
+    const doc = target.ownerDocument;
+    //type="radio" and same name
+    const allRadioSameName = doc.querySelectorAll("input[type='radio'][name='"+target.name+"']");
+    //same owner
+    return Array.from(allRadioSameName).filter(el => el.form === target.form);
+  }
+
   function removePseudoPseudoClasses(input) {
     input.classList.remove("input-altered");
     input.classList.remove("input-reset");
@@ -43,9 +51,7 @@
     if (e.target.type === "checkbox")
       correctCheckedAndAddPseudoPseudo(e.target);
     if (e.target.type === "radio") {
-      const allInputs = Array.from(e.target.form.elements);
-      const targetRadioGroup = allInputs.filter(el => el.type === "radio" && el.name === e.target.name);
-      for (let radio of targetRadioGroup)
+      for (let radio of radioGroup(e.target))
         correctCheckedAndAddPseudoPseudo(radio);
     }
   }
