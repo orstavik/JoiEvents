@@ -1,0 +1,42 @@
+<script src="./altered-reset-submitted.js"></script>
+
+<style>
+  input::after {
+    width: 2px;
+    height: 1em;
+    content: ".";
+    display: block;
+    background-color: yellow;
+  }
+  input[checked]::after {
+    width: 10px;
+    content: "X";
+  }
+  input.input-altered::after {
+    background-color: red;
+  }
+  input.input-reset::after {
+    background-color: orange;
+  }
+  input.input-submitted::after {
+    background-color: green;
+  }
+
+</style>
+
+<form name="test">
+  <input type="radio" name="group1">a<br>
+  <input type="radio" name="group1" checked>b<br>
+  <input type="radio" name="group1">c<br>
+  <hr>
+  <input type="radio" name="group2">radio-lonesome<br>
+  <hr>
+  <input type="checkbox" value="d">checkbox 1<br>
+  <input type="checkbox" value="d" checked>checkbox 2<br>
+  <hr>
+  <input type="submit" name="case" value="Submit">
+</form>
+<script>
+  //this is an app that manages form submit via xhr.
+  window.addEventListener("submit", e => e.preventDefault(), false);
+</script>

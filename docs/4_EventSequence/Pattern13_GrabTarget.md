@@ -17,7 +17,7 @@ Why make decisions up front :
 ## When to capture the `target`?
 
 To find the `target` element for an EventSequence is a small task (cf. the AttributeFilteredEvent and 
-TypeFilteredEvent patterns). 
+TypedEvent patterns). 
 When done once in the initial trigger function, this small task is negligible.
 However, if the task is repeated in several fine-grained secondary trigger functions, it can burden the browser.
 Furthermore, changing the `target` between different composed events within the same EventSequence 
