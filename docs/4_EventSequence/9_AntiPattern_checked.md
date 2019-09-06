@@ -34,15 +34,16 @@ This is a **bad** pattern. If there are aspects of the *current*, *real* DOM tha
 
 ## Why is `checked` broken? 2. HTML is synchronous
 
-We start by declaring two simple truths: 
+We start by declaring some simple truths: 
  * HTML and CSS are declarative language. 
  * Declarative languages are synchronous. 
+ * The DOM is dynamic. 
 
 Put simply, this means that when you open devtools, then:
 1. what you see in the app screen and 
 2. the values of the "Elements" hierarchy (the hierarchy of HTML tags and HTML attributes) and the styles (the list of CSS rules and properties), 
 
-   are **always in sync**. 
+   are **always in sync**, even as the DOM changes dynamically. 
 
 Of course, there are some grey areas here: CSS animations and transitions are *declared as functions of time*, and for practical purposes CSS styles are *not* calculated synchronously. But, again, when you see something on screen, then that reality should in principle be reflected in the DOM as attributes and text nodes, *immediately*.
 
@@ -52,12 +53,7 @@ The `checked` *attribute* however is **not in sync**. It's **historical**. It re
 
 This is a **horrible** pattern. This means that the HTML version of the DOM explicitly tell you about a default, historic state of the DOM, and *nothing* about the current, real state that you see on screen.
 
-### Old
-It is clear that the `checked` attribute is broken. The DOM attributes (the HTML view) should be just as dynamic as the DOM properties (the JS view). With a dynamic `checked` attribute, you could *skip* both the current `:checked` pseudo-class and the separate `.checked` JS property as `.getAttribute("checked")` from JS and `[checked]` in CSS would serve the same purposes. 
-
-> HTML is a declarative language, and declarative languages are synchronic. All its statements are true at the same time; it all happens at the same time. It is the opposite of an imperative programming language in which things happen one step at a time. The DOM is the current state of HTML. Any dynamic changes to the app's state (that is represented in the DOM, and not just as JS variables) *must* immediately be reflected in the DOM state. The DOM isn't a historic account of the original template; the DOM is always simply "the present reality", a reality that simply happened to be *first* described in an HTML template. 
-
-
+> HTML is a declarative language, and declarative languages are synchronic. All its statements are true at the same time; it all happens at the same time. It is the opposite of an imperative programming language in which things happen one step at a time. The DOM is the current state of HTML. Any dynamic changes to the app's state (that is represented in the DOM, and not just as JS variables) *should* immediately be reflected in the DOM state. The DOM isn't a historic account of the original template; the DOM is always simply "the present reality", a reality that simply happened to be *first* described in an HTML template. 
 
 ## References
 

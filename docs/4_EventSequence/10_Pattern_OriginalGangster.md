@@ -145,41 +145,21 @@ And in HTML it looks like so:
 
 The OriginalGangster pattern does several things. 
  
-1. The OG pattern makes the DOM synchronic. You can *trust* the `checked` attribute. What you see in the HTML template reflects what you see on screen. Synchronously. No more historic, outdated attributes in the DOM. 
+1. The OG pattern makes the DOM synchronic. You can *trust* the `checked` attribute. What you see in the HTML template reflects what you see on screen. Synchronously. No historic, outdated DOM attributes. 
 
 2. The OG pattern creates JS property that contains the historic value. History is relevant, and when we need to access the element's history from JS, we can do so. 
 
-3. If you want, you can store the original, historical value as an attribute. For example, instead of adding a `defaultCheckedOG` as a JS property, we could have added it as a `checkedOG` attribute for example. This would have some cool benefits such as replacing the `input-altered` pseudo-pseudo-classes with an attribute only query such as `[checked]:not([checkedOG])), [checkedOG]:not([checked]))`. However, this works for binary `<input>` elements only, and if you plan to use such queries, then the attribute only CSS selectors are not really readable. If you feel the historic value can and should be an attribute too, that is possible.
+3. The OG pattern provides three useful pseudo-pseudo-classes: `.input-altered`, `.input-reset`, and `.input-submitted`. These automatic CSS classes gives the UX a declarative state over time. The history of a users interaction with `<form>` elements in a session is given a declarative API. You can access the UX event sequence directly from CSS in a meaningful way.
 
-4. The OG pattern gives the UX event sequence, ie. the history of a users session, a declarative face. With it, it is possible for the HTML and CSS developers to relate in a meaningful way with a dynamic DOM+event sequence world.
+ * If you want, you can store the original, historical value as an attribute. For example, instead of adding a `defaultCheckedOG` as a JS property, we could have added it as a `checkedOG` attribute for example. This would have some cool benefits such as replacing the `input-altered` pseudo-pseudo-classes with an attribute only query such as `[checked]:not([checkedOG])), [checkedOG]:not([checked]))`. However, this works for binary `<input>` elements only, and if you plan to use such queries, then the attribute only CSS selectors are not really readable. If you feel the historic value can and should be an attribute too, that is possible.
 
-### old
+## Pseudo-classes = EventSequence declarations
 
-When we look now at `checked` from the perspective of EventSequences. Which sequence of events is the `checked` attribute and `<input>` elements responding to? Answer: `input` events. What would a cycle for such an `input` EventSequence look like? Answer: `<input>` elements under the same `<form>` would be grouped; it would start with an empty register; every time an `<input>` element first changes, it would be added to the register; every time a `<form>` is `submit`, the `<input>` element under that `<form>` would be reset in the register. 
-
-   Now, which use-cases for pseudo-classes can we imagine for an EventSequence underlying `input` events?
-   * If the user alters the value of a checkbox, radiobox, or any other `<input>` element, an `input` event should be dispatched. Consequently, an EventSequence can register *which* elements have been registered as getting new `input` since the page was first loaded. , and for example mark these "`<input>` elements altered during the current session" with an `:altered` pseudo-class.
-   * If the value of an `<input>` element has been altered back to its original value (the value it had before the first `input` event), the element could be marked `:reset`.
-
-This setup has many benefits. First, it does *not* provide redundant properties in JS and HTML. Second, it gives *more* information about the state of the users events than the current `:checked` debacle. For example would it be much simpler to give the user feedback about which inputs he has not yet answered, and which inputs he has answered and reset or answered and changed. And finally, such a pseudo-class would *be in line* with other pseudo-classes such as `:hover` and `:visited` that *also* reflect native EventSequences' state.
-
-## Why view pseudo-classes as reflecting EventSequences' state?
-
-It is not common to talk about CSS pseudo-classes as driven by EventSequences' state. Usually, we describe CSS pseudo-classes as associated with an element's state (only). However, I would argue that seeing many CSS pseudo-classes as event-regulated, and not element regulated, is necessary when you make composed events. Here's why.
-
-HTML elements don't suddenly change state on their own. In order for the DOM and its elements to change state, an event must occur. Thus, when an element's state change, we usually think of this change first as an event. And therefore, when an element goes through as series of state changes, these changes can be viewed as driven by a sequence of events.
-
-* One event can cause one state change in an element.
-* One event sequence can cause an element to switch between several different states.
-
-But, one event might affect more than one element. Some of the 
-This means that the state of an EventSequence is *translated* into a set of states in DOM elements. *And*, some of the nuances and details of the EventSequence's state might be lost in translation. When you look at the translated, still result in the element's state in the DOM, you might not see the entire state of the EventSequence, only the aspect of the EventSequence that was relevant to this one element. On the other hand, if you focus clearly on the sequence of events that has occured to produce a certain state, then you are more likely to see a fuller picture. Thus, parts of the "logic behind" the altered DOM state might elude you if you view pseudo-classes in terms of individual elements. 
-
-For me, the `:checked` pseudo-class is a good example of why and when seeing CSS pseudo-classes from the perspective of EventSequence state. 
-
-> Can we learn from other's mistakes? `:checked`.
+It is not common to talk about CSS pseudo-classes as driven by EventSequences' state. Usually, we describe CSS pseudo-classes as associated with an element's state. A pseudo-class as a way to represent the "shifting face of an element".
+ 
+But, CSS pseudo-classes can also be understood as "the still face of an event sequence". Pseudo-classes such as `:hover` and `:visited` *reflect* the state of a native EventSequence *onto different elements*. 
 
 ## References
 
- * [MDN: CSS pseudo-classes](https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes)
+ * [Whatwg: `<input type="radio">`](https://html.spec.whatwg.org/multipage/input.html#radio-button-state-(type=radio))
  * [MDN: CSS pseudo-classes](https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes)
