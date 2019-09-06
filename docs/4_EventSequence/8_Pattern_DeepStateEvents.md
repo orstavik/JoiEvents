@@ -4,7 +4,7 @@
 
 The term "deep state" comes from politics and describe networks of people that work to further their own agenda within a state. The "deep state" group rules themselves. They cannot be fully controlled by the state. "Deep states" are problematic for both democracies and kings alike in that they often can work against the expressed interests of the state when it conflicts with their own objectives. 
 
-"Deep state" is neither good nor bad. It depends on your perspective. On the one hand, if you have just voted in a new government that wants to teach kids to code, you might be less happy about a ministry of education "doing things the old way". On the other hand, if your democratically elected president is utterly incompetent, you might be happy that the "deep state" will not give him the nuclear launch codes (ref the nytimes article about Trump). 
+"Deep state" is neither good nor bad. It depends on your perspective. On the one hand, if you have just voted in a new government that wants to teach kids to code, you might be less happy about a ministry of education "doing things the old way". On the other hand, if your democratically elected president is utterly incompetent, you might be happy that the "deep state" hides the nuclear launch codes from him (ref the nytimes article about Trump). 
 
 ## Deep state in programming
 
@@ -15,7 +15,7 @@ In programming, the term "deep state" is a good fit for state data that:
 3. influence the running of the app, and
 4. which might even be only indirectly observable.
  
-When the "deep state" data works in harmony with the rest of the app, we most often considered it good. The deep data is appropriately encapsulated. After all, if we don't need to know the details and they don't contradict our apps behavior, then why would we want to bother with them?
+When the "deep state" data works in harmony with the rest of the app, we most often consider it good. The deep data is appropriately encapsulated. After all, if we don't need to know the details and they don't contradict our apps behavior, then why would we want to bother with them?
 
 When "deep state" data conflicts or needs to be synchronized with expressed behavior in the app, it is another matter entirely. In these situations we need to control and set the deep state, so that the behavior the data influences is synced with the behavior of the app.
 

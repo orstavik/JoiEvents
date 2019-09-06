@@ -8,7 +8,7 @@ Native events and EventSequences uses one of several strategies to identify thei
 
 ## One event, one target 
 
-*One* event can only have *one* target. If your event needs to target a group of elements, then it must either:
+*One* event can only have *one* target. If your event targets a group of elements, then it must either:
  
 1. **skip targets**. An example of this is the `click` event. If *two* or more elements overlap the same screen space, then only the top-most element is `click`ed. Any `click` event on elements positioned "behind" the topmost element are simply discarded, even when the topmost element is fully transparent. 
 
@@ -21,7 +21,7 @@ Native events and EventSequences uses one of several strategies to identify thei
 Drag'n'drop is a native EventSequence. Using the mouse, it registers a sequence of `mousedown`, `mousemove`, and `mouseup` events so that elements can be dragged around on screen. A problem for the drag'n'drop EventSequence is that it has two different types of targets: a) the dragged element being moved around, and b) the element(s) the dragged element can be dragged over and dropped into. 
 
 To solve this issue of *two* different targets, the native drag'n'drop EventSequence dispatches *two* different sets of events:
-1. The `dragend`, `drag`, `dragend` events targets the dragged element. During the drag'n'drop EventSequence, this target remains fixed and immutable from beginning till end.
+1. The `dragstart`, `drag`, `dragend` events targets the dragged element. During the drag'n'drop EventSequence, this target remains fixed and immutable from beginning till end.
 2. The `dragenter`, `dragover`, `dragleave`, and `drop` targets different elements, similar to `mouseenter`, `mousemove`, and `mouseleave`.  
 
 ## Why event diversity?
@@ -29,7 +29,7 @@ To solve this issue of *two* different targets, the native drag'n'drop EventSequ
 The browser dispatch many and diverse events that often more or less overlap each other. 
 
  * the `mousemove` event could well be used to extract info about which elements are currently hovered, and which are not. Still, the browser dispatches five(!) closely related events: `mousemove`, `mouseenter`, `mouseleave`, `mouseover`, `mouseout`. 
- * The drag'n'drop events `dragenter`, `dragover`, `dragleave`, and `drop` also overlap `mouseenter`, `mousemove`, and `mouseleave` closely. One could easily assume that for example `dragenter` and `dragleave` could be implemented using listeners for `dragstart` initiating listeners for `mouseenter` and `mouseleave` instead.
+ * The drag'n'drop events `dragenter`, `dragover`, `dragleave`, and `drop` also overlap `mouseenter`, `mousemove`, and `mouseleave` closely. One could easily assume that for example `dragenter` and `dragleave` could be implemented using listeners for `mousedown` that in turn initiates listeners for `mouseenter` and `mouseleave` instead.
  
 The reason for this event diversity in the browser is both efficiency and developer ergonomics. The cursor does not enter the space of a new element for every `mousemove`. Therefore, the events `mouseenter` does not need to be dispatched as often as `mousemove`, triggering the JS event listener more rarely. Second, if the same event type was used for all purposes, the beginning of event listeners would quickly fill up with boilerplate if-else-if's. As the browser easily and quickly can distinguish between common states, the end code becomes much clearer with diverse event types (such as `mousemove`, `mouseenter`, `mouseleave`) that all essentially reflect the same underlying event (the user moving the mouse a single pixel).
 

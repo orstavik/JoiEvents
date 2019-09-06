@@ -12,12 +12,6 @@ By making sure that the app can control the duration of a `long-press` thus make
 
 Apps also often need to control an EventSequence's global behavior:
 
- * `start()`
- * `stop()`
- * `registerElement()` (cf. ReverseGlobalization)
- * `setFeedbackImage()`
- * `setFeedbackSound()`
- * `disableVibration()`
  * etc.
 
 There are three different purposes for GlobalEventDetails:

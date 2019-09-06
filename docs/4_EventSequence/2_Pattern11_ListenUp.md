@@ -4,11 +4,11 @@
 
 To listen for events in JS can be expensive. If you listen for events such as `wheel`, `scroll`, `touchmove`, and `touchstart`, then your app can quickly start to lag (cf. PayAttention). And this can be a problem for EventSequences. If an EventSequence *always* listens for *all* events, it can lag. 
 
-To make EventSequences more efficient, we can use the ListenUp pattern. ListenUp reduces the cost of event listeners by adding them *as late as possible*. The ListenUp pattern is based 
+To make EventSequences more efficient, we can use the ListenUp pattern. ListenUp reduces the cost of event listeners by adding them *as late as possible*.
 
 ## HowTo: ListenUp
  
-1. An EventSequence observes *two or more different types* events. 
+1. An EventSequence observes *two or more different event types*. 
 
 2. The event types must follow a particular order.
 

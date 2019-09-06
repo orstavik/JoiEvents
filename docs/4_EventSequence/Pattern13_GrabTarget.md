@@ -4,7 +4,7 @@
 
 Native EventSequences make their decisions up front. For example, *before* the `touchstart` event begins to propagate, the value of the `touch-action` and `pointer-action` has already been fixed. Thus, it makes no difference to the *current* touch gesture if you for example set `touch-action: none` in a `touchstart` event listener: if `touch-action` did allow `scroll` before the `touchstart` event was dispatched, then the browser will not change that decision until the gesture ends with a `touchend`.
 
-Why make decisions up front :        
+Why make decisions up front?        
 
 1. By making decisions up front early in the initial event trigger function, an EventSequence can reduce its workload. By making a decision up-front, the EventSequence might
    1. avoid even registering secondary trigger event functions, and

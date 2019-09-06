@@ -1,10 +1,6 @@
 # Pattern: TakeNote
 
-Mark my words. And take note. These two expression basically mean "what I am saying now will 
-be important in the future, so you should make a physical or mental note of it." 
-They put an expectation on the listener to remember it. 
-And it is implied the listener will need this particular piece of information to complete some
-future task and/or to fully understand a future statement that builds on this premise.
+//todo I think this chapter is eaten up by the chapter on EventSequence.
 
 Many composed events are triggered by multiple events, not only a single event. 
 These composed events must remember the *state* of the primary or preceding trigger events.
