@@ -1,15 +1,22 @@
 # Problem: TouchSimulatesMouse
 
-When using a handheld device, you have no mouse to control the browser, only your finger.
-However, many web sites are made for desktop browsers and mouse. 
-This was especially true when the mobile browser was in minority. 
-So, the mobile browsers needed the finger to be able to not only trigger touch events, 
-but also some key mouse events, in order for the mobile users to control mouse-only web sites.
-To implement this, mobile browsers made some touch actions also trigger some mouse events.
+When using a handheld device, you have no mouse to control the browser, only your finger. However, many web sites are made for desktop browsers and mouse. This was especially true when the mobile browser was in minority. So, the mobile browsers needed the finger to be able to not only trigger touch events, but also some key mouse events, in order for the mobile users to control mouse-only web sites. To implement this, mobile browsers made some touch actions also trigger some mouse events.
 
-I am not exactly sure which mouse events the browser adds to touch events. 
-Both Chrome and Firefox mobile adds extra mouse events when the touch produces a click, but otherwise
-no. If you have some documentation about this, please let me know.
+## Which events are triggered by touch events?
+
+There is truly a myriad of mouse events and other events triggered by touch events (see Lauke). The basic principle is that a physical touchstart, touchmove, touchend will produce touchstart, mousedown, touchmove, mousemove, touchend, mouseup, click events, but this is not given, and both the sequence and event types may differ from browser to browser. These "extra" events spawned by touch events are considered part of the default actions of touch events, along side scrolling.
+
+Put simply, the default action of touch events are:
+1. mouse events,
+2. click
+3. scrolling
+
+If you call `preventDefault()` on:
+1. `touchstart`, you will block 1) mouse events, 2) click and 3) scrolling,
+2. the first `touchmove` event, you will only block 3) scrolling, and
+3. `touchend`, you will only block 2) `click`. (and also `mouseup` event??).
+
+This is browser dependent, and I am not sure how well this standard is implemented and which browser follows which convention. Also, note that the browser may set `cancellable` to `false` on the touch event if there are no listeners added with `passive: false` as their configuration, thus negating the developers ability to call `preventDefault()`.
  
 ## Problem: touch events spawns mouse events
 
@@ -35,6 +42,8 @@ the `touchend` event.
 ## References 
 
  * [Lauke: event sequences](https://patrickhlauke.github.io/touch/tests/results/)
+ * [w3c: touch](https://w3c.github.io/touch-events/#touch-interface)
+ * [MDN: touch events](https://developer.mozilla.org/en-US/docs/Web/API/Touch_events)
 
 
 
