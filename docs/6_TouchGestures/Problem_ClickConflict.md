@@ -2,15 +2,9 @@
 
 This chapter builds on [Pattern: CancelClick](../2_EventToEvent/5_Pattern20_CancelClick).
 
-Mouse-based gestures such as a drag'n'drop can be active on an element that is a descendant of 
-an element that listens for `click` event. The ancestor element might desire to listen for 
-`click` events on several of its other children elements, thus listening for the same `click` event 
-at a higher level. If you are making a mouse-based gesture that you know will conflict with `click`
-events and therefore should cancel them, you need to somehow cancel the trailing, domino `click`
-events. 
+Mouse-based gestures such as a drag'n'drop can be active on an element that is a descendant of an element that listens for `click` events. The ancestor element might desire to listen for `click` events on several of its other children elements, thus listening for the same `click` event at a higher level. If you are making a mouse-based gesture that you know will conflict with `click` events and therefore should cancel them, you need to somehow cancel the trailing, domino `click` events. 
 
-This can cause conflict. Lets look at an example with an imagined, custom composed event called 
-"custom-draggable":
+This can cause conflict. Lets look at an example with an imagined, custom composed event called "custom-draggable":
 
 ```html
 <div id="parent">
@@ -25,29 +19,17 @@ document.querySelector("#child").addEventListener("custom-dragstart", alert("Chi
 </script>
 ```
 
-In this example, the script initiates a mouse-based gesture on `<div id="child">`.
-It then adds a listener for:
+In this example, the script initiates a mouse-based gesture on `<div id="child">`. It then adds a listener for:
  * `click` on `<div id="parent">` and 
  * `custom-dragstart` on `<div id="child">`.
-Now, it is highly likely that both the user and the app developer would consider custom-drag gesture
-to *replace* the native `click` gesture.
-In fact, it is likely that both the user and the app developer would not expect a `click` event
-to be fired if the user initiates a drag EventSequence on `<div id="child">`.
-This confusion would lead to bugs or alternatively highly complex code in both sets of event listeners,
-and the best way to avoid these problems would be to have the custom-draggable mouse-based gesture
-cancel the click event. But, how to do that? How to prevent an unpreventable event?
+
+Now, it is highly likely that both the user and the app developer would consider custom-drag gesture to *replace* the native `click` gesture. In fact, it is likely that both the user and the app developer would not expect a `click` event to be fired if the user initiates a drag EventSequence on `<div id="child">`. This confusion would lead to bugs or alternatively highly complex code in both sets of event listeners, and the best way to avoid these problems would be to have the custom-draggable mouse-based gesture cancel the click event. But, how to do that? How to prevent an unpreventable event?
 
 ## Example: `long-press` with `cancelEventOnce("click")` and `do-click` attribute
 
-When a mouse-based gestures needs to cancel subsequent, unpreventable `click` events, 
-they most likely need to do so most of the time. You should therefore expect CancelClick to be 
-the default behavior of custom composed mouse-based events that need it.
-However, it would yield good developer ergonomics to provide an EventAttribute called `do-click` 
-that enables the user of the event to let the `click` event be dispatched anyway. 
-`do-click` would prevent the prevention of the unpreventable `click` so to speak.
+When a mouse-based gestures needs to cancel subsequent, unpreventable `click` events, they most likely need to do so most of the time. You should therefore expect CancelClick to be  the default behavior of custom composed mouse-based events that need it. However, it would yield good developer ergonomics to provide an EventAttribute called `do-click` that enables the user of the event to let the `click` event be dispatched anyway. `do-click` would prevent the prevention of the unpreventable `click` so to speak.
 
-The implementation of the `do-click` attribute is straight-forward and follows the EventAttribute pattern.
-The implementation of one-time EarlyBird event-cancelling trigger functions is described below.
+The implementation of the `do-click` attribute is straight-forward and follows the EventAttribute pattern. The implementation of one-time EarlyBird event-cancelling trigger functions is described below.
 
 In this example we add the CancelClick pattern to our naive, composed `long-press` event.
 

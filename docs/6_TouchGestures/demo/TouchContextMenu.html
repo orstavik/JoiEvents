@@ -1,0 +1,26 @@
+<h2>Touch me, please! I will block the contextMenu</h2>
+<pre style="background: red; height: 100vh;">
+  Touch me too,
+  but if you long press me,
+  I will interrupt you with
+  a context menu.
+</pre>
+
+<script>
+  function log(e) {
+    console.log(e.type);
+  }
+
+  let h2 = document.querySelector("h2");
+  //  h2.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("touchstart", log);
+  window.addEventListener("touchmove", log);
+  window.addEventListener("touchend", log);
+  window.addEventListener("mousedown", log);
+  window.addEventListener("mousemove", log);
+  window.addEventListener("mouseup", log);
+  window.addEventListener("click", log);
+  window.addEventListener("scroll", log);
+  window.addEventListener("selectstart", log);
+  //window.addEventListener("contextmenu", log);
+</script>

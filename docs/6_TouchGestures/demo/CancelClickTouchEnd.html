@@ -1,0 +1,27 @@
+<h1>Hello world! touchstart.preventDefault()</h1>
+<h2>Hello sunshine! touchend.preventDefault()</h2>
+<pre style="height: 200vh">
+  In Chrome:
+
+  If you start scrolling,
+  then there will never be a click.
+
+  If you start scrolling,
+  then *sometimes* the touchend event will be cancelable: false.
+
+  If you don't scroll,
+  then the touchend should be cancelable: true.
+
+  Something like that. Can you trust that touchend.cancelable === true? Not really.
+  Do you know from a touchend event if there will be dispatched a click? Not really.
+  Do you have a problem if you can't call preventDefault from touchstart? Yes, sir.
+</pre>
+
+<script >
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("touchstart", e => console.log(e.type, e.cancelable));
+  window.addEventListener("touchmove", e => console.log(e.type, e.cancelable));
+  window.addEventListener("touchend", e => console.log(e.type, e.cancelable));
+  document.querySelector("h1").addEventListener("touchstart", e => e.preventDefault());
+  document.querySelector("h2").addEventListener("touchend", e => e.preventDefault());
+</script>

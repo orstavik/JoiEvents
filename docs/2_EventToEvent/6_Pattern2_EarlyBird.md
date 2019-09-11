@@ -37,7 +37,7 @@ triggering event *before* it is captured by the EarlyBird trigger function. And 
 added the EarlyBird on the `document`, we can now do this on the `window`.
 
 Furthermore. Custom composed events can be composed from all types of native events. This means that
-some of the triggering events might not be `cancellable`. In such cases, we set a custom property 
+some of the triggering events might not be `cancelable`. In such cases, we set a custom property 
 called `customPrevented`.
 
 ## Implementation: EarlyBird
@@ -49,7 +49,7 @@ The EarlyBird pattern consists of two parts:
    or `customPrevented` is `true` on the trigger event.
 
 2. To block an EarlyBird trigger function, you add call `preventDefault()` on the triggering event
-   (or set `customPrevented` to `true` instead if the triggering event is not cancellable).
+   (or set `customPrevented` to `true` instead if the triggering event is not cancelable).
    This triggering event must *captured* on the `window` node so that it is registered before
    the EarlyBird primary trigger is captured on the `document`.
    

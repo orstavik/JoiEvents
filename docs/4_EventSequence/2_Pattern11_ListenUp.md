@@ -28,7 +28,7 @@ Let's look at this pattern in a basic `long-press` EventSequence:
 
 <pretty-printer href="./demo/long-press-ListenUp.js"></pretty-printer>
 
-Comment: Listening for both `mousedown` and `mouseup` is not be a big performance problem: `mousedown` and `mouseup` trigger events are infrequent and rare. Therefore, it might be more costly to ListenUp and juggle with the event listeners than to just listen for both events all the time. But, this is *not(!)* the case for other frequent events such as `mousemove` and `touchmove`. Therefore, I recommend using the ListenUp pattern by default, and instead revert to a simplistic listen-all-the-time strategy if you end up with an event listener that does not need to ListenUp.
+Comment: Listening for both `mousedown` and `mouseup` is not a big performance problem: `mousedown` and `mouseup` are relatively infrequent and rare events. Therefore, for `long-press`, it might be just as costly to add/remove event listeners with the ListenUp pattern as it would be to simply listen for both events all constantly. But, this is *not(!)* the case for high-frequency events such as `mousemove` and `touchmove`. Therefore, I recommend using the ListenUp pattern by default, and instead revert to a simplistic listen-all-the-time strategy if you end up with an event listener that does not need ListenUp.
 
 ## References
 

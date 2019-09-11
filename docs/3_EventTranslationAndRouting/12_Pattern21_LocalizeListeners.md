@@ -96,6 +96,14 @@ Often, LocalizeListeners is combined with the TypeSpecificEvent and AttributeSpe
 
 > Tips: If you need the LocalizeListeners pattern, you likely need/will benefit from TypeSpecificEvent and AttributeSpecificEvent, and vice versa.
 
+## todo
+
+enable localize on children, descendants
+
+if the touch-hover attribute has the value `"children"`, then the localize function will add it on all the children.
+else
+if the touch-hover attribute has another value `"query[whatever]"`, then localize function will select those children. The problem here is the target selection. How can we make that work together?
+
 ## References
 
  * 

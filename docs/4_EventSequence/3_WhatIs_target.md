@@ -22,7 +22,7 @@ Drag'n'drop is a native EventSequence. Using the mouse, it registers a sequence 
 
 To solve this issue of *two* different targets, the native drag'n'drop EventSequence dispatches *two* different sets of events:
 1. The `dragstart`, `drag`, `dragend` events targets the dragged element. During the drag'n'drop EventSequence, this target remains fixed and immutable from beginning till end.
-2. The `dragenter`, `dragover`, `dragleave`, and `drop` targets different elements, similar to `mouseenter`, `mousemove`, and `mouseleave`.  
+2. The `dragenter`, `dragover`, `dragleave`, and `drop` targets different elements, similar to `mouseenter`, `mousemove`, `mouseleave`, and `mouseup`.  
 
 ## Why event diversity?
 
@@ -35,7 +35,7 @@ The reason for this event diversity in the browser is both efficiency and develo
 
 ## Targets, `bubble` and propagation
 
-Above we stated "one event, one target". However, it is theoretically possible to associate multiple targets to the same event object. In fact, when events propagate down and up through the target's ancestors, it hits multiple "target" elements. Different event listeners added to different elements often do respond to the same event. Viewed from this perspective, the `target` of event that do `bubble` is "a list of elements in the DOM", not a single element.
+When we postulate "one event, one target", this is a half truth. When events propagate down and up through the target's ancestors, it hits multiple elements, from the JS perspective (and . Different event listeners added to different elements often do respond to the same event. Viewed from this perspective, the `target` of event that do `bubble` is "a list of elements in the DOM", not a single element.
 
 This illustrate that the `target` is more than a simple JS property on the `Event` object. The a) `Event.target` and b) `Event.bubble` properties combines with c) `HTMLElement.addEventListener()` and other methods to form a *grammatical* construct: event propagation. 
 

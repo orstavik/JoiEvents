@@ -1,35 +1,68 @@
-<pre>Touch me, please!</pre>
+<div style="background: red; height: 95vh;"></div>
+<div id="active">
+  <pre id="one">Touch me, please! I preventDefault on touchstart</pre>
+  <pre id="two">Touch me, please! I preventDefault on touchmove</pre>
+  <pre id="three">Touch me, please! I preventDefault on touchend</pre>
+  <pre id="four">Touch me, please! I do NOT preventDefault</pre>
+</div>
+<div id="passive">
+  <pre id="five">Touch me, please! I preventDefault on touchstart</pre>
+  <pre id="six">Touch me, please! I preventDefault on touchmove</pre>
+  <pre id="seven">Touch me, please! I preventDefault on touchend</pre>
+</div>
 
 <script>
   var supportsPassive = false;
   try {
     var opts = Object.defineProperty({}, 'passive', {
-      get: function() {
+      get: function () {
         supportsPassive = true;
       }
     });
     window.addEventListener("test", null, opts);
     window.removeEventListener("test", null, opts);
-  } catch (e) {}
-  var thirdArg = supportsPassive ? {passive: false, capture: true}: true;
+  } catch (e) {
+  }
+  var thirdArg = supportsPassive ? {passive: false, capture: true} : true;
 
-  function log(e){
-    e.target.innerText += "\n"+ e.type + ": " + (new Date().getTime()-time);
+  function log(e) {
+    const newTime = new Date().getTime();
+    e.target.innerText += "\n" + e.type + ": " + (newTime - time);
+    time = newTime;
   }
 
   var time;
-  var pre = document.querySelector("pre");
 
-  pre.addEventListener("touchstart", function(){
+  document.querySelector("#one").addEventListener("touchstart", function (e) {
     e.preventDefault();
   }, thirdArg);
-  pre.addEventListener("touchstart", function(){
-    time = new Date().getTime();
+  document.querySelector("#two").addEventListener("touchmove", function (e) {
+    e.preventDefault();
+  }, thirdArg);
+  document.querySelector("#three").addEventListener("touchend", function (e) {
+    e.preventDefault();
+  }, thirdArg);
+  document.querySelector("#five").addEventListener("touchstart", function (e) {
+    e.preventDefault();
+  });
+  document.querySelector("#six").addEventListener("touchmove", function (e) {
+    e.preventDefault();
+  });
+  document.querySelector("#seven").addEventListener("touchend", function (e) {
+    e.preventDefault();
   });
 
-  pre.addEventListener("touchstart", log);
-  pre.addEventListener("touchend", log);
-  pre.addEventListener("mousedown", log);
-  pre.addEventListener("mouseup", log);   //Chrome bug: when mouseup is active, then click will not trigger.
-  pre.addEventListener("click", log);     //Chrome bug: when mouseup is inactive, then click triggers.
+  const all = Array.from(document.querySelectorAll("pre"));
+  for (let pre of all) {
+    pre.addEventListener("touchstart", log);
+    pre.addEventListener("touchmove", log);
+    pre.addEventListener("touchend", log);
+    pre.addEventListener("mousedown", log);
+    pre.addEventListener("mousemove", log);
+    pre.addEventListener("mouseup", log);   //Chrome bug: when mouseup is active, then click will not trigger.
+    pre.addEventListener("click", log);     //Chrome bug: when mouseup is inactive, then click triggers.
+    pre.addEventListener("scroll", log);     //Chrome bug: when mouseup is inactive, then click triggers.
+    pre.addEventListener("contextmenu", log);     //Chrome bug: when mouseup is inactive, then click triggers.
+    pre.addEventListener("contextmenu", e=> e.preventDefault());     //Chrome bug: when mouseup is inactive, then click triggers.
+  }
 </script>

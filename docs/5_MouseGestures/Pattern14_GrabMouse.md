@@ -1,54 +1,32 @@
 ## Pattern: GrabMouse
 
-> You know I'm automatically attracted to beautiful—I just start kissing them. 
-> It's like a magnet. Just kiss. I don't even wait. And when you're a star, they let you do it. 
-> You can do anything. Grab 'em by the pussy. You can do anything.
+> You know I'm automatically attracted to beautiful—I just start kissing them. It's like a magnet. Just kiss. I don't even wait. And when you're a star, they let you do it. You can do anything. Grab 'em by the pussy. You can do anything.
 > 
 >   From ["Donald Trump *Access Hollywood* tape"](https://en.wikipedia.org/wiki/Donald_Trump_Access_Hollywood_tape)
 
-Sometimes, in the midst of an EventSequence, it can seem as if the mouse has got a will of its own.
-Its own behavior or default action that seem to come out of nowhere.
-It doesn't happen all the time.
-But near some elements, the mouse does something completely unexpected: it selects text. 
+Sometimes, in the midst of an EventSequence, it can seem as if the mouse has got a will of its own. Its own behavior or default action that seem to come out of nowhere. It doesn't happen all the time. But near some elements, the mouse does something completely unexpected: it selects text. 
 
-When you make an EventSequence, this behavior is often unwanted. You have a completely different agenda,
-you are doing something else. So, what do you do? You GrabMouse.
+When you make an EventSequence, this behavior is often unwanted. You have a completely different agenda, you are doing something else. So, what do you do? You GrabMouse.
 
 ## GrabMouse's defaultAction
 
-To control the defaultAction of text selection by mouse, there is currently one main alternative:
-CSS property [`user-select`](https://developer.mozilla.org/en-US/docs/Web/CSS/user-select).
+To control the defaultAction of text selection by mouse, there is currently one main alternative: CSS property [`user-select`](https://developer.mozilla.org/en-US/docs/Web/CSS/user-select).
 
-You might have expected that this event would be controlled from JS via `.preventDefault()`
-on `mousedown` or `mousemove`, or from HTML as an attribute. But no. The default action of the mouse 
-is far harder to both read and understand than that.
+You might have expected that this event would be controlled from JS via `.preventDefault()` on `mousedown` or `mousemove`, or from HTML as an attribute. But no. The default action of the mouse is far harder to both read and understand than that.
 
-First, there are no HTML attributes that directly control mouse events. 
-From HTML you must set the `user-select` in the `style` attribute to control mouse events.
+First, there are no HTML attributes that directly control mouse events. From HTML you must set the `user-select` in the `style` attribute to control mouse events.
                                             
-Second, JS controls text selection via `select` events. These events are
-composed events triggered by `mousedown`, `mousemove` and `mousemove`. 
-But from mouse events they are *unpreventable*, same as `click`: 
-Calling `.preventDefault()` on mouse events stops neither their `click` nor `select` native 
-composed events.
+Second, JS controls text selection via `select` events. These events are composed events triggered by `mousedown`, `mousemove` and `mousemove`. But from mouse events they are *unpreventable*, same as `click`: Calling `.preventDefault()` on mouse events stops neither their `click` nor `select` native composed events.
 
-This could spell trouble. What if the browser already reads, captures, and locks the 
-`user-select` CSS property *before* the `mousedown` event is dispatched? Thankfully, it doesn't. 
-If you set the `user-select` property during `mousedown` propagation, it *will* control the 
-`select` event and text selection behavior.
+This could spell trouble. What if the browser already reads, captures, and locks the `user-select` CSS property *before* the `mousedown` event is dispatched? Thankfully, it doesn't. If you set the `user-select` property during `mousedown` propagation, it *will* control the `select` event and text selection behavior.
 
 To dynamically control the actions of mouse events during an EventSequence, we therefore need to:
 1. set `user-select: none` on the `<html>` element when the sequence starts (ie. on `mousedown`) and
-2. restore the the `<html>` element's original `user-select` value when the sequence ends 
-   (ie. on `mouseup` and/or `mouseout`, cf. the ListenUp pattern). 
+2. restore the the `<html>` element's original `user-select` value when the sequence ends (ie. on `mouseup` and/or `mouseout`, cf. the ListenUp pattern). 
 
 ## IE9: GrabMouse with both hands
 
-`user-select` is only supported by IE10. Thus, if you want to GrabMouse, and you need to include IE9,
-you need to "GrabMouse with both hands". First, you specify the `user-select` property as described above.
-Second, you add a secondary event trigger for the `selectstart` event and call `.preventDefault()` 
-and `stopImmediatePropagation()` on this event. Grabbing the mouse with both hands like this will ensure 
-that no text selection will occur during your mouse-oriented EventSequence.
+`user-select` is only supported by IE10. Thus, if you want to GrabMouse, and you need to include IE9, you need to "GrabMouse with both hands". First, you specify the `user-select` property as described above. Second, you add a secondary event trigger for the `selectstart` event and call `.preventDefault()` and `stopImmediatePropagation()` on this event. Grabbing the mouse with both hands like this will ensure that no text selection will occur during your mouse-oriented EventSequence.
 
 ```javascript
 var onSelectstart = function (e){                           
@@ -59,8 +37,7 @@ var onSelectstart = function (e){
 
 ## Example: `long-press` grabbed with both hands
 
-To make a safer `long-press` we need to GrabMouse. GrabMouse prevents native text selection 
-behavior from interfering with our custom composed DOM EventSequence. To GrabMouse with both hands we:
+To make a safer `long-press` we need to GrabMouse. GrabMouse prevents native text selection behavior from interfering with our custom composed DOM EventSequence. To GrabMouse with both hands we:
 1. initially add the `user-select: none` attribute on the `<html>` element,
 2. add an extra event listener for `selectstart` event and that calls `e.preventDefault()`, and
 3. conclude by resetting the `<html>` element's `user-select` style property.

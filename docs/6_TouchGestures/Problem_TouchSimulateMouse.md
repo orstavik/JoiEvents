@@ -4,22 +4,32 @@ When using a handheld device, you have no mouse to control the browser, only you
 
 ## Which events are triggered by touch events?
 
-There is truly a myriad of mouse events and other events triggered by touch events (see Lauke). The basic principle is that a physical touchstart, touchmove, touchend will produce touchstart, mousedown, touchmove, mousemove, touchend, mouseup, click events, but this is not given, and both the sequence and event types may differ from browser to browser. These "extra" events spawned by touch events are considered part of the default actions of touch events, along side scrolling.
+There is truly a myriad of mouse events and other events triggered by touch events (see Lauke). The principle is that a physical touchstart, touchmove, touchend will produce touchstart, mousedown, touchmove, mousemove, touchend, mouseup, click events. But this is **not the reality**. If you do a touch long press on Chrome android, you get touchstart, mousemove, contextmenu(!). The TouchSimulateMouse are good IE6 style problems, with no clear agreement between browsers and no apparent logic, just different hacks from different browsers to make things work now, for me, not in the future for all.
 
-Put simply, the default action of touch events are:
-1. mouse events,
-2. click
-3. scrolling
+So, how to handle these "extra" events and actions spawned by touch events? First, we need an overview of all such events and actions. Touch events can spawn:
+1. dispatch mouse events (mousedown, mousemove, mouseup)
+2. dispatch the click event
+3. dispatch the contextmenu event (that in turn will open the context menu) (long-press on Android)
+4. dispatch selectstart event and select the text (long-press in Chrome Android when you press on text)
+5. execute scrolling, but touch driven scrolling will not necessarily dispatch scroll events.
 
-If you call `preventDefault()` on:
-1. `touchstart`, you will block 1) mouse events, 2) click and 3) scrolling,
+In the updated spec, if you call `preventDefault()` on:
+1. `touchstart`, you will block 1) mouse events, 2) click, 3) contextmenu, and 4) scrolling,
 2. the first `touchmove` event, you will only block 3) scrolling, and
 3. `touchend`, you will only block 2) `click`. (and also `mouseup` event??).
 
-This is browser dependent, and I am not sure how well this standard is implemented and which browser follows which convention. Also, note that the browser may set `cancellable` to `false` on the touch event if there are no listeners added with `passive: false` as their configuration, thus negating the developers ability to call `preventDefault()`.
+ * The long-press produce contextmenu, can be blocked using a temporary event listener for contextmenu that preventDefault and thus block the context menu.
+
+ * Do not spawn mouseevents. Should you listen for them and then block them one by one? or block them all using preventDefault in touchstart?
+
+ * To separate the click and the scrolling, simply a) block the click in touchstart, and then b) produce your own click event in 
+
+This is browser dependent, and I am not sure how well this standard is implemented and which browser follows which convention. Also, note that the browser may set `cancelable` to `false` on the touch event if there are no listeners added with `passive: false` as their configuration, thus negating the developers ability to call `preventDefault()`.
  
 ## Problem: touch events spawns mouse events
 
+
+//todo check and fix this
 In mobile browsers, when you `click` with a finger,
 this action will trigger the following sequence of events:
  * `touchstart`

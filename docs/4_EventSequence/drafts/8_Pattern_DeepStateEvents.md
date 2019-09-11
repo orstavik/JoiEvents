@@ -27,6 +27,7 @@ EventSequences are structured as self-contained functions (SIFs). SIF is a *good
 
 Thus, most of the EventSequences' state we want to keep as "deep state", managed as inner variables in this SIF or cycles of ListenUp event listeners triggering each other.
 
+
 ## Demo
 
 todo
@@ -49,13 +50,10 @@ Now, you know how to:
 
 But, wait. That is not too hard. I write my CSS rules to be activated/deactivated based on the presence of for example CSS classes in the DOM.
 
-> todo maybe I should add a Global variable for EventSequences, so that others can read the values? And write protect them?
 
 ## Further reading
 
 And the simplest data to store is the triggering event objects themselves. 
-
-
 
 ## References
 

@@ -10,6 +10,8 @@ By making sure that the app can control the duration of a `long-press` thus make
 
 ## GlobalEventDetails as controls
 
+> todo maybe I should add a Global variable for EventSequences, so that others can read the values? And write protect them?
+
 Apps also often need to control an EventSequence's global behavior:
 
  * etc.

@@ -63,7 +63,7 @@
 ## Event translation
 
 13. [Pattern: AttributeFilteredEvent](docs/3_EventTranslationAndRouting/Pattern6_AttributeFilteredEvent)
-13. [Pattern: TypeFilteredEvent](docs/3_EventTranslationAndRouting/Pattern7_TypeFilteredEvent)
+13. [Pattern: TypedEvent](docs/3_EventTranslationAndRouting/Pattern7_TypedEvent)
 13. [Pattern: DetailsOnDemand](docs/3_EventTranslationAndRouting/Pattern8_DetailsOnDemand)
 13. [Event: `link-click`](docs/3_EventTranslationAndRouting/Event_linkClick)
 13. [Pattern: SpecializedEventInterface](docs/3_EventTranslationAndRouting/Pattern18_SpecializedEventInterface)
@@ -77,7 +77,7 @@
 18. [Pattern: EventAttribute](docs/4_EventSequence/Pattern12_EventAttribute)
 18. [Pattern: MarkMyValues](docs/4_EventSequence/Pattern17_MarkMyValues)
 18. [Pattern: ShowGestureState](4_EventSequence/Pattern23_ShowGestureState) (todo)
-18. [Pattern: DebounceEvents](docs/4_EventSequence/Pattern16_DebounceEvents.md) (todo)
+18. [Pattern: DebounceEvents](docs/2_EventToEvent/Pattern16_DebounceEvents.md) (todo)
 
 ## Gestures: mouse
 

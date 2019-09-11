@@ -25,7 +25,7 @@ To lessen the burden for the users of the `browse` event, we add a function `set
     }
     setQueryParameter(prop, value) {
       const form = this.target;
-      debugger;
+      //debugger; todo this demo should be polished
       if (form[prop]){
         form[prop] = value;
       } else {
