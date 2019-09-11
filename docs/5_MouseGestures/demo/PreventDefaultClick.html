@@ -23,6 +23,7 @@
 <h1>hello world (preventDefault on all mouse events)</h1>
 <h2>hello sunshine (preventDefault on all mouse events, but added preventDefaultClick from mouseup)</h2>
 <h3>hello beautiful (preventDefault on all mouse events and touch events)</h3>
+<h4>hello goodness (preventDefault on all mouse events and touch events, but passive event listener for touch)</h4>
 <pre>
   On the entire page .preventDefault() is called on all mouse events.
     This does not block mouse driven clicks on for example hello world.
@@ -30,12 +31,14 @@
     blocks the mouse driven click.
   On Hello beautiful, the preventDefault on the touch events
     blocks the mouse events and thus the mouse driven click.
+  On Hello goodness, the preventDefault on the touch events
+    cannot be called as the touch events are passive.
   Script driven clicks are not affected by none of the methods,
     so a sync click event should always be logged after the mouseup event has been logged
 </pre>
 <script >
   function log(e){
-    console.log(e.type, e.isTrusted, e.clientX);
+    console.log(e.type, e.isTrusted, e.clientX, e.cancelable);
   }
   //preventDefault on all mouse events
   window.addEventListener("mousedown", e => e.preventDefault());
@@ -67,6 +70,11 @@
   document.querySelector("h3").addEventListener("touchstart", e => e.preventDefault(), {passive: false});
   document.querySelector("h3").addEventListener("touchmove", e => e.preventDefault(), {passive: false});
   document.querySelector("h3").addEventListener("touchend", e => e.preventDefault(), {passive: false});
+
+  //preventDefault on touch directly stops the mouse events and thus indirectly the mouse driven click event
+  document.querySelector("h4").addEventListener("touchstart", e => e.preventDefault(), {passive: true});
+  document.querySelector("h4").addEventListener("touchmove", e => e.preventDefault(), {passive: true});
+  document.querySelector("h4").addEventListener("touchend", e => e.preventDefault(), {passive: true});
 
   //using preventDefaultClick(e) inside mouseup event listener to prevent the click
   document.querySelector("h2").addEventListener("mouseup", e => preventDefaultClick(e));

@@ -1,4 +1,4 @@
-# Problem: PreventDefaultClick
+# Pattern: PreventDefaultClick
 
 `click` is a composed event. The browser runs a native EventSequence that observes `mousedown` and `mouseup` events and then produces a `click` event. Basically, this EventSequence checks that:
  * the `mousedown` and `mouseup` occurs on the same target element,
@@ -14,6 +14,8 @@ Both the duration of the press and the accepted movement depends on *both* the b
 I suspect that legacy is the reason `click` is given its special status: **`click` cannot be prevented**. Calling `preventDefault()` from `mousedown` or `mouseup` will not stop an ensuing `click` if the browser detects it. And this can be a problem for custom mouse and touch EventSequences.
 
 ## How to prevent inevitable `click`s?
+
+> Setting `pointer-events: none` or `touch-action: none` will remove `click`, but it will also remove all mouse and touch events on the elements too. The task here is to get the mouse and touch event and only prevent any native, composed `click` event that they might in turn generate.
 
 There are several ways to create a `click`:
  * the user presses the primary mouse button down and up,
@@ -69,10 +71,16 @@ Below is a demo of how things work.
 
 <code-demo src="./demo/PreventDefaultClick.html"></code-demo>
 
-## Comment
+## Comments
 
-Mouse and touch EventSequences should most likely only listen for `.isTrusted === true` events. However, leaving open the ability to take in and react to programmatic events also enable scripts to interact with the EventSequence, which is necessary for testing and which is beneficial for patches if needed.
+1. Mouse and touch EventSequences should most likely only listen for `.isTrusted === true` events. However, leaving open the ability to take in and react to programmatic events also enable scripts to interact with the EventSequence, which is necessary for testing and which is beneficial for patches if needed.
+
+2. Chrome can make `touchstart` and `touchmove` events non-cancelable (cf. [PassiveAggressiveTouchstart](../6_TouchGestures/Pattern_PassiveAggressiveTouchstart)). When that happens, calling `.preventDefault()` on `touchstart` and `touchend` does nothing, thus allowing both the subsequent mouse and `click` events to occur.
 
 ## References
 
  * [w3.org: Trusted events](https://www.w3.org/TR/uievents/#trusted-events)
+ 
+## Old drafts
+
+Calling `.preventDefault()` on `mousedown` and `mouseup` does *not stop* subsequent `click` events. This is abnormal behavior: all other native composed events are cancelled using `preventDefault()`, asfaik. I suspect this is due to legacy logic from HTML in the 1990's, a legacy that must persist in order not to break existing web pages that calls `preventDefault()` on `mousedown` or `mouseup` to stop for example text selection, but that relies on `click` events passing through unhindered.
