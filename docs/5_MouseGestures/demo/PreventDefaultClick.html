@@ -1,6 +1,73 @@
-<h1>hello sunshine</h1>
+<script >
+  function preventDefaultClick(mouseupEvent) {
+    if (!mouseupEvent.isTrusted)
+      return;
+    let timedTask, onceTask;
+    onceTask = function (e) {
+      if (!e.isTrusted)
+        return;
+      if (e.clientX !== mouseupEvent.clientX ||e.clientY !== mouseupEvent.clientY)
+        return;
+      e.stopImmediatePropagation? e.stopImmediatePropagation() : e.stopPropagation();
+      e.preventDefault();
+      window.removeEventListener("click", onceTask, true);
+      clearTimeout(timedTask);
+    };
+    timedTask = setTimeout(function(){
+      window.removeEventListener("click", onceTask, true);
+    }, 0);
+    window.addEventListener("click", onceTask, true);
+  }
+</script>
 
-<script>
+<h1>hello world (preventDefault on all mouse events)</h1>
+<h2>hello sunshine (preventDefault on all mouse events, but added preventDefaultClick from mouseup)</h2>
+<h3>hello beautiful (preventDefault on all mouse events and touch events)</h3>
+<pre>
+  On the entire page .preventDefault() is called on all mouse events.
+    This does not block mouse driven clicks on for example hello world.
+  On Hello sunshine, the preventDefaultClick from mouseup
+    blocks the mouse driven click.
+  On Hello beautiful, the preventDefault on the touch events
+    blocks the mouse events and thus the mouse driven click.
+  Script driven clicks are not affected by none of the methods,
+    so a sync click event should always be logged after the mouseup event has been logged
+</pre>
+<script >
+  function log(e){
+    console.log(e.type, e.isTrusted, e.clientX);
+  }
+  //preventDefault on all mouse events
+  window.addEventListener("mousedown", e => e.preventDefault());
+  window.addEventListener("mousemove", e => e.preventDefault());
+  window.addEventListener("mouseover", e => e.preventDefault());
+  window.addEventListener("mouseout", e => e.preventDefault());
+  window.addEventListener("mouseenter", e => e.preventDefault());
+  window.addEventListener("mouseleave", e => e.preventDefault());
+  window.addEventListener("mouseup", e => e.preventDefault());
 
+  //logging click and all mouse and touch events
+  window.addEventListener("mousedown", log);
+  window.addEventListener("mousemove", log);
+  window.addEventListener("mouseover", log);
+  window.addEventListener("mouseout", log);
+  window.addEventListener("mouseenter", log);
+  window.addEventListener("mouseleave", log);
+  window.addEventListener("mouseup", log);
+  window.addEventListener("click", log);
+  window.addEventListener("touchstart", log);
+  window.addEventListener("touchmove", log);
+  window.addEventListener("touchend", log);
 
+  //adding a sync `click` event using .click() from within the mouseup event.
+  //this is done *after* mouseup is logged
+  window.addEventListener("mouseup", e => e.target.click());
+
+  //preventDefault on touch directly stops the mouse events and thus indirectly the mouse driven click event
+  document.querySelector("h3").addEventListener("touchstart", e => e.preventDefault(), {passive: false});
+  document.querySelector("h3").addEventListener("touchmove", e => e.preventDefault(), {passive: false});
+  document.querySelector("h3").addEventListener("touchend", e => e.preventDefault(), {passive: false});
+
+  //using preventDefaultClick(e) inside mouseup event listener to prevent the click
+  document.querySelector("h2").addEventListener("mouseup", e => preventDefaultClick(e));
 </script>
