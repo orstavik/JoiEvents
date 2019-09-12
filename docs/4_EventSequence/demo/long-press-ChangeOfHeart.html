@@ -1,0 +1,23 @@
+<script src="./long-press-ChangeOfHeart.js"></script>
+
+<style>
+  .long-press {
+    border: 2px solid orange;
+  }
+  .long-press-active {
+    border: 2px solid green;
+  }
+</style>
+
+<h1>Hello sunshine!</h1>
+
+<script>
+  function log(e){
+    console.log(e.type, e.timeStamp);
+  }
+
+  window.addEventListener("long-press-start", log);
+  window.addEventListener("long-press-active", log);
+  window.addEventListener("long-press-cancel", log);
+  window.addEventListener("long-press-end", log);
+</script>
