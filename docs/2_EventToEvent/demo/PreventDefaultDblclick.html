@@ -1,0 +1,21 @@
+<script>
+  function preventDefaultDblClick() {
+    let timedTask, onceTask;
+    onceTask = function (e) {
+      e.stopImmediatePropagation? e.stopImmediatePropagation() : e.stopPropagation();
+      e.preventDefault();
+      window.removeEventListener("dblclick", onceTask, true);
+      clearTimeout(timedTask);
+    };
+    timedTask = setTimeout(function(){
+      window.removeEventListener("dblclick", onceTask, true);
+    }, 0);
+    window.addEventListener("dblclick", onceTask, true);
+  }
+</script>
+<h1>Hello sunshine, you cannot dblclick on me!</h1>
+<script>
+  document.querySelector("h1").addEventListener("click", e => preventDefaultDblClick(e))
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("dblclick", e => console.log(e.type));
+</script>

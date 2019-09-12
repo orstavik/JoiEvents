@@ -1,100 +1,49 @@
 # Pattern: EarlyBird
 
-To compose an event, we need one or more original, *trigger events* to make it from.
-And to get hold of these trigger events, we *must* listen for them.
+> gets the worm!
+
+To compose an event, we need one or more original, *trigger events* from which to compose the new event. And to get hold of these trigger events, we *must* listen for them.
 
 But, what if:
-1. some other function in your app
+1. some other event listener function in your app
 2. listens for the same event, 
 3. receives and processes the event *before* your trigger function, and
-4. calls `.stopPropagation()` or `.stopImmediatePropagation()` on it?
+4. calls `.stopPropagation()` on it?
 
-As we saw in the last example in [HowTo: StopPropagation](4_HowTo_StopPropagation), this
-will mute your trigger function. So, to avoid being blocked like this, we want
-to add our event listener as early as possible. We want an EarlyBird event listener.
+As we saw in the last example in [HowTo: StopPropagation](4_HowTo_StopPropagation), this will mute your trigger function. So, to avoid being blocked like this, we want to add our event listener as early as possible. We want an EarlyBird event listener.
 
-## HowTo: block an EarlyBird
+## WhatIs: an EarlyBird
 
-The earliest possible moment we can listen for an event is in the *capture* phase on the `window`.
-But. This is *too* early. If we *capture* the event on the `window`, we cannot deliberately cancel 
-the trigger function afterwards if the trigger event is dispatched. Even when we desperately need to. 
-Therefore, we *capture* trigger events on the `document` instead.
+EarlyBird event listeners can control and direct events that `bubbles`. An EarlyBird is:
+
+1. is added in the `capture` phase of the event propagation on
+2. a top level DOM node, either the `window` or the `document`.
+
+When we make custom composed events, we have no control of the loading of scripts in the DOM. This means that when:
+1. events are added to the same target and in the same propagation phase, then
+2. we have no control over the sequence in which these event listeners run. 
+
+Thus, for the EarlyBird pattern to work safely, no other scripts in your app should listen for events on the `window` in the capture and target phase or `document` node in the capture phase. *Do not use EarlyBird event listeners to react to events on the level of the app: do not crowd out the EarlyBird event space for regular bullshit.*
+
+## When should EarlyBirds block and compose?
+
+There are *two* distinct use-cases for controlling other bubbling events:
+
+1. **Block another event** (cf. the StopTheUnstoppable and the PreventDefaultClick patterns). 
+2. **Compose new events or pseudo-classes based on other events**.
+
+The decision of **blocking** another event has priority over **observing and composing** the same event. Whenever you block an event, you should always expect this act to also block the event as a trigger for a composed event. EarlyBird event listeners that should block another event are therefore always added to the `window` node in the `capture` phase.
+
+EarlyBird event listeners that should observe and then compose events and pseudo-classes, should be added to the `document` in the `capture` phase for events that `bubble` and on the `window` in the `target` phase for non-bubbling events. 
 
 ```javascript
-document.addEventListener("some-event", function(e){
-  someFunction(e);
-}, true);
+window.addEventListener("bubble-event", e => blockBubbleEvent(e), true);
+document.addEventListener("bubble-event", e => observeAndComposeAnotherEvent(e), true);
 ```
 
-As we saw in the previous chapter [Pattern: CancelClick](5_Pattern20_CancelClick), 
-the `click` event cannot be prevented when it is composed from `mousedown` and `mouseup` events.
-To prevent the native composed `click` event from the `mouseup` event, we therefore called
-`cancelEventOnce("click")`.
-
-A similar problem applies to all our custom composed events that we create with the EarlyBird pattern. 
-In order to *prevent* a custom composed event, we need to be able to call `preventDefault()` on the
-triggering event *before* it is captured by the EarlyBird trigger function. And since we have
-added the EarlyBird on the `document`, we can now do this on the `window`.
-
-Furthermore. Custom composed events can be composed from all types of native events. This means that
-some of the triggering events might not be `cancelable`. In such cases, we set a custom property 
-called `customPrevented`.
-
-## Implementation: EarlyBird
-
-The EarlyBird pattern consists of two parts:
-
-1. The primary trigger function is added on the `document` node in the capture phase for a 
-   trigger event. The first thing this function checks is to see if either `defaultPrevented` 
-   or `customPrevented` is `true` on the trigger event.
-
-2. To block an EarlyBird trigger function, you add call `preventDefault()` on the triggering event
-   (or set `customPrevented` to `true` instead if the triggering event is not cancelable).
-   This triggering event must *captured* on the `window` node so that it is registered before
-   the EarlyBird primary trigger is captured on the `document`.
-   
 ## Example: `click-echo` EarlyBird
 
 <code-demo src="demo/EarlyBirdClickEcho.html"></code-demo>
-
-## Pattern: CallShotgun
-
-In almost all cases, the EarlyBird pattern is enough in itself. 
-But, *if* for some mysterious reason:
- * another EarlyBird event listener that 
- * also calls `stopImmediatePropagation()` 
- * is added *before* your event trigger function and
- * you do not want to move your event listener scripts up top as it will delay first meaningful paint,
- 
-then you can employ another pattern: CallShotgun.
-
-```html
-<script>
-window.addEventListener("click", function(e){clickEcho(e);}, true);    //1. calling shotgun
-</script>
-<script >/*Here is the bad, but unavoidable library with an EarlyBirdStopPropagationTorpedo*/
-window.addEventListener("click", function(e){e.stopImmediatePropagation();}, true);
-</script>
-
-<h1>hello world</h1>
-
-<script >/*Here is your composed event that you would like to load as late as possible.*/
-function clickEcho(e){                                                //2. taking a seat
-  e.target.dispatchEvent(new CustomEvent("click-echo", {composed: true, bubbles: true}));
-}
-window.addEventListener("click-echo", function(e){alert("click-echo");}, true);
-</script>
-```
-
-In the above example the EarlyBird listener function is added *before*
-the function is loaded. It "calls shotgun". Later, when it is good and ready, 
-the app loads and defines the actual function and takes a seat.
-Now, if the shotgun happens to be triggered before the event listener function is loaded, 
-it would still only result in a silent error / nothing happening.
-And as soon as the function is defined, the trigger function would work as intended.
-
-> Create custom, composed event with the EarlyBird pattern.
-> If you really need, you can CallShotgun too.
 
 ## References
 

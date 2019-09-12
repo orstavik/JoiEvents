@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<script>
+  //1. calling shotgun
+  window.addEventListener("resize", function (e) {
+    window["stopResize"] && stopResize(e);
+  }, true);
+  window.addEventListener("resize", function (e) {
+    window["echoResize"] && echoResize(e);
+  }, true);
+  window.addEventListener("scroll", function (e) {
+    window["stopScroll"] && stopScroll(e);
+  }, true);
+  window.addEventListener("scroll", function (e) {
+    window["echoScroll"] && echoScroll(e);
+  }, true);
+</script>
+
+<h1>hello world</h1>
+<pre style="height: 100vh">
+
+  1. After 5sec
+   the functions that
+   echos the resize and scroll events
+   are loaded and registered.
+
+  2. With 2 sec interval,
+   a function that stops
+   the scroll and event
+   from doing anything
+   is added/removed.
+</pre>
+
+<script>
+  //2. taking a seat permanently
+  setTimeout(function () {
+    window["echoResize"] =
+      function (e) {
+        e.target.dispatchEvent(new CustomEvent("echo-resize"));
+      };
+    window["echoScroll"] =
+      function (e) {
+        e.target.dispatchEvent(new CustomEvent("echo-scroll", {bubbles: true}));
+      };
+  }, 5000);
+
+  //2. using the front seat only when we need it
+  let stop = true;
+
+  function stopEvent(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
+  }
+
+  setInterval(function () {
+    window["stopScroll"] = window["stopResize"] = (stop ? stopEvent : function () {
+    });
+    stop = !stop;
+  }, 2000);
+</script>
+
+<script>
+  //small script that shows us which events are dispatched
+  function log(e) {
+    console.log(e.type, e.timeStamp);
+  }
+
+  window.addEventListener("scroll", log);
+  window.addEventListener("resize", log);
+  window.addEventListener("echo-scroll", log);
+  window.addEventListener("echo-resize", log);
+</script>
+</body>
+</html>
