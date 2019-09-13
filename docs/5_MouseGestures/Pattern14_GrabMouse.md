@@ -4,124 +4,86 @@
 > 
 >   From ["Donald Trump *Access Hollywood* tape"](https://en.wikipedia.org/wiki/Donald_Trump_Access_Hollywood_tape)
 
-Sometimes, in the midst of an EventSequence, it can seem as if the mouse has got a will of its own. Its own behavior or default action that seem to come out of nowhere. It doesn't happen all the time. But near some elements, the mouse does something completely unexpected: it selects text. 
+Sometimes, in the midst of an EventSequence, it can seem as if the mouse has got a will of its own. Its own behavior or default action that seem to come out of nowhere. It doesn't happen all the time. But near a certain type of elements, the mouse behaves funny: it starts to select text or show a contextmenu.
 
-When you make an EventSequence, this behavior is often unwanted. You have a completely different agenda, you are doing something else. So, what do you do? You GrabMouse.
+When you make an EventSequence for mouse, text selection and contextmenus are most often unwanted. You and the mouse seems to have different agendas: you are doing one thing, the mouse another. So, what do you do? You Trump it. You GrabMouse.
 
-## GrabMouse's defaultAction
+## HowTo: block the mouse's defaultAction
 
-To control the defaultAction of text selection by mouse, there is currently one main alternative: CSS property [`user-select`](https://developer.mozilla.org/en-US/docs/Web/CSS/user-select).
+Here, we will describe how to block the mouse's agenda. You expect that the mouse's defaultActions can be stopped calling `.preventDefault()` from a `mousedown` or `mousemove` event listener. Not so, the ensuing text selection and context menu are Unstoppable (cf. StopTheUnstoppable pattern). Maybe via an HTML attribute. No again. The mouse's actions are more complex than that.
 
-You might have expected that this event would be controlled from JS via `.preventDefault()` on `mousedown` or `mousemove`, or from HTML as an attribute. But no. The default action of the mouse is far harder to both read and understand than that.
+### No `selectstart`, please
 
-First, there are no HTML attributes that directly control mouse events. From HTML you must set the `user-select` in the `style` attribute to control mouse events.
-                                            
-Second, JS controls text selection via `select` events. These events are composed events triggered by `mousedown`, `mousemove` and `mousemove`. But from mouse events they are *unpreventable*, same as `click`: Calling `.preventDefault()` on mouse events stops neither their `click` nor `select` native composed events.
+Text selection and the `selectstart` event can be controlled with the CSS property [`user-select`](https://developer.mozilla.org/en-US/docs/Web/CSS/user-select). And, unlike `pointer-events` and `touch-action`, the `user-select` property *can be* set from within a `mousedown` event listener. 
 
-This could spell trouble. What if the browser already reads, captures, and locks the `user-select` CSS property *before* the `mousedown` event is dispatched? Thankfully, it doesn't. If you set the `user-select` property during `mousedown` propagation, it *will* control the `select` event and text selection behavior.
+This means that:
+1. when a mouse button is pressed on a text element that would normally initiate a text selection sequence, and
+2. a `mousedown` event listener sets `user-select: none` on the event's `target` element, then
+3. text selection will be blocked.
 
-To dynamically control the actions of mouse events during an EventSequence, we therefore need to:
-1. set `user-select: none` on the `<html>` element when the sequence starts (ie. on `mousedown`) and
-2. restore the the `<html>` element's original `user-select` value when the sequence ends (ie. on `mouseup` and/or `mouseout`, cf. the ListenUp pattern). 
+Any EventSequence that does this, should cache the original setting of the `user-select` and reset it when the EventSequence ends or is cancelled.
 
-## IE9: GrabMouse with both hands
+> IE9: `user-select` is only supported by IE10. If you need to support IE9, you should employ the StopTheUnstoppable pattern on the `selectstart` event as I do on the `contextmenu` event below.
 
-`user-select` is only supported by IE10. Thus, if you want to GrabMouse, and you need to include IE9, you need to "GrabMouse with both hands". First, you specify the `user-select` property as described above. Second, you add a secondary event trigger for the `selectstart` event and call `.preventDefault()` and `stopImmediatePropagation()` on this event. Grabbing the mouse with both hands like this will ensure that no text selection will occur during your mouse-oriented EventSequence.
+### No `contextmenu`, please
+
+The context menu is the default action of the `contextmenu` event. So to stop the context menu action, we must stop the `contextmenu` event. But, the `contextmenu` event is Unstoppable. We cannot stop it by for example calling `preventDefault()` from `mousedown` or `mouseup`. So, then what do we do?
+
+1. We add a temporary EarlyBird event listener for `contextmenu` at the `window` element in the `capture` phase from the `mouseup` event listener, that will a) call `stopPropagation()` and `preventDefault()` on the `contextmenu` event, ie. stop it.
+2. Then, when the mouse EventSequence ends or is cancelled, we remove the temporary EarlyBird event listener.
+
+> `contextmenu` only needs to be prevented for mouse EventSequences that react to the right mouse button.
+
+## Naive implementation
 
 ```javascript
-var onSelectstart = function (e){                           
+function stopEvent(e){                           
   e.preventDefault();
   e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
 }
-```
 
-## Example: `long-press` grabbed with both hands
+var cachedUserSelect;
 
-To make a safer `long-press` we need to GrabMouse. GrabMouse prevents native text selection behavior from interfering with our custom composed DOM EventSequence. To GrabMouse with both hands we:
-1. initially add the `user-select: none` attribute on the `<html>` element,
-2. add an extra event listener for `selectstart` event and that calls `e.preventDefault()`, and
-3. conclude by resetting the `<html>` element's `user-select` style property.
-
-The resulting `long-press` composed event trigger function is:
-
-```javascript
-function dispatchPriorEvent(target, composedEvent, trigger) {
-  composedEvent.preventDefault = function () {
-    trigger.preventDefault();
-    trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-  };
-  composedEvent.trigger = trigger;
-  return target.dispatchEvent(composedEvent);
-}
-
-var primaryEvent;                                               
-var userSelectCache;                                            //[1]
-
-function startSequenceState(e){                                 
-  primaryEvent = e;                                     
-  window.addEventListener("mouseup", onMouseup);             
-  window.addEventListener("selectstart", onSelectstart);        //[2]   
-  userSelectCache = document.children[0].style.userSelect;      //[1]
-  document.children[0].style.userSelect = "none";               //[1]
-}
-
-function resetSequenceState(){
-  primaryEvent = undefined;                                     
-  window.removeEventListener("mouseup", onMouseup);             
-  window.removeEventListener("selectstart", onSelectstart);     //[2]      
-  document.children[0].style.userSelect = userSelectCache;      //[1]
-}
-
-function onMousedown(e){                                        
-  startSequenceState(e);                                             
-}
-
-function onMouseup(e){                                          
-  var duration = e.timeStamp - primaryEvent.timeStamp;
-  //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
-  if (duration > 300 && e.target === primaryEvent.target)       
-    dispatchPriorEvent(primaryEvent.target, new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration}), e);
-  resetSequenceState();                                         
-}
-
-function onSelectstart(e){                                       //[2]
-  e.preventDefault();
-}
-
-window.addEventListener("mousedown", onMousedown);              
-
-//1. The initial trigger function caches the value of the CSS `user-select` 
-//   property on the element and sets its value to `none`.
-//   At the end of the EventSequence, the value of the CSS `user-select` is reset. 
-//2. The initial trigger function adds an event listener for `selectstart`.
-//   At the end of the EventSequence, the event listener for `selectstart` is removed again. 
-```
-
-## Demo: `long-press` grabbed with both hands 
-
-```html
-<div id="one">
-  You can long-press me with the mouse. The long-press is a click longer than 300ms.
-  This long-press is "grabbed with both hands", meaning that you should not be able 
-  to be able to select this text when you press on it.
-</div>
-
-<script>
-document.querySelector("#two").addEventListener("mousedown", function(){
-  setTimeout(function(){
-    alert("I'm trying to trip things up");
-  }, 10);
+window.addEventListener("mousedown", function(e){
+  cachedUserSelect = e.target.style.userSelect;
+  e.target.style.userSelect = "none";
+  window.addEventListener("contextmenu", stopEvent);
+  window.addEventListener("selectstart", stopEvent);
 });
 
-window.addEventListener("long-press", function(e){
-  console.log("long-press", e);
+window.addEventListener("mouseup", function(e){
+  e.target.style.userSelect = cachedUserSelect;
+  cachedUserSelect = undefined;
+  window.removeEventListener("contextmenu", stopEvent);
+  window.removeEventListener("selectstart", stopEvent);
 });
-window.addEventListener("long-press-cancel", function(e){
-  console.log("long-press", e);
+
+window.addEventListener("mousecancel", function(e){
+  e.target.style.userSelect = cachedUserSelect;
+  cachedUserSelect = undefined;
+  window.removeEventListener("contextmenu", stopEvent);
+  window.removeEventListener("selectstart", stopEvent);
 });
-</script>
 ```
+
+This implementation is naive because:
+* it doesn't necessarily have the same target from the mousedown and mouseup events, 
+* it doesn't consider which mouse button is pressed, and 
+* it anticipates no other events in between.
+
+## Demo: Naive `long-press` GrabMouse
+
+This demo is naive because:
+* it doesn't consider the `mousecancel` event, 
+* it doesn't consider which mouse button is pressed, and 
+* it anticipates no other events in between.
+
+<code-demo src="./demo/long-press-GrabMouse.html"></code-demo>
+
+## Lookahead: GrabTouch
+
+The text selection behavior can be blocked using the same CSS `user-select` property from `touchstart`. Temporary EarlyBird event listeners for `selectstart` and `contextmenu` can also be added from `touchstart`, and then removed when the touch EventSequence completes.
 
 ## References
 
- * 
+ * [MDN: `user-select`](https://developer.mozilla.org/en-US/docs/Web/CSS/user-select)

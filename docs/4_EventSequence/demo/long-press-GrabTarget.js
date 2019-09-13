@@ -38,7 +38,7 @@
       return;
     primaryEvent = e;
     primaryPath = getComposedPath(e);                       //[1]
-    window.addEventListener("mouseup", onMouseup);
+    window.addEventListener("mouseup", onMouseup, true);
   }
 
   function onMouseup(e) {
@@ -51,7 +51,7 @@
     }
     primaryEvent = undefined;
     primaryPath = undefined;                                //[3]
-    window.removeEventListener("mouseup", onMouseup);
+    window.removeEventListener("mouseup", onMouseup, true);
   }
 
   window.addEventListener("mousedown", onMousedown, true);

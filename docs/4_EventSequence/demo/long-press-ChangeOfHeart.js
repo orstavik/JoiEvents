@@ -23,7 +23,7 @@
     if (e.button !== 0)                                     //[3]
       return;
     primaryEvent = e;                                       //[4]
-    window.addEventListener("mouseup", onMouseup);          //[4]
+    window.addEventListener("mouseup", onMouseup, true);          //[4]
     timer = setTimeout(onDurationComplete, duration);
     primaryEvent.target.classList.add("long-press");
     let longPress = new CustomEvent("long-press-start", {bubbles: true, composed: true, detail: duration});
@@ -44,7 +44,7 @@
     }
     primaryEvent.target.classList.remove("long-press");
     primaryEvent = undefined;                               //[7]
-    window.removeEventListener("mouseup", onMouseup);       //[8]
+    window.removeEventListener("mouseup", onMouseup, true);       //[8]
   }
 
   window.addEventListener("mousedown", onMousedown, true);  //[2]

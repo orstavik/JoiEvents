@@ -20,7 +20,7 @@ var userSelectCache;                                            //[1]
 
 function startSequenceState(e){                                 
   primaryEvent = e;                                     
-  window.addEventListener("mouseup", onMouseup);             
+  window.addEventListener("mouseup", onMouseup, true);             
   window.addEventListener("selectstart", onSelectstart);        //[2]   
   userSelectCache = document.children[0].style.userSelect;      //[1]
   document.children[0].style.userSelect = "none";               //[1]
@@ -33,7 +33,7 @@ function startSequenceState(e){
 
 function resetSequenceState(){
   primaryEvent = undefined;                                     
-  window.removeEventListener("mouseup", onMouseup);             
+  window.removeEventListener("mouseup", onMouseup, true);             
   window.removeEventListener("selectstart", onSelectstart);     //[2]      
   document.children[0].style.userSelect = userSelectCache;      //[1]
   

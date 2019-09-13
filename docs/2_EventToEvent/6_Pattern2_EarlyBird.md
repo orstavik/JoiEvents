@@ -23,7 +23,9 @@ When we make custom composed events, we have no control of the loading of script
 1. events are added to the same target and in the same propagation phase, then
 2. we have no control over the sequence in which these event listeners run. 
 
-Thus, for the EarlyBird pattern to work safely, no other scripts in your app should listen for events on the `window` in the capture and target phase or `document` node in the capture phase. *Do not use EarlyBird event listeners to react to events on the level of the app: do not crowd out the EarlyBird event space for regular bullshit.*
+Thus, for the EarlyBird pattern to work safely, no other scripts in your app should listen for events on the `window` in the capture and target phase or `document` node in the capture phase.
+
+> Att! This pattern includes an assumption about the DOM!! The EarlyBird pattern assumes that either a) *no* event listeners for bubbling events are added on the `window` or the `document` in the the capture phase, or b) if they are, that the app developer has control of their conflicts and priority.
 
 ## When should EarlyBirds block and compose?
 

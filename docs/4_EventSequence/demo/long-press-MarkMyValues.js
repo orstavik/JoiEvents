@@ -16,7 +16,7 @@
       return;
     primaryEvent = e;
     markMyValues = {x: e.pageX, y: e.pageY};               //[1]
-    window.addEventListener("mouseup", onMouseup);
+    window.addEventListener("mouseup", onMouseup, true);
   }
 
   function onMouseup(e) {
@@ -33,7 +33,7 @@
     }
     primaryEvent = undefined;
     markMyValues = undefined;                              //[3]
-    window.removeEventListener("mouseup", onMouseup);
+    window.removeEventListener("mouseup", onMouseup, true);
   }
 
   window.addEventListener("mousedown", onMousedown, true);

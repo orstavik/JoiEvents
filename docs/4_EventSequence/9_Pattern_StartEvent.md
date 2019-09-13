@@ -26,7 +26,9 @@ There are several benefits for fixing an EventSequence's settings up front.
 
 4. Set PseudoPseudoClasses, if applicable.
 
-5. To ListenUp, if need be.
+5. To ListenUp.
+
+6. GrabMouse and GrabTouch
 
 ## Demo: `long-press-start`
 

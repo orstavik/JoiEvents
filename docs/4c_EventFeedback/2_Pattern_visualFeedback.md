@@ -86,7 +86,7 @@ The feedback element is made up of two HTML elements: a `<style>` and a `<div>`.
     if (e.button !== 0)                                     
       return;
     primaryEvent = e;                                       
-    window.addEventListener("mouseup", onMouseup);
+    window.addEventListener("mouseup", onMouseup, true);
     addVisualFeedback(e.clientX, e.clientY);
   }
 
@@ -98,7 +98,7 @@ The feedback element is made up of two HTML elements: a `<style>` and a `<div>`.
       dispatchPriorEvent(e.target, longPress, e); 
     }
     primaryEvent = undefined;                               
-    window.removeEventListener("mouseup", onMouseup);
+    window.removeEventListener("mouseup", onMouseup, true);
     removeVisualFeedback();
   }
 

@@ -1,0 +1,59 @@
+<script >
+  (function () {
+    function dispatchPriorEvent(target, composedEvent, trigger) {
+      composedEvent.preventDefault = function () {
+        trigger.preventDefault();
+        trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
+      };
+      composedEvent.trigger = trigger;
+      return target.dispatchEvent(composedEvent);
+    }
+
+    function stopEvent(e){
+      e.preventDefault();
+      e.stopImmediatePropagation ?
+        e.stopImmediatePropagation() :
+        e.stopPropagation();
+    }
+
+    var primaryEvent;
+    var cachedUserSelect;
+
+    function onMousedown(e) {
+      primaryEvent = e;
+      cachedUserSelect = e.target.style.userSelect;
+      primaryEvent.target.style.userSelect = "none";
+      window.addEventListener("contextmenu", stopEvent, true);
+      window.addEventListener("selectstart", stopEvent, true);
+      window.addEventListener("mouseup", onMouseup, true);
+    }
+
+    function onMouseup(e) {
+      var duration = e.timeStamp - primaryEvent.timeStamp;
+      if (duration > 300){
+        let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration});
+        dispatchPriorEvent(e.target, longPress, e);
+      }
+      primaryEvent.target.style.userSelect = cachedUserSelect;
+      cachedUserSelect = undefined;
+      primaryEvent = undefined;
+      window.removeEventListener("contextmenu", stopEvent, true);
+      window.removeEventListener("selectstart", stopEvent, true);
+      window.removeEventListener("mouseup", onMouseup, true);
+    }
+
+    window.addEventListener("mousedown", onMousedown, true);
+  })();
+</script>
+<h1>Hello sunshine</h1>
+<script >
+  function log(e){
+    console.log(e.type, e);
+  }
+  window.addEventListener("mousedown", log);
+  window.addEventListener("mouseup", log);
+  window.addEventListener("click", log);
+  window.addEventListener("long-press", log);
+  window.addEventListener("contextmenu", log);
+  window.addEventListener("selectstart", log);
+</script>

@@ -24,7 +24,7 @@
         return;
       audioEl.play();
     }.bind(this), 1000);
-    window.addEventListener("mouseup", onMouseup);
+    window.addEventListener("mouseup", onMouseup, true);
   }
 
   function onMouseup(e) {
@@ -36,7 +36,7 @@
     }
     primaryEvent = undefined;
     clearTimeout(audioTimer);
-    window.removeEventListener("mouseup", onMouseup);
+    window.removeEventListener("mouseup", onMouseup, true);
   }
 
   window.addEventListener("mousedown", onMousedown, true);

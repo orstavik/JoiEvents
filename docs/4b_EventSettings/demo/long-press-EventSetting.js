@@ -14,7 +14,7 @@
     if (e.button !== 0)
       return;
     primaryEvent = e;
-    window.addEventListener("mouseup", onMouseup);
+    window.addEventListener("mouseup", onMouseup, true);
   }
 
   function onMouseup(e) {
@@ -29,7 +29,7 @@
       dispatchPriorEvent(e.target, longPress, e);
     }
     primaryEvent = undefined;
-    window.removeEventListener("mouseup", onMouseup);
+    window.removeEventListener("mouseup", onMouseup, true);
   }
 
   window.addEventListener("mousedown", onMousedown, true);
