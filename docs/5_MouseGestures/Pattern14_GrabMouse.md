@@ -67,16 +67,16 @@ window.addEventListener("mousecancel", function(e){
 ```
 
 This implementation is naive because:
-* it doesn't necessarily have the same target from the mousedown and mouseup events, 
-* it doesn't consider which mouse button is pressed, and 
-* it anticipates no other events in between.
+* the `mousedown` and `mouseup` events might not have the same target, 
+* the EventSequence doesn't consider which mouse button is pressed, 
+* etc.
 
 ## Demo: Naive `long-press` GrabMouse
 
-This demo is naive because:
-* it doesn't consider the `mousecancel` event, 
-* it doesn't consider which mouse button is pressed, and 
-* it anticipates no other events in between.
+This demo is naive because it doesn't consider:
+* the `mousecancel` event, 
+* which mouse button is pressed, and 
+* other events in between.
 
 <code-demo src="./demo/long-press-GrabMouse.html"></code-demo>
 
