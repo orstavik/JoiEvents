@@ -30,6 +30,12 @@ As with the visual feedback of `cursor` and CssEventControls, visual feedback im
 
 The `.setDragImage(...)` can only be called on the `dragstart` event for native drag'n'drop EventSequences (ie. *not* on `drag` event objects). However, if you need to implement a mechanism for displaying highly fluid changes in a custom EventSequence, then the GetSetEvent pattern is what you want.
 
+## Discussion
+
+CssControls chooses a visual feedback image from a predefined set; GetSetEvent adds a custom made visual image (as an element).
+
+Natively, CssEventControls and GetSetEvent methods are not used in parallel. However, when setting up custom event controlling functions, this might be a good fit. If *both* CssEventControls and GetSetEvent methods are made available for the same visual feedback image, such as a `cursor` and `setCursorImage()` on a `mouseenter` event, then the GetSetEvent method should override any CssEventControls set on the same element.
+
 ## References
 
  * []()
