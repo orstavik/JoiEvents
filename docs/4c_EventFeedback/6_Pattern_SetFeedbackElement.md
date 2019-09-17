@@ -1,7 +1,25 @@
-# Pattern: VisualFeedback
+# Pattern: SetFeedbackElement
 
-VisualFeedback is a pattern for adding a visual response to a gesture. VisualFeedback works by adding and updating a set of HTML elements (feedback element) to the DOM when the gesture is active that illustrate its state.
+The SetFeedbackElement pattern adds/replaces a feedback image for an EventSequence or composed event. The pattern:
 
+1. adds a `.setImage(feedbackElement, timeToLive)` on all the composed event objects dispatched from the EventSequence function. The arguments are:
+   1. `feedbackElement`: an `HTMLElement` node that will be displayed. Often, this is a custom element/web component. EventSequence *does* not clone the `feedbackElement` argument.
+   2. `timeToLive`: The `Number` of milliseconds that the visual `feedbackElement` will be kept alive in the DOM after the current EventSequence cycle has completed. If the `timeToLive` is so long that *two or more* `feedbackElement`s should be added to the DOM and visible *at the same time*, then the script calling `setImage(..)` should ensure that *two or more* different element objects are passed into the EventSequence. The 
+
+2. The `.setImage(..)` function stores the `feedbackElement` as a variable in the composed event sif. The `feedbackElement` is kept for the current event cycle only, but can be overwritten by subsequent calls to `.setImage(..)`. The `feedbackElement` is displayed on screen using the BlindManDOM pattern.
+
+3. During the lifecycle of an EventSequence, the EventSequence function can add and update custom CSS variables on the `feedbackElement`'s `style` property. Examples of such CSS variables are:
+   * `--mouse-client-x`, `--mouse-client-y`, 
+   * `--touch-one-x`, `--touch-two-y`, 
+   * `--touch-rotation-angle`, 
+   * `--press-duration`,
+   * etc.
+   
+The `timeToLive` argument is very useful. It enables the EventSequence to display the state of an EventSequence when it *ends* and show the user:
+ * *when* a gesture succeeds or fails,
+ * the *state* of the gesture as it succeeds or fails, 
+ * the *occurence* and/or *state* of for (composed) events that starts and ends so fast that a human user will not perceive them, such as a `click`, the browser starting and ending loading a network resources, etc.
+   
 ## Demo: Naive `long-press` with a bulls-eye
 
 In this demo, we add a bulls-eye to a naive implementation of the `long-press` event. The feedback element is a circle border that grows from where the initial `mousedown` is registered, which then gets doubled as the time requirement for the press is met.
