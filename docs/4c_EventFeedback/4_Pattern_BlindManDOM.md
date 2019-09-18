@@ -1,4 +1,4 @@
-# Pattern: BlindManDOM
+# Pattern: BlindManDom
 
 > Even when you know *nothing* about the DOM, you can still *add* to it, *temporarily*.
 
@@ -10,67 +10,71 @@ The composed event implementation behind the gesture does not know anything abou
  
 3. The feedback element is given the `z-index: 2147483647` value. 2147483647 is the maximum z-index value (please, prove me wrong! :), and this `z-index` combined with the feedback elements position as last on the main `document` ensures that the feedback element is displayed in all situations.
  
-4. The feedback element has `pointer-events: none`. This makes the feedback element invisible for touch and mouse interaction. Any BlindManDOM element should do this, so the visual feedback doesn't conflict with any ongoing user interaction.
+4. The feedback element has `pointer-events: none`. This makes the feedback element invisible for touch and mouse interaction. Any BlindManDom element should do this, so the visual feedback doesn't conflict with any ongoing user interaction.
 
-## BlindManWebComp
+These properties can be put together in a layer element (ie. a `<div>`).
 
-To add a BlindManDOM element requires adding both the visual element itself, such as a `<div>`, and the style for that visual element, ie. a `<style>` element. Furthermore, you don't want this style to temporarily bleed into the rest of the DOM, and for other styles in the DOM to bleed into your BlindManDOM element. Thus, setting up the BlindManDOM element as a web component is a good fit.
+We will later work with visual elements being passed into an EventSequence from outside. The EventSequence might need to alter the position of these visual elements. However, setting the position on an HTMLElement passed in from another context can cause conflicts: the outer context might accidentally overwrite properties from the EventSequence, or vice versa. Thus, the BlindManDom layer should position the layer element, and not the content of the layer element. To achieve this effect, two sets of other CSS properties are added to the BlindManDom layer element:
+ * `left`, `top`, `right`, `bottom`, and
+ * `overflow: visible`
 
-## Demo: FlashyRing
+## Implementation
 
-```html
-<script>
-
-  //1. create a BlindManDOM layer
+```javascript
   const blindManDomLayer = document.createElement("div");
   blindManDomLayer.style.position="fixed";
   blindManDomLayer.style.zIndex= 2147483647;
   blindManDomLayer.style.pointerEvents= "none";
+  blindManDomLayer.style.overflow = "visible";
+  // blindManDomLayer.style.left = 20px;
+  // blindManDomLayer.style.top = 20px;
+```
 
-  class FlashyRing extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = `
-<style>
-:host {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 3px solid red;
-}
-</style>
-      `;
-    }
-  }
+## Demo: BlindManDom
 
-  customElements.define("flashy-ring", FlashyRing);
-</script>
+```html
 <h1>Hello sunshine</h1>
-
+<p>You can test that no clicks can be performed on the orange circle that is added in a BlindManDom layer.</p>
 <script>
-  const flashyRing = new FlashyRing();
-  flashyRing.style.backgroundColor = "orange";
+  //1. create a BlindManDom layer
+  const blind = document.createElement("div");
+  blind.style.position="fixed";
+  blind.style.zIndex= 2147483647;
+  blind.style.pointerEvents= "none";
+  blind.style.overflow = "visible";
+
+  //2. create an element to be displayed in the BlindManDom layer
+  const ring = document.createElement("div");
+  ring.style.width = "10px";
+  ring.style.height = "10px";
+  ring.style.borderRadius = "50%";
+  ring.style.border = "3px solid red";
+  ring.style.backgroundColor = "orange";
 
   const body = document.querySelector("body");
 
   setInterval(function () {
-    //2. when a state change occurs, update the BlindManDOM
-    blindManDomLayer.style.left = "10px";
-    blindManDomLayer.style.top = "10px";
-        
-    //3. create a visual element to be placed in the BlindManDOM
-    
-    blindManDomLayer.appendChild(flashyRing);
-    blindManDomLayer.isConnected ?
-      body.removeChild(blindManDomLayer) :
-      body.appendChild(blindManDomLayer);
+    //2. when a state change occurs, update the BlindManDom
+    blind.style.left = Math.random() * 20 + 20 + "px";
+    blind.style.top = Math.random() * 20 + 20 + "px";
+
+    //3. append/remove a) the visual element to the blindManDomLayer, and
+    //                 b) the blindManDomLayer on the body
+    //   as needed.
+    if (blind.isConnected) {
+      body.removeChild(blind);
+      blind.removeChild(ring);
+    } else {
+      blind.appendChild(ring);
+      body.appendChild(blind);
+    }
   }, 2000);
 
-  document.querySelector("h1").addEventListener("click", e => console.log(e.target.innerText));
+  window.addEventListener("click", e => console.log(e.target.tagName));
 </script>
 ``` 
-In the demo above, you see an element added and removed from above the Hello sunshine header every two seconds. This element cannot be clicked, and its inner style doesn't bleed into the main document, while it can also be styled from outside when needed.
+
+In the demo above, you see an element added and removed from above the Hello sunshine header every two seconds. This element cannot be clicked, you will never see a `DIV` in the console.
 
 ## References
 

@@ -1,0 +1,39 @@
+<h1>Hello sunshine</h1>
+<p>You can test that no clicks can be performed on the orange circle that is added in a BlindManDom layer.</p>
+<script>
+  //1. create a BlindManDom layer
+  const blind = document.createElement("div");
+  blind.style.position="fixed";
+  blind.style.zIndex= 2147483647;
+  blind.style.pointerEvents= "none";
+  blind.style.overflow = "visible";
+
+  //2. create an element to be displayed in the BlindManDom layer
+  const ring = document.createElement("div");
+  ring.style.width = "10px";
+  ring.style.height = "10px";
+  ring.style.borderRadius = "50%";
+  ring.style.border = "3px solid red";
+  ring.style.backgroundColor = "orange";
+
+  const body = document.querySelector("body");
+
+  setInterval(function () {
+    //2. when a state change occurs, update the BlindManDom
+    blind.style.left = Math.random() * 20 + 20 + "px";
+    blind.style.top = Math.random() * 20 + 20 + "px";
+
+    //3. append/remove a) the visual element to the blindManDomLayer, and
+    //                 b) the blindManDomLayer on the body
+    //   as needed.
+    if (blind.isConnected) {
+      body.removeChild(blind);
+      blind.removeChild(ring);
+    } else {
+      blind.appendChild(ring);
+      body.appendChild(blind);
+    }
+  }, 2000);
+
+  window.addEventListener("click", e => console.log(e.target.tagName));
+</script>
