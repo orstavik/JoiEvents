@@ -2,20 +2,30 @@
 
 The FeedbackElement displays a feedback image during the lifecycle of an EventSequence. The feedback image is an `HTMLElement`, often a custom element/web component. The feedback image is displayed using the BlindManDOM pattern, and removed from the DOM once the cycle of the EventSequence concludes. 
 
-The layout and positioning of the FeedbackElement is not associated with the DOM, but pointer position and the screen dimensions. The most common position on the screen not associated with a pointer device is the top right corner.
+The layout and positioning of the FeedbackElement is *not* DOM related, but pointer position and the screen dimensions. DOM related feedback is handled by CSS pseudo-classes and made visible by the script controlling the shadowDOM of an element, or script controlling the lightDOM of an app. The most common position on the screen not associated with a pointer device is the top right corner.
 
 ## When to remove the FeedbackElement?
 
-Many EventSequences start and end so quickly that humans cannot read a feedback image if it is *only* visible during such a short lifecycle. Examples of such EventSequences are `click` and the loading of network resources. For such EventSequences the removal of the feedback image is delayed using a `setTimeout(..)`. Whenever a feedback image is still active in the DOM, any new feedback image added must be a deep clone of the original feedback element.
+Many EventSequences start and end so quickly that humans cannot read a feedback image if it is *only* visible during such a short lifecycle. Examples of such EventSequences are `click`, `select`, loading network resources, and more. For such EventSequences the removal of the feedback image is delayed using a `setTimeout(..)`.
 
-Delaying the removal of the FeedbackElement opens up for tackling several use-cases within the EventSequence, making them reusable across apps. Allowing the FeedbackElement to remain in the DOM until the user has had time to read it, enables the EventSequence to a.o. display the *end* state of an EventSequence, and thus answer user questions such as:
+Delaying the removal of the FeedbackElement using `setTimeout(...)` is a boon. When the duration of the feedback is separated from the duration of the EventSequence, the *end* state of an EventSequence can be communicated to the user. This enables the EventSequence to answer such questions as:
  * did the gesture succeed or fail?
  * what was the *state* of the gesture when it ended? 
  * did the app register a "very fast event" such as a `click` or loading of a network resource?
 
+Not for implementations: When two or more feedback elements from the same EventSequence are active in the DOM at the same time, then remember to deep clone the feedback image or otherwise ensure that the different feedback element objects.
+
 ## Automated CSS properties for FeedbackElements 
  
-During the lifecycle of an EventSequence, the EventSequence function will automatically control the layout and position of the FeedbackElement. The BlindManDOM *must* control the `display` and `z-index` properties. Commonly, the BlindManDOM also controls the `top`, `left`, and/or `bottom`, `right` properties. In addition, several other properties such as `width`, `height`, `transform`, `opacity`, and `animate` can also be automated on the FeedbackElement.
+The BlindManDOM *must* set `display: fixed; pointer-events: none; z-index: 2147483647;` on the FeedbackElement `style` object, and these should not be overridden by the user. To accomplish this safely, a separate BlindManDomLayer element is created inside the composed event sif function, which any outside developer must actively seek out in the DOM in order to get a hold of.
+
+But, EventSequences often also control automatically other aspects of the layout such as:
+ * `top`, `left`, `bottom`, `right`, 
+ * `width`, `height`, `box-sizing`, 
+ * `transform`, `opacity`, `animate`,
+ * a.o.
+ 
+These properties can also be added to the other properties such as ,  can also be automated on the FeedbackElement.
 
 In preparation for later chapters, these properties are written on the `feedbackElement`'s `style` object.
    
@@ -28,6 +38,17 @@ The feedback element is made up of two HTML elements: a `<style>` and a `<div>`.
 ```html
 <script >
 (function () {
+  
+  class BlindManDomLayer extends HTMLElement {
+    constructor(){
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+<style>:host { position: fixed; z-index: 2147483647; pointer-events: none; }</style>
+<slot></slot>`;
+    }
+  }
+  customElements.define("blind-man-dom-layer", BlindManDomLayer);
   
   class PondRing extends HTMLElement {
     constructor(){
@@ -120,15 +141,12 @@ The feedback element is made up of two HTML elements: a `<style>` and a `<div>`.
   window.addEventListener("mousedown", onMousedown, true);  
 })();
 </script>
-```
-In the demo below, the long-press is logged and will cancel link clicks.
-```html
-<script src="demo/naive-long-press-visual.js"></script>
-<a href="https://elizabethwarren.com/">Try to click me quick</a>
-<hr>
-<a href="https://time.com/5622374/donald-trump-climate-change-hoax-event/">The right thing to do is to press me hard and long</a>
+
+<h1>Hello sunshine</h1>
 <script >
-  window.addEventListener("long-press", e => {e.preventDefault(); console.log(e)});  
+window.addEventListener("long-press", function(e){
+  console.log(e.type);
+})
 </script>
 ``` 
 

@@ -20,6 +20,13 @@ To add a BlindManDOM element requires adding both the visual element itself, suc
 
 ```html
 <script>
+
+  //1. create a BlindManDOM layer
+  const blindManDomLayer = document.createElement("div");
+  blindManDomLayer.style.position="fixed";
+  blindManDomLayer.style.zIndex= 2147483647;
+  blindManDomLayer.style.pointerEvents= "none";
+
   class FlashyRing extends HTMLElement {
     constructor() {
       super();
@@ -27,9 +34,6 @@ To add a BlindManDOM element requires adding both the visual element itself, suc
       this.shadowRoot.innerHTML = `
 <style>
 :host {
-  position: fixed;
-  z-index: 2147483647;
-  pointer-events: none;
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -45,18 +49,22 @@ To add a BlindManDOM element requires adding both the visual element itself, suc
 <h1>Hello sunshine</h1>
 
 <script>
-
   const flashyRing = new FlashyRing();
-  const body = document.querySelector("body");
-  flashyRing.style.left = "10px";
-  flashyRing.style.top = "10px";
   flashyRing.style.backgroundColor = "orange";
-  flashyRing.style.borderColor = "yellow";
+
+  const body = document.querySelector("body");
 
   setInterval(function () {
-    flashyRing.isConnected ?
-      body.removeChild(flashyRing) :
-      body.appendChild(flashyRing);
+    //2. when a state change occurs, update the BlindManDOM
+    blindManDomLayer.style.left = "10px";
+    blindManDomLayer.style.top = "10px";
+        
+    //3. create a visual element to be placed in the BlindManDOM
+    
+    blindManDomLayer.appendChild(flashyRing);
+    blindManDomLayer.isConnected ?
+      body.removeChild(blindManDomLayer) :
+      body.appendChild(blindManDomLayer);
   }, 2000);
 
   document.querySelector("h1").addEventListener("click", e => console.log(e.target.innerText));
