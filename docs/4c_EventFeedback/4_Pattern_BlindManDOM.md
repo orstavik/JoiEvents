@@ -25,7 +25,7 @@ We will later work with visual elements being passed into an EventSequence from 
   blindManDomLayer.style.position="fixed";
   blindManDomLayer.style.zIndex= 2147483647;
   blindManDomLayer.style.pointerEvents= "none";
-  blindManDomLayer.style.overflow = "visible";
+  // blindManDomLayer.style.overflow = "visible"; //visible is default value
   // blindManDomLayer.style.left = 20px;
   // blindManDomLayer.style.top = 20px;
 ```

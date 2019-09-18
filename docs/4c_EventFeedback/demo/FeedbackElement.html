@@ -1,0 +1,125 @@
+<script >
+  (function () {
+
+    class BlindManDomLayer extends HTMLElement {
+      constructor(){
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
+<style>
+  @keyframes starting-press {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0.5;
+    }
+  }
+  :host {
+    position: fixed;
+    z-index: 2147483647;
+    pointer-events: none;
+    /*overflow: visible;*/
+    animation: starting-press 300ms forwards;
+  }
+</style>
+<slot></slot>`;
+      }
+    }
+    customElements.define("blind-man-dom-layer", BlindManDomLayer);
+
+    class PondRing extends HTMLElement {
+      constructor(){
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
+<style>
+  @keyframes pressing-starts {
+    0% {
+      border: 1px solid grey;
+    }
+    99.99% {
+      border: 1px solid grey;
+    }
+    100% {
+      border: 4px double grey;
+    }
+  }
+  :host {
+    box-sizing: border-box;
+    width: 10px;
+    height: 10px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    animation: pressing-starts 300ms forwards;
+  }
+  :host(.long-press-ends) {
+    border-color: green;
+  }
+</style>`;
+      }
+    }
+    customElements.define("long-press-pond-ring", PondRing);
+
+    function addVisualFeedback(x, y){
+      //using left and top instead of transform: translate(x, y) so as to simplify scale animation
+      feedbackElement.style.left = x + "px";
+      feedbackElement.style.top = y + "px";
+      document.body.appendChild(feedbackElement);
+    }
+
+    function removeVisualFeedback(){
+      feedbackElement.remove();
+    }
+
+    function isInside(start, stop){
+      const x = stop.clientX - start.clientX;
+      const y = stop.clientY - start.clientY;
+      return (x * x + y * y) < 81;
+    }
+
+    function dispatchPriorEvent(target, composedEvent, trigger) {
+      composedEvent.preventDefault = function () {
+        trigger.preventDefault();
+        trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
+      };
+      composedEvent.trigger = trigger;
+      return target.dispatchEvent(composedEvent);
+    }
+
+    var primaryEvent;
+    var feedbackElement = document.createElement("long-press-pond-ring");
+    blindManDOM(feedbackElement);
+
+    function onMousedown(e) {
+      if (e.button !== 0)
+        return;
+      primaryEvent = e;
+      window.addEventListener("mouseup", onMouseup, true);
+      addVisualFeedback(e.clientX, e.clientY);
+    }
+
+    function onMouseup(e) {
+      var duration = e.timeStamp - primaryEvent.timeStamp;
+      //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
+      if (duration > 300 && isInside(primaryEvent, e)){
+        let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration});
+        dispatchPriorEvent(e.target, longPress, e);
+      }
+      primaryEvent = undefined;
+      window.removeEventListener("mouseup", onMouseup, true);
+      removeVisualFeedback();
+    }
+
+    window.addEventListener("mousedown", onMousedown, true);
+  })();
+</script>
+
+<h1>Hello sunshine</h1>
+<script >
+  window.addEventListener("long-press", function(e){
+    console.log(e.type);
+  })
+</script>

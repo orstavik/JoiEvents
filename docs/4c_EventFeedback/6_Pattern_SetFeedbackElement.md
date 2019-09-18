@@ -6,7 +6,7 @@ The SetFeedbackElement pattern adds/replaces a feedback image for an EventSequen
    1. `feedbackElement`: an `HTMLElement` node that will be displayed. Often, this is a custom element/web component. EventSequence *does* not clone the `feedbackElement` argument.
    2. `timeToLive`: The `Number` of milliseconds that the visual `feedbackElement` will be kept alive in the DOM after the current EventSequence cycle has completed. If the `timeToLive` is so long that *two or more* `feedbackElement`s should be added to the DOM and visible *at the same time*, then the script calling `setImage(..)` should ensure that *two or more* different element objects are passed into the EventSequence. The 
 
-2. The `.setImage(..)` function stores the `feedbackElement` as a variable in the composed event sif. The `feedbackElement` is kept for the current event cycle only, but can be overwritten by subsequent calls to `.setImage(..)`. The `feedbackElement` is displayed on screen using the BlindManDOM pattern.
+2. The `.setImage(..)` function stores the `feedbackElement` as a variable in the composed event sif. The `feedbackElement` is kept for the current event cycle only, but can be overwritten by subsequent calls to `.setImage(..)`. The `feedbackElement` is displayed on screen using the BlindManDom pattern.
 
 3. During the lifecycle of an EventSequence, the EventSequence function can add and update custom CSS variables on the `feedbackElement`'s `style` property. Examples of such CSS variables are:
    * `--mouse-client-x`, `--mouse-client-y`, 
