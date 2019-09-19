@@ -1,25 +1,3 @@
-# Pattern: SetFeedbackElement
-
-The SetFeedbackElement pattern adds/replaces a feedback image for an EventSequence or composed event. The pattern:
-
-1. adds a `.setImage(feedbackElement, timeToLive)` on all the composed event objects dispatched from the EventSequence function. The arguments are:
-   1. `feedbackElement`: an `HTMLElement` node that will be displayed. Often, this is a custom element/web component.
-   2. `ttl` (time to live): The `Number` of milliseconds that the visual `feedbackElement` will be kept alive in the DOM after the current EventSequence cycle has completed.
-   * If the `feedbackElement` argument `isConnected` to the DOM when it is to be first added, the EventSequence will deep clone the `feedbackElement` object.
-
-2. The `.setImage(..)` function overrides the `feedbackElement` for one display cycle. If the EventSequence needs to override the default display of the `feedbackElement`, then a static `setDefaultImage(..)` function needs to be set up on the ExtendsEvent class.
-
-3. The EventSequence will attach the `feedbackElement` to a BlindManDom layer element and automatically control relevant CSS variables on the BlindManDom layer such as position, size and rotation.
-
-4. The EventSequence will attach CSS pseudo-pseudo-classes to the feedback element, as it would its default FeedbackElement.
-   
-## Demo: Show how `long-press` persists
-
-In this demo, we set up a `long-press` EventSequence and pass it two custom feedback elements using the `.setImage(...)` method on the `long-press-start` event. The first `setImage(...)` is passed a plain old `<div>` element. The `<div>` is dumb as in restricted from doing any animations or adaptations to CSS pseudo-pseudo-classes. The second `setImage(...)` is passed a modern, elegant web component called `<beating-heart>`. The web component is smart as it can include styles that both animate and respond to changing pseudo-pseudo-classes.
-
-To reduce the example size, we do not implement a default `long-press` FeedbackElement such as a bulls-eye. The feedback element is a circle border that grows from where the initial `mousedown` is registered, which then gets doubled as the time requirement for the press is met.
-
-```html
 <script>
   (function () {
 
@@ -183,9 +161,3 @@ document.querySelector("#Pocahuntas").addEventListener("long-press-start", funct
 window.addEventListener("long-press-start", e => console.log(e.type));
 window.addEventListener("long-press", e => console.log(e.type));
 </script>
-``` 
-
-## References
-
- * []()
-

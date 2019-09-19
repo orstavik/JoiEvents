@@ -1,17 +1,6 @@
-# Pattern: SetFeedbackElement
+# Pattern: SelectFeedbackElement
 
-The SetFeedbackElement pattern adds/replaces a feedback image for an EventSequence or composed event. The pattern:
-
-1. adds a `.setImage(feedbackElement, timeToLive)` on all the composed event objects dispatched from the EventSequence function. The arguments are:
-   1. `feedbackElement`: an `HTMLElement` node that will be displayed. Often, this is a custom element/web component.
-   2. `ttl` (time to live): The `Number` of milliseconds that the visual `feedbackElement` will be kept alive in the DOM after the current EventSequence cycle has completed.
-   * If the `feedbackElement` argument `isConnected` to the DOM when it is to be first added, the EventSequence will deep clone the `feedbackElement` object.
-
-2. The `.setImage(..)` function overrides the `feedbackElement` for one display cycle. If the EventSequence needs to override the default display of the `feedbackElement`, then a static `setDefaultImage(..)` function needs to be set up on the ExtendsEvent class.
-
-3. The EventSequence will attach the `feedbackElement` to a BlindManDom layer element and automatically control relevant CSS variables on the BlindManDom layer such as position, size and rotation.
-
-4. The EventSequence will attach CSS pseudo-pseudo-classes to the feedback element, as it would its default FeedbackElement.
+The SelectFeedbackElement pattern enables the user to select and control the visual feedback of EventSequence from CSS. The pattern uses CssControls: the EventSequence reads a custom CSS property on the target element at startup.
    
 ## Demo: Show how `long-press` persists
 

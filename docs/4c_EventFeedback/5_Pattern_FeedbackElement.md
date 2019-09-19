@@ -13,11 +13,11 @@ Delaying the removal of the FeedbackElement using `setTimeout(...)` is a boon. W
  * what was the *state* of the gesture when it ended? 
  * did the app register a "very fast event" such as a `click` or loading of a network resource?
 
-Not for implementations: When two or more feedback elements from the same EventSequence are active in the DOM at the same time, then remember to deep clone the feedback image or otherwise ensure that the different feedback element objects.
+Not for implementations: When two or more feedback elements from the same EventSequence are active in the DOM at the same time, due to for example a long delay before the FeedbackElement is removed, then the EventSequence can deep clone the BlindManDom layer element to disconnect it from new actions.
 
 ## Automated CSS properties for FeedbackElements 
  
-The BlindManDom sets `display: fixed; pointer-events: none; z-index: 2147483647; overflow: visible;` on its layer element. 
+The BlindManDom sets `display: fixed; pointer-events: none; z-index: 2147483647; overflow: visible; padding: 0; margin: 0;` on its layer element. 
 
 The EventSequence can also add a `transform` style to the BlindManDom layer element. The `transform` style allows the EventSequence to efficiently (re)position the FeedbackElement together with a moving cursor. If the FeedbackElement rarely moves on screen, the less efficient `top`, `left`, `bottom`, `right` properties can be used instead.
 
@@ -28,6 +28,8 @@ Thus, the automated CSS properties of the BlindManDom layer element are:
  * pointer-events: none; 
  * z-index: 2147483647; 
  * overflow: visible;
+ * margin: 0;
+ * padding: 0;
  * transform: translate scale and rotate
  * animate: => mainly (transform: scale and rotate)
  * top, left, bottom, right can be used instead of transform translate for still FeedbackElements.
@@ -47,9 +49,9 @@ Pseudo-pseudo-classes enables the developer controlling the FeedbackElement to a
 In this demo, we show the state of a `long-press` with an animated bulls-eye. The `long-press` event is deliberately naive (simple and do not handle edge cases).
 1. When the initial `mousedown` is registered, the bulls-eye is added to the screen at the press location.
 2. While the user keeps pressing, the bulls-eye grows and becomes less opaque.
-3. When the user has pressed down as long as is needed to perform a `long-press`, the bulls-eye stops growing and is given double rings. 
-4. When the user releases the press, the bulls-eye turns green.
-5. The bulls-eye is removed 150ms after the `long-press` cycle ends.
+3. When the user has pressed down as long as is needed to perform a `long-press`, the bulls-eye stops growing. 
+4. When the user releases the press, the bulls-eye turns green if the press was long enough for a `long-press`, and red if it was not.
+5. The bulls-eye is removed 250ms after the `long-press` cycle ends.
 
 The demo uses a web component for `BlindManDomLayer` with a `grow-less-opaque` animation.
 
@@ -58,14 +60,14 @@ The FeedbackElement is also set up as a web component `PondRing` to add two anim
  * one for when the EventSequence ends.
 
 ```html
-<script >
-(function () {
-  
-  class BlindManDomLayer extends HTMLElement {
-    constructor(){
-      super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = `
+<script>
+  (function () {
+
+    class BlindManDomLayer extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
 <style>
   @keyframes starting-press {
     0% {
@@ -73,115 +75,114 @@ The FeedbackElement is also set up as a web component `PondRing` to add two anim
       opacity: 0;
     }
     100% {
-      transform: scale(2);
+      transform: scale(1);
       opacity: 0.5;
     }
   }
-  :host { 
-    position: fixed; 
-    z-index: 2147483647; 
+  :host {
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    z-index: 2147483647;
     pointer-events: none;
     /*overflow: visible;*/
-    animation: starting-press 300ms forwards;
+    animation: starting-press 600ms forwards;
   }
 </style>
 <slot></slot>`;
+      }
     }
-  }
-  customElements.define("blind-man-dom-layer", BlindManDomLayer);
-  
-  class PondRing extends HTMLElement {
-    constructor(){
-      super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = `
+
+    customElements.define("blind-man-dom-layer", BlindManDomLayer);
+
+    class PondRing extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
 <style>
-  @keyframes pressing-starts {
-    0% {
-      border: 1px solid grey; 
-    }
-    99.99% {
-      border: 1px solid grey; 
-    }
-    100% {
-      border: 4px double grey;
-    }
-  }
   :host {
+    display: block;
     box-sizing: border-box;
-    width: 10px; 
-    height: 10px; 
-    margin: -7px 0 0 -7px;
-    border-radius: 50%; 
-    animation: pressing-starts 300ms forwards;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: -10px 0 0 -6px;
+    border: 3px double grey;
+    border-radius: 50%;
   }
-  :host(.long-press-ends) { 
-    border-color: green;
+  :host(*.long-press-ends) {
+    background: green;
+  }
+  :host(*.long-press-fails) {
+    background: red;
   }
 </style>`;
+      }
     }
-  }
-  customElements.define("long-press-pond-ring", PondRing);
-  
-  function addVisualFeedback(x, y){
-    //using left and top instead of transform: translate(x, y) so as to simplify scale animation
-    feedbackElement.style.left = x + "px";
-    feedbackElement.style.top = y + "px";
-    document.body.appendChild(feedbackElement);    
-  }
-  
-  function removeVisualFeedback(){
-    feedbackElement.remove();    
-  }
-  
-  function isInside(start, stop){
-    const x = stop.clientX - start.clientX;
-    const y = stop.clientY - start.clientY;
-    return (x * x + y * y) < 81;
-  }
-  
-  function dispatchPriorEvent(target, composedEvent, trigger) {
-    composedEvent.preventDefault = function () {
-      trigger.preventDefault();
-      trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
-    };
-    composedEvent.trigger = trigger;
-    return target.dispatchEvent(composedEvent);
-  }
 
-  var primaryEvent;
-  var feedbackElement = document.createElement("long-press-pond-ring");
-  blindManDOM(feedbackElement);
+    customElements.define("long-press-pond-ring", PondRing);
 
-  function onMousedown(e) {                                 
-    if (e.button !== 0)                                     
-      return;
-    primaryEvent = e;                                       
-    window.addEventListener("mouseup", onMouseup, true);
-    addVisualFeedback(e.clientX, e.clientY);
-  }
-
-  function onMouseup(e) {                                   
-    var duration = e.timeStamp - primaryEvent.timeStamp;
-    //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
-    if (duration > 300 && isInside(primaryEvent, e)){                                    
-      let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration});
-      dispatchPriorEvent(e.target, longPress, e); 
+    function dispatchPriorEvent(target, composedEvent, trigger) {
+      composedEvent.preventDefault = function () {
+        trigger.preventDefault();
+        trigger.stopImmediatePropagation ? trigger.stopImmediatePropagation() : trigger.stopPropagation();
+      };
+      composedEvent.trigger = trigger;
+      return target.dispatchEvent(composedEvent);
     }
-    primaryEvent = undefined;                               
-    window.removeEventListener("mouseup", onMouseup, true);
-    removeVisualFeedback();
-  }
 
-  window.addEventListener("mousedown", onMousedown, true);  
-})();
+    var primaryEvent;
+    var blindMan = document.createElement("blind-man-dom-layer");
+    var feedbackElement = document.createElement("long-press-pond-ring");
+    blindMan.appendChild(feedbackElement);
+
+    function addVisualFeedback(x, y) {
+      //using left and top instead of transform: translate(x, y) so as to simplify scale animation
+      blindMan.style.left = x + "px";
+      blindMan.style.top = y + "px";
+      document.body.appendChild(blindMan);
+    }
+
+    function removeVisualFeedback(success, ttl) {
+      const endState = success ? "long-press-ends" : "long-press-fails";
+      blindMan.classList.add(endState);
+      feedbackElement.classList.add(endState);
+      setTimeout(function () {
+        blindMan.classList.remove(endState);
+        feedbackElement.classList.remove(endState);
+        blindMan.remove();
+      }, ttl);
+    }
+
+    function onMousedown(e) {
+      if (e.button !== 0)
+        return;
+      primaryEvent = e;
+      window.addEventListener("mouseup", onMouseup, true);
+      addVisualFeedback(e.clientX, e.clientY);
+    }
+
+    function onMouseup(e) {
+      var duration = e.timeStamp - primaryEvent.timeStamp;
+      //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
+      if (duration > 600) {
+        let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration});
+        dispatchPriorEvent(e.target, longPress, e);
+        removeVisualFeedback(true, 250);
+      } else {
+        removeVisualFeedback(false, 250);
+      }
+      primaryEvent = undefined;
+      window.removeEventListener("mouseup", onMouseup, true);
+    }
+
+    window.addEventListener("mousedown", onMousedown, true);
+  })();
 </script>
-
 <h1>Hello sunshine</h1>
-<script >
-window.addEventListener("long-press", function(e){
-  console.log(e.type);
-})
+<script>
+  window.addEventListener("long-press", e => console.log(e.type));
 </script>
 ``` 
 

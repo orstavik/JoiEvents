@@ -1,8 +1,8 @@
-<script >
+<script>
   (function () {
 
     class BlindManDomLayer extends HTMLElement {
-      constructor(){
+      constructor() {
         super();
         this.attachShadow({mode: "open"});
         this.shadowRoot.innerHTML = `
@@ -18,67 +18,47 @@
     }
   }
   :host {
+    margin: 0;
+    padding: 0;
     position: fixed;
     z-index: 2147483647;
     pointer-events: none;
     /*overflow: visible;*/
-    animation: starting-press 300ms forwards;
+    animation: starting-press 600ms forwards;
   }
 </style>
 <slot></slot>`;
       }
     }
+
     customElements.define("blind-man-dom-layer", BlindManDomLayer);
 
     class PondRing extends HTMLElement {
-      constructor(){
+      constructor() {
         super();
         this.attachShadow({mode: "open"});
         this.shadowRoot.innerHTML = `
 <style>
-  @keyframes pressing-starts {
-    0% {
-      border: 1px solid grey;
-    }
-    99.99% {
-      border: 1px solid grey;
-    }
-    100% {
-      border: 4px double grey;
-    }
-  }
   :host {
+    display: block;
     box-sizing: border-box;
     width: 10px;
     height: 10px;
-    margin: -7px 0 0 -7px;
+    margin: -5px 0 0 -3px;
+    border: 3px double grey;
     border-radius: 50%;
-    animation: pressing-starts 300ms forwards;
   }
-  :host(.long-press-ends) {
-    border-color: green;
+  :host(*.long-press-ends) {
+    background: green;
+  }
+  :host(*.long-press-fails) {
+    background: red;
   }
 </style>`;
       }
     }
+
     customElements.define("long-press-pond-ring", PondRing);
-
-    function addVisualFeedback(x, y){
-      //using left and top instead of transform: translate(x, y) so as to simplify scale animation
-      feedbackElement.style.left = x + "px";
-      feedbackElement.style.top = y + "px";
-      document.body.appendChild(feedbackElement);
-    }
-
-    function removeVisualFeedback(){
-      feedbackElement.remove();
-    }
-
-    function isInside(start, stop){
-      const x = stop.clientX - start.clientX;
-      const y = stop.clientY - start.clientY;
-      return (x * x + y * y) < 81;
-    }
 
     function dispatchPriorEvent(target, composedEvent, trigger) {
       composedEvent.preventDefault = function () {
@@ -90,8 +70,27 @@
     }
 
     var primaryEvent;
+    var blindMan = document.createElement("blind-man-dom-layer");
     var feedbackElement = document.createElement("long-press-pond-ring");
-    blindManDOM(feedbackElement);
+    blindMan.appendChild(feedbackElement);
+
+    function addVisualFeedback(x, y) {
+      //using left and top instead of transform: translate(x, y) so as to simplify scale animation
+      blindMan.style.left = x + "px";
+      blindMan.style.top = y + "px";
+      document.body.appendChild(blindMan);
+    }
+
+    function removeVisualFeedback(success, ttl) {
+      const endState = success ? "long-press-ends" : "long-press-fails";
+      blindMan.classList.add(endState);
+      feedbackElement.classList.add(endState);
+      setTimeout(function () {
+        blindMan.classList.remove(endState);
+        feedbackElement.classList.remove(endState);
+        blindMan.remove();
+      }, ttl);
+    }
 
     function onMousedown(e) {
       if (e.button !== 0)
@@ -104,22 +103,21 @@
     function onMouseup(e) {
       var duration = e.timeStamp - primaryEvent.timeStamp;
       //trigger long-press iff the press duration is more than 300ms ON the exact same mouse event target.
-      if (duration > 300 && isInside(primaryEvent, e)){
+      if (duration > 600) {
         let longPress = new CustomEvent("long-press", {bubbles: true, composed: true, detail: duration});
         dispatchPriorEvent(e.target, longPress, e);
+        removeVisualFeedback(true, 250);
+      } else {
+        removeVisualFeedback(false, 250);
       }
       primaryEvent = undefined;
       window.removeEventListener("mouseup", onMouseup, true);
-      removeVisualFeedback();
     }
 
     window.addEventListener("mousedown", onMousedown, true);
   })();
 </script>
-
 <h1>Hello sunshine</h1>
-<script >
-  window.addEventListener("long-press", function(e){
-    console.log(e.type);
-  })
+<script>
+  window.addEventListener("long-press", e => console.log(e.type));
 </script>
