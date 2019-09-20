@@ -2,7 +2,13 @@
 
 The FeedbackElement displays a feedback image during the lifecycle of an EventSequence. The feedback image is an `HTMLElement`, often a custom element/web component. The feedback image is displayed using the BlindManDom pattern, and removed from the DOM once the cycle of the EventSequence concludes. 
 
-The layout and positioning of the FeedbackElement is *not* DOM related, but pointer position and the screen dimensions. DOM related feedback is handled by CSS pseudo-classes and made visible by the script controlling the shadowDOM of an element, or script controlling the lightDOM of an app. The most common position on the screen not associated with a pointer device is the top right corner.
+The layout and positioning of the FeedbackElement is *not exclusively* DOM related, but often is:
+1. identical to a pointer position,
+2. fixed to a static screen viewport (most commonly top right corner),
+3. fixed to a static element viewport (such as the top right corner of an element), and
+4. calculated based on both a static viewport and a relative pointer position (cf. the pull-to-refresh and over-scroll feedback images). 
+
+DOM related feedback is handled by CSS pseudo-classes and made visible by the script controlling the shadowDOM of an element, or script controlling the lightDOM of an app. The most common position on the screen not associated with a pointer device is the top right corner.
 
 ## When to remove the FeedbackElement?
 

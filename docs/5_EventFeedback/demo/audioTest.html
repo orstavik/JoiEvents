@@ -1,0 +1,98 @@
+<textarea cols="40" rows="6">
+  square 244.50 0.0015 1.2 0.6 0.005,
+  lowpass 244.50 0.001 0.8 0.5 0.130,
+  lowpass 320.5 0.5 0.9 0.6 0.001
+</textarea>
+<br>
+<button>Play</button>
+
+<web-audio></web-audio>
+
+<script>
+  const wa = document.querySelector("web-audio");
+  const ta = document.querySelector("textarea");
+  const pl = document.querySelector("button");
+  window.addEventListener("DOMContentLoaded", function(){
+    wa.style.setProperty("--audio-settings", ta.value.replace(/\s+/g, " "));
+  });
+  ta.addEventListener("input", function (e) {
+    wa.style.setProperty("--audio-settings", ta.value.replace(/\s+/g, " "));
+  });
+  pl.addEventListener("click", function (e) {
+    wa.play();
+  });
+</script>
+
+
+<script type="module">
+
+  import {StyleCallbackMixin} from "https://unpkg.com/joicomponents@1.3.6/src/style/StyleCallbackMixin.js";
+
+  class WebAudioCSSComponent extends StyleCallbackMixin(HTMLElement) {
+    constructor() {
+      super();
+      this.filters;
+      this.biquadFilters;
+    }
+
+    static get observedStyles() {
+      return ["--audio-settings"];
+    }
+
+    styleCallback(name, oldValue, newValue) {
+      if (name === "--audio-settings") {
+        let components = newValue.trim().split(",");
+        this.filters = components.map(line => line.trim().split(" "));
+      }
+    }
+
+    play() {
+      const audioContext = new AudioContext();
+      let now = audioContext.currentTime;
+      let duration = 1; //this is in sec I think
+      const og = this.makeOscillatorGain(audioContext, this.filters[0], now, duration);
+
+      //in between here I stack the filters:   gain > filter > filter > destination
+      og.gain.connect(audioContext.destination);
+
+      //to start, i must start the oscillator
+      og.oscillator.start(audioContext.currentTime);
+
+      //to end it, I must call oscillator stop
+//      og.gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+//      og.oscillator.stop(now + 1);
+    }
+
+    makeOscillatorGain(audioContext, line, now, duration) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      gain.gain.value = 0;
+
+      let type = line[0];
+      let Hz = line[1];
+      let attack = parseFloat(line[2]);
+      let decay = parseFloat(line[3]);
+      let sustain = parseFloat(line[4]);
+      let release = decay + parseFloat(line[5]);
+
+      oscillator.frequency.value = Hz;
+      oscillator.type = type;
+      gain.gain.setValueAtTime(0, 0); //attack
+      gain.gain.exponentialRampToValueAtTime(1, now); //attack
+      gain.gain.exponentialRampToValueAtTime(sustain, now + attack); //attack
+      gain.gain.setValueAtTime(sustain, now + attack + decay); //attack
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay + release); //attack
+      oscillator.connect(gain);
+      return {oscillator, gain};
+    }
+
+//    stop(){
+//      this.stopSound(false);
+//    }
+  }
+
+  customElements.define("web-audio", WebAudioCSSComponent);
+
+
+</script>
+

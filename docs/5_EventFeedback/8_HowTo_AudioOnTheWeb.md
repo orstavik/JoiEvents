@@ -39,10 +39,10 @@ But, adding audio feedback in a rich app is often more complex. The sound being 
 
 And, you might need to change the sound fluently during the course of a gesture, not just turn it on/off. Imagine for example a game where you drag the string of a bow to shoot arrows at a target. The longer you drag, the higher the volume on a drag feedback tone; and when you change the angle of the drag, you change the pitch of this tone. In such use-cases, you need direct programmatic access to the API controlling the sound, and you do *not* want this audio api to be encapsulated into something else.
  
-The conclusion is that for **on-screen gestures** should implement audio feedback in event listeners in the app layer: 
+The conclusion is that for **on-screen gestures** should not implement audio feedback in event listeners in the app layer: 
 1. because audio feedback is conventionally considered part of the app layer, and *not* the platform layer,
 2. because implementing audio feedback often would require coordination with a rich app's soundscape and other state external to the event itself, and
-3. because the audio feedback often would require low level control,
+3. because the audio feedback often would require low level control.
 
 Thus, the composed events need to provide events that for event state changes. For example, in our "bow and arrow"-game the app needs events for drag-start, drag-move, drag-end to be able to control the sound correspondingly. The composed event does not need to implement for example a `setAudioFeedback(mp3)` method.
 
@@ -51,36 +51,12 @@ Thus, the composed events need to provide events that for event state changes. F
 For off-screen events such as orientation- and motion-based gestures, audio often should be used as feedback. For example, if you shake your phone, you might wish to alert your user:
 1. when the shake *can be* registered (maybe you need to press at least four fingers on the screen to activate the gesture?),
 2. when the shake *is* registered,
-3. when and how the shake changes state (up or down), and
+3. when and how the shake changes state (when the phone moves up, the pitch moves up?), and
 4. when the shake ends.
 
-Audio feedback for such off-screen events *can* be controlled in the app layer in the same way as for on-screen events. However, off-screen events should likely have:
-1. a default audio feedback that should reside in the platform layer,
-2. some settings for the default audio feedback, such as volume and maybe a set of alternative sounds, and thus
-3. the ability to turn off the default audio feedback if a custom feedback is added in the app layer.
+## Discussion
 
-We process these requirements bottom up. 
-
- * If the volume is set to `0`, this means sound is off. If a sound alternative `none` is chosen, this means no sound.
-
- * specifying volume and choosing one sound from a set of pre-existing choices can and should be done as CSS properties, cf. the `cursor` property.
- 
-## Demo: TinCan
-
-todo this is completely not implemented
-
-This demo require patterns from the coming chapter on motion- and orientation events. And a touch-press.js event listener that will dispatch events such as press-start, press-change, press-end. 
-
-```html
-<script src="demo/touch-press.js"></script>
-<script src="demo/shake.js"></script>
-
-<div>
-When four fingers are pressed on screen, the shake event is activated. 
-</div>
-```
-
-We need to make a demo for a 
+If and when audio is necessary, the app and/or user must decide. Off-screen gestures would need audio feedback more often than on-screen gestures. However, composed events and EventSequences should support audio feedback, but keep them mute by default. This would enhance their reusability, and would add little extra cost if the EventSequence already needs to call `getComputedStyle(..)` for other settings.
 
 ## References
 
