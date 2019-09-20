@@ -62,7 +62,7 @@ body {
 </script>
 ```
 
-## Lookahead: When CSS control EventSequences 
+## Lookahead: CSS controls EventSequences and EventFeedback
 
 CSS controls for composed events can be used to:
  * activate/deactivate the event for selected elements (cf. `pointer-events: none`),
@@ -70,7 +70,7 @@ CSS controls for composed events can be used to:
  * or event specific properties (cf. `--echo-click-times`),
  * and other purposes, depending on the use-case of the composed event in question.
  
-To control events via CSS is not a mission-critical objective. If the performance of your app requires that you avoid calling `getComputedStyle(..)` during a composed event function, you likely have to go with HTML attributes. But, when we get to EventSequences in the next chapter, the *importance of* and *quantity* event controlling properties increases. For EventSequences, custom CSS properties to guide composed events is more preferable.
+Sometimes an app's performance require that it avoids calling `getComputedStyle(..)` during a composed event function. In such instances, HTML attributes is the way to go. But, when we get to EventSequences and Event Feedback, the *importance of* and *quantity* event controlling properties increases. For EventSequences, custom CSS properties to guide composed events is more preferable.
 
 ## References
  

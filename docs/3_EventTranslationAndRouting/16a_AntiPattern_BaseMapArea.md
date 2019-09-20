@@ -16,7 +16,7 @@ To use HTML template to control an event seems very strange. However, there is a
 
 The `<map>` is an invisible grid with a set of specified `<area>`s that in essence adds a map of links to a single `<img>`. If no `click` (cf. `link="..."`) or `mousemove` (cf. `title="..."`) event occurs, then `<map>` and `<area>` are useless.
 
-The use-case for such client-side image-maps is a bit dated. Back in the 90s, developers made website from large images that they a) cut up into smaller pieces, b) added a link to each piece, and then c) glued together in a `<table>` like a collage clientside. Yes, it was truly ugly. To simplify this process, the HTML 3.2 set up imagemaps. Imagemaps enabled the developer to send the entire image as a single piece and then add an imagemap to spread out different links across this single image. It was back then a step in the right direction.
+The use-case for such client-side image-maps is a bit dated. Back in the 90s, developers made website from large images that they a) cut up into smaller pieces, b) added a link to each piece, and then c) glued together in a `<table>` like a collage clientside. Yes, it was truly ugly. To simplify this process, the HTML 3.2 set up imagemaps. Imagemaps enabled the developer to send the entire image as a single piece and then add an imagemap to spread out different links across this single image. It was a step in the right direction, way back then.
 
 ## The peculiar `usemap` attribute
 
@@ -26,7 +26,7 @@ If anybody knows the historical answer to this question, I'd be glad to hear. Bu
 
 This one-to-many `<img>` to `<map>` reference has several important consequences:
 
-1. `<map>` elements are reusable. This potentially reduces boilerplate. And it can potentially reduce complexity, if the logic reused and encapsulated is independent from its context of use (unfortunately, this is not the case with `<map>`s).
+1. `<map>` elements are reusable. This potentially reduces boilerplate. And it can potentially reduce complexity. (If the reusable and encapsulated logic is truly independent from its context of use. Which, unfortunately, is not the case with `<map>`s.)
 
 2. Because `<map>` elements are only active when they are referenced, their role is not defined by their position in the DOM, but by the position of the references to them. This breaks with the normal DOM structure in which an elements position matter. This makes `<map>`s function like meta elements, similar to `<script>`, `<style>`, `<link>`, and `<template>`.
 

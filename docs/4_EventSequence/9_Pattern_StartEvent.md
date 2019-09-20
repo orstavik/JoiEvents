@@ -30,6 +30,10 @@ There are several benefits for fixing an EventSequence's settings up front.
 
 6. GrabMouse and GrabTouch
 
+## old drafts
+
+The consequence of `StartEvent.setVisualFeedback()` strategy is that a start event at the beginning of the gesture must always be exposed to the system outside of the composed event. However, this could be considered good housekeeping, as a developer might otherwise need this start event for other and similar purposes that you, the developer of the composed event, do not foresee.
+
 ## Demo: `long-press-start`
 
 

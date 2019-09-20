@@ -18,15 +18,27 @@ For more details on the creation and use of pseudo-classes, see the previous cha
 
 ## Setter method on event objects
 
-The `.setDragImage(...)` is an example of a setter method on a native event object used to alter the visual feedback image of an event. 
+The native drag'n'drop EventSequences provide a `.setDragImage(...)` method on its `dragstart` event. The `.setDragImage(element)` alters the visual feedback image during a drag'n'drop sequence, by passing an `element` as an attribute.
+
+```javascript
+window.addEventListener("dragstart", e=> {
+  var img = new Image(); 
+  img.src = 'sunshine.gif'; 
+  e.dataTransfer.setDragImage(img, 10, 10);
+});
+```
+
+There are a couple of implementation details to note for `.setDragImage(...)`:
+1. `.setDragImage(...)` can only be called on the `dragstart` event. You cannot call `.setDragImage(...)` from a `drag` event listener. 
+2. The `dataTransfer` object is specific to drag'n'drop. Other EventSequences implementing a similar pattern should add their similar method to the Event object itself.
 
 As with `cursor`, a visual feedback CSS property described below, visual feedback image passed in using a setter method on the `dragstart` event is also a) controlled by the EventSequence function and b) presented DOM independently, ie. positioned on top of the screen, relative to the cursor position on screen. 
 
-The `.setDragImage(...)` can only be called on the `dragstart` event for native drag'n'drop EventSequences (ie. *not* on `drag` event objects). However, if you need to implement a mechanism for displaying highly fluid changes in a custom EventSequence, then the GetSetEvent pattern is what you want.
+If you need to implement a mechanism for displaying highly fluid changes in a custom EventSequence, then the GetSetEvent pattern is what you want.
 
 ## CSS property on target elements
 
-CSS properties can be used to select one of a small group of *predefined* visual feedback expressions. For example, the CSS `cursor` property can alter the visual feedback image of the mouse cursor as it hovers different elements. Adding a CSS rule `.helpers {cursor: help;}` to a selection of elements will cause the mouse cursor to display a `?` when it hovers over `.helpers` elements.
+CSS properties can be used to select one of a small group of *predefined* visual feedback expressions. For example, the CSS `cursor` property can alter the visual feedback image of the mouse cursor as it hovers different elements. Adding a CSS rule `.enemies{ cursor: crosshair; }` to a selection of elements will cause the mouse cursor to display a `crosshair` symbol when it hovers over `.enemies` elements.
 
 When CSS properties are used, the native EventSequence function controlling the EventSequence is in direct control of the visual feedback. This means that even though the visual feedback image is chosen by CSS settings attached to the DOM, the presentation of the the visual feedback image is DOM independent. For example, the position of the cursor image is context dependent to the x/y-coordinates on the screen.
 
@@ -37,6 +49,10 @@ CSS properties are heavy to process. Custom CssEventControls for custom EventSeq
 CssControls chooses a visual feedback image from a predefined set; GetSetEvent adds a custom made visual image (as an element).
 
 Natively, CssEventControls and GetSetEvent methods are not used in parallel. However, if a custom event controlling functions choose to make both available at the same time, (imagine `setCursorImage()` setter method on a `mouseenter` event combined with today's `cursor` CSS property), then the GetSetEvent method should override any CssEventControls set on the same element.
+
+Composed events and EventSequences should likely combine all three methods in their implementations.
+
+These use-cases can be controlled from both CSS and JS. It is likely, that custom composed events should implement *both* CSS properties to select or do minor alterations between default visual feedback expressions, and JS setter methods to so which method is used to control the feedback depends  Different events have different preferences
 
 ## References
 
