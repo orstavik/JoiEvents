@@ -1,8 +1,74 @@
-<textarea cols="40" rows="6">
+<pre>
+delay is not implemented yet
+
+  The adsr is a four step curve.
+  But, we do not need to limit the curve to four steps.
+  We can have as many as we want.
+
+  Each step is:
+
+  "target/timeEL"
+
+  if there is no "/", the target is implied: ((todo: no, i should probably not allow implied target))
+  1 if the previous target is 0, or
+  0 if the previous target is > 0 or < 0
+
+  "target" is the volume or frequency or whatever being turned.
+  the timeEL is the number of seconds + E(xponential) or L(inear)
+  E(xponential) is the default value.
+
+  The initial setting is 0/0.
+
+  To delay playing a sound, you would set
+  "0/delayTimeEL" on a gain-node.
+  to delay 300ms would be:
+  "0/0.3"
+
+  To make an adsr envelope, you would set
+  "attackGoal/attackTimeEL, sustainGoal/decayTimeEL, sustainGoal/sustainTimeEL, releaseGoal/releaseTimeEL",
+  an example adsr would be:
+  "1/0.0015 0.6/0.001 0.6/1.2 0/0.005".
+  If we add the implied start position of 0/0, it would look like
+  "0/0 1/0.0015 0.6/0.001 0.6/1.2 0/0.005".
+  If we look only at the values, then the curve would go like so:
+  0 - 1 - 0.6 - 0.6 - 0
+  We would have the following settings
+  1/startAttack at 0
+  0.6/startDecay at 0.0015
+  0.6/startSustain at 0.0025
+  0/startRelease at 1.2025
+  0/endRelease at 1.203
+
+  To make an adsr curve, you would set:
+  0/0, attackTime/attackTime
+  (oscillatorGain) type frequency delay a d s r,
+  (filter) type args delay a d s r,
+  (filter) type args delay a d s r.
+  (another oscillatorGain) type frequency delay a d s r,
+  (filter) type args delay a d s r,
+  (filter) type args delay a d s r
+
+"." separate pipes added to the same destination.
+
+"," separate the filters on the oscillatorGain.
+
+" " separate the arguments.
+
+"delay" is the time before the filter begins (void in the beginning).
+  The total duration of the sound = delay + a + d + r.
+
+Old format:
   square 244.50 0.0015 1.2 0.6 0.005,
   lowpass 244.50 0.001 0.8 0.5 0.130,
   lowpass 320.5 0.5 0.9 0.6 0.001
+
+</pre>
+<textarea cols="40" rows="6">
+  square 244.50 0.9/0.0015 0.6/0.001 0.6/0.4  0/0.02,
+  highpass 144.50 0.9/0.0015 0.6/0.001 0.6/0.4  0/0.02
 </textarea>
+,
+lowpass 320.5 0.9/0.0015 0.6/0.001 0.6/0.4  0/0.02,
 <br>
 <button>Play</button>
 
@@ -12,7 +78,7 @@
   const wa = document.querySelector("web-audio");
   const ta = document.querySelector("textarea");
   const pl = document.querySelector("button");
-  window.addEventListener("DOMContentLoaded", function(){
+  window.addEventListener("DOMContentLoaded", function () {
     wa.style.setProperty("--audio-settings", ta.value.replace(/\s+/g, " "));
   });
   ta.addEventListener("input", function (e) {
@@ -32,7 +98,6 @@
     constructor() {
       super();
       this.filters;
-      this.biquadFilters;
     }
 
     static get observedStyles() {
@@ -42,53 +107,64 @@
     styleCallback(name, oldValue, newValue) {
       if (name === "--audio-settings") {
         let components = newValue.trim().split(",");
-        this.filters = components.map(line => line.trim().split(" "));
+        components = components.map(line => line.trim().split(" "));
+        this.filters = components.map(line => WebAudioCSSComponent.parseLine(line, 2));
+      }
+    }
+
+    static parseLine(ar, customCount){
+      const res = {};
+      for (let i = 0; i < customCount; i++)
+        res[i] = ar.shift();
+      res["pointsTxt"] = ar.map(point => point.split("/"));
+      res["points"] = res["pointsTxt"].map(txts => txts.map(p => parseFloat(p)));
+      return res;
+    }
+
+    static plotEnvelope(target, now, points) {
+      target.value = 0;
+      let nextStart = now;
+      for (let point of points) {
+        target.setTargetAtTime(point[0], nextStart, point[1] / 4);
+        nextStart += point[1];
       }
     }
 
     play() {
       const audioContext = new AudioContext();
       let now = audioContext.currentTime;
-      let duration = 1; //this is in sec I think
-      const og = this.makeOscillatorGain(audioContext, this.filters[0], now, duration);
-
-      //in between here I stack the filters:   gain > filter > filter > destination
-      og.gain.connect(audioContext.destination);
+      const filters = this.filters.slice(0);
+      let audioNodes = this.makeOscillatorGain(audioContext, filters.shift(), now);
+      audioNodes = audioNodes.concat(filters.map(filter => this.makeFilter(audioContext, filter, now)));
+      audioNodes.push(audioContext.destination);
+      //audioNodes:   osc > gain > filter > filter > destination
+      for (let i = 0; i < audioNodes.length-1; i++)
+        audioNodes[i].connect(audioNodes[i+1]);
 
       //to start, i must start the oscillator
-      og.oscillator.start(audioContext.currentTime);
-
-      //to end it, I must call oscillator stop
-//      og.gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-//      og.oscillator.stop(now + 1);
+      audioNodes[0].start(now);
+//      audioNodes[0].stop(now + 1);
     }
 
-    makeOscillatorGain(audioContext, line, now, duration) {
+    makeOscillatorGain(audioContext, line, now) {
       const oscillator = audioContext.createOscillator();
+      oscillator.type = line[0];
+      oscillator.frequency.value = line[1];
+
       const gain = audioContext.createGain();
-      gain.gain.value = 0;
+      WebAudioCSSComponent.plotEnvelope(gain.gain, now, line.points);
 
-      let type = line[0];
-      let Hz = line[1];
-      let attack = parseFloat(line[2]);
-      let decay = parseFloat(line[3]);
-      let sustain = parseFloat(line[4]);
-      let release = decay + parseFloat(line[5]);
-
-      oscillator.frequency.value = Hz;
-      oscillator.type = type;
-      gain.gain.setValueAtTime(0, 0); //attack
-      gain.gain.exponentialRampToValueAtTime(1, now); //attack
-      gain.gain.exponentialRampToValueAtTime(sustain, now + attack); //attack
-      gain.gain.setValueAtTime(sustain, now + attack + decay); //attack
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay + release); //attack
-      oscillator.connect(gain);
-      return {oscillator, gain};
+      return [oscillator, gain];
     }
 
-//    stop(){
-//      this.stopSound(false);
-//    }
+    makeFilter(audioContext, line, now) {
+      const filter = audioContext.createBiquadFilter();
+      filter.type = line[0];
+      let target = filter.frequency;
+      target.value = parseFloat(line[1]);   //todo here I am plotting the target on a frequency filter.. This is broken
+      WebAudioCSSComponent.plotEnvelope(target, now, line.points);
+      return filter;
+    }
   }
 
   customElements.define("web-audio", WebAudioCSSComponent);
