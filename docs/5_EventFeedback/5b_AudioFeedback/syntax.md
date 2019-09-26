@@ -40,9 +40,17 @@ Value := Name || NumberText || Coordinate.
 Name := [_a-zA-Z][_a-zA-Z0-9-]*.
 Coordinate := NumberText, "/", NumberText.
 NumberText := [0-9+-][0-9.e+-]*.
+
+
 ```
 
 ## Semantics and resolution
+
+The AST is pure data objects, no classes.
+
+The resolution method returns a data structure of arrays and AudioNodes.
+
+The binding method connects all these AudioNodes and then returns a flat array of audioNodes that can be connected to an audio destination.
 
 1. The `Pipe` object: `{type: pipe, nodes: array, resolved: array}`
  * calling `resolve(pipe)` will recursively resolve all the `nodes` in the array.
@@ -70,10 +78,3 @@ Once the audio graph is resolved, the nodes are connected. For each array of nod
  * "a | b | c" yields two calls: "a.connect(b); b.connect(c)" and return "c"
  * "[a, b] | [c, d]"  yields four calls: "a.connect(c); a.connect(d); b.connect(c); b.connect(d)" and return the two last nodes "[c,d]" 
 
-The WebAudio API `AudioNode` or something is likely the interface for the node. All arguments of the `SingleNode` must be `resolved` before the AudioNode function is called.
-
-4. `Name` and `NumberText` are objects: `{txt: string, number: Number}`. If `number` is `undefined`, it is a `Name`. If `txt` is undefined, the number has no unit.
-
-5. `Coordinate` is a `[{txt: string, number: Number}, {txt: string, number: Number}]`.
-
-* Pure data objects, no classes. 

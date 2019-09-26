@@ -1,0 +1,83 @@
+Pipe := start, PipeBody, end || "(", PipeBody, ")".
+
+PipeBody := Node, PipeTail.
+PipeTail := "|", Node, PipeTail || empty.
+
+Node := Pipe || Array || Function || Value.
+Array := "[", ArgList, "]".
+ArgList := Node, ArgListTail.
+ArgListTail := ",", Node, ArgListTail || empty.
+
+Function := Name, "(", ArgList, ")".
+Value := Name || NumberText || Coordinate.
+Name := [_a-zA-Z][_a-zA-Z0-9-]*.
+Coordinate := NumberText, "/", NumberText.
+NumberText := [0-9+-][0-9.e+-]*.
+
+<script>
+  var test = "a > b > c";
+
+  var tokenizer = /\||\/|\,|\(|\)|\[|\]|[_a-zA-Z][_a-zA-Z-]*|[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*|\s+/g;
+
+  function skipWhite(tokens) {
+    tokens[0].trim() === "" && tokens.shift();
+  }
+
+  function isName(token){
+    /^[_a-zA-Z][_a-zA-Z-]*$/g.test(token);
+  }
+
+  function parse(str) {
+    str = str.trim();
+    const tokens = Array.from(str.matchAll(tokenizer));
+    let result = parsePipeBody(tokens);
+    if (tokens.length)
+      throw new SyntaxError("the main css audio pipe is broken");
+    return result;
+  }
+
+  function parsePipeBody(tokens) {
+    const nodes = [parseNode(tokens, res)];
+    for (skipWhite(tokens); tokens[0] === "|"; skipWhite(tokens)) {
+      tokens.shift();
+      nodes.push(parseNode(tokens, res));
+    }
+    return nodes;
+  }
+
+  function parseNode(tokens) {
+    skipWhite(tokens);
+    if (tokens[0] === "(") {
+      tokens.shift();
+      const pipe = parsePipeBody(tokens);
+      skipWhite(tokens);
+      if (tokens[0] !== ")")
+        throw new SyntaxError("inner css audio pipe group node");
+      tokens.shift();
+      return {type: "group", nodes: pipe};
+    } else if (tokens[0] === "[") {
+      tokens.shift();
+      const array = parseArgumentList(tokens);
+      skipWhite(tokens);
+      if (tokens[0] !== "]")
+        throw new SyntaxError("inner css audio array node");
+      tokens.shift();
+      return array;
+    } else if (isName(token[0])) {
+      const value = parseValue(tokens);
+    }
+
+    else if (isNumber(tokens[0])) {
+
+      const array = parseArgumentList(tokens);
+      skipWhite(tokens);
+      if (tokens[0] !== "]")
+        throw new SyntaxError("inner css audio array node");
+      tokens.shift();
+      return array;
+    }
+
+  }
+
+
+</script>
