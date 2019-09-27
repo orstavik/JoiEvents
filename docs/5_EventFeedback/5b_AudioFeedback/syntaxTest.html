@@ -1,5 +1,6 @@
 <script type="module">
   import {parse} from "./cssAudioParser.js";
+  import {interpret} from "./cssAudioInterpreter.js";
 
   let a = "a > b > c";
   let a_ = '{"type":"pipe","nodes":["a","b","c"]}';
@@ -7,7 +8,7 @@
   let b_ = '{"type":"pipe","nodes":["a","--audio-var","c"]}';
   let c = "a > b > [c, d]";
   let c_ = '{"type":"pipe","nodes":["a","b",["c","d"]]}';
-  let d = "square(144hz) > lowpass(180hz, 12dB)";
+  let d = "sawtooth(144hz) > lowpass(140hz, 24dB)";
   let d_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
   let e = "square(144hz) > vol([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)";
   let e_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"vol","args":[[["1","0.0015"]],[["0.6","0.001"]],[["0.6","1"]],[["0","0.03"]]]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
@@ -19,13 +20,7 @@
     if (tst === stringify)
       console.log("success: ", msg, obj);
     else
-      console.alert("error: ", msg, obj);
-  }
-
-  function resolve(node) {
-    if (node.type === "pipe"){
-
-    }
+      console.error("error: ", msg, obj);
   }
 
   test(a, a_);
@@ -33,5 +28,13 @@
   test(c, c_);
   test(d, d_);
   test(e, e_);
+
+  function onClick(){
+    const nodes = interpret(d, new AudioContext());
+    setTimeout(function(){
+      nodes.forEach(node => node.disconnect());
+    }, 2000);
+  }
+  window.addEventListener("click", onClick);
 
 </script>
