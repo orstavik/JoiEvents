@@ -1,6 +1,5 @@
 import {parse} from "./cssAudioParser.js";
 
-
 function connectMtoN(m, n) {
   for (let a of m) {
     for (let b of n) {
@@ -11,26 +10,39 @@ function connectMtoN(m, n) {
   }
 }
 
-function interpretPipe(pipe) {
-  const nodes = pipe.nodes
-    .map(node => interpretNode(node))
-    .map(node => node instanceof Array ? node : [node]);
+async function interpretPipe(pipe) {
+  const nodes = [];
+  for (let node of pipe.nodes) {
+    node = await interpretNode(node);
+    node = node instanceof Array ? node : [node];
+    nodes.push(node);
+  }
   for (let i = 0; i < nodes.length - 1; i++)
     connectMtoN(nodes[i], nodes[i + 1]);
   return nodes.pop();
 }
 
-function interpretNode(node) {
+async function interpretNode(node) {
   if (node.type === "pipe")
-    return interpretPipe(node);
-  if (node instanceof Array)
-    return node.map(item => interpretNode(item));
+    return await interpretPipe(node);
+  if (node instanceof Array){
+    const res = [];
+    for (let item of node) {
+      item = await interpretNode(item);
+      res.push(item);
+    }
+    return res;
+  }
   if (node.type === "fun") {
-    const args = node.args.map(arg => interpretNode(arg));
-    return makeNode(node.name, args);
+    const args = [];
+    for (let item of node.args) {
+      item = await interpretNode(item);
+      args.push(item);
+    }
+    return await makeNode(node.name, args);
   }
   if (typeof node === "string")
-    return makeNode(node);
+    return await makeNode(node);
   throw new Error("omg? wtf? " + node)
 }
 
@@ -38,7 +50,7 @@ function makeOscillator(audioContext, type, freq) {
   const oscillator = audioContext.createOscillator();
   oscillator.type = type;
   oscillator.frequency.value = parseFloat(freq);
-  oscillator.start(0);
+  oscillator.start();
   return oscillator;
 }
 
@@ -50,25 +62,38 @@ function makeFilter(audioContext, type, freq, q) {
   return filterNode;
 }
 
-function makeNode(name, args) {
+async function makeUrl(audioCtx, skip, url) {
+  var bufferSource = audioCtx.createBufferSource();
+  // bufferSource.connect(audioCtx.destination);
+  var file = await fetch(url);
+  var data = await file.arrayBuffer();
+  audioCtx.decodeAudioData(data, decodedData => {
+    bufferSource.buffer = decodedData;
+    bufferSource.start();
+  });
+  return bufferSource;
+}
+
+async function makeNode(name, args) {
   const audioNodes = {
     square: makeOscillator,
     sine: makeOscillator,
     sawtooth: makeOscillator,
     lowpass: makeFilter,
-    highpass: makeFilter
+    highpass: makeFilter,
+    url: makeUrl              //async
   };
   if (audioNodes[name])
-    return audioNodes[name](audioCtx, name, ...args);
+    return await audioNodes[name](audioCtx, name, ...args);
   return name;
 }
 
 let audioCtx;
 
-export function interpret(str, ctx) {
+export async function interpret(str, ctx) {
   audioCtx = ctx;
   const ast = parse(str);
-  const audioNodes = interpretPipe(ast);
+  const audioNodes = await interpretPipe(ast);
   for (let node of audioNodes)
     node.connect(ctx.destination);
   return audioNodes;

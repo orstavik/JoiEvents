@@ -12,6 +12,10 @@
   let d_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
   let e = "square(144hz) > vol([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)";
   let e_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"vol","args":[[["1","0.0015"]],[["0.6","0.001"]],[["0.6","1"]],[["0","0.03"]]]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
+  let f = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3)";
+  let f_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]}]}';
+  let g = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > lowpass(180hz, 12dB)";
+  let g_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
 
 
   function test(msg, tst) {
@@ -28,10 +32,13 @@
   test(c, c_);
   test(d, d_);
   test(e, e_);
+  test(f, f_);
+  test(g, g_);
 
-  function onClick(){
-    const nodes = interpret(d, new AudioContext());
+  async function onClick(){
+    const nodes = await interpret(g, new AudioContext());
     setTimeout(function(){
+
       nodes.forEach(node => node.disconnect());
     }, 2000);
   }

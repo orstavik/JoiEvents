@@ -1,4 +1,4 @@
-const tokenizer = /\s+|>|\/|\,|\(|\)|\[|\]|[_a-zA-Z][_a-zA-Z-]*|[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*|--[_a-zA-Z][_a-zA-Z-]*/g;
+const tokenizer = /\s+|>|\/|\,|\(|\)|\[|\]|https:[^)]*|[_a-zA-Z][_a-zA-Z-]*|[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*|--[_a-zA-Z][_a-zA-Z-]*/g;
 
 function skipWhite(tokens) {
   tokens.length && tokens[0].trim() === "" && tokens.shift();
@@ -62,9 +62,21 @@ function parseNumber(tokens) {
   throw new SyntaxError("inner css audio coordinate");
 }
 
+function isUrl(token) {
+  return /^https:[^)]*$/.test(token);
+}
+
+function parseUrl(tokens) {
+  return isUrl(tokens[0]) ? tokens.shift() : null;
+}
+
 function parseNode(tokens) {
   skipWhite(tokens);
-  return parseGroup(tokens) || parseArray(tokens) || parseNameAndFunction(tokens) || parseNumber(tokens);
+  return parseGroup(tokens) ||
+    parseArray(tokens) ||
+    parseNameAndFunction(tokens) ||
+    parseNumber(tokens) ||
+    parseUrl(tokens);
 }
 
 function parseNodeList(tokens, separator) {
