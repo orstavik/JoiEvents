@@ -1,83 +1,37 @@
-Pipe := start, PipeBody, end || "(", PipeBody, ")".
+<script type="module">
+  import {parse} from "./cssAudioParser.js";
 
-PipeBody := Node, PipeTail.
-PipeTail := "|", Node, PipeTail || empty.
+  let a = "a > b > c";
+  let a_ = '{"type":"pipe","nodes":["a","b","c"]}';
+  let b = "a > --audio-var > c";
+  let b_ = '{"type":"pipe","nodes":["a","--audio-var","c"]}';
+  let c = "a > b > [c, d]";
+  let c_ = '{"type":"pipe","nodes":["a","b",["c","d"]]}';
+  let d = "square(144hz) > lowpass(180hz, 12dB)";
+  let d_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
+  let e = "square(144hz) > vol([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)";
+  let e_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"vol","args":[[["1","0.0015"]],[["0.6","0.001"]],[["0.6","1"]],[["0","0.03"]]]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
 
-Node := Pipe || Array || Function || Value.
-Array := "[", ArgList, "]".
-ArgList := Node, ArgListTail.
-ArgListTail := ",", Node, ArgListTail || empty.
 
-Function := Name, "(", ArgList, ")".
-Value := Name || NumberText || Coordinate.
-Name := [_a-zA-Z][_a-zA-Z0-9-]*.
-Coordinate := NumberText, "/", NumberText.
-NumberText := [0-9+-][0-9.e+-]*.
-
-<script>
-  var test = "a > b > c";
-
-  var tokenizer = /\||\/|\,|\(|\)|\[|\]|[_a-zA-Z][_a-zA-Z-]*|[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*|\s+/g;
-
-  function skipWhite(tokens) {
-    tokens[0].trim() === "" && tokens.shift();
+  function test(msg, tst) {
+    let obj = parse(msg);
+    let stringify = JSON.stringify(obj);
+    if (tst === stringify)
+      console.log("success: ", msg, obj);
+    else
+      console.alert("error: ", msg, obj);
   }
 
-  function isName(token){
-    /^[_a-zA-Z][_a-zA-Z-]*$/g.test(token);
-  }
+  function resolve(node) {
+    if (node.type === "pipe"){
 
-  function parse(str) {
-    str = str.trim();
-    const tokens = Array.from(str.matchAll(tokenizer));
-    let result = parsePipeBody(tokens);
-    if (tokens.length)
-      throw new SyntaxError("the main css audio pipe is broken");
-    return result;
-  }
-
-  function parsePipeBody(tokens) {
-    const nodes = [parseNode(tokens, res)];
-    for (skipWhite(tokens); tokens[0] === "|"; skipWhite(tokens)) {
-      tokens.shift();
-      nodes.push(parseNode(tokens, res));
     }
-    return nodes;
   }
 
-  function parseNode(tokens) {
-    skipWhite(tokens);
-    if (tokens[0] === "(") {
-      tokens.shift();
-      const pipe = parsePipeBody(tokens);
-      skipWhite(tokens);
-      if (tokens[0] !== ")")
-        throw new SyntaxError("inner css audio pipe group node");
-      tokens.shift();
-      return {type: "group", nodes: pipe};
-    } else if (tokens[0] === "[") {
-      tokens.shift();
-      const array = parseArgumentList(tokens);
-      skipWhite(tokens);
-      if (tokens[0] !== "]")
-        throw new SyntaxError("inner css audio array node");
-      tokens.shift();
-      return array;
-    } else if (isName(token[0])) {
-      const value = parseValue(tokens);
-    }
-
-    else if (isNumber(tokens[0])) {
-
-      const array = parseArgumentList(tokens);
-      skipWhite(tokens);
-      if (tokens[0] !== "]")
-        throw new SyntaxError("inner css audio array node");
-      tokens.shift();
-      return array;
-    }
-
-  }
-
+  test(a, a_);
+  test(b, b_);
+  test(c, c_);
+  test(d, d_);
+  test(e, e_);
 
 </script>
