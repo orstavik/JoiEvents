@@ -1,5 +1,60 @@
 import {parse} from "./cssAudioParser.js";
 
+class InterpreterFunctions {
+
+  static sine(ctx, freq){
+    return InterpreterFunctions.makeOscillator(ctx, "sine", freq);
+  }
+
+  static square(ctx, freq){
+    return InterpreterFunctions.makeOscillator(ctx, "square", freq);
+  }
+
+  static sawtooth(ctx, freq){
+    return InterpreterFunctions.makeOscillator(ctx, "sawtooth", freq);
+  }
+
+  static triangle(ctx, freq){
+    return InterpreterFunctions.makeOscillator(ctx, "triangle", freq);
+  }
+
+  static makeOscillator(audioContext, type, freq) {
+    const oscillator = audioContext.createOscillator();
+    oscillator.type = type;
+    oscillator.frequency.value = parseFloat(freq);
+    oscillator.start();
+    return oscillator;
+  }
+
+  static lowpass(ctx, freq, q){
+    return InterpreterFunctions.makeFilter(ctx, "lowpass", freq, q);
+  }
+
+  static highpass(ctx, freq, q){
+    return InterpreterFunctions.makeFilter(ctx, "highpass", freq, q);
+  }
+
+  static makeFilter(audioContext, type, freq, q) {
+    const filterNode = audioContext.createBiquadFilter();
+    filterNode.type = type;
+    filterNode.frequency.value = parseFloat(freq);
+    filterNode.Q.value = parseFloat(q);
+    return filterNode;
+  }
+
+  static async url(audioCtx, url) {
+    var bufferSource = audioCtx.createBufferSource();
+    // bufferSource.connect(audioCtx.destination);
+    var file = await fetch(url);
+    var data = await file.arrayBuffer();
+    audioCtx.decodeAudioData(data, decodedData => {
+      bufferSource.buffer = decodedData;
+      bufferSource.start();
+    });
+    return bufferSource;
+  }
+}
+
 function connectMtoN(m, n) {
   for (let a of m) {
     for (let b of n) {
@@ -22,6 +77,14 @@ async function interpretPipe(pipe) {
   return nodes.pop();
 }
 
+/**
+ * todo 0. call start outside of the audio nodes, so that they are easier to reuse.
+ * todo 1. cache the url audio in some way, so that it doesn't need to fetch it anymore? keep the sound in memory. should/can this be done to all audio nodes? can i clone an audio node?
+ * todo a. make this recursive instead? first pipe, then array, then node, then argument? but I don't need argument, as it has already been processed?
+ *
+ * @param node
+ * @returns {Promise.<*>}
+ */
 async function interpretNode(node) {
   if (node.type === "pipe")
     return await interpretPipe(node);
@@ -46,46 +109,8 @@ async function interpretNode(node) {
   throw new Error("omg? wtf? " + node)
 }
 
-function makeOscillator(audioContext, type, freq) {
-  const oscillator = audioContext.createOscillator();
-  oscillator.type = type;
-  oscillator.frequency.value = parseFloat(freq);
-  oscillator.start();
-  return oscillator;
-}
-
-function makeFilter(audioContext, type, freq, q) {
-  const filterNode = audioContext.createBiquadFilter();
-  filterNode.type = type;
-  filterNode.frequency.value = parseFloat(freq);
-  filterNode.Q.value = parseFloat(q);
-  return filterNode;
-}
-
-async function makeUrl(audioCtx, skip, url) {
-  var bufferSource = audioCtx.createBufferSource();
-  // bufferSource.connect(audioCtx.destination);
-  var file = await fetch(url);
-  var data = await file.arrayBuffer();
-  audioCtx.decodeAudioData(data, decodedData => {
-    bufferSource.buffer = decodedData;
-    bufferSource.start();
-  });
-  return bufferSource;
-}
-
 async function makeNode(name, args) {
-  const audioNodes = {
-    square: makeOscillator,
-    sine: makeOscillator,
-    sawtooth: makeOscillator,
-    lowpass: makeFilter,
-    highpass: makeFilter,
-    url: makeUrl              //async
-  };
-  if (audioNodes[name])
-    return await audioNodes[name](audioCtx, name, ...args);
-  return name;
+  return InterpreterFunctions[name] ? await InterpreterFunctions[name](audioCtx, ...args) : name;
 }
 
 let audioCtx;
