@@ -2,9 +2,6 @@
   import {parse} from "./cssAudioParser.js";
   import {interpret} from "./cssAudioInterpreter.js";
 
-
-  //sorry for my stupidity
-
   let a = "a > b > c";
   let a_ = '{"type":"pipe","nodes":["a","b","c"]}';
   let b = "a > --audio-var > c";
@@ -39,11 +36,11 @@
   test(g, g_);
 
   async function onClick(){
-    const nodes = await interpret(g, new AudioContext());
+    let ctx = new AudioContext();
+    await interpret(g, ctx, true);
     setTimeout(function(){
-
-      nodes.forEach(node => node.disconnect());
-    }, 2000);
+      ctx.suspend();
+    }, 4000);
   }
   window.addEventListener("click", onClick);
 
