@@ -37,7 +37,8 @@
 
   async function onClick(){
 //    let x = "sine(340hz) > gain(0.2)"; //works
-    let x = "sine(340hz) > gain(square(2hz))";
+//    let x = "sine(340hz) > gain(square(2hz))"; //works
+    let x = "sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"; //works
     let ctx = new AudioContext();
     await interpret(x, ctx, true);
     setTimeout(function(){

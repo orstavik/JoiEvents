@@ -4,8 +4,10 @@ function plotEnvelope(target, now, points) {
   target.value = 0;
   let nextStart = now;
   for (let point of points) {
-    target.setTargetAtTime(parseFloat(point[0]), nextStart, parseFloat(point[1]) / 4);   //todo or /3? as mdn suggests
-    nextStart += point[1];
+    let vol = parseFloat(point[0]);
+    let time = parseFloat(point[1]);
+    target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
+    nextStart += time;
   }
 }
 
