@@ -1,6 +1,6 @@
 <script type="module">
   import {parse} from "./cssAudioParser.js";
-  import {interpret} from "./cssAudioInterpreter.js";
+  import {interpret, interpret2} from "./cssAudioInterpreter.js";
 
   let a = "a > b > c";
   let a_ = '{"type":"pipe","nodes":["a","b","c"]}';
@@ -42,6 +42,20 @@
       ctx.suspend();
     }, 4000);
   }
+  async function onClick2(e){
+    e.stopPropagation();
+    const buffer = await interpret2(g);
+    const audioCtx = new AudioContext();
+    const bufferSource = audioCtx.createBufferSource();
+    bufferSource.buffer = buffer;
+    bufferSource.connect(audioCtx.destination);
+    setTimeout(function(){
+      audioCtx.suspend();
+    }, 4000);
+  }
   window.addEventListener("click", onClick);
+  document.querySelector("pre").addEventListener("click", onClick2);
 
 </script>
+
+<pre>to max: make this click work :)</pre>

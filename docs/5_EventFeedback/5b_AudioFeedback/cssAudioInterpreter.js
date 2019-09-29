@@ -46,7 +46,7 @@ class InterpreterFunctions {
   static async url(audioCtx, url) {
     const data = await InterpreterFunctions.getFileBuffer(url);
     const bufferSource = audioCtx.createBufferSource();
-    audioCtx.decodeAudioData(data, decodedData => bufferSource.buffer = decodedData);
+    bufferSource.buffer = await audioCtx.decodeAudioData(data);
     return bufferSource;
   }
 
@@ -140,4 +140,14 @@ export async function interpret(str, ctx, startImmediately) {
   CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
   CssAudioInterpreterContext.startNodes(ctx.destination);
   return audioNodes;
+}
+
+export async function interpret2(str) {
+  const ast = parse(str);
+  const ctx = new OfflineAudioContext(2,44100*40,44100);
+  const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
+  CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
+  CssAudioInterpreterContext.startNodes(ctx.destination);
+  const audioBuffer = await ctx.startRendering();
+  return audioBuffer;
 }
