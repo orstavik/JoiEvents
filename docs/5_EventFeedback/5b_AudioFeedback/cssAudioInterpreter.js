@@ -1,5 +1,14 @@
 import {parse} from "./cssAudioParser.js";
 
+function plotEnvelope(target, now, points) {
+  target.value = 0;
+  let nextStart = now;
+  for (let point of points) {
+    target.setTargetAtTime(parseFloat(point[0]), nextStart, parseFloat(point[1]) / 4);   //todo or /3? as mdn suggests
+    nextStart += point[1];
+  }
+}
+
 class InterpreterFunctions {
 
   static sine(ctx, freq) {
@@ -16,6 +25,22 @@ class InterpreterFunctions {
 
   static triangle(ctx, freq) {
     return InterpreterFunctions.makeOscillator(ctx, "triangle", freq);
+  }
+
+  static gain(ctx, gain){
+    const node = ctx.createGain();
+    if (gain instanceof AudioNode) {
+      gain.start();
+      gain.connect(node.gain);
+    } else if (typeof gain === "string") {
+      node.gain.value = parseFloat(gain);
+    } else if (gain instanceof Array) {
+      plotEnvelope(node.gain, 0, gain);
+    // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
+    //   node.gain.value = 0;
+    } else
+      throw new Error("CssAudio: Illegal input to gain node: " + gain);
+    return node;
   }
 
   static makeOscillator(audioContext, type, freq) {
@@ -142,12 +167,12 @@ export async function interpret(str, ctx, startImmediately) {
   return audioNodes;
 }
 
-export async function interpret2(str) {
-  const ast = parse(str);
-  const ctx = new OfflineAudioContext(2,44100*40,44100);
-  const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
-  CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
-  CssAudioInterpreterContext.startNodes(ctx.destination);
-  const audioBuffer = await ctx.startRendering();
-  return audioBuffer;
-}
+// export async function interpret2(str) {
+//   const ast = parse(str);
+//   const ctx = new OfflineAudioContext(2,44100*40,44100);
+//   const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
+//   CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
+//   CssAudioInterpreterContext.startNodes(ctx.destination);
+//   const audioBuffer = await ctx.startRendering();
+//   return audioBuffer;
+// }
