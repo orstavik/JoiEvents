@@ -1,8 +1,8 @@
 //space | pipe | comma | parenthesis | brackets | url | word | coordinate | number | cssVariable
-const tokenizer = /\s+|>|\,|\(|\)|\[|\]|https:[^)]*|[_a-zA-Z][_a-zA-Z-]*|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*|--[_a-zA-Z][_a-zA-Z-]*/g;
+const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^)]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
 
 function skipWhite(tokens) {
-  tokens.length && getNext(tokens).trim() === "" && tokens.shift();
+  tokens.length && tokens[0][1] && tokens.shift();
 }
 
 function parseGroup(tokens) {
@@ -27,12 +27,8 @@ function parseArray(tokens) {
   return array;
 }
 
-function isName(token) {
-  return /^[_a-zA-Z][_a-zA-Z-]*$/.test(token) || /^--[_a-zA-Z][_a-zA-Z-]*$/.test(token);
-}
-
 function parseNameAndFunction(tokens) {
-  if (!isName(getNext(tokens)))
+  if (!tokens[0][3])
     return null;
   const name = tokens.shift()[0];
   skipWhite(tokens);
@@ -46,38 +42,32 @@ function parseNameAndFunction(tokens) {
   return {type: "fun", name, args};
 }
 
-function isNumber(token) {
-  return /^[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*$/.test(token);
-}
-
-function parseNumber(tokens) {
-  if (isNumber(getNext(tokens)))
+//todo implement the function that reads the content of the CSS var into the pipe
+//todo this should be done in the Interpreter
+function parseCssVar(tokens) {
+  if (tokens[0][7])
     return tokens.shift()[0];
 }
 
-function isCoordinate(token) {
-  return /^[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*\s*\/\s*[+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*$/.test(token);
+function parseNumber(tokens) {
+  if (tokens[0][6])
+    return tokens.shift()[0];
 }
 
 function parseCoordinate(tokens) {
-  if (tokens[0][1]){
+  if (tokens[0][4]) {
     const t = tokens.shift();
-    return [t[1], t[2]];
+    return [t[4], t[5]];
   }
-  // if (isCoordinate(tokens[0]))
-  //   return tokens.shift().split("/").map(str => str.trim());
-}
-
-function isUrl(token) {
-  return /^https:[^)]*$/.test(token);
 }
 
 function getNext(tokens) {
-  return tokens[0] ?  tokens[0][0] : undefined;
+  return tokens[0] ? tokens[0][0] : undefined;
 }
 
 function parseUrl(tokens) {
-  return isUrl(getNext(tokens)) ? tokens.shift()[0] : null;
+  if (tokens[0][2])
+    return tokens.shift()[0];
 }
 
 function parseNode(tokens) {
@@ -85,6 +75,7 @@ function parseNode(tokens) {
   return parseGroup(tokens) ||
     parseArray(tokens) ||
     parseNameAndFunction(tokens) ||
+    parseCssVar(tokens) ||
     parseCoordinate(tokens) ||
     parseNumber(tokens) ||
     parseUrl(tokens);
