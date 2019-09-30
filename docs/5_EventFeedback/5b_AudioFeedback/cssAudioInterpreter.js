@@ -101,8 +101,12 @@ class InterpreterFunctions {
     //todo convert the factory methods to constructors as specified by MDN
     const filterNode = audioContext.createBiquadFilter();
     filterNode.type = type;
-    filterNode.frequency.value = parseFloat(freq);
-    filterNode.Q.value = parseFloat(q);
+    if (freq.hasOwnProperty("num")){
+      filterNode.frequency.value = parseFloat(freq.num);
+    }
+    if (q.hasOwnProperty("num")){
+      filterNode.Q.value = parseFloat(q.num);
+    }
     return filterNode;
   }
 
@@ -175,6 +179,9 @@ class CssAudioInterpreterContext {
         args.push(item);
       }
       return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
+    }
+    if (node.hasOwnProperty("num")) {
+      return node;
     }
     if (typeof node === "string")
       return await CssAudioInterpreterContext.makeNode(ctx, node);
