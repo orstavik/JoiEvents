@@ -1,30 +1,23 @@
 //space | pipe | comma | parenthesis | brackets | url | word | coordinate | number | cssVariable
 const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^)]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
 
+function getNext(tokens) {
+  return tokens[0] ? tokens[0][0] : undefined;
+}
+
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
 }
 
-function parseGroup(tokens) {
-  if (getNext(tokens) !== "(")
+function parseNodeGroup(tokens, start, separator, end) {
+  if (getNext(tokens) !== start)
     return null;
   tokens.shift();
-  const nodes = parseNodeList(tokens, ">");
-  if (getNext(tokens) !== ")")
-    throw new SyntaxError("inner css audio pipe group node");
+  const nodes = parseNodeList(tokens, separator);
+  if (getNext(tokens) !== end)
+    throw new SyntaxError("inner css audio array list: expected " + end);
   tokens.shift();
-  return {type: "pipe", nodes};
-}
-
-function parseArray(tokens) {
-  if (getNext(tokens) !== "[")
-    return null;
-  tokens.shift();
-  const array = parseNodeList(tokens, ",");
-  if (getNext(tokens) !== "]")
-    throw new SyntaxError("inner css audio array list: expected ']', got '" + getNext(tokens));
-  tokens.shift();
-  return array;
+  return nodes;
 }
 
 function parseNameAndFunction(tokens) {
@@ -32,14 +25,8 @@ function parseNameAndFunction(tokens) {
     return null;
   const name = tokens.shift()[0];
   skipWhite(tokens);
-  if (getNext(tokens) !== "(")
-    return name;
-  tokens.shift();
-  const args = parseNodeList(tokens, ",");
-  if (getNext(tokens) !== ")")
-    throw new SyntaxError("inner css audio function argument list: expected ')', got '" + getNext(tokens) + "'");
-  tokens.shift();
-  return {type: "fun", name, args};
+  const nodes = parseNodeGroup(tokens, "(", ",", ")");
+  return nodes ? {type: "fun", name, args: nodes} : name;
 }
 
 //todo implement the function that reads the content of the CSS var into the pipe
@@ -61,10 +48,6 @@ function parseCoordinate(tokens) {
   }
 }
 
-function getNext(tokens) {
-  return tokens[0] ? tokens[0][0] : undefined;
-}
-
 function parseUrl(tokens) {
   if (tokens[0][2])
     return tokens.shift()[0];
@@ -72,8 +55,8 @@ function parseUrl(tokens) {
 
 function parseNode(tokens) {
   skipWhite(tokens);
-  return parseGroup(tokens) ||
-    parseArray(tokens) ||
+  return parseNodeGroup(tokens, "(", ">", ")") ||
+    parseNodeGroup(tokens, "[", ",", "]") ||
     parseNameAndFunction(tokens) ||
     parseCssVar(tokens) ||
     parseCoordinate(tokens) ||
