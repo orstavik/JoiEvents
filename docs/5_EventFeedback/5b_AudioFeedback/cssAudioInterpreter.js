@@ -1,16 +1,33 @@
 import {parse} from "./cssAudioParser.js";
 
-function plotEnvelope(target, now, points) {
+function plotEnvelope(target, points) {
   target.value = 0;
-  let nextStart = now;
+  let nextStart = 0;
   for (let point of points) {
-    let vol = parseFloat(point[0]);
-    let time = parseFloat(point[1]);
-    target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
+    let vol = parseFloat(point[0].num);
+    let time = parseFloat(point[1].num);
+    if (point[1].unit === "" || point[1].unit === "e")
+      target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
+    else
+      throw new Error("todo: implement 'l' or 'a' type of time coordinate.");
     nextStart += time;
   }
 }
 
+function setAudioParameter(target, param) {
+  if (param instanceof AudioNode) {
+    param.connect(target);
+  } else if (param.hasOwnProperty("num")) {
+    //todo if the number is not parsed outside, then the units will be universal to all nodes..
+    //todo I have not implemented any interpretation of "Hz" or "db" or "ms" or whatever
+    target.value = parseFloat(param.num);
+  } else if (param instanceof Array) {
+    plotEnvelope(target, param);
+    // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
+    //   node.gain.value = 0;
+  } else
+    throw new Error("CssAudio: Illegal input to gain node: " + param);
+}
 
 /**
  * AudioFileRegister caches the arrayBuffers for different audio url's.
@@ -64,19 +81,9 @@ class InterpreterFunctions {
     return InterpreterFunctions.makeOscillator(ctx, "triangle", freq);
   }
 
-  static gain(ctx, gain) {
+  static gain(ctx, gainParam) {
     const node = ctx.createGain();
-    if (gain instanceof AudioNode) {
-      // gain.start();
-      gain.connect(node.gain);
-    } else if (typeof gain === "string") {
-      node.gain.value = parseFloat(gain);
-    } else if (gain instanceof Array) {
-      plotEnvelope(node.gain, 0, gain);
-      // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
-      //   node.gain.value = 0;
-    } else
-      throw new Error("CssAudio: Illegal input to gain node: " + gain);
+    setAudioParameter(node.gain, gainParam);
     return node;
   }
 
@@ -84,7 +91,8 @@ class InterpreterFunctions {
     //todo convert the factory methods to constructors as specified by MDN
     const oscillator = audioContext.createOscillator();
     oscillator.type = type;
-    oscillator.frequency.value = parseFloat(freq);
+    setAudioParameter(oscillator.frequency, freq);
+    // oscillator.frequency.value = parseFloat(freq);
     oscillator.start();
     return oscillator;
   }
@@ -101,10 +109,10 @@ class InterpreterFunctions {
     //todo convert the factory methods to constructors as specified by MDN
     const filterNode = audioContext.createBiquadFilter();
     filterNode.type = type;
-    if (freq.hasOwnProperty("num")){
+    if (freq.hasOwnProperty("num")) {
       filterNode.frequency.value = parseFloat(freq.num);
     }
-    if (q.hasOwnProperty("num")){
+    if (q.hasOwnProperty("num")) {
       filterNode.Q.value = parseFloat(q.num);
     }
     return filterNode;
