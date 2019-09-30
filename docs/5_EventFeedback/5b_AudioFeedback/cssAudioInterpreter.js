@@ -11,6 +11,41 @@ function plotEnvelope(target, now, points) {
   }
 }
 
+
+/**
+ * AudioFileRegister caches the arrayBuffers for different audio url's.
+ * This implementation is naive because it:
+ * 1. doesn't handle url files that change dynamically
+ * 2. stores potentially infinite audio url files directly in memory
+ *
+ * Can be made smarter by:
+ * 1. keeping a limit on how many files are stored.
+ *    If more than 100 audiofiles, or 20mb data
+ *    (ie. the sum of the length/size of each arrayBuffer in the cache),
+ *    then delete the cached arrayBuffer last retrieved from the cache.
+ * 2. Add a static method AudioFileRegister.clearCache(url) that can be called manually from js.
+ * 3. Preferably use the ttl of the http request to control the cache. If the ttl of the http request is not ok, then:
+ *    a. When the file is first added to the cache register,
+ *       check if trying to get the same file again returns a 304, not modified.
+ *    b. if the file was not modified last time, then use the cache and check *after* the cache has been delivered
+ *       if the assumption that the server returns a 304.
+ *    c. check rarely if the cache needs updating, ie. after every 10n uses of the cache, ie. 1, 10, 100, 1000 etc.
+ *
+ * A combination of 1 and 3 should be ok.
+ */
+const cachedFiles = Object.create(null);
+
+class AudioFileRegister {
+  static async getFileBuffer(url) {
+    let cache = cachedFiles[url];
+    if (!cache) {
+      const file = await fetch(url);
+      cache = cachedFiles[url] = await file.arrayBuffer();
+    }
+    return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
+  }
+}
+
 class InterpreterFunctions {
 
   static sine(ctx, freq) {
@@ -29,17 +64,17 @@ class InterpreterFunctions {
     return InterpreterFunctions.makeOscillator(ctx, "triangle", freq);
   }
 
-  static gain(ctx, gain){
+  static gain(ctx, gain) {
     const node = ctx.createGain();
     if (gain instanceof AudioNode) {
-      gain.start();
+      // gain.start();
       gain.connect(node.gain);
     } else if (typeof gain === "string") {
       node.gain.value = parseFloat(gain);
     } else if (gain instanceof Array) {
       plotEnvelope(node.gain, 0, gain);
-    // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
-    //   node.gain.value = 0;
+      // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
+      //   node.gain.value = 0;
     } else
       throw new Error("CssAudio: Illegal input to gain node: " + gain);
     return node;
@@ -50,6 +85,7 @@ class InterpreterFunctions {
     const oscillator = audioContext.createOscillator();
     oscillator.type = type;
     oscillator.frequency.value = parseFloat(freq);
+    oscillator.start();
     return oscillator;
   }
 
@@ -71,20 +107,13 @@ class InterpreterFunctions {
   }
 
   static async url(audioCtx, url) {
-    const data = await InterpreterFunctions.getFileBuffer(url);
+    const data = await AudioFileRegister.getFileBuffer(url);
     const bufferSource = audioCtx.createBufferSource();
     bufferSource.buffer = await audioCtx.decodeAudioData(data);
+    bufferSource.start();
     return bufferSource;
   }
-
-  //todo cache this buffer in the bufferMap
-  static async getFileBuffer(url) {
-    var file = await fetch(url);
-    return await file.arrayBuffer();
-  }
 }
-
-const bufferMap = {};
 
 class CssAudioInterpreterContext {
 
@@ -96,8 +125,9 @@ class CssAudioInterpreterContext {
         if (!b instanceof AudioNode)
           throw new SyntaxError("CssAudioNode cannot be: " + b);
         a.connect(b);
-        let inputs = b.inputs || (b.inputs = []);
-        inputs.push(a);
+        //todo calling start inside all source nodes now, as the ctx passed in is suspended before being populated.
+        // let inputs = b.inputs || (b.inputs = []);
+        // inputs.push(a);
       }
     }
   }
@@ -115,7 +145,12 @@ class CssAudioInterpreterContext {
   }
 
   /**
-   * todo 0. Can we reuse reuse the audio node or context?
+   * todo 0. Reuse the propcessing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
+   * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
+   * todo    need to have a "off(endtime)", or analyze a "gain()" expression, in the main pipe, verify that no source
+   * todo    nodes are added after it, and check if it ends with 0 (which only can be done in an envelope or a fixed
+   * todo    value), and then calculate the duration of the gain with sound. then summarize the duration of that gain.
+   * todo
    * todo 1. cache the url audio in some way, so that it doesn't need to fetch it anymore? keep the sound in memory. should/can this be done to all audio nodes? can i clone an audio node?
    * todo a. make this recursive instead? first pipe, then array, then node, then argument? but I don't need argument, as it has already been processed?
    *
@@ -150,23 +185,26 @@ class CssAudioInterpreterContext {
     return InterpreterFunctions[name] ? await InterpreterFunctions[name](ctx, ...args) : name;
   }
 
-  static startNodes(node) {
-    if (node.inputs) {
-      for (let child of node.inputs)
-        CssAudioInterpreterContext.startNodes(child);
-    }
-    node.start && node.start();
-  }
+  //todo not using this any more, since I think the web audio api better supports making new context objects and nodes
+  //todo for every sound. If the context is suspended() before they are populated, then calling resume() will essentially
+  //todo "start" them.
+  //todo the remaining problem is cleaning up AudioContext objects that are finished. I need to know when I can delete them.
+  // static startNodes(node) {
+  //   if (node.inputs) {
+  //     for (let child of node.inputs)
+  //       CssAudioInterpreterContext.startNodes(child);
+  //   }
+  //   node.start && node.start();
+  // }
 }
 
-export async function interpret(str, ctx, startImmediately) {
-  if (!startImmediately)
-    ctx.suspend();
+export async function interpret(str) {
   const ast = parse(str);
+  const ctx = new AudioContext();
+  ctx.suspend();
   const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
   CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
-  CssAudioInterpreterContext.startNodes(ctx.destination);
-  return audioNodes;
+  return ctx;
 }
 
 // export async function interpret2(str) {

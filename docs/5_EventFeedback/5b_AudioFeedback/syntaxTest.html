@@ -9,7 +9,7 @@
   let c = "a > b > [c, d]";
   let c_ = '{"type":"pipe","nodes":["a","b",["c","d"]]}';
   let d = "sawtooth(144hz) > lowpass(140hz, 24dB)";
-  let d_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
+  let d_ = '{"type":"pipe","nodes":[{"type":"fun","name":"sawtooth","args":["144hz"]},{"type":"fun","name":"lowpass","args":["140hz","24dB"]}]}';
   let e = "square(144hz) > vol([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)";
   let e_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":["144hz"]},{"type":"fun","name":"vol","args":[[["1","0.0015"]],[["0.6","0.001"]],[["0.6","1"]],[["0","0.03"]]]},{"type":"fun","name":"lowpass","args":["180hz","12dB"]}]}';
   let f = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3)";
@@ -38,9 +38,9 @@
   async function onClick(){
 //    let x = "sine(340hz) > gain(0.2)"; //works
 //    let x = "sine(340hz) > gain(square(2hz))"; //works
-    let x = "sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"; //works
-    let ctx = new AudioContext();
-    await interpret(x, ctx, true);
+//    let x = "sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"; //works
+    const ctx = await interpret(g);
+    ctx.resume();
     setTimeout(function(){
       ctx.suspend();
     }, 2000);
