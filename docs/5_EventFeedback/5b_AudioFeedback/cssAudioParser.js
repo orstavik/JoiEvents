@@ -1,32 +1,28 @@
 //space | pipe | comma | parenthesis | brackets | url | word | coordinate | number | cssVariable
 const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^)]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
 
-function getNext(tokens) {
-  return tokens[0] ? tokens[0][0] : undefined;
-}
-
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
 }
 
-function parseNodeGroup(tokens, start, separator, end) {
-  if (getNext(tokens) !== start)
-    return null;
+function parseGroup(tokens, start, separator, end) {
+  if (!tokens[0] || tokens[0][0] !== start)
+    return undefined;
   tokens.shift();
   const nodes = parseNodeList(tokens, separator);
-  if (getNext(tokens) !== end)
+  if (!tokens[0] || tokens[0][0] !== end)
     throw new SyntaxError("inner css audio array list: expected " + end);
   tokens.shift();
   return nodes;
 }
 
-function parseNameAndFunction(tokens) {
+function parseNameOrFunction(tokens) {
   if (!tokens[0][3])
-    return null;
+    return undefined;
   const name = tokens.shift()[0];
   skipWhite(tokens);
-  const nodes = parseNodeGroup(tokens, "(", ",", ")");
-  return nodes ? {type: "fun", name, args: nodes} : name;
+  const args = parseGroup(tokens, "(", ",", ")");
+  return args ? {type: "fun", name, args} : name;
 }
 
 //todo implement the function that reads the content of the CSS var into the pipe
@@ -55,9 +51,9 @@ function parseUrl(tokens) {
 
 function parseNode(tokens) {
   skipWhite(tokens);
-  return parseNodeGroup(tokens, "(", ">", ")") ||
-    parseNodeGroup(tokens, "[", ",", "]") ||
-    parseNameAndFunction(tokens) ||
+  return parseGroup(tokens, "(", ">", ")") ||
+    parseGroup(tokens, "[", ",", "]") ||
+    parseNameOrFunction(tokens) ||
     parseCssVar(tokens) ||
     parseCoordinate(tokens) ||
     parseNumber(tokens) ||
@@ -66,7 +62,7 @@ function parseNode(tokens) {
 
 function parseNodeList(tokens, separator) {
   const nodes = [parseNode(tokens)];
-  for (skipWhite(tokens); getNext(tokens) === separator; skipWhite(tokens)) {
+  for (skipWhite(tokens); tokens[0] && tokens[0][0] === separator; skipWhite(tokens)) {
     tokens.shift();
     nodes.push(parseNode(tokens));
   }
