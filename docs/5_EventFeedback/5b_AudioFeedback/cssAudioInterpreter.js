@@ -109,12 +109,8 @@ class InterpreterFunctions {
     //todo convert the factory methods to constructors as specified by MDN
     const filterNode = audioContext.createBiquadFilter();
     filterNode.type = type;
-    if (freq.hasOwnProperty("num")) {
-      filterNode.frequency.value = parseFloat(freq.num);
-    }
-    if (q.hasOwnProperty("num")) {
-      filterNode.Q.value = parseFloat(q.num);
-    }
+    setAudioParameter(filterNode.frequency, freq);
+    setAudioParameter(filterNode.Q, q);
     return filterNode;
   }
 
