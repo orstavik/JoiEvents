@@ -1,5 +1,5 @@
 //space | pipe | comma | parenthesis | brackets | url | word | coordinate | number | cssVariable
-const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^)]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*[_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
+const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^)]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
 
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
@@ -28,21 +28,21 @@ function parseNameOrFunction(tokens) {
 //todo implement the function that reads the content of the CSS var into the pipe
 //todo this should be done in the Interpreter
 function parseCssVar(tokens) {
-  if (tokens[0][8])
+  if (tokens[0][10])
     return tokens.shift()[0];
 }
 
 function parseNumber(tokens) {
-  if (tokens[0][6]){
+  if (tokens[0][8]) {
     const t = tokens.shift();
-    return {num: t[6], unit: t[7]};
+    return {num: t[8], unit: t[9]};
   }
 }
 
 function parseCoordinate(tokens) {
   if (tokens[0][4]) {
     const t = tokens.shift();
-    return [t[4], t[5]];
+    return [{num: t[4], unit: t[5]}, {num: t[6], unit: t[7]}];
   }
 }
 
