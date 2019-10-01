@@ -15,7 +15,9 @@ function plotEnvelope(target, points) {
 }
 
 function setAudioParameter(target, param) {
-  if (param instanceof AudioNode) {
+  if (param === undefined) {
+    return;
+  } else if (param instanceof AudioNode) {
     param.connect(target);
   } else if (param.hasOwnProperty("num")) {
     //todo if the number is not parsed outside, then the units will be universal to all nodes..
@@ -51,6 +53,17 @@ function setAudioParameter(target, param) {
  * A combination of 1 and 3 should be ok.
  */
 const cachedFiles = Object.create(null);
+let noise;
+function makeNoiseNode(duration, sampleRate) {
+  const audioCtx = new OfflineAudioContext(1, sampleRate* duration, sampleRate);
+  const bufferSize = sampleRate * duration; // set the time of the note
+  const buffer = audioCtx.createBuffer(1, bufferSize, sampleRate); // create an empty buffer
+  let data = buffer.getChannelData(0); // get data
+  // fill the buffer with noise
+  for (let i = 0; i < bufferSize; i++)
+    data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
 
 class AudioFileRegister {
   static async getFileBuffer(url) {
@@ -61,6 +74,12 @@ class AudioFileRegister {
     }
     return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
+  static noise(){
+    return noise || (noise = makeNoiseNode(3, 44100));
+  }
+  //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
+  //to max: this makes me think that the method .createBuffer could have been static
+  //to max: but it means that the AudioBuffer objects are context free. Also for OfflineAudioContexts.
 }
 
 class InterpreterFunctions {
@@ -97,20 +116,47 @@ class InterpreterFunctions {
     return oscillator;
   }
 
-  static lowpass(ctx, freq, q) {
-    return InterpreterFunctions.makeFilter(ctx, "lowpass", freq, q);
+  static lowpass(ctx, freq, q, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "lowpass", {freq, q, detune});
   }
 
-  static highpass(ctx, freq, q) {
-    return InterpreterFunctions.makeFilter(ctx, "highpass", freq, q);
+  static highpass(ctx, freq, q, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "highpass", {freq, q, detune});
   }
 
-  static makeFilter(audioContext, type, freq, q) {
-    //todo convert the factory methods to constructors as specified by MDN
+  static bandpass(ctx, freq, q, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "bandpass", {freq, q, detune});
+  }
+
+  static lowshelf(ctx, freq, gain, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "lowshelf", {freq, gain, detune});
+  }
+
+  static highshelf(ctx, freq, gain, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "highshelf", {freq, gain, detune});
+  }
+
+  static peaking(ctx, freq, q, gain, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "peaking", {freq, q, gain, detune});
+  }
+
+  static notch(ctx, freq, q, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "notch", {freq, q, detune});
+  }
+
+  static allpass(ctx, freq, q, detune) {
+    return InterpreterFunctions.makeFilter(ctx, "allpass", {freq, q, detune});
+  }
+
+  static makeFilter(audioContext, type, p) {
+    //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
+    //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
     const filterNode = audioContext.createBiquadFilter();
     filterNode.type = type;
-    setAudioParameter(filterNode.frequency, freq);
-    setAudioParameter(filterNode.Q, q);
+    setAudioParameter(filterNode.frequency, p.freq);
+    setAudioParameter(filterNode.Q, p.q);
+    setAudioParameter(filterNode.gain, p.gain);
+    setAudioParameter(filterNode.detune, p.detune);
     return filterNode;
   }
 
@@ -120,6 +166,14 @@ class InterpreterFunctions {
     bufferSource.buffer = await audioCtx.decodeAudioData(data);
     bufferSource.start();
     return bufferSource;
+  }
+
+  static async noise(audioCtx) {
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = AudioFileRegister.noise();
+    noise.loop = true;
+    noise.start();
+    return noise;
   }
 }
 
@@ -159,7 +213,7 @@ class CssAudioInterpreterContext {
    * todo    nodes are added after it, and check if it ends with 0 (which only can be done in an envelope or a fixed
    * todo    value), and then calculate the duration of the gain with sound. then summarize the duration of that gain.
    * todo
-   * todo 1. cache the url audio in some way, so that it doesn't need to fetch it anymore? keep the sound in memory. should/can this be done to all audio nodes? can i clone an audio node?
+   * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
    * todo a. make this recursive instead? first pipe, then array, then node, then argument? but I don't need argument, as it has already been processed?
    *
    * @param node
@@ -193,20 +247,12 @@ class CssAudioInterpreterContext {
   }
 
   static async makeNode(ctx, name, args) {
-    return InterpreterFunctions[name] ? await InterpreterFunctions[name](ctx, ...args) : name;
+    if (!InterpreterFunctions[name])
+      return name;
+    if (!args)
+      return await InterpreterFunctions[name](ctx);
+    return await InterpreterFunctions[name](ctx, ...args);
   }
-
-  //todo not using this any more, since I think the web audio api better supports making new context objects and nodes
-  //todo for every sound. If the context is suspended() before they are populated, then calling resume() will essentially
-  //todo "start" them.
-  //todo the remaining problem is cleaning up AudioContext objects that are finished. I need to know when I can delete them.
-  // static startNodes(node) {
-  //   if (node.inputs) {
-  //     for (let child of node.inputs)
-  //       CssAudioInterpreterContext.startNodes(child);
-  //   }
-  //   node.start && node.start();
-  // }
 }
 
 export async function interpret(str) {
@@ -217,13 +263,3 @@ export async function interpret(str) {
   CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
   return ctx;
 }
-
-// export async function interpret2(str) {
-//   const ast = parse(str);
-//   const ctx = new OfflineAudioContext(2,44100*40,44100);
-//   const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
-//   CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
-//   CssAudioInterpreterContext.startNodes(ctx.destination);
-//   const audioBuffer = await ctx.startRendering();
-//   return audioBuffer;
-// }
