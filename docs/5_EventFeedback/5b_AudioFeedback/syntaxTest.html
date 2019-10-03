@@ -16,7 +16,18 @@
   let f_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]}]}';
   let g = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > lowpass(180hz, 12dB)";
   let g_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]},{"type":"fun","name":"lowpass","args":[{"num":"180","unit":"hz"},{"num":"12","unit":"dB"}]}]}';
-
+  let h = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > gain([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)";
+  let h_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]},{"type":"fun","name":"gain","args":[[[{"num":"1","unit":""},{"num":"0.0015","unit":""}]],[[{"num":"0.6","unit":""},{"num":"0.001","unit":""}]],[[{"num":"0.6","unit":""},{"num":"1","unit":""}]],[[{"num":"0","unit":""},{"num":"0.03","unit":""}]]]},{"type":"fun","name":"lowpass","args":[{"num":"180","unit":"hz"},{"num":"12","unit":"dB"}]}]}';
+  let i = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > [a, b]";
+  let i_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]},["a","b"]]}';
+  let j = "triangle(144hz) > peaking(120hz, 25dB, 10hz)";
+  let j_ = '{"type":"pipe","nodes":[{"type":"fun","name":"triangle","args":[{"num":"144","unit":"hz"}]},{"type":"fun","name":"peaking","args":[{"num":"120","unit":"hz"},{"num":"25","unit":"dB"},{"num":"10","unit":"hz"}]}]}';
+  let k = "noise > bandpass(140hz, 12dB, 300hz)";
+  let k_ = '{"type":"pipe","nodes":["noise",{"type":"fun","name":"bandpass","args":[{"num":"140","unit":"hz"},{"num":"12","unit":"dB"},{"num":"300","unit":"hz"}]}]}';
+  let l = 'noise > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02]) > peaking(120hz, 25dB, 100hz)';
+  let l_ = '{"type":"pipe","nodes":["noise",{"type":"fun","name":"gain","args":[[[{"num":"0.9","unit":""},{"num":"0.9","unit":""}],[{"num":"0.6","unit":""},{"num":"0.001","unit":""}],[{"num":"0.6","unit":""},{"num":"0.4","unit":""}],[{"num":"0","unit":""},{"num":"0.02","unit":""}]]]},{"type":"fun","name":"peaking","args":[{"num":"120","unit":"hz"},{"num":"25","unit":"dB"},{"num":"100","unit":"hz"}]}]}';
+  let m = 'a > --audio-var > peaking(120hz, 25dB, 1hz)';
+  let m_ = '{"type":"pipe","nodes":["a","--audio-var",{"type":"fun","name":"peaking","args":[{"num":"120","unit":"hz"},{"num":"25","unit":"dB"},{"num":"1","unit":"hz"}]}]}';
 
   function test(msg, tst) {
     let obj = parse(msg);
@@ -34,7 +45,13 @@
   test(e, e_);
   test(f, f_);
   test(g, g_);
-
+  test(h, h_);
+  test(i, i_);
+  test(j, j_);
+  test(k, k_);
+  test(l, l_);
+  test(m, m_);
+  
   async function onClick(){
 //    let x = "sine(340hz) > gain(0.2)"; //works
 //    let x = "sine(340hz) > gain(square(2hz))"; //works
