@@ -51,34 +51,4 @@
   test(k, k_);
   test(l, l_);
   test(m, m_);
-  
-  async function onClick(){
-//    let x = "sine(340hz) > gain(0.2)"; //works
-//    let x = "sine(340hz) > gain(square(2hz))"; //works
-//    let x = "sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"; //works
-//    let x = "noise";
-    let x = "noise > bandpass(500Hz)";
-    const ctx = await interpret(x);
-//    const ctx = await interpret(g);
-    ctx.resume();
-    setTimeout(function(){
-      ctx.suspend();
-    }, 2000);
-  }
-  window.addEventListener("click", onClick);
-
-//  async function onClick2(e){
-//    e.stopPropagation();
-//    const buffer = await interpret2(g);
-//    const audioCtx = new AudioContext();
-//    const bufferSource = audioCtx.createBufferSource();
-//    bufferSource.buffer = buffer;
-//    bufferSource.connect(audioCtx.destination);
-//    setTimeout(function(){
-//      audioCtx.suspend();
-//    }, 4000);
-//  }
-//  document.querySelector("pre").addEventListener("click", onClick2);
 </script>
-
-<pre>here the beautiful sounds! (sic.)</pre>

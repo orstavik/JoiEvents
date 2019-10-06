@@ -1,0 +1,62 @@
+<h1>here the beautiful sounds! (sic.)</h1>
+<style>
+  sound-strip {
+    display: block;
+  }
+</style>
+
+<sound-strip sound="noise > bandpass(500Hz)"></sound-strip>
+<sound-strip sound="noise"></sound-strip>
+<sound-strip sound="sine(340hz) > gain(square(2hz))"></sound-strip>
+<sound-strip sound="sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"></sound-strip>
+<sound-strip sound="sine(340hz) > gain(0.2)"></sound-strip>
+
+
+<script type="module">
+  import {InfiniteSound} from "./cssAudioInterpreter.js";
+
+  class SoundStrip extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+<input type="text" value="noise > bandpass(500Hz)">
+<button id="start">start</button>
+<button id="stop">stop</button>`;
+      this.shadowRoot.children[1].addEventListener("click", this.start.bind(this));
+      this.shadowRoot.children[2].addEventListener("click", this.stop.bind(this));
+    }
+
+    static get observedAttributes(){
+      return ["sound"];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (name === "sound")
+        this.shadowRoot.children[0].value = newValue;
+    }
+
+    async start() {
+      this.stop();
+      const x = this.shadowRoot.children[0].value;
+      this.ctx = await InfiniteSound.load(x);
+      this.ctx.resume();
+      setTimeout(() => this.stop(), 2000);
+    }
+
+    stop() {
+      this.ctx && this.ctx.suspend();
+    }
+  }
+  customElements.define("sound-strip", SoundStrip);
+
+  //    const buffer = await interpret2(g);
+  //    const audioCtx = new AudioContext();
+  //    const bufferSource = audioCtx.createBufferSource();
+  //    bufferSource.buffer = buffer;
+  //    bufferSource.connect(audioCtx.destination);
+  //    setTimeout(function(){
+  //      audioCtx.suspend();
+  //    }, 4000);
+</script>
+

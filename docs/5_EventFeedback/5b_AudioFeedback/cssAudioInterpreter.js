@@ -255,11 +255,18 @@ class CssAudioInterpreterContext {
   }
 }
 
-export async function interpret(str) {
-  const ast = parse(str);
-  const ctx = new AudioContext();
-  ctx.suspend();
-  const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
-  CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
-  return ctx;
+export class InfiniteSound extends AudioContext {
+
+  static async load(sound) {
+    const ctx = new InfiniteSound();
+    const ast = parse(sound);
+    const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
+    CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
+    return ctx;
+  }
+
+  constructor() {
+    super();
+    this.suspend();
+  }
 }
