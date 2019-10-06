@@ -1,9 +1,6 @@
 import {parse} from "./cssAudioParser.js";
+import {Notes} from "./notes.js";
 
-// const noteToHz = {
-//   "a1"
-// }
-//
 // class CircleOfFifth {
 //
 //   static get noteToHz(note) {
@@ -209,7 +206,7 @@ class InterpreterFunctions {
     if (a.num && !b)
       num = Math.random() * a.num;
     else if (steps === undefined)
-      num = Math.random() * (b.num- a.num) + b.num;
+      num = Math.random() * (b.num - a.num) + b.num;
     else
       num = (Math.random() * ((b.num - a.num) / steps.num) * steps.num) + b.num;
     return {num, unit: a.unit};
@@ -286,11 +283,12 @@ class CssAudioInterpreterContext {
   }
 
   static async makeNode(ctx, name, args) {
-    if (!InterpreterFunctions[name])
-      return name;
-    if (!args)
-      return await InterpreterFunctions[name](ctx);
-    return await InterpreterFunctions[name](ctx, ...args);
+    let match;
+    if (match = InterpreterFunctions[name])
+      return args ? await match(ctx, ...args) : await match(ctx);
+    if (match = Notes[name])
+      return {num: match, unit: "Hz"};
+    return name;
   }
 }
 

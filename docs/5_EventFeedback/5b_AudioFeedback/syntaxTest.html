@@ -29,6 +29,10 @@
   let l_ = '{"type":"pipe","nodes":["noise",{"type":"fun","name":"gain","args":[[[{"num":0.9,"unit":""},{"num":0.9,"unit":""}],[{"num":0.6,"unit":""},{"num":0.001,"unit":""}],[{"num":0.6,"unit":""},{"num":0.4,"unit":""}],[{"num":0,"unit":""},{"num":0.02,"unit":""}]]]},{"type":"fun","name":"peaking","args":[{"num":120,"unit":"hz"},{"num":25,"unit":"dB"},{"num":100,"unit":"hz"}]}]}';
   let m = 'a > --audio-var > peaking(120hz, 25dB, 1hz)';
   let m_ = '{"type":"pipe","nodes":["a","--audio-var",{"type":"fun","name":"peaking","args":[{"num":120,"unit":"hz"},{"num":25,"unit":"dB"},{"num":1,"unit":"hz"}]}]}';
+  let n = 'sine(F4)';
+  let n_ = '{"type":"pipe","nodes":[{"type":"fun","name":"sine","args":["F4"]}]}';
+  let o = 'sine(F#4)';
+  let o_ = '{"type":"pipe","nodes":[{"type":"fun","name":"sine","args":["F#4"]}]}';
 
   function test(msg, tst) {
     let obj = parse(msg);
@@ -53,4 +57,6 @@
   test(k, k_);
   test(l, l_);
   test(m, m_);
+  test(n, n_);
+  test(o, o_);
 </script>
