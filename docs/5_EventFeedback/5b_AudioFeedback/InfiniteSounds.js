@@ -4,8 +4,8 @@ function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
   for (let point of points) {
-    let vol = parseFloat(point[0].num);
-    let time = parseFloat(point[1].num);
+    let vol = point[0].num;
+    let time = point[1].num;
     if (point[1].unit === "" || point[1].unit === "e")
       target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
     else
@@ -22,7 +22,7 @@ function setAudioParameter(target, param) {
   } else if (param.hasOwnProperty("num")) {
     //todo if the number is not parsed outside, then the units will be universal to all nodes..
     //todo I have not implemented any interpretation of "Hz" or "db" or "ms" or whatever
-    target.value = parseFloat(param.num);
+    target.value = param.num;
   } else if (param instanceof Array) {
     plotEnvelope(target, param);
     // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
@@ -54,10 +54,11 @@ function setAudioParameter(target, param) {
  */
 const cachedFiles = Object.create(null);
 let noise;
+
 function makeNoiseNode(duration, sampleRate) {
-  const audioCtx = new OfflineAudioContext(1, sampleRate* duration, sampleRate);
+  const ctx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
   const bufferSize = sampleRate * duration; // set the time of the note
-  const buffer = audioCtx.createBuffer(1, bufferSize, sampleRate); // create an empty buffer
+  const buffer = ctx.createBuffer(1, bufferSize, sampleRate); // create an empty buffer
   let data = buffer.getChannelData(0); // get data
   // fill the buffer with noise
   for (let i = 0; i < bufferSize; i++)
@@ -74,9 +75,11 @@ class AudioFileRegister {
     }
     return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
-  static noise(){
+
+  static noise() {
     return noise || (noise = makeNoiseNode(3, 44100));
   }
+
   //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
   //to max: this makes me think that the method .createBuffer could have been static
   //to max: but it means that the AudioBuffer objects are context free. Also for OfflineAudioContexts.
@@ -111,7 +114,7 @@ class InterpreterFunctions {
     const oscillator = audioContext.createOscillator();
     oscillator.type = type;
     setAudioParameter(oscillator.frequency, freq);
-    // oscillator.frequency.value = parseFloat(freq);
+    // oscillator.frequency.value = freq);
     oscillator.start();
     return oscillator;
   }
@@ -160,20 +163,39 @@ class InterpreterFunctions {
     return filterNode;
   }
 
-  static async url(audioCtx, url) {
+  static async url(ctx, url) {
     const data = await AudioFileRegister.getFileBuffer(url);
-    const bufferSource = audioCtx.createBufferSource();
-    bufferSource.buffer = await audioCtx.decodeAudioData(data);
+    const bufferSource = ctx.createBufferSource();
+    bufferSource.buffer = await ctx.decodeAudioData(data);
     bufferSource.start();
     return bufferSource;
   }
 
-  static async noise(audioCtx) {
-    const noise = audioCtx.createBufferSource();
+  static async noise(ctx) {
+    const noise = ctx.createBufferSource();
     noise.buffer = AudioFileRegister.noise();
     noise.loop = true;
     noise.start();
     return noise;
+  }
+
+  /**
+   * random(array) will return a random entry from the array.
+   * random(a) will return a random value between 0 and the number "a".
+   * random(a, b) will return a random value the numbers "a" and "b".
+   * random(a, b, step) will return a random "step" between numbers "a" and "b".
+   */
+  static async random(ctx, a, b, steps) {
+    if (a instanceof Array)
+      return a[Math.floor(Math.random() * a.length)];
+    let num;
+    if (a.num && !b)
+      num = Math.random() * a.num;
+    else if (steps === undefined)
+      num = Math.random() * (b.num- a.num) + b.num;
+    else
+      num = (Math.random() * ((b.num - a.num) / steps.num) * steps.num) + b.num;
+    return {num, unit: a.unit};
   }
 }
 

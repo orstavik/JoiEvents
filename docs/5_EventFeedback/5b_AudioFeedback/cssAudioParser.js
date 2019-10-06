@@ -35,14 +35,14 @@ function parseCssVar(tokens) {
 function parseNumber(tokens) {
   if (tokens[0][8]) {
     const t = tokens.shift();
-    return {num: t[8], unit: t[9]};
+    return {num: parseFloat(t[8]), unit: t[9]};
   }
 }
 
 function parseCoordinate(tokens) {
   if (tokens[0][4]) {
     const t = tokens.shift();
-    return [{num: t[4], unit: t[5]}, {num: t[6], unit: t[7]}];
+    return [{num: parseFloat(t[4]), unit: t[5]}, {num: parseFloat(t[6]), unit: t[7]}];
   }
 }
 

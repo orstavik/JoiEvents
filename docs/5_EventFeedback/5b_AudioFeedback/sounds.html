@@ -10,10 +10,14 @@
 <sound-strip sound="sine(340hz) > gain(square(2hz))"></sound-strip>
 <sound-strip sound="sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"></sound-strip>
 <sound-strip sound="sine(340hz) > gain(0.2)"></sound-strip>
+<sound-strip sound="square(random([160hz, 1340hz, 4000hz, 340hz])) > gain(0.1)"></sound-strip>
+<sound-strip sound="sine(random(1340hz)) > gain(0.1)"></sound-strip>
+<sound-strip sound="sine(random(1600hz, 3040hz)) > gain(0.1)"></sound-strip>
+<sound-strip sound="sine(random(0, 6000hz, 1000hz)) > gain(0.1)"></sound-strip>
 
 
 <script type="module">
-  import {InfiniteSound} from "./cssAudioInterpreter.js";
+  import {InfiniteSound} from "./InfiniteSounds.js";
 
   class SoundStrip extends HTMLElement {
     constructor() {
@@ -41,11 +45,12 @@
       const x = this.shadowRoot.children[0].value;
       this.ctx = await InfiniteSound.load(x);
       this.ctx.resume();
-      setTimeout(() => this.stop(), 2000);
+      this.timer = setTimeout(() => this.stop(), 2000);
     }
 
     stop() {
       this.ctx && this.ctx.suspend();
+      clearTimeout(this.timer);
     }
   }
   customElements.define("sound-strip", SoundStrip);
