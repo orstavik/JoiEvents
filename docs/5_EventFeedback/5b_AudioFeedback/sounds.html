@@ -15,7 +15,7 @@
 <sound-strip sound="sine(random(1600hz, 3040hz)) > gain(0.1)"></sound-strip>
 <sound-strip sound="sine(random(0, 6000hz, 1000hz)) > gain(0.1)"></sound-strip>
 <sound-strip sound="url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3)"></sound-strip>
-<sound-strip sound="url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)"></sound-strip>
+<sound-strip sound="url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)" dont-stop></sound-strip>
 
 
 <script type="module">
@@ -47,7 +47,8 @@
       const x = this.shadowRoot.children[0].value;
       this.ctx = await InfiniteSound.load(x);
       this.ctx.resume();
-      this.timer = setTimeout(() => this.stop(), 2000);
+      if (!this.hasAttribute("dont-stop"))
+        this.timer = setTimeout(() => this.stop(), 2000);
     }
 
     stop() {
