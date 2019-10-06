@@ -13,6 +13,8 @@
   let e_ = '{"type":"pipe","nodes":[{"type":"fun","name":"square","args":[{"num":144,"unit":"hz"}]},{"type":"fun","name":"vol","args":[[[{"num":1,"unit":""},{"num":0.0015,"unit":""}]],[[{"num":0.6,"unit":""},{"num":0.001,"unit":""}]],[[{"num":0.6,"unit":""},{"num":1,"unit":""}]],[[{"num":0,"unit":""},{"num":0.03,"unit":""}]]]},{"type":"fun","name":"lowpass","args":[{"num":180,"unit":"hz"},{"num":12,"unit":"dB"}]}]}';
   let f = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3)";
   let f_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]}]}';
+  let f2 = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)";
+  let f2_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3",{"num":1,"unit":""}]}]}';
   let g = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > lowpass(180hz, 12dB)";
   let g_ = '{"type":"pipe","nodes":[{"type":"fun","name":"url","args":["https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"]},{"type":"fun","name":"lowpass","args":[{"num":180,"unit":"hz"},{"num":12,"unit":"dB"}]}]}';
   let h = "url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > gain([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)";
@@ -43,6 +45,7 @@
   test(d, d_);
   test(e, e_);
   test(f, f_);
+  test(f2, f2_);
   test(g, g_);
   test(h, h_);
   test(i, i_);

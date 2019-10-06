@@ -1,5 +1,17 @@
 import {parse} from "./cssAudioParser.js";
 
+// const noteToHz = {
+//   "a1"
+// }
+//
+// class CircleOfFifth {
+//
+//   static get noteToHz(note) {
+//     return
+//
+//   }
+// }
+//
 function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
@@ -163,10 +175,15 @@ class InterpreterFunctions {
     return filterNode;
   }
 
-  static async url(ctx, url) {
+  /**
+   * url(https://some.com/sound.file) plays the sound file once
+   * url(https://some.com/sound.file, 1) plays the sound file in a loop
+   */
+  static async url(ctx, url, loop) {
     const data = await AudioFileRegister.getFileBuffer(url);
     const bufferSource = ctx.createBufferSource();
     bufferSource.buffer = await ctx.decodeAudioData(data);
+    bufferSource.loop = !!loop;
     bufferSource.start();
     return bufferSource;
   }

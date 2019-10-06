@@ -1,5 +1,5 @@
 //space | pipe | comma | parenthesis | brackets | url | word | coordinate | number | cssVariable
-const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^)]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
+const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^),]*|([_a-zA-Z][_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
 
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
