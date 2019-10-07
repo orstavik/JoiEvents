@@ -216,12 +216,6 @@ class InterpreterFunctions {
   }
 }
 
-const symbols = {
-  ">": "pipe",
-  ",": "array",
-  "/": "coordinate"
-};
-
 function connectMtoN(m, n) {
   m = m instanceof Array ? m : [m];
   n = n instanceof Array ? n : [n];
@@ -239,21 +233,21 @@ function connectMtoN(m, n) {
   }
 }
 
-class InfiniteSoundsPrimitives {
-  static pipe(nodes) {
-    for (let i = 0; i < nodes.length - 1; i++)
-      connectMtoN(nodes[i], nodes[i + 1]);
-    return nodes[nodes.length - 1];
-  }
+const Primitives = Object.create(null);
+Primitives[">"] = function (nodes) {
+  for (let i = 0; i < nodes.length - 1; i++)
+    connectMtoN(nodes[i], nodes[i + 1]);
+  return nodes[nodes.length - 1];
+};
 
-  static array(args) {
-    return args;
-  }
 
-  static coordinate(args) {
-    return args;
-  }
-}
+Primitives[","] = function (args) {
+  return args;
+};
+
+Primitives["/"] = function (args) {
+  return args;
+};
 
 class CssAudioInterpreterContext {
 
@@ -280,8 +274,8 @@ class CssAudioInterpreterContext {
     //bottom processed first
     let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
     //replace function
-    if (symbols[node.type])
-      return InfiniteSoundsPrimitives[symbols[node.type]](args);
+    if (Primitives[node.type])
+      return Primitives[node.type](args);
     if (node.hasOwnProperty("num"))
       return node;
     if (node.type === "fun")
