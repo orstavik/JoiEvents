@@ -248,6 +248,14 @@ Primitives["/"] = function (ctx, ...args) {
   return args;
 };
 
+// Primitives["--"] = function (ctx, value) {
+//   return value;
+// };
+//
+// Primitives["url"] = function (ctx, value) {
+//   return value;
+// };
+//
 class CssAudioInterpreterContext {
 
   /**
@@ -270,21 +278,26 @@ class CssAudioInterpreterContext {
    * @returns The Promise of an array of the end AudioNode(s).
    */
   static async interpretNode(ctx, node) {
-    //bottom processed first
-    let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
     //replace function
     if (node.hasOwnProperty("num"))
       return node;
     if (node.hasOwnProperty("value")) //url and --variables
       return node.value;
-    let name = node.type;
-    const tables = [Primitives, TranslateFunctions, InterpreterFunctions, Notes];
+    //bottom processed first
+    let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
+
+    const tables = [TranslateFunctions, Notes, InterpreterFunctions, Primitives];
     for (let table of tables) {
-      let match;
-      if (match = table[name])
-        return await (args ? match(ctx, ...args) : match(ctx));
+      const match = table[node.type];
+      if (match && args)
+        return await match(ctx, ...args);
+      if (match)
+        return await match(ctx);
     }
-    throw new Error("omgŵtf")
+    //todo when I have multiple passes here, I must make new objects to avoid mutation.
+    //todo then, I must clone the objects and the args arrays.
+    //todo but, if there are no replacements, then I must not alter the object
+    throw new Error("omgŵtf");
   }
 
   static async interpretArgs(node, ctx) {
