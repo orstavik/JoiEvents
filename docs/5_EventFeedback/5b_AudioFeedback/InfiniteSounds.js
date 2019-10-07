@@ -256,12 +256,11 @@ class CssAudioInterpreterContext {
    */
   static async interpretNode(ctx, node) {
     let res;
-    if (node instanceof Array || node.type === "pipe"|| node.type === "fun") {
-      res = (node.nodes || node.args || node).slice();
+    if (node.args) {
+      res = node.args.slice();
       for (let i = 0; i < res.length; i++)
         res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
-
-      if (node.type === "pipe")
+      if (node.type === ">")
         return await CssAudioInterpreterContext.interpretPipe(res);
       if (node.type === "fun")
         return await CssAudioInterpreterContext.makeNode(ctx, node.name, res);
@@ -278,7 +277,7 @@ class CssAudioInterpreterContext {
   static async interpretPipe(nodes) {
     for (let i = 0; i < nodes.length - 1; i++)
       CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
-    return nodes.pop();
+    return nodes[nodes.length - 1];
   }
 
   static async makeNode(ctx, name, args) {

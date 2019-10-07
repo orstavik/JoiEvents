@@ -13,7 +13,7 @@ function parseGroup(tokens, start, separator, end) {
   if (!tokens[0] || tokens[0][0] !== end)
     throw new SyntaxError("inner css audio array list: expected " + end);
   tokens.shift();
-  return nodes;
+  return {type: separator, args: nodes};
 }
 
 function parseNameOrFunction(tokens) {
@@ -22,7 +22,7 @@ function parseNameOrFunction(tokens) {
   const name = tokens.shift()[0];
   skipWhite(tokens);
   const args = parseGroup(tokens, "(", ",", ")");
-  return args ? {type: "fun", name, args} : name;
+  return args ? {type: "fun", name, args: args.args} : name;
 }
 
 //todo implement the function that reads the content of the CSS var into the pipe
@@ -55,7 +55,7 @@ function parseExpression(tokens) {
     const right = parseExpression(tokens);
     if (!right)
       throw new SyntaxError("Something ends with a '/': " + tokens[0]);
-    return [left, right]; //todo, this should be an object
+    return {type: "/", args: [left, right]};
   }
   return left;
 }
@@ -82,12 +82,12 @@ function parseNodeList(tokens, separator) {
 }
 
 export function parse(str) {
-  let txt = str.trim();
+  let txt = "("+str.trim()+")";
   const tokens = [];
   for (let array1; (array1 = tokenizer.exec(txt)) !== null;)
     tokens.push(array1);
-  let args = parseNodeList(tokens, ">");
+  let args = parseGroup(tokens, "(",">", ")");
   if (tokens.length)
     throw new SyntaxError("the main css audio pipe is broken");
-  return {type: "pipe", args};
+  return args;
 }
