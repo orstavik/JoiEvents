@@ -1,5 +1,5 @@
-//space | pipe | comma | parenthesis | brackets | url | word | coordinate | number | cssVariable
-const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|(https:)[^),]*|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)\s*\/\s*([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
+//space | pipe | comma | parenthesis | brackets | slash | url | word | number | cssVariable
+const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|(https:)[^),]*|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)/g;
 
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
@@ -28,22 +28,36 @@ function parseNameOrFunction(tokens) {
 //todo implement the function that reads the content of the CSS var into the pipe
 //todo this should be done in the Interpreter
 function parseCssVar(tokens) {
-  if (tokens[0][10])
+  if (tokens[0][6])
     return tokens.shift()[0];
 }
 
 function parseNumber(tokens) {
-  if (tokens[0][8]) {
+  if (tokens[0][4]) {
     const t = tokens.shift();
-    return {num: parseFloat(t[8]), unit: t[9]};
+    return {num: parseFloat(t[4]), unit: t[5]};
   }
 }
 
-function parseCoordinate(tokens) {
-  if (tokens[0][4]) {
-    const t = tokens.shift();
-    return [{num: parseFloat(t[4]), unit: t[5]}, {num: parseFloat(t[6]), unit: t[7]}];
+function parseValue(tokens) {
+  return parseNameOrFunction(tokens) ||
+    parseCssVar(tokens) ||
+    parseNumber(tokens) ||
+    parseUrl(tokens);
+}
+
+function parseExpression(tokens) {
+  const left = parseValue(tokens);
+  //todo here we can have more expressions, but we also have the problem of priorities of operators here..
+  //todo only slash as in coordinate here thus far
+  if (tokens[0] && tokens[0][0] === "/") {
+    tokens.shift();
+    const right = parseExpression(tokens);
+    if (!right)
+      throw new SyntaxError("Something ends with a '/': " + tokens[0]);
+    return [left, right]; //todo, this should be an object
   }
+  return left;
 }
 
 function parseUrl(tokens) {
@@ -55,11 +69,7 @@ function parseNode(tokens) {
   skipWhite(tokens);
   return parseGroup(tokens, "(", ">", ")") ||
     parseGroup(tokens, "[", ",", "]") ||
-    parseNameOrFunction(tokens) ||
-    parseCssVar(tokens) ||
-    parseCoordinate(tokens) ||
-    parseNumber(tokens) ||
-    parseUrl(tokens);
+    parseExpression(tokens);
 }
 
 function parseNodeList(tokens, separator) {
