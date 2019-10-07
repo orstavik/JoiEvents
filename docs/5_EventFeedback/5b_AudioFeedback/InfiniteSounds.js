@@ -233,19 +233,20 @@ function connectMtoN(m, n) {
   }
 }
 
+const PrimitiveOne = Object.create(null);
+PrimitiveOne["/"] = function (ctx, ...args) {
+  return args;
+};
+
+PrimitiveOne[","] = function (ctx, ...args) {
+  return args;
+};
+
 const Primitives = Object.create(null);
 Primitives[">"] = function (ctx, ...nodes) {
   for (let i = 0; i < nodes.length - 1; i++)
     connectMtoN(nodes[i], nodes[i + 1]);
   return nodes[nodes.length - 1];
-};
-
-Primitives[","] = function (ctx, ...args) {
-  return args;
-};
-
-Primitives["/"] = function (ctx, ...args) {
-  return args;
 };
 
 Primitives["--"] = function (ctx, value) {
@@ -277,7 +278,7 @@ class CssAudioInterpreterContext {
    * @param node
    * @returns The Promise of an array of the end AudioNode(s).
    */
-  static async interpretNode(ctx, node) {
+  static async interpretNode(ctx, node, table) {
     //primitives
     if (node.hasOwnProperty("num"))
       return node;
@@ -285,26 +286,21 @@ class CssAudioInterpreterContext {
       return node.value;
 
     //bottom processed first
-    const args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
-
-    const tables = [TranslateFunctions, Notes, InterpreterFunctions, Primitives];
-    for (let table of tables) {
-      const match = table[node.type];
-      if (match)
-        return await (args instanceof Array ? match(ctx, ...args): match(ctx, args));
-    }
-    //todo when I have multiple passes here, I must make new objects to avoid mutation.
-    //todo then, I must clone the objects and the args arrays.
-    //todo but, if there are no replacements, then I must not alter the object
+    //todo mutates the args list array
+    const args = await CssAudioInterpreterContext.interpretArgs(node, ctx, table);
+    const match = table[node.type];
+    if (match)
+      return await (args instanceof Array ? match(ctx, ...args) : match(ctx, args));
+    //todo must return a new object is the args list of the object is mutated
     return node;
-    // throw new Error("omgŵtf");
   }
 
-  static async interpretArgs(node, ctx) {
+  static async interpretArgs(node, ctx, table) {
     if (!node.args)
       return;
+    //todo mutates the args list array
     for (let i = 0; i < node.args.length; i++)
-      node.args[i] = await CssAudioInterpreterContext.interpretNode(ctx, node.args[i]);
+      node.args[i] = await CssAudioInterpreterContext.interpretNode(ctx, node.args[i], table);
     return node.args;
   }
 }
@@ -312,10 +308,12 @@ class CssAudioInterpreterContext {
 export class InfiniteSound extends AudioContext {
 
   static async load(sound) {
+    const tables = [PrimitiveOne, TranslateFunctions, Notes, InterpreterFunctions, Primitives];
+    let result = parse(sound);
     const ctx = new InfiniteSound();
-    const ast = parse(sound);
-    const audioNodes = await CssAudioInterpreterContext.interpretNode(ctx, ast);
-    connectMtoN(audioNodes, ctx.destination);
+    for (let table of tables)
+      result = await CssAudioInterpreterContext.interpretNode(ctx, result, table);
+    connectMtoN(result, ctx.destination);
     return ctx;
   }
 
