@@ -1,5 +1,6 @@
 import {parse} from "./cssAudioParser.js";
 import {Notes} from "./notes.js";
+
 // import {circleOfFifth, chord, chord2, scale} from "./CircleOfFifth.js";
 
 function plotEnvelope(target, points) {
@@ -233,6 +234,12 @@ class CssAudioInterpreterContext {
   }
 
   /**
+   * Works layer by layer, based on priority.
+   * 1. is the translate functions,
+   * 2. is the values to number,
+   * 3. is the audio ctx dependent functions
+   *
+   * Works bottom up.
    * todo 0. Reuse the propcessing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
    * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
    * todo    need to have a "off(endtime)", or analyze a "gain()" expression, in the main pipe, verify that no source
@@ -243,22 +250,20 @@ class CssAudioInterpreterContext {
    * todo a. make this recursive instead? first pipe, then array, then node, then argument? but I don't need argument, as it has already been processed?
    *
    * @param node
-   * @returns {Promise.<*>}
-   * todo bottom up?
+   * @returns The Promise of an array of the end AudioNode(s).
    */
   static async interpretNode(ctx, node) {
-    // let children = node.nodes || node.args || (node instanceof Array ? node : undefined);
-    // let args;
-    // if (children)
-    //   args = children.map(child => interpretNode(ctx, child));
-    //
-    if (node.type === "pipe")
-      return await CssAudioInterpreterContext.interpretPipe(ctx, node);
-    if (node instanceof Array) {
-      return await CssAudioInterpreterContext.interpretArray(node, ctx);
-    }
-    if (node.type === "fun") {
-      return await CssAudioInterpreterContext.interpretFunction(node, ctx);
+    let res;
+    if (node instanceof Array || node.type === "pipe"|| node.type === "fun") {
+      res = (node.nodes || node.args || node).slice();
+      for (let i = 0; i < res.length; i++)
+        res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
+
+      if (node.type === "pipe")
+        return await CssAudioInterpreterContext.interpretPipe(res);
+      if (node.type === "fun")
+        return await CssAudioInterpreterContext.interpretFunction(node, ctx, res);
+      return res;
     }
     if (node.hasOwnProperty("num")) {
       return node;
@@ -268,34 +273,15 @@ class CssAudioInterpreterContext {
     throw new Error("omg? wtf? " + node)
   }
 
-  static async interpretPipe(ctx, pipe) {
-    const nodes = [];
-    for (let node of pipe.nodes) {
-      node = await CssAudioInterpreterContext.interpretNode(ctx, node);
-      node = node instanceof Array ? node : [node];
-      nodes.push(node);
-    }
+  static async interpretPipe(nodes) {
+    nodes = nodes.map(node => node instanceof Array ? node : [node]);
     for (let i = 0; i < nodes.length - 1; i++)
       CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
     return nodes.pop();
   }
 
-  static async interpretFunction(node, ctx) {
-    const args = [];
-    for (let item of node.args) {
-      item = await CssAudioInterpreterContext.interpretNode(ctx, item);
-      args.push(item);
-    }
+  static async interpretFunction(node, ctx, args) {
     return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
-  }
-
-  static async interpretArray(node, ctx) {
-    const res = [];
-    for (let item of node) {
-      item = await CssAudioInterpreterContext.interpretNode(ctx, item);
-      res.push(item);
-    }
-    return res;
   }
 
   static async makeNode(ctx, name, args) {
@@ -315,7 +301,7 @@ export class InfiniteSound extends AudioContext {
   static async load(sound) {
     const ctx = new InfiniteSound();
     const ast = parse(sound);
-    const audioNodes = await CssAudioInterpreterContext.interpretPipe(ctx, ast);
+    const audioNodes = await CssAudioInterpreterContext.interpretNode(ctx, ast);
     CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
     return ctx;
   }
