@@ -278,7 +278,7 @@ class CssAudioInterpreterContext {
     let name = node.type;
     if (node.type === "fun")
       name = node.name;
-    else if(typeof node === "string")
+    else if(typeof node === "string")  //url.. and css-variables are not typed out of the parser just yet
       name = node;
     return await CssAudioInterpreterContext.makeNode(ctx, name, args);
   }
