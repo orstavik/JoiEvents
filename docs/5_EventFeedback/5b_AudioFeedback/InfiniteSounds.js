@@ -216,24 +216,46 @@ class InterpreterFunctions {
   }
 }
 
-class CssAudioInterpreterContext {
+const symbols = {
+  ">": "pipe",
+  ",": "array",
+  "/": "coordinate"
+};
 
-  static connectMtoN(m, n) {
-    m = m instanceof Array ? m : [m];
-    n = n instanceof Array ? n : [n];
-    for (let a of m) {
-      for (let b of n) {
-        if (!a instanceof AudioNode)
-          throw new SyntaxError("CssAudioNode cannot be: " + a);
-        if (!b instanceof AudioNode)
-          throw new SyntaxError("CssAudioNode cannot be: " + b);
-        a.connect(b);
-        //todo calling start inside all source nodes now, as the ctx passed in is suspended before being populated.
-        // let inputs = b.inputs || (b.inputs = []);
-        // inputs.push(a);
-      }
+function connectMtoN(m, n) {
+  m = m instanceof Array ? m : [m];
+  n = n instanceof Array ? n : [n];
+  for (let a of m) {
+    for (let b of n) {
+      if (!a instanceof AudioNode)
+        throw new SyntaxError("CssAudioNode cannot be: " + a);
+      if (!b instanceof AudioNode)
+        throw new SyntaxError("CssAudioNode cannot be: " + b);
+      a.connect(b);
+      //todo calling start inside all source nodes now, as the ctx passed in is suspended before being populated.
+      // let inputs = b.inputs || (b.inputs = []);
+      // inputs.push(a);
     }
   }
+}
+
+class InfiniteSoundsPrimitives {
+  static pipe(nodes) {
+    for (let i = 0; i < nodes.length - 1; i++)
+      connectMtoN(nodes[i], nodes[i + 1]);
+    return nodes[nodes.length - 1];
+  }
+
+  static array(args) {
+    return args;
+  }
+
+  static coordinate(args) {
+    return args;
+  }
+}
+
+class CssAudioInterpreterContext {
 
   /**
    * Works layer by layer, based on priority.
@@ -258,12 +280,8 @@ class CssAudioInterpreterContext {
     //bottom processed first
     let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
     //replace function
-    if (node.type === ">")
-      return await CssAudioInterpreterContext.interpretPipe(args);
-    if (node.type === ",")
-      return args;                                //todo this is not good..
-    if (node.type === "/")
-      return args;                                //todo this is not good..
+    if (symbols[node.type])
+      return InfiniteSoundsPrimitives[symbols[node.type]](args);
     if (node.hasOwnProperty("num"))
       return node;
     if (node.type === "fun")
@@ -280,12 +298,6 @@ class CssAudioInterpreterContext {
     for (let i = 0; i < res.length; i++)
       res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
     return res;
-  }
-
-  static async interpretPipe(nodes) {
-    for (let i = 0; i < nodes.length - 1; i++)
-      CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
-    return nodes[nodes.length - 1];
   }
 
   static async makeNode(ctx, name, args) {
@@ -306,7 +318,7 @@ export class InfiniteSound extends AudioContext {
     const ctx = new InfiniteSound();
     const ast = parse(sound);
     const audioNodes = await CssAudioInterpreterContext.interpretNode(ctx, ast);
-    CssAudioInterpreterContext.connectMtoN(audioNodes, [ctx.destination]);
+    connectMtoN(audioNodes, ctx.destination);
     return ctx;
   }
 
