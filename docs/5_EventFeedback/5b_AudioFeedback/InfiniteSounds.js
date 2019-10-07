@@ -234,18 +234,17 @@ function connectMtoN(m, n) {
 }
 
 const Primitives = Object.create(null);
-Primitives[">"] = function (nodes) {
+Primitives[">"] = function (...nodes) {
   for (let i = 0; i < nodes.length - 1; i++)
     connectMtoN(nodes[i], nodes[i + 1]);
   return nodes[nodes.length - 1];
 };
 
-
-Primitives[","] = function (args) {
+Primitives[","] = function (...args) {
   return args;
 };
 
-Primitives["/"] = function (args) {
+Primitives["/"] = function (...args) {
   return args;
 };
 
@@ -274,15 +273,15 @@ class CssAudioInterpreterContext {
     //bottom processed first
     let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
     //replace function
-    if (Primitives[node.type])
-      return Primitives[node.type](args);
     if (node.hasOwnProperty("num"))
       return node;
+    if (Primitives[node.type])
+      return Primitives[node.type](...args);
     if (node.type === "fun")
       return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
     if (typeof node === "string")
       return await CssAudioInterpreterContext.makeNode(ctx, node);
-    throw new Error("omg? wtf? " + node)
+    throw new Error("omg^wtf= " + node);
   }
 
   static async interpretArgs(node, ctx) {
