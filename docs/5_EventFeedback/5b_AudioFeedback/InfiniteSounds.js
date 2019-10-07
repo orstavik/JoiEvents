@@ -1,14 +1,7 @@
 import {parse} from "./cssAudioParser.js";
 import {Notes} from "./notes.js";
+// import {circleOfFifth, chord, chord2, scale} from "./CircleOfFifth.js";
 
-// class CircleOfFifth {
-//
-//   static get noteToHz(note) {
-//     return
-//
-//   }
-// }
-//
 function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
@@ -92,6 +85,34 @@ class AudioFileRegister {
   //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
   //to max: this makes me think that the method .createBuffer could have been static
   //to max: but it means that the AudioBuffer objects are context free. Also for OfflineAudioContexts.
+}
+
+//todo so far none of the TranslateFunctions are async,
+//todo but that occur later if we need to for example load a wave table from a file
+class TranslateFunctions {
+  /**
+   * random(array) will return a random entry from the array.
+   * random(a) will return a random value between 0 and the number "a".
+   * random(a, b) will return a random value the numbers "a" and "b".
+   * random(a, b, step) will return a random "step" between numbers "a" and "b".
+   */
+  static random(a, b, steps) {
+    if (a instanceof Array)
+      return a[Math.floor(Math.random() * a.length)];
+    let num;
+    if (a.num && !b)
+      num = Math.random() * a.num;
+    else if (steps === undefined)
+      num = Math.random() * (b.num - a.num) + b.num;
+    else
+      num = (Math.random() * ((b.num - a.num) / steps.num) * steps.num) + b.num;
+    return {num, unit: a.unit};
+  }
+
+  static cof(coor, key, mode) {
+    debugger;
+    return circleOfFifth(coor, key, mode);
+  }
 }
 
 class InterpreterFunctions {
@@ -192,25 +213,6 @@ class InterpreterFunctions {
     noise.start();
     return noise;
   }
-
-  /**
-   * random(array) will return a random entry from the array.
-   * random(a) will return a random value between 0 and the number "a".
-   * random(a, b) will return a random value the numbers "a" and "b".
-   * random(a, b, step) will return a random "step" between numbers "a" and "b".
-   */
-  static async random(ctx, a, b, steps) {
-    if (a instanceof Array)
-      return a[Math.floor(Math.random() * a.length)];
-    let num;
-    if (a.num && !b)
-      num = Math.random() * a.num;
-    else if (steps === undefined)
-      num = Math.random() * (b.num - a.num) + b.num;
-    else
-      num = (Math.random() * ((b.num - a.num) / steps.num) * steps.num) + b.num;
-    return {num, unit: a.unit};
-  }
 }
 
 class CssAudioInterpreterContext {
@@ -230,18 +232,6 @@ class CssAudioInterpreterContext {
     }
   }
 
-  static async interpretPipe(ctx, pipe) {
-    const nodes = [];
-    for (let node of pipe.nodes) {
-      node = await CssAudioInterpreterContext.interpretNode(ctx, node);
-      node = node instanceof Array ? node : [node];
-      nodes.push(node);
-    }
-    for (let i = 0; i < nodes.length - 1; i++)
-      CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
-    return nodes.pop();
-  }
-
   /**
    * todo 0. Reuse the propcessing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
    * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
@@ -254,25 +244,21 @@ class CssAudioInterpreterContext {
    *
    * @param node
    * @returns {Promise.<*>}
+   * todo bottom up?
    */
   static async interpretNode(ctx, node) {
+    // let children = node.nodes || node.args || (node instanceof Array ? node : undefined);
+    // let args;
+    // if (children)
+    //   args = children.map(child => interpretNode(ctx, child));
+    //
     if (node.type === "pipe")
       return await CssAudioInterpreterContext.interpretPipe(ctx, node);
     if (node instanceof Array) {
-      const res = [];
-      for (let item of node) {
-        item = await CssAudioInterpreterContext.interpretNode(ctx, item);
-        res.push(item);
-      }
-      return res;
+      return await CssAudioInterpreterContext.interpretArray(node, ctx);
     }
     if (node.type === "fun") {
-      const args = [];
-      for (let item of node.args) {
-        item = await CssAudioInterpreterContext.interpretNode(ctx, item);
-        args.push(item);
-      }
-      return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
+      return await CssAudioInterpreterContext.interpretFunction(node, ctx);
     }
     if (node.hasOwnProperty("num")) {
       return node;
@@ -282,12 +268,44 @@ class CssAudioInterpreterContext {
     throw new Error("omg? wtf? " + node)
   }
 
+  static async interpretPipe(ctx, pipe) {
+    const nodes = [];
+    for (let node of pipe.nodes) {
+      node = await CssAudioInterpreterContext.interpretNode(ctx, node);
+      node = node instanceof Array ? node : [node];
+      nodes.push(node);
+    }
+    for (let i = 0; i < nodes.length - 1; i++)
+      CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
+    return nodes.pop();
+  }
+
+  static async interpretFunction(node, ctx) {
+    const args = [];
+    for (let item of node.args) {
+      item = await CssAudioInterpreterContext.interpretNode(ctx, item);
+      args.push(item);
+    }
+    return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
+  }
+
+  static async interpretArray(node, ctx) {
+    const res = [];
+    for (let item of node) {
+      item = await CssAudioInterpreterContext.interpretNode(ctx, item);
+      res.push(item);
+    }
+    return res;
+  }
+
   static async makeNode(ctx, name, args) {
     let match;
+    if (match = TranslateFunctions[name])
+      return args ? match(...args) : match();
     if (match = InterpreterFunctions[name])
       return args ? await match(ctx, ...args) : await match(ctx);
     if (match = Notes[name])
-      return {num: match, unit: "Hz"};
+      return match();
     return name;
   }
 }

@@ -1,3 +1,7 @@
+function getter(num) {
+  return {num, unit: "Hz"}
+}
+
 export const Notes = {
   "C0": 16.35,
   "C#0": 17.32,
@@ -153,3 +157,5 @@ export const Notes = {
   "Bb8": 7458.62,
   "B8": 7902.13
 };
+for (let key in Notes)
+  Notes[key] = getter.bind(Notes, Notes[key]);
