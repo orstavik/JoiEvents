@@ -86,8 +86,8 @@ export function parse(str) {
   const tokens = [];
   for (let array1; (array1 = tokenizer.exec(txt)) !== null;)
     tokens.push(array1);
-  let nodes = parseNodeList(tokens, ">");
+  let args = parseNodeList(tokens, ">");
   if (tokens.length)
     throw new SyntaxError("the main css audio pipe is broken");
-  return {type: "pipe", nodes};
+  return {type: "pipe", args};
 }
