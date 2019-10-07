@@ -66,7 +66,7 @@ function parseExpression(tokens) {
 
 function parseUrl(tokens) {
   if (tokens[0][2])
-    return {type: "url", value: tokens.shift()[0]};
+    return {type: "_url", value: tokens.shift()[0]};
 }
 
 function parseNode(tokens) {

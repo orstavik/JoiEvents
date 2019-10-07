@@ -248,14 +248,14 @@ Primitives["/"] = function (ctx, ...args) {
   return args;
 };
 
-// Primitives["--"] = function (ctx, value) {
-//   return value;
-// };
-//
-// Primitives["url"] = function (ctx, value) {
-//   return value;
-// };
-//
+Primitives["--"] = function (ctx, value) {
+  return value;
+};
+
+Primitives["_url"] = function (ctx, value) {
+  return value;
+};
+
 class CssAudioInterpreterContext {
 
   /**
@@ -278,35 +278,34 @@ class CssAudioInterpreterContext {
    * @returns The Promise of an array of the end AudioNode(s).
    */
   static async interpretNode(ctx, node) {
-    //replace function
+    //primitives
     if (node.hasOwnProperty("num"))
       return node;
     if (node.hasOwnProperty("value")) //url and --variables
       return node.value;
+
     //bottom processed first
-    let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
+    const args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
 
     const tables = [TranslateFunctions, Notes, InterpreterFunctions, Primitives];
     for (let table of tables) {
       const match = table[node.type];
-      if (match && args)
-        return await match(ctx, ...args);
       if (match)
-        return await match(ctx);
+        return await (args instanceof Array ? match(ctx, ...args): match(ctx, args));
     }
     //todo when I have multiple passes here, I must make new objects to avoid mutation.
     //todo then, I must clone the objects and the args arrays.
     //todo but, if there are no replacements, then I must not alter the object
-    throw new Error("omgŵtf");
+    return node;
+    // throw new Error("omgŵtf");
   }
 
   static async interpretArgs(node, ctx) {
     if (!node.args)
-      return undefined;
-    const res = node.args.slice();
-    for (let i = 0; i < res.length; i++)
-      res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
-    return res;
+      return;
+    for (let i = 0; i < node.args.length; i++)
+      node.args[i] = await CssAudioInterpreterContext.interpretNode(ctx, node.args[i]);
+    return node.args;
   }
 }
 
