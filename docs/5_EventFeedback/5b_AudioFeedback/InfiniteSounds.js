@@ -97,7 +97,7 @@ class TranslateFunctions {
    * random(a, b) will return a random value the numbers "a" and "b".
    * random(a, b, step) will return a random "step" between numbers "a" and "b".
    */
-  static random(a, b, steps) {
+  static random(ctx, a, b, steps) {
     if (a instanceof Array)
       return a[Math.floor(Math.random() * a.length)];
     let num;
@@ -110,7 +110,7 @@ class TranslateFunctions {
     return {num, unit: a.unit};
   }
 
-  static cof(coor, key, mode) {
+  static cof(ctx, coor, key, mode) {
     debugger;
     return circleOfFifth(coor, key, mode);
   }
@@ -234,17 +234,17 @@ function connectMtoN(m, n) {
 }
 
 const Primitives = Object.create(null);
-Primitives[">"] = function (...nodes) {
+Primitives[">"] = function (ctx, ...nodes) {
   for (let i = 0; i < nodes.length - 1; i++)
     connectMtoN(nodes[i], nodes[i + 1]);
   return nodes[nodes.length - 1];
 };
 
-Primitives[","] = function (...args) {
+Primitives[","] = function (ctx, ...args) {
   return args;
 };
 
-Primitives["/"] = function (...args) {
+Primitives["/"] = function (ctx, ...args) {
   return args;
 };
 
@@ -276,11 +276,15 @@ class CssAudioInterpreterContext {
     if (node.hasOwnProperty("num"))
       return node;
     let name = node.type;
-    if (node.type === "fun")
-      name = node.name;
-    else if(typeof node === "string")  //url.. and css-variables are not typed out of the parser just yet
+    if (typeof node === "string")  //url.. and css-variables are not typed out of the parser just yet
       name = node;
-    return await CssAudioInterpreterContext.makeNode(ctx, name, args);
+    const tables = [Primitives, TranslateFunctions, InterpreterFunctions, Notes];
+    for (let table of tables) {
+      let match;
+      if (match = table[name])
+        return await (args ? match(ctx, ...args) : match());
+    }
+    return name;
   }
 
   static async interpretArgs(node, ctx) {
@@ -290,19 +294,6 @@ class CssAudioInterpreterContext {
     for (let i = 0; i < res.length; i++)
       res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
     return res;
-  }
-
-  static async makeNode(ctx, name, args) {
-    let match;
-    if (match = Primitives[name])
-      return args ? match(...args) : match();
-    if (match = TranslateFunctions[name])
-      return args ? match(...args) : match();
-    if (match = InterpreterFunctions[name])
-      return args ? await match(ctx, ...args) : await match(ctx);
-    if (match = Notes[name])
-      return match();
-    return name;
   }
 }
 
