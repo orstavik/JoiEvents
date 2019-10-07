@@ -264,7 +264,7 @@ class CssAudioInterpreterContext {
       if (node.type === "pipe")
         return await CssAudioInterpreterContext.interpretPipe(res);
       if (node.type === "fun")
-        return await CssAudioInterpreterContext.interpretFunction(node, ctx, res);
+        return await CssAudioInterpreterContext.makeNode(ctx, node.name, res);
       return res;
     }
     if (node.hasOwnProperty("num")) {
@@ -279,10 +279,6 @@ class CssAudioInterpreterContext {
     for (let i = 0; i < nodes.length - 1; i++)
       CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
     return nodes.pop();
-  }
-
-  static async interpretFunction(node, ctx, args) {
-    return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
   }
 
   static async makeNode(ctx, name, args) {
