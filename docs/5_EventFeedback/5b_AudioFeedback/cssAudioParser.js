@@ -33,7 +33,7 @@ function parseNameOrFunction(tokens) {
 //todo this should be done in the Interpreter
 function parseCssVar(tokens) {
   if (tokens[0][6])
-    return tokens.shift()[0];
+    return {type: "--", value: tokens.shift()[0]};
 }
 
 function parseNumber(tokens) {
@@ -66,7 +66,7 @@ function parseExpression(tokens) {
 
 function parseUrl(tokens) {
   if (tokens[0][2])
-    return tokens.shift()[0];
+    return {type: "url", value: tokens.shift()[0]};
 }
 
 function parseNode(tokens) {

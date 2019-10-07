@@ -275,16 +275,16 @@ class CssAudioInterpreterContext {
     //replace function
     if (node.hasOwnProperty("num"))
       return node;
+    if (node.hasOwnProperty("value")) //url and --variables
+      return node.value;
     let name = node.type;
-    if (typeof node === "string")  //url.. and css-variables are not typed out of the parser just yet
-      name = node;
     const tables = [Primitives, TranslateFunctions, InterpreterFunctions, Notes];
     for (let table of tables) {
       let match;
       if (match = table[name])
-        return await (args ? match(ctx, ...args) : match());
+        return await (args ? match(ctx, ...args) : match(ctx));
     }
-    return name;
+    throw new Error("omgŵtf")
   }
 
   static async interpretArgs(node, ctx) {
