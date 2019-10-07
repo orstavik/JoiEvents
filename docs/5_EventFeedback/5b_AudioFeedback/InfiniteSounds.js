@@ -255,23 +255,31 @@ class CssAudioInterpreterContext {
    * @returns The Promise of an array of the end AudioNode(s).
    */
   static async interpretNode(ctx, node) {
-    let res;
-    if (node.args) {
-      res = node.args.slice();
-      for (let i = 0; i < res.length; i++)
-        res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
-      if (node.type === ">")
-        return await CssAudioInterpreterContext.interpretPipe(res);
-      if (node.type === "fun")
-        return await CssAudioInterpreterContext.makeNode(ctx, node.name, res);
-      return res;
-    }
-    if (node.hasOwnProperty("num")) {
+    //bottom processed first
+    let args = await CssAudioInterpreterContext.interpretArgs(node, ctx);
+    //replace function
+    if (node.type === ">")
+      return await CssAudioInterpreterContext.interpretPipe(args);
+    if (node.type === ",")
+      return args;                                //todo this is not good..
+    if (node.type === "/")
+      return args;                                //todo this is not good..
+    if (node.hasOwnProperty("num"))
       return node;
-    }
+    if (node.type === "fun")
+      return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
     if (typeof node === "string")
       return await CssAudioInterpreterContext.makeNode(ctx, node);
     throw new Error("omg? wtf? " + node)
+  }
+
+  static async interpretArgs(node, ctx) {
+    if (!node.args)
+      return undefined;
+    const res = node.args.slice();
+    for (let i = 0; i < res.length; i++)
+      res[i] = await CssAudioInterpreterContext.interpretNode(ctx, res[i]);
+    return res;
   }
 
   static async interpretPipe(nodes) {
