@@ -257,62 +257,61 @@ Primitives["_url"] = function (ctx, value) {
   return value;
 };
 
-class CssAudioInterpreterContext {
+/**
+ * todo 0. Reuse the processing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
+ * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
+ * todo    need to have a "off(endtime)", or analyze a "gain()" expression, in the main pipe, verify that no source
+ * todo    nodes are added after it, and check if it ends with 0 (which only can be done in an envelope or a fixed
+ * todo    value), and then calculate the duration of the gain with sound. then summarize the duration of that gain.
+ * todo
+ * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
+ */
 
-  /**
-   * Works layer by layer, based on priority.
-   * 1. is the translate functions,
-   * 2. is the values to number,
-   * 3. is the audio ctx dependent functions
-   *
-   * Works bottom up.
-   * todo 0. Reuse the propcessing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
-   * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
-   * todo    need to have a "off(endtime)", or analyze a "gain()" expression, in the main pipe, verify that no source
-   * todo    nodes are added after it, and check if it ends with 0 (which only can be done in an envelope or a fixed
-   * todo    value), and then calculate the duration of the gain with sound. then summarize the duration of that gain.
-   * todo
-   * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
-   * todo a. make this recursive instead? first pipe, then array, then node, then argument? but I don't need argument, as it has already been processed?
-   *
-   * @param node
-   * @returns The Promise of an array of the end AudioNode(s).
-   */
-  static async interpretNode(ctx, node, table) {
-    //primitives
-    if (node.hasOwnProperty("num"))
-      return node;
-    if (node.hasOwnProperty("value")) //url and --variables
-      return node.value;
-
-    //bottom processed first
-    //todo mutates the args list array
-    const args = await CssAudioInterpreterContext.interpretArgs(node, ctx, table);
-    const match = table[node.type];
-    if (match)
-      return await (args instanceof Array ? match(ctx, ...args) : match(ctx, args));
-    //todo must return a new object is the args list of the object is mutated
+/**
+ * Works layer by layer, based on priority.
+ * 0. syntactic primitives such as arrays,
+ * 1. is the translate functions,
+ * 2. is the values to number,
+ * 3. is the audio ctx dependent functions
+ *
+ * Works bottom up.
+ *
+ * @param ctx audio context if needed
+ * @param node currently being processed
+ * @param table of functions
+ * @returns the node being processed against the current function table
+ *          The Promise of an array of the end AudioNode(s).
+ */
+async function interpretNode(ctx, node, table) {
+  //primitives
+  if (node.hasOwnProperty("num"))
     return node;
-  }
+  if (node.hasOwnProperty("value")) //url and --variables
+    return node.value;
 
-  static async interpretArgs(node, ctx, table) {
-    if (!node.args)
-      return;
-    //todo mutates the args list array
+  //todo I need to process the primitive arrays created by the PrimitiveOne table here..
+  //todo this will not work for any arrays holding functions etc.
+
+  //bottom processed first
+  //todo mutates the args list array
+  if (node.args) {
     for (let i = 0; i < node.args.length; i++)
-      node.args[i] = await CssAudioInterpreterContext.interpretNode(ctx, node.args[i], table);
-    return node.args;
+      node.args[i] = await interpretNode(ctx, node.args[i], table);
   }
+  const match = table[node.type];
+  if (match)
+    return await (node.args instanceof Array ? match(ctx, ...node.args) : match(ctx, node.args));
+  //todo must return a new object is the args list of the object is mutated
+  return node;
 }
 
 export class InfiniteSound extends AudioContext {
 
   static async load(sound) {
-    const tables = [PrimitiveOne, TranslateFunctions, Notes, InterpreterFunctions, Primitives];
     let result = parse(sound);
     const ctx = new InfiniteSound();
-    for (let table of tables)
-      result = await CssAudioInterpreterContext.interpretNode(ctx, result, table);
+    for (let table of [PrimitiveOne, TranslateFunctions, Notes, InterpreterFunctions, Primitives])
+      result = await interpretNode(ctx, result, table);
     connectMtoN(result, ctx.destination);
     return ctx;
   }
