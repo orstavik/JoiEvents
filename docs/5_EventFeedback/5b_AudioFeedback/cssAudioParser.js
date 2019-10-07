@@ -22,7 +22,7 @@ function parseNameOrFunction(tokens) {
   const name = tokens.shift()[0];
   skipWhite(tokens);
   const args = parseGroup(tokens, "(", ",", ")");
-  return args ? {type: "fun", name, args: args.args} : name;
+  return args ? {type: name, args: args.args} : name;
 }
 
 //todo implement the function that reads the content of the CSS var into the pipe
