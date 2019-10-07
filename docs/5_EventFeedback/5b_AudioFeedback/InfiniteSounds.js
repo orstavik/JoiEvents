@@ -275,13 +275,12 @@ class CssAudioInterpreterContext {
     //replace function
     if (node.hasOwnProperty("num"))
       return node;
-    if (Primitives[node.type])
-      return Primitives[node.type](...args);
+    let name = node.type;
     if (node.type === "fun")
-      return await CssAudioInterpreterContext.makeNode(ctx, node.name, args);
-    if (typeof node === "string")
-      return await CssAudioInterpreterContext.makeNode(ctx, node);
-    throw new Error("omg^wtf= " + node);
+      name = node.name;
+    else if(typeof node === "string")
+      name = node;
+    return await CssAudioInterpreterContext.makeNode(ctx, name, args);
   }
 
   static async interpretArgs(node, ctx) {
@@ -295,6 +294,8 @@ class CssAudioInterpreterContext {
 
   static async makeNode(ctx, name, args) {
     let match;
+    if (match = Primitives[name])
+      return args ? match(...args) : match();
     if (match = TranslateFunctions[name])
       return args ? match(...args) : match();
     if (match = InterpreterFunctions[name])
