@@ -219,6 +219,8 @@ class InterpreterFunctions {
 class CssAudioInterpreterContext {
 
   static connectMtoN(m, n) {
+    m = m instanceof Array ? m : [m];
+    n = n instanceof Array ? n : [n];
     for (let a of m) {
       for (let b of n) {
         if (!a instanceof AudioNode)
@@ -274,7 +276,6 @@ class CssAudioInterpreterContext {
   }
 
   static async interpretPipe(nodes) {
-    nodes = nodes.map(node => node instanceof Array ? node : [node]);
     for (let i = 0; i < nodes.length - 1; i++)
       CssAudioInterpreterContext.connectMtoN(nodes[i], nodes[i + 1]);
     return nodes.pop();
