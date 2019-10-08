@@ -1,8 +1,8 @@
 import {parse} from "./Parser.js";
-import {Notes} from "./Notes.js";
-import {Random} from "./Random.js";
-import {InterpreterFunctions} from "./AudioNodesConstructors.js";
-import {ScaleFunctions} from "./CircleOfFifth.js";
+import {Notes} from "./LibNotes.js";
+import {Random} from "./LibRandom.js";
+import {InterpreterFunctions} from "./LibAudioNodes.js";
+import {ScaleFunctions} from "./LibCircleOfFifth.js";
 
 const Pipe = Object.create(null);
 Pipe[">"] = function (ctx, ...nodes) {
