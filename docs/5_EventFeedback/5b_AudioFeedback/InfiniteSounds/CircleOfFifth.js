@@ -55,14 +55,14 @@ function getModeNumbers(mode) {
   throw new SyntaxError("Illegal music mode: " + mode);
 }
 
-let getKeyModeNumbers = function (coor) {
+function getKeyModeNumbers (coor) {
   coor = coor instanceof Array ? coor : [coor, undefined];
   const startKey = getNoteNumber(coor[0]);
   const startMode = getModeNumbers(coor[1]);
   return [startKey, startMode];
-};
+}
 
-export function circleOfFifth(coor, key, mode) {
+function circleOfFifth(coor, key, mode) {
   const [startKey, startMode] = getKeyModeNumbers(coor);
   const morphKey = startKey + (key * 7);
   const morphMode = startMode + mode;
@@ -81,24 +81,30 @@ const modeScales = [
   [0, 2, 4, 6, 7, 9, 11]
 ];
 
-export function scale(coor) {
-  const [note, mode] = getKeyModeNumbers(coor);
-  return modeScales[mode].map(pos => note + pos);
-}
-
 function absoluteTonePosition(scale, pos) {
   return scale[pos % 7] + Math.floor(pos / 7) * 12;
 }
 
-export function chord(coor, notes) {
-  const [note, mode] = getKeyModeNumbers(coor);
-  const scale = modeScales[mode];
-  return notes.map(pos => absoluteTonePosition(scale, pos) + note);
-}
+export class ScaleFunctions {
+  static circle5(ctx, coor, key, mode) {
+    debugger;
+    return circleOfFifth(coor, key, mode);
+  }
+  static scale(coor) {
+    const [note, mode] = getKeyModeNumbers(coor);
+    return modeScales[mode].map(pos => note + pos);
+  }
 
-export function chord2(coor, count, skips) {
-  const notes = [];
-  for (let i = 0; count--; i += skips)
-    notes.push(i);
-  return chord(coor, notes);
+  static chord(coor, notes) {
+    const [note, mode] = getKeyModeNumbers(coor);
+    const scale = modeScales[mode];
+    return notes.map(pos => absoluteTonePosition(scale, pos) + note);
+  }
+
+  static makeChord(coor, count, skips) {
+    const notes = [];
+    for (let i = 0; count--; i += skips)
+      notes.push(i);
+    return chord(coor, notes);
+  }
 }

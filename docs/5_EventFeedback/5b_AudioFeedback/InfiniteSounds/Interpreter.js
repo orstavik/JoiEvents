@@ -1,37 +1,8 @@
 import {parse} from "./Parser.js";
 import {Notes} from "./Notes.js";
+import {Random} from "./Random.js";
 import {InterpreterFunctions} from "./AudioNodesConstructors.js";
-// import {circleOfFifth, chord, chord2, scale} from "./CircleOfFifth.js";
-
-//todo so far none of the TranslateFunctions are async,
-//todo but that occur later if we need to for example load a wave table from a file
-class TranslateFunctionsOne {
-  static cof(ctx, coor, key, mode) {
-    debugger;
-    return circleOfFifth(coor, key, mode);
-  }
-}
-
-class TranslateFunctionsTwo {
-  /**
-   * random(array) will return a random entry from the array.
-   * random(a) will return a random value between 0 and the number "a".
-   * random(a, b) will return a random value the numbers "a" and "b".
-   * random(a, b, step) will return a random "step" between numbers "a" and "b".
-   */
-  static random(ctx, a, b, steps) {
-    if (a instanceof Array)
-      return a[Math.floor(Math.random() * a.length)];
-    let value;
-    if (a.value && !b)
-      value = Math.random() * a.value;
-    else if (steps === undefined)
-      value = Math.random() * (b.value - a.value) + b.value;
-    else
-      value = (Math.random() * ((b.value - a.value) / steps.value) * steps.value) + b.value;
-    return {value: value, unit: a.unit};
-  }
-}
+import {ScaleFunctions} from "./CircleOfFifth.js";
 
 const Pipe = Object.create(null);
 Pipe[">"] = function (ctx, ...nodes) {
@@ -114,7 +85,7 @@ export class InfiniteSound extends AudioContext {
     result = cachedResults[sound];
     if (!result) {
       result = parse(sound);
-      for (let table of [TranslateFunctionsOne, Notes])
+      for (let table of [ScaleFunctions, Notes])
         result = await interpretNode(null, result, table);
       cachedResults[sound] = result;
     }
@@ -131,7 +102,7 @@ export class InfiniteSound extends AudioContext {
      * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
      */
     const ctx = new InfiniteSound();
-    for (let table of [TranslateFunctionsTwo, InterpreterFunctions, Pipe])
+    for (let table of [Random, InterpreterFunctions, Pipe])
       result = await interpretNode(ctx, result, table);
     if (result instanceof Array) {
       for (let audioNode of result) {
