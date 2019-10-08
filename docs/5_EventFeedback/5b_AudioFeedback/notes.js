@@ -1,5 +1,5 @@
-function getter(num) {
-  return {num, unit: "Hz"}
+function getter(value) {
+  return {value, unit: "Hz"}
 }
 
 export const Notes = {

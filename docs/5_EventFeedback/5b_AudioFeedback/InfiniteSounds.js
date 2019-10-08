@@ -7,8 +7,8 @@ function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
   for (let point of points) {
-    let vol = point[0].num;
-    let time = point[1].num;
+    let vol = point[0].value;
+    let time = point[1].value;
     if (point[1].unit === "" || point[1].unit === "e")
       target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
     else
@@ -22,10 +22,10 @@ function setAudioParameter(target, param) {
     return;
   } else if (param instanceof AudioNode) {
     param.connect(target);
-  } else if (param.hasOwnProperty("num")) {
+  } else if (param.hasOwnProperty("value")) {
     //todo if the number is not parsed outside, then the units will be universal to all nodes..
     //todo I have not implemented any interpretation of "Hz" or "db" or "ms" or whatever
-    target.value = param.num;
+    target.value = param.value;
   } else if (param instanceof Array) {
     plotEnvelope(target, param);
     // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
@@ -107,14 +107,14 @@ class TranslateFunctionsTwo {
   static random(ctx, a, b, steps) {
     if (a instanceof Array)
       return a[Math.floor(Math.random() * a.length)];
-    let num;
-    if (a.num && !b)
-      num = Math.random() * a.num;
+    let value;
+    if (a.value && !b)
+     value = Math.random() * a.value;
     else if (steps === undefined)
-      num = Math.random() * (b.num - a.num) + b.num;
+      value = Math.random() * (b.value - a.value) + b.value;
     else
-      num = (Math.random() * ((b.num - a.num) / steps.num) * steps.num) + b.num;
-    return {num, unit: a.unit};
+      value = (Math.random() * ((b.value - a.value) / steps.value) * steps.value) + b.value;
+    return {value: value, unit: a.unit};
   }
 }
 
@@ -313,6 +313,8 @@ export class InfiniteSound extends AudioContext {
         result = await interpretNode(null, result, table);
       cachedResults[sound] = result;
     }
+    //todo implement a table that gets the CSS variables
+
     //turn the result into an Offline AudioBuffer that we can reuse..
     /**
      * todo 0. Reuse the processing. To do that we need to analyze it into an ArrayBuffer. That can be reused.

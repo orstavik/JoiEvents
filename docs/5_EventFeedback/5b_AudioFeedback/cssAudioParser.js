@@ -29,8 +29,6 @@ function parseNameOrFunction(tokens) {
   return {type: name};
 }
 
-//todo implement the function that reads the content of the CSS var into the pipe
-//todo this should be done in the Interpreter
 function parseCssVar(tokens) {
   if (tokens[0][6])
     return {type: "--", value: tokens.shift()[0]};
@@ -39,8 +37,13 @@ function parseCssVar(tokens) {
 function parseNumber(tokens) {
   if (tokens[0][4]) {
     const t = tokens.shift();
-    return {num: parseFloat(t[4]), unit: t[5]};
+    return {type: "num", value: parseFloat(t[4]), unit: t[5]};
   }
+}
+
+function parseUrl(tokens) {
+  if (tokens[0][2])
+    return {type: "_url", value: tokens.shift()[0]};
 }
 
 function parseValue(tokens) {
@@ -62,11 +65,6 @@ function parseExpression(tokens) {
     return {type: "/", args: [left, right]};
   }
   return left;
-}
-
-function parseUrl(tokens) {
-  if (tokens[0][2])
-    return {type: "_url", value: tokens.shift()[0]};
 }
 
 function parseNode(tokens) {
