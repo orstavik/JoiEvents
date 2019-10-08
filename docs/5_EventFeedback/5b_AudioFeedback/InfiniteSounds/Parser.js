@@ -13,7 +13,7 @@ function parseGroup(tokens, start, separator, end) {
   if (!tokens[0] || tokens[0][0] !== end)
     throw new SyntaxError("inner css audio array list: expected " + end);
   tokens.shift();
-  return {type: separator, args: nodes};
+  return (start === "[") ? nodes : {type: separator, args: nodes};
 }
 
 function parseNameOrFunction(tokens) {
@@ -62,7 +62,8 @@ function parseExpression(tokens) {
     const right = parseExpression(tokens);
     if (!right)
       throw new SyntaxError("Something ends with a '/': " + tokens[0]);
-    return {type: "/", args: [left, right]};
+    return [left, right];
+    // return {type: "/", args: [left, right]};
   }
   return left;
 }
