@@ -1,4 +1,5 @@
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const modeNames = ["locrian", "phrygian", "aeolian", "dorian", "mixolydian", "ionian", "lydian"];
 const minors = {
   Db: "C#",
   Eb: "D#",
@@ -6,16 +7,6 @@ const minors = {
   Ab: "G#",
   Bb: "A#"
 };
-
-const modeNames = [
-  "locrian",
-  "phrygian",
-  "aeolian",
-  "dorian",
-  "mixolydian",
-  "ionian",
-  "lydian"
-];
 
 const altModeName = {
   minor: "aeolian",
@@ -33,10 +24,11 @@ function getNoteNumber(name) {
     octave = name.substring(1);
   }
   key = minors[key] || key;
-  if (!notes[key])
+  let number = notes.indexOf(key);
+  if (number === -1)
     throw new SyntaxError("A note name must be on the form 'C', 'D#', 'Eb', 'C4', or 'D#3'.");
   //todo add efficient test for checking that octave is a positive integer.
-  return notes[key] + parseInt(octave) * 12;
+  return number + parseInt(octave) * 12;
 }
 
 function getModeNumbers(mode) {
@@ -55,15 +47,7 @@ function getModeNumbers(mode) {
   throw new SyntaxError("Illegal music mode: " + mode);
 }
 
-function getKeyModeNumbers (coor) {
-  coor = coor instanceof Array ? coor : [coor, undefined];
-  const startKey = getNoteNumber(coor[0]);
-  const startMode = getModeNumbers(coor[1]);
-  return [startKey, startMode];
-}
-
-function circleOfFifth(coor, key, mode) {
-  const [startKey, startMode] = getKeyModeNumbers(coor);
+function circleOfFifth(startKey, startMode, key = 0, mode = 0) {
   const morphKey = startKey + (key * 7);
   const morphMode = startMode + mode;
   const addedKeys = Math.floor(morphMode / 7);
@@ -85,18 +69,38 @@ function absoluteTonePosition(scale, pos) {
   return scale[pos % 7] + Math.floor(pos / 7) * 12;
 }
 
+function parseKeyModeCoordinate(coor) {
+  coor = coor instanceof Array ? coor : [coor, undefined];
+  const startKey = getNoteNumber(coor[0] ? coor[0].type : undefined);
+  const startMode = getModeNumbers(coor[1] ? coor[1].type : undefined);
+  return [startKey, startMode];
+}
+
 export class ScaleFunctions {
   static circle5(ctx, coor, key, mode) {
-    debugger;
-    return circleOfFifth(coor, key, mode);
+    if (coor instanceof Array) {
+      const [startKey, startMode] = parseKeyModeCoordinate(coor);
+      let [note, newMode] = circleOfFifth(startKey, startMode, key ? parseInt(key.value) : 0, mode ? parseInt(mode.value) : 0);
+      note = notes[note % 12] + Math.floor(note / 12);
+      newMode = modeNames[newMode];
+      return [{type: note}, {type: newMode}];
+    }
+    if (coor.type && !coor.args) {
+      const [startKey, startMode] = parseKeyModeCoordinate(coor);
+      let [note, newMode] = circleOfFifth(startKey, 0, key ? parseInt(key.value) : 0, mode ? parseInt(mode.value) : 0);
+      note = notes[note % 12] + Math.floor(note / 12);
+      return {type: note};
+    }
+    throw new Error("omg: wrong error to circle of fifths..");
   }
+
   static scale(coor) {
-    const [note, mode] = getKeyModeNumbers(coor);
+    const [note, mode] = parseKeyModeCoordinate(coor);
     return modeScales[mode].map(pos => note + pos);
   }
 
   static chord(coor, notes) {
-    const [note, mode] = getKeyModeNumbers(coor);
+    const [note, mode] = parseKeyModeCoordinate(coor);
     const scale = modeScales[mode];
     return notes.map(pos => absoluteTonePosition(scale, pos) + note);
   }
