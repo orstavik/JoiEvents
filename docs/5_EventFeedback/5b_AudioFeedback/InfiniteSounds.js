@@ -90,7 +90,14 @@ class AudioFileRegister {
 
 //todo so far none of the TranslateFunctions are async,
 //todo but that occur later if we need to for example load a wave table from a file
-class TranslateFunctions {
+class TranslateFunctionsOne {
+  static cof(ctx, coor, key, mode) {
+    debugger;
+    return circleOfFifth(coor, key, mode);
+  }
+}
+
+class TranslateFunctionsTwo {
   /**
    * random(array) will return a random entry from the array.
    * random(a) will return a random value between 0 and the number "a".
@@ -108,11 +115,6 @@ class TranslateFunctions {
     else
       num = (Math.random() * ((b.num - a.num) / steps.num) * steps.num) + b.num;
     return {num, unit: a.unit};
-  }
-
-  static cof(ctx, coor, key, mode) {
-    debugger;
-    return circleOfFifth(coor, key, mode);
   }
 }
 
@@ -199,7 +201,7 @@ class InterpreterFunctions {
    * url(https://some.com/sound.file, 1) plays the sound file in a loop
    */
   static async url(ctx, url, loop) {
-    const data = await AudioFileRegister.getFileBuffer(url);
+    const data = await AudioFileRegister.getFileBuffer(url.value);
     const bufferSource = ctx.createBufferSource();
     bufferSource.buffer = await ctx.decodeAudioData(data);
     bufferSource.loop = !!loop;
@@ -216,65 +218,64 @@ class InterpreterFunctions {
   }
 }
 
-function connectMtoN(m, n) {
-  m = m instanceof Array ? m : [m];
-  n = n instanceof Array ? n : [n];
-  for (let a of m) {
-    for (let b of n) {
-      if (!a instanceof AudioNode)
-        throw new SyntaxError("CssAudioNode cannot be: " + a);
-      if (!b instanceof AudioNode)
-        throw new SyntaxError("CssAudioNode cannot be: " + b);
-      a.connect(b);
-      //todo calling start inside all source nodes now, as the ctx passed in is suspended before being populated.
-      // let inputs = b.inputs || (b.inputs = []);
-      // inputs.push(a);
+const SyntacticArrays = Object.create(null);
+SyntacticArrays["/"] = function (ctx, ...args) {
+  return args;
+};
+
+SyntacticArrays[","] = function (ctx, ...args) {
+  return args;
+};
+
+const Pipe = Object.create(null);
+Pipe[">"] = function (ctx, ...nodes) {
+  for (let i = 0; i < nodes.length - 1; i++) {
+    let n = nodes[i + 1];
+    let m = nodes[i];
+    m = m instanceof Array ? m : [m];
+    n = n instanceof Array ? n : [n];
+    for (let a of m) {
+      for (let b of n) {
+        if (!a instanceof AudioNode)
+          throw new SyntaxError("CssAudioNode cannot be: " + a);
+        if (!b instanceof AudioNode)
+          throw new SyntaxError("CssAudioNode cannot be: " + b);
+        a.connect(b);
+      }
     }
   }
-}
-
-const PrimitiveOne = Object.create(null);
-PrimitiveOne["/"] = function (ctx, ...args) {
-  return args;
-};
-
-PrimitiveOne[","] = function (ctx, ...args) {
-  return args;
-};
-
-const Primitives = Object.create(null);
-Primitives[">"] = function (ctx, ...nodes) {
-  for (let i = 0; i < nodes.length - 1; i++)
-    connectMtoN(nodes[i], nodes[i + 1]);
   return nodes[nodes.length - 1];
 };
 
-Primitives["--"] = function (ctx, value) {
-  return value;
-};
-
-Primitives["_url"] = function (ctx, value) {
-  return value;
-};
-
-/**
- * todo 0. Reuse the processing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
- * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
- * todo    need to have a "off(endtime)", or analyze a "gain()" expression, in the main pipe, verify that no source
- * todo    nodes are added after it, and check if it ends with 0 (which only can be done in an envelope or a fixed
- * todo    value), and then calculate the duration of the gain with sound. then summarize the duration of that gain.
- * todo
- * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
- */
+async function interpretArray(input, ctx, table) {
+  let output;
+  for (let i = 0; i < input.length; i++) {
+    let newNode = await interpretNode(ctx, input[i], table);
+    if (newNode === input[i])
+      continue;
+    if (!output)
+      output = input.slice(0);
+    output[i] = newNode;
+  }
+  return output || input;
+}
 
 /**
- * Works layer by layer, based on priority.
- * 0. syntactic primitives such as arrays,
- * 1. is the translate functions,
- * 2. is the values to number,
- * 3. is the audio ctx dependent functions
+ * The interpretNode function gradually turns the ast graph into an audioNode graph.
+ * The final step, pipe, produces a single AudioNode or an array of AudioNodes. It is processed
+ * in layers, depending on the priority of the given expression or function interpretation.
+ * Each layer is produces immutable object graphs that can be reused when needed.
  *
- * Works bottom up.
+ * The layers priority are:
+ * 0. Syntactic primitives: [,,] and / arrays.
+ * todo !!!I feel like I should revert and make [,,] and x/y into syntactic sugar for arrays again!!!
+ * 1. pure functions 1-5: "random" and "cof". These functions are pure, they produce an output based on input only,
+ *    no side effects. Other examples are convertion of Note values, such as A4 to 440hz.
+ * 2. AudioNode production: "sine(..)", "lowpass(..)". Producing AudioNodes require an audio ctx.
+ * 3. Piping: connecting the AudioNodes in a graph. This does not technically require an audio ctx,
+ *    as the audio ctx is already baked into the AudioNodes.
+ *
+ * Each layer is processed bottom up.
  *
  * @param ctx audio context if needed
  * @param node currently being processed
@@ -283,36 +284,54 @@ Primitives["_url"] = function (ctx, value) {
  *          The Promise of an array of the end AudioNode(s).
  */
 async function interpretNode(ctx, node, table) {
-  //primitives
-  if (node.hasOwnProperty("num"))
-    return node;
-  if (node.hasOwnProperty("value")) //url and --variables
-    return node.value;
-
-  //todo I need to process the primitive arrays created by the PrimitiveOne table here..
-  //todo this will not work for any arrays holding functions etc.
-
+  if (node instanceof Array)
+    return await interpretArray(node, ctx, table);
   //bottom processed first
-  //todo mutates the args list array
-  if (node.args) {
-    for (let i = 0; i < node.args.length; i++)
-      node.args[i] = await interpretNode(ctx, node.args[i], table);
-  }
+  let args = node.args;
+  if (args)                          //if the node is a function or expression, process its arguments first
+    args = await interpretArray(args, ctx, table);
   const match = table[node.type];
-  if (match)
-    return await (node.args instanceof Array ? match(ctx, ...node.args) : match(ctx, node.args));
-  //todo must return a new object is the args list of the object is mutated
-  return node;
+  if (match)                                //try to execute the function using table and arguments
+    return await (args instanceof Array ? match(ctx, ...args) : match(ctx));
+  if (args === node.args)
+    return node;                              //if not, just return the node with arguments processed
+  let newNode = Object.assign({}, node);
+  newNode.args = args;
+  return newNode;
 }
+
+const cachedResults = {};
 
 export class InfiniteSound extends AudioContext {
 
   static async load(sound) {
-    let result = parse(sound);
+    let result;
+    result = cachedResults[sound];
+    if (!result) {
+      result = parse(sound);
+      for (let table of [SyntacticArrays, TranslateFunctionsOne, Notes])
+        result = await interpretNode(null, result, table);
+      cachedResults[sound] = result;
+    }
+    //turn the result into an Offline AudioBuffer that we can reuse..
+    /**
+     * todo 0. Reuse the processing. To do that we need to analyze it into an ArrayBuffer. That can be reused.
+     * todo    But, to convert it into an ArrayBuffer, we need to know when the sound is off.. To know that, we either
+     * todo    need to have a "off(endtime)", or analyze a "gain()" expression, in the main pipe, verify that no source
+     * todo    nodes are added after it, and check if it ends with 0 (which only can be done in an envelope or a fixed
+     * todo    value), and then calculate the duration of the gain with sound. then summarize the duration of that gain.
+     * todo
+     * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
+     */
     const ctx = new InfiniteSound();
-    for (let table of [PrimitiveOne, TranslateFunctions, Notes, InterpreterFunctions, Primitives])
+    for (let table of [TranslateFunctionsTwo, InterpreterFunctions, Pipe])
       result = await interpretNode(ctx, result, table);
-    connectMtoN(result, ctx.destination);
+    if (result instanceof Array) {
+      for (let audioNode of result) {
+        audioNode.connect(ctx.destination);
+      }
+    } else
+      result.connect(ctx.destination);
     return ctx;
   }
 
