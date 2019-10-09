@@ -85,19 +85,19 @@ class AudioFileRegister {
 
 export class InterpreterFunctions {
 
-  static sine(ctx, freq, wave) {
+  static async sine(ctx, freq, wave) {
     return InterpreterFunctions.makeOscillator(ctx, "sine", freq, wave);
   }
 
-  static square(ctx, freq, wave) {
+  static async square(ctx, freq, wave) {
     return InterpreterFunctions.makeOscillator(ctx, "square", freq, wave);
   }
 
-  static sawtooth(ctx, freq, wave) {
+  static async sawtooth(ctx, freq, wave) {
     return InterpreterFunctions.makeOscillator(ctx, "sawtooth", freq, wave);
   }
 
-  static triangle(ctx, freq, wave) {
+  static async triangle(ctx, freq, wave) {
     return InterpreterFunctions.makeOscillator(ctx, "triangle", freq, wave);
   }
 
@@ -107,17 +107,29 @@ export class InterpreterFunctions {
     return node;
   }
 
-  static makeOscillator(ctx, type, freq, wave) {
+  static async makeOscillator(ctx, type, freq, wave) {
     //todo convert the factory methods to constructors as specified by MDN
     const oscillator = ctx.createOscillator();
     oscillator.type = type;
     setAudioParameter(oscillator.frequency, freq);
-    oscillator.setPeriodicWave(InterpreterFunctions.createPeriodicTable(ctx, wave));
+    const table = await InterpreterFunctions.createPeriodicTable(ctx, wave);
+    oscillator.setPeriodicWave(table);
     oscillator.start();
     return oscillator;
   }
 
-  static createPeriodicTable(ctx, wave) {
+  static async createPeriodicTable(ctx, wave) {
+    if (wave.type === "_url"){
+      const file = await fetch(wave.value);
+      debugger;
+      try {
+        const data = await file.json();
+      } catch (e) {
+        console.log(e);
+        debugger;
+
+      }
+    }
     if (!(wave instanceof Array))
       throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
     const real = wave[0].map(num => parseFloat(num.value));
