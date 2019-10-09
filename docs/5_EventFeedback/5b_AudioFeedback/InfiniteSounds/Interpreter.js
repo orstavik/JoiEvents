@@ -104,17 +104,55 @@ export class InfiniteSound extends AudioContext {
     const ctx = new InfiniteSound();
     for (let table of [Random, InterpreterFunctions, Pipe])
       result = await interpretNode(ctx, result, table);
+
     if (result instanceof Array) {
       for (let audioNode of result) {
-        audioNode.connect(ctx.destination);
+        audioNode.connect(ctx.specialGain);
       }
     } else
-      result.connect(ctx.destination);
+      result.connect(ctx.specialGain);
     return ctx;
   }
 
   constructor() {
     super();
+    this.specialGain = this.createGain();
+    this.specialGain.gain.value = 1;
+    this.specialGain.connect(this.destination);
     this.suspend();
+  }
+
+  stop() {
+    console.log("boo");
+    if (location.hash === "linear") {
+      this.specialGain.gain.linearRampToValueAtTime(0.0001, this.currentTime + 0.03);
+    } else if (location.hash === "exponential") {
+      this.specialGain.gain.exponentialRampToValueAtTime(0.0001, this.currentTime + 0.03);
+    } else {
+      this.specialGain.gain.setTargetAtTime(0, this.currentTime, 0.015);
+    }
+    setTimeout(() =>
+      super.suspend(), 100);
+  }
+
+  //http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
+  /**
+   * This method tries to avoid a change in the sound when one audio context replaces another.
+   * todo there is still a crackle in the sound.. It is not very big, but it is there.
+   * todo it might be considered a feature that the sound gets a slight bump when one sound replace another,
+   * todo as this is likely to represent some kind of change in the app state, relevant for the user to be
+   * todo notified of.
+   * @param ctx
+   */
+  replace(ctx) {
+    ctx.stop();
+    if (location.hash === "linear") {
+      this.specialGain.gain.linearRampToValueAtTime(1, this.currentTime + 0.03);
+    } else if (location.hash === "exponential") {
+      this.specialGain.gain.exponentialRampToValueAtTime(1, this.currentTime + 0.03);
+    } else {
+      this.specialGain.gain.setTargetAtTime(1, this.currentTime, 0.015);
+    }
+    this.resume();
   }
 }

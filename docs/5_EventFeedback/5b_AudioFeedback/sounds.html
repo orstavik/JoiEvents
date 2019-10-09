@@ -5,6 +5,7 @@
   }
 </style>
 
+<sound-strip sound="square(500Hz)" sound-two="square(500Hz)"></sound-strip>
 <sound-strip sound="noise > bandpass(500Hz)"></sound-strip>
 <sound-strip sound="noise"></sound-strip>
 <sound-strip sound="sine(340hz) > gain(square(2hz))"></sound-strip>
@@ -32,20 +33,25 @@
       super();
       this.attachShadow({mode: "open"});
       this.shadowRoot.innerHTML = `
-<input type="text" value="noise > bandpass(500Hz)">
-<button id="start">start</button>
-<button id="stop">stop</button>`;
-      this.shadowRoot.children[1].addEventListener("click", this.start.bind(this));
-      this.shadowRoot.children[2].addEventListener("click", this.stop.bind(this));
+<input type="text" value="start sound">
+<input type="text" value="">
+<button id="start">long-press to play</button>
+<button id="stop">stop second sound</button>
+`;
+      this.shadowRoot.children[2].addEventListener("mousedown", this.start.bind(this));
+      this.shadowRoot.children[2].addEventListener("mouseup", this.startTwo.bind(this));
+      this.shadowRoot.children[3].addEventListener("mousedown", this.stop.bind(this));
     }
 
     static get observedAttributes(){
-      return ["sound"];
+      return ["sound", "sound-two"];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
       if (name === "sound")
         this.shadowRoot.children[0].value = newValue;
+      if (name === "sound-two")
+        this.shadowRoot.children[1].value = newValue;
     }
 
     async start() {
@@ -54,11 +60,24 @@
       this.ctx = await InfiniteSound.load(x);
       this.ctx.resume();
       if (!this.hasAttribute("dont-stop"))
-        this.timer = setTimeout(() => this.stop(), 2000);
+        this.timer = setTimeout(() => this.stop(), 1000);
+    }
+
+    async startTwo() {
+      const x = this.shadowRoot.children[1].value;
+      if (x === "")
+        return this.stop();
+      const nextCtx = await InfiniteSound.load(x);
+
+      nextCtx.replace(this.ctx);
+      this.stop();
+      this.ctx = nextCtx;
+      if (!this.hasAttribute("dont-stop"))
+        this.timer = setTimeout(() => this.stop(), 1000);
     }
 
     stop() {
-      this.ctx && this.ctx.suspend();
+      this.ctx && this.ctx.stop();
       clearTimeout(this.timer);
     }
   }
