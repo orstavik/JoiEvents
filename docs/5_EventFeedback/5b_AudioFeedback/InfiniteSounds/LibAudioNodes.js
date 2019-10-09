@@ -85,20 +85,20 @@ class AudioFileRegister {
 
 export class InterpreterFunctions {
 
-  static sine(ctx, freq) {
-    return InterpreterFunctions.makeOscillator(ctx, "sine", freq);
+  static sine(ctx, freq, wave) {
+    return InterpreterFunctions.makeOscillator(ctx, "sine", freq, wave);
   }
 
-  static square(ctx, freq) {
-    return InterpreterFunctions.makeOscillator(ctx, "square", freq);
+  static square(ctx, freq, wave) {
+    return InterpreterFunctions.makeOscillator(ctx, "square", freq, wave);
   }
 
-  static sawtooth(ctx, freq) {
-    return InterpreterFunctions.makeOscillator(ctx, "sawtooth", freq);
+  static sawtooth(ctx, freq, wave) {
+    return InterpreterFunctions.makeOscillator(ctx, "sawtooth", freq, wave);
   }
 
-  static triangle(ctx, freq) {
-    return InterpreterFunctions.makeOscillator(ctx, "triangle", freq);
+  static triangle(ctx, freq, wave) {
+    return InterpreterFunctions.makeOscillator(ctx, "triangle", freq, wave);
   }
 
   static gain(ctx, gainParam) {
@@ -107,14 +107,22 @@ export class InterpreterFunctions {
     return node;
   }
 
-  static makeOscillator(audioContext, type, freq) {
+  static makeOscillator(ctx, type, freq, wave) {
     //todo convert the factory methods to constructors as specified by MDN
-    const oscillator = audioContext.createOscillator();
+    const oscillator = ctx.createOscillator();
     oscillator.type = type;
     setAudioParameter(oscillator.frequency, freq);
-    // oscillator.frequency.value = freq);
+    oscillator.setPeriodicWave(InterpreterFunctions.createPeriodicTable(ctx, wave));
     oscillator.start();
     return oscillator;
+  }
+
+  static createPeriodicTable(ctx, wave) {
+    if (!(wave instanceof Array))
+      throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
+    const real = wave[0].map(num => parseFloat(num.value));
+    const imag = wave[1]? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
+    return ctx.createPeriodicWave(real, imag);
   }
 
   static lowpass(ctx, freq, q, detune) {
@@ -149,10 +157,10 @@ export class InterpreterFunctions {
     return InterpreterFunctions.makeFilter(ctx, "allpass", {freq, q, detune});
   }
 
-  static makeFilter(audioContext, type, p) {
+  static makeFilter(ctx, type, p) {
     //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
     //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
-    const filterNode = audioContext.createBiquadFilter();
+    const filterNode = ctx.createBiquadFilter();
     filterNode.type = type;
     setAudioParameter(filterNode.frequency, p.freq);
     setAudioParameter(filterNode.Q, p.q);

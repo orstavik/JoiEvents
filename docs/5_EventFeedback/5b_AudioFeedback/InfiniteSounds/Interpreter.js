@@ -128,6 +128,8 @@ export class InfiniteSound extends AudioContext {
       this.specialGain.gain.linearRampToValueAtTime(0.0001, this.currentTime + 0.03);
     } else if (location.hash === "exponential") {
       this.specialGain.gain.exponentialRampToValueAtTime(0.0001, this.currentTime + 0.03);
+    } else if (location.hash === "absolute") {
+      this.specialGain.gain.value = 0;
     } else {
       this.specialGain.gain.setTargetAtTime(0, this.currentTime, 0.015);
     }
@@ -150,6 +152,8 @@ export class InfiniteSound extends AudioContext {
       this.specialGain.gain.linearRampToValueAtTime(1, this.currentTime + 0.03);
     } else if (location.hash === "exponential") {
       this.specialGain.gain.exponentialRampToValueAtTime(1, this.currentTime + 0.03);
+    } else if (location.hash === "absolute") {
+      this.specialGain.gain.value = 1;
     } else {
       this.specialGain.gain.setTargetAtTime(1, this.currentTime, 0.015);
     }
