@@ -112,28 +112,24 @@ export class InterpreterFunctions {
     const oscillator = ctx.createOscillator();
     oscillator.type = type;
     setAudioParameter(oscillator.frequency, freq);
-    const table = await InterpreterFunctions.createPeriodicTable(ctx, wave);
-    oscillator.setPeriodicWave(table);
+    if (wave) {
+      const table = await InterpreterFunctions.createPeriodicTable(ctx, wave);
+      oscillator.setPeriodicWave(table);
+    }
     oscillator.start();
     return oscillator;
   }
 
   static async createPeriodicTable(ctx, wave) {
-    if (wave.type === "_url"){
+    if (wave.type === "_url") {
       const file = await fetch(wave.value);
-      debugger;
-      try {
-        const data = await file.json();
-      } catch (e) {
-        console.log(e);
-        debugger;
-
-      }
+      const data = await file.json();
+      return ctx.createPeriodicWave(data.real, data.imag);
     }
     if (!(wave instanceof Array))
       throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
     const real = wave[0].map(num => parseFloat(num.value));
-    const imag = wave[1]? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
+    const imag = wave[1] ? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
     return ctx.createPeriodicWave(real, imag);
   }
 
