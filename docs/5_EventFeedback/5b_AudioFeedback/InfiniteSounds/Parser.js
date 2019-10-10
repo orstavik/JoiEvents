@@ -1,7 +1,3 @@
-
-//todo add the table for urls? should I return a table, or should i start fetching and then return a table?
-//todo no, that kind of preemptive speed optimization is bad, return the ast and a list of urls?
-
 //todo numbers as primitive floats?
 
 //todo handle and position --css-variables as regular function names.
@@ -14,16 +10,16 @@
 //1. quotes are used for base64 and urls. All quotes are converted to double quotes
 //urls and base64 should be wrapped in quotes: "azs1234SAKDJHQPOWEIHT+/dkfhsdkgj=" / "https://some.where.com/help.me" / "my.file"
 
-//space | pipe | comma | parenthesis | brackets | slash | double quotes | single quotes | word | number | cssVariable | error
-const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|("(?:[^\\"]|\\.)*")|'((?:[^\\']|\\.)*)'|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)|(.+)/g;
+//space | pipe | comma | parenthesis | brackets | slash | double quotes | single quotes | word | number | cssVariable | $var | error
+const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|("(?:[^\\"]|\\.)*")|'((?:[^\\']|\\.)*)'|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)|(\$[\d]+)|(.+)/g;
 
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
 }
 
 function error(tokens) {
-  if (tokens.length && tokens[0][8])
-    throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][8]);
+  if (tokens.length && tokens[0][9])
+    throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][9]);
 }
 
 function nextToken(tokens) {
@@ -45,9 +41,9 @@ function parseGroup(tokens, start, separator, end) {
 }
 
 function parseNameOrFunction(tokens) {
-  if (!tokens[0][4])
-    return undefined;
-  const name = nextToken(tokens)[0];
+  const name = parseNameOrVar(tokens);
+  if (!name)
+    return;
   let args = parseGroup(tokens, "(", ",", ")");
   if (args) {
     args.type = name;
@@ -56,9 +52,19 @@ function parseNameOrFunction(tokens) {
   return {type: name};
 }
 
+function parseNameOrVar(tokens) {
+  if (tokens[0][4] || tokens[0][8])
+    return nextToken(tokens)[0];
+}
+
 function parseCssVar(tokens) {
   if (tokens[0][7])
     return {type: "--", value: nextToken(tokens)[0]};
+}
+
+function parseDollarVar(tokens) {
+  if (tokens[0][8])
+    return nextToken(tokens)[0];
 }
 
 function parseNumber(tokens) {
@@ -121,6 +127,10 @@ export function parse(str) {
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
 }
+
+
+//todo add the table for urls? should I return a table, or should i start fetching and then return a table?
+//todo no, that kind of preemptive speed optimization is bad, return the ast and a list of urls?
 
 /*
 * the parser should maybe specify if there is a list of urls, or a list of css variables, or a list of expressions.

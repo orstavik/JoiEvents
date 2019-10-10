@@ -39,8 +39,11 @@
   let q_ = '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"--","value":"--my-mode"}]]}]}';
   let r = 'sine(F#4/plus(2,2))';
   let r_ = '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"plus","args":[{"type":"num","value":2,"unit":""},{"type":"num","value":2,"unit":""}]}]]}]}';
-  let s = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)';
-  let s_ = 'InfiniteSound: Illegal token: ://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1))';
+  let s = 'url($1, 1) > $2(A4) > gain($3)';
+  let s_ = '{"type":">","args":[{"type":"url","args":[{"type":"$1"},{"type":"num","value":1,"unit":""}]},{"type":"$2","args":[{"type":"A4"}]},{"type":"gain","args":[{"type":"$3"}]}]}';
+  
+  let x1 = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)';
+  let x1_ = 'InfiniteSound: Illegal token: ://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1))';
 
   function test(msg, tst, name) {
     let stringify, obj;
@@ -55,8 +58,8 @@
       console.log(name + " success: ", msg, obj);
     else {
       console.error(name + " error: ", msg, obj);
-      console.log(`let ${name} = '${msg}';`);
-      console.log(`let ${name}_ = '${stringify}';`);
+//      console.log(`let ${name} = '${msg}';`);
+//      console.log(`let ${name}_ = '${stringify}';`);
     }
   }
 
@@ -80,4 +83,5 @@
   test(q, q_, "q");
   test(r, r_, "r");
   test(s, s_, "s");
+  test(x1, x1_, "x1");
 </script>
