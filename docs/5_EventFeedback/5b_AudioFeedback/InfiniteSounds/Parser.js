@@ -1,18 +1,18 @@
-//todo urls and base64 should be wrapped in quotes: "azs1234SAKDJHQPOWEIHT+/dkfhsdkgj=" / "https://some.where.com/help.me" / "my.file"
-//todo | base64\(([a-zA-Z0-9+\/][=]?)\) |
-//todo add quotes | "(?:[^\\"]|\\.)*" | '(?:[^\\']|\\.)*' |
-//should we try to convert the base64 or url in the parser? no.. that would lead to many irrelevant tasks. we wait with this until we get to the semantic interpreation. that also solves the problem of ctx in the parser. perfect.
 
 //todo add the table for urls? should I return a table, or should i start fetching and then return a table?
 //todo no, that kind of preemptive speed optimization is bad, return the ast and a list of urls?
 
 //todo numbers as primitive floats?
-//todo keep a string for the different arguments
+
+//todo handle and position --css-variables as regular function names.
 
 //todo css variable replacements: $1, $2 etc
 //todo | \$[1-9][0-9]* |               | \$0 | \$[\d]+ | where the first will cause a syntax error? the second is better..
 //todo use a first pass tokenizer to find syntax errors? maybe no..
 //todo add |(*) at the end to produce syntax error? yes
+
+//1. quotes are used for base64 and urls. All quotes are converted to double quotes
+//urls and base64 should be wrapped in quotes: "azs1234SAKDJHQPOWEIHT+/dkfhsdkgj=" / "https://some.where.com/help.me" / "my.file"
 
 //space | pipe | comma | parenthesis | brackets | slash | double quotes | single quotes | word | number | cssVariable | error
 const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|("(?:[^\\"]|\\.)*")|'((?:[^\\']|\\.)*)'|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)|(.+)/g;
