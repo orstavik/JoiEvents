@@ -1,6 +1,6 @@
 //todo numbers as primitive floats?
 
-//todo handle and position --css-variables as regular function names.
+//todo names, --css-variables, and $1 variables are all treated as functions
 
 //todo css variable replacements: $1, $2 etc
 //todo | \$[1-9][0-9]* |               | \$0 | \$[\d]+ | where the first will cause a syntax error? the second is better..
@@ -52,20 +52,24 @@ function parseNameOrFunction(tokens) {
   return {type: name};
 }
 
+/**
+ * captures both names, --css-var-names, and $1 etc. names
+ * @param tokens
+ */
 function parseNameOrVar(tokens) {
-  if (tokens[0][4] || tokens[0][8])
+  if (tokens[0][4] || tokens[0][8] || tokens[0][7])
     return nextToken(tokens)[0];
 }
 
-function parseCssVar(tokens) {
-  if (tokens[0][7])
-    return {type: "--", value: nextToken(tokens)[0]};
-}
-
-function parseDollarVar(tokens) {
-  if (tokens[0][8])
-    return nextToken(tokens)[0];
-}
+// function parseCssVar(tokens) {
+//   if (tokens[0][7])
+//     return {type: "--", value: nextToken(tokens)[0]};
+// }
+//
+// function parseDollarVar(tokens) {
+//   if (tokens[0][8])
+//     return nextToken(tokens)[0];
+// }
 
 function parseNumber(tokens) {
   if (tokens[0][5]) {
@@ -81,7 +85,7 @@ function parseQuote(tokens) {
 
 function parseValue(tokens) {
   return parseNameOrFunction(tokens) ||
-    parseCssVar(tokens) ||
+    // parseCssVar(tokens) ||
     parseNumber(tokens) ||
     parseQuote(tokens);
 }
