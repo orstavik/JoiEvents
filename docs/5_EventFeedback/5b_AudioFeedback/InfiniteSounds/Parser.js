@@ -41,14 +41,27 @@ function parseGroup(tokens, start, separator, end) {
 }
 
 function parseNameOrFunction(tokens) {
-  const name = parseNameOrVar(tokens);
+  let name = parseNameOrVar(tokens);
   if (!name)
     return;
+  let varName;
+  if (name[0] === "$") {
+    varName = name;
+    name = "$";
+  }
+  if (name[0] === "-" && name[1] === "-") {
+    varName = name;
+    name = "--";
+  }
   let args = parseGroup(tokens, "(", ",", ")");
   if (args) {
     args.type = name;
+    if (varName)
+      args.varName = varName;
     return args;
   }
+  if (varName)
+    return {type: name, varName: varName};
   return {type: name};
 }
 

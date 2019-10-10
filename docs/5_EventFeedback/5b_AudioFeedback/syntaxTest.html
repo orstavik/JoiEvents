@@ -5,7 +5,7 @@
     a: ['a > b > c',
       '{"type":">","args":[{"type":"a"},{"type":"b"},{"type":"c"}]}'],
     b: ['a > --audio-var > c',
-      '{"type":">","args":[{"type":"a"},{"type":"--audio-var"},{"type":"c"}]}'],
+      '{"type":">","args":[{"type":"a"},{"type":"--","varName":"--audio-var"},{"type":"c"}]}'],
     c: ['a > b > [c, d]',
       '{"type":">","args":[{"type":"a"},{"type":"b"},[{"type":"c"},{"type":"d"}]]}'],
     d: ['sawtooth(144hz) > lowpass(140hz, 24dB)',
@@ -29,7 +29,7 @@
     l: ['noise > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02]) > peaking(120hz, 25dB, 100hz)',
       '{"type":">","args":[{"type":"noise"},{"type":"gain","args":[[[{"type":"num","value":0.9,"unit":""},{"type":"num","value":0.9,"unit":""}],[{"type":"num","value":0.6,"unit":""},{"type":"num","value":0.001,"unit":""}],[{"type":"num","value":0.6,"unit":""},{"type":"num","value":0.4,"unit":""}],[{"type":"num","value":0,"unit":""},{"type":"num","value":0.02,"unit":""}]]]},{"type":"peaking","args":[{"type":"num","value":120,"unit":"hz"},{"type":"num","value":25,"unit":"dB"},{"type":"num","value":100,"unit":"hz"}]}]}'],
     m: ['a > --audio-var > peaking(120hz, 25dB, 1hz)',
-      '{"type":">","args":[{"type":"a"},{"type":"--audio-var"},{"type":"peaking","args":[{"type":"num","value":120,"unit":"hz"},{"type":"num","value":25,"unit":"dB"},{"type":"num","value":1,"unit":"hz"}]}]}'],
+      '{"type":">","args":[{"type":"a"},{"type":"--","varName":"--audio-var"},{"type":"peaking","args":[{"type":"num","value":120,"unit":"hz"},{"type":"num","value":25,"unit":"dB"},{"type":"num","value":1,"unit":"hz"}]}]}'],
     n: ['sine(F4)',
       '{"type":">","args":[{"type":"sine","args":[{"type":"F4"}]}]}'],
     o: ['sine(F#4)',
@@ -37,12 +37,11 @@
     p: ['sine(F#4/Ionian)',
       '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"Ionian"}]]}]}'],
     q: ['sine(F#4/--my-mode)',
-      '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"--my-mode"}]]}]}'],
+      '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"--","varName":"--my-mode"}]]}]}'],
     r: ['sine(F#4/plus(2,2))',
       '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"plus","args":[{"type":"num","value":2,"unit":""},{"type":"num","value":2,"unit":""}]}]]}]}'],
     s: ['url($1, 1) > $2(A4) > gain($3)',
-      '{"type":">","args":[{"type":"url","args":[{"type":"$1"},{"type":"num","value":1,"unit":""}]},{"type":"$2","args":[{"type":"A4"}]},{"type":"gain","args":[{"type":"$3"}]}]}'],
-
+      '{"type":">","args":[{"type":"url","args":[{"type":"$","varName":"$1"},{"type":"num","value":1,"unit":""}]},{"type":"$","args":[{"type":"A4"}],"varName":"$2"},{"type":"gain","args":[{"type":"$","varName":"$3"}]}]}'],
     x1: ['url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)',
       'InfiniteSound: Illegal token: ://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1))']
   };
@@ -64,14 +63,13 @@
   var success = [];
   for (let test in tests) {
     let res = runTest(tests[test][0], tests[test][1], test);
-    if (!res){
+    if (!res) {
       success.push(test);
       continue;
     }
     const {name, msg, obj, stringify} = res;
     console.error(name + " error: ", msg, obj);
-    console.log(`let ${name} = '${msg}';`);
-    console.log(`let ${name}_ = '${stringify}';`);
+    console.log(`${name}: ['${msg}', '${stringify}'],`);
   }
   console.log("OK: " + success.join(" "));
 </script>
