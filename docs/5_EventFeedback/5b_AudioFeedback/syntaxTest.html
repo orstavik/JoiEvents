@@ -2,10 +2,6 @@
   import {parse} from "./InfiniteSounds/Parser.js";
 
   const tests = {
-    a: ['a > b > c',
-      '{"type":">","args":[{"type":"a"},{"type":"b"},{"type":"c"}]}'],
-    b: ['a > --audio-var > c',
-      '{"type":">","args":[{"type":"a"},{"type":"--","varName":"--audio-var"},{"type":"c"}]}'],
     c: ['a > b > [c, d]',
       '{"type":">","args":[{"type":"a"},{"type":"b"},[{"type":"c"},{"type":"d"}]]}'],
     d: ['sawtooth(144hz) > lowpass(140hz, 24dB)',
@@ -16,8 +12,7 @@
       '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]}]}'],
     f2: ['url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3", 1)',
       '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\"",{"type":"num","value":1,"unit":""}]}]}'],
-    g: ['url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > lowpass(180hz, 12dB)',
-      '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}'],
+    g: ['url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > lowpass(180hz, 12dB)', '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}'],
     h: ['url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > gain([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)',
       '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},{"type":"gain","args":[[[{"type":"num","value":1,"unit":""},{"type":"num","value":0.0015,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":0.001,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":1,"unit":""}]],[[{"type":"num","value":0,"unit":""},{"type":"num","value":0.03,"unit":""}]]]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}'],
     i: ['url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > [a, b]',
