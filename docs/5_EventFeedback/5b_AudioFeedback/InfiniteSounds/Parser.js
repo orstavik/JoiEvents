@@ -74,16 +74,6 @@ function parseNameOrVar(tokens) {
     return nextToken(tokens)[0];
 }
 
-// function parseCssVar(tokens) {
-//   if (tokens[0][7])
-//     return {type: "--", value: nextToken(tokens)[0]};
-// }
-//
-// function parseDollarVar(tokens) {
-//   if (tokens[0][8])
-//     return nextToken(tokens)[0];
-// }
-
 function parseNumber(tokens) {
   if (tokens[0][5]) {
     const t = nextToken(tokens);
@@ -98,7 +88,6 @@ function parseQuote(tokens) {
 
 function parseValue(tokens) {
   return parseNameOrFunction(tokens) ||
-    // parseCssVar(tokens) ||
     parseNumber(tokens) ||
     parseQuote(tokens);
 }
