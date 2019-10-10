@@ -120,9 +120,36 @@ export class InterpreterFunctions {
     return oscillator;
   }
 
+  // //todo reverb/convolver
+  // static async reverb(ctx, array, gain) {
+  //   const convolver = ctx.createConvolver();
+  //   if (array instanceof Array)
+  //     convolver.buffer = await convertToAudioBuffer(ctx, array);
+  //   else if (array.type === "_url")
+  //     convolver.buffer = await getAudioBuffer(ctx, array);
+  //   else if (array.type === "base64")
+  //     convolver.buffer = await convertToAudioBuffer(ctx, array);
+  //   else
+  //     throw new Error("omg, cannot reverb without array");
+  //   convolver.gain = ctx.createGain();
+  //   convolver.gain = gain;
+  //   return convolver;
+  // }
+  //
+  // //todo delay
+  // static async delay(ctx, goal = 0, max = 1) {
+  //   if (!isNumber(goal)|| !isNumber(max))
+  //     throw new Error("omg, cannot delay without a number.");
+  //   return new DelayNode(ctx, {
+  //     delayTime: goal,
+  //     maxDelayTime: max
+  //   });
+  // }
+  //
   static async createPeriodicTable(ctx, wave) {
-    if (wave.type === "_url") {
-      const file = await fetch(wave.value);
+    if (wave[0] === '"') {
+      let tst = wave.substring(1, wave.length - 1);
+      const file = await fetch(tst);
       const data = await file.json();
       return ctx.createPeriodicWave(data.real, data.imag);
     }
@@ -182,7 +209,8 @@ export class InterpreterFunctions {
    * url(https://some.com/sound.file, 1) plays the sound file in a loop
    */
   static async url(ctx, url, loop) {
-    const data = await AudioFileRegister.getFileBuffer(url.value);
+    let tst = url.substring(1, url.length - 1);
+    const data = await AudioFileRegister.getFileBuffer(tst);
     const bufferSource = ctx.createBufferSource();
     bufferSource.buffer = await ctx.decodeAudioData(data);
     bufferSource.loop = !!loop;

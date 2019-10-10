@@ -5,7 +5,7 @@
   }
 </style>
 
-<sound-strip sound="sine(160hz, https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/wavetables/trombone.json)"></sound-strip>
+<sound-strip sound="sine(160hz, 'https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/wavetables/trombone.json')"></sound-strip>
 <sound-strip sound="square(500Hz)" sound-two="square(500Hz)"></sound-strip>
 <sound-strip sound="noise > bandpass(500Hz)"></sound-strip>
 <sound-strip sound="noise"></sound-strip>
@@ -16,8 +16,8 @@
 <sound-strip sound="sine(random(1340hz)) > gain(0.1)"></sound-strip>
 <sound-strip sound="sine(random(1600hz, 3040hz)) > gain(0.1)"></sound-strip>
 <sound-strip sound="sine(random(0, 6000hz, 1000hz)) > gain(0.1)"></sound-strip>
-<sound-strip sound="url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3)"></sound-strip>
-<sound-strip sound="url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)" dont-stop></sound-strip>
+<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3')"></sound-strip>
+<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3', 1)" dont-stop></sound-strip>
 <sound-strip sound="sine(F4)"></sound-strip>
 <sound-strip sound="sine(Ab4)"></sound-strip>
 <sound-strip sound="sine(C#4)"></sound-strip>
@@ -26,6 +26,31 @@
 <sound-strip sound="sawtooth(random([C2, E2, G2])) > gain([1/0.0015, 0/1.2]) > lowpass(244.5hz) > gain([1.0/0.001, 0/0.8])"></sound-strip>
 <sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]])"></sound-strip>
 
+<!--
+1. fix the parser
+a. if we have numbers with a unit, such as 34dB, then we preserve that as a complex unit. But, if we only have a number, we keep that as a float. This gives us the ability to do optional run time type checking inside functions. And it gives us the ability to skip everything for basic floats.
+
+b. Strings we keep as complex objects, because they are essentially empty functions. But. They can also be arguments. When strings are passed in as arguments, they should be simplified before the function runs.
+
+c. The parse() function will return also an object of files being retrieved. The parse function also gets a second argument of the urls already retrieved. Optional.
+
+d. When we make audio nodes, we do the same thing, we pass in a map of already processed data, which we reuse from if the entry already exists.
+
+This means that our context now will include two maps, one for fetched files, and one for processed data.
+But this is a different type of context. I don't want to mix this global context with the local one. The function should instead have two context inputs.
+LocalCtx and GlobalCtx.
+
+2. Add delaynode
+3. Add Convolvernode (reverb)
+4. Add css variables also with arguments (css var functions)
+5. To do css var functions, i think that i need to make a to string function, so that i can make strings of bits that has been parsed. Thus, i think that the parser should observe the nodes consumed. So instead of unshifting nodes, i think that i should use an index.
+
+x. //https://surikov.github.io/webaudiofontdata/sound/0120_JCLive_sf2_file.html
+make the reverbator from this file
+
+y. make the atob data type
+//The 64 characters (hence the name Base64) are 10 digits, 26 lowercase characters, 26 uppercase characters as well as the Plus sign (+) and the Forward Slash (/). There is also a 65th character known as a pad, which is the Equal sign (=). This character is used when the last segment of binary data doesn't contain a full 6 bits.
+-->
 
 <script type="module">
   import {InfiniteSound} from "./InfiniteSounds/Interpreter.js";

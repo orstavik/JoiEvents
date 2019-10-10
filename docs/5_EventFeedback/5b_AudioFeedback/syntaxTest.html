@@ -11,16 +11,16 @@
   let d_ = '{"type":">","args":[{"type":"sawtooth","args":[{"type":"num","value":144,"unit":"hz"}]},{"type":"lowpass","args":[{"type":"num","value":140,"unit":"hz"},{"type":"num","value":24,"unit":"dB"}]}]}';
   let e = 'square(144hz) > vol([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)';
   let e_ = '{"type":">","args":[{"type":"square","args":[{"type":"num","value":144,"unit":"hz"}]},{"type":"vol","args":[[[{"type":"num","value":1,"unit":""},{"type":"num","value":0.0015,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":0.001,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":1,"unit":""}]],[[{"type":"num","value":0,"unit":""},{"type":"num","value":0.03,"unit":""}]]]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}';
-  let f = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3)';
-  let f_ = '{"type":">","args":[{"type":"url","args":[{"type":"_url","value":"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"}]}]}';
-  let f2 = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)';
-  let f2_ = '{"type":">","args":[{"type":"url","args":[{"type":"_url","value":"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"},{"type":"num","value":1,"unit":""}]}]}';
-  let g = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > lowpass(180hz, 12dB)';
-  let g_ = '{"type":">","args":[{"type":"url","args":[{"type":"_url","value":"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"}]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}';
-  let h = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > gain([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)';
-  let h_ = '{"type":">","args":[{"type":"url","args":[{"type":"_url","value":"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"}]},{"type":"gain","args":[[[{"type":"num","value":1,"unit":""},{"type":"num","value":0.0015,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":0.001,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":1,"unit":""}]],[[{"type":"num","value":0,"unit":""},{"type":"num","value":0.03,"unit":""}]]]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}'
-  let i = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3) > [a, b]';
-  let i_ = '{"type":">","args":[{"type":"url","args":[{"type":"_url","value":"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3"}]},[{"type":"a"},{"type":"b"}]]}';
+  let f = "url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3')";
+  let f_ = '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]}]}';
+  let f2 = 'url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3", 1)';
+  let f2_ = '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\"",{"type":"num","value":1,"unit":""}]}]}';
+  let g = 'url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > lowpass(180hz, 12dB)';
+  let g_ = '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}';
+  let h = 'url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > gain([1/0.0015],[0.6/0.001],[0.6/1],[0/0.03]) > lowpass(180hz, 12dB)';
+  let h_ = '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},{"type":"gain","args":[[[{"type":"num","value":1,"unit":""},{"type":"num","value":0.0015,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":0.001,"unit":""}]],[[{"type":"num","value":0.6,"unit":""},{"type":"num","value":1,"unit":""}]],[[{"type":"num","value":0,"unit":""},{"type":"num","value":0.03,"unit":""}]]]},{"type":"lowpass","args":[{"type":"num","value":180,"unit":"hz"},{"type":"num","value":12,"unit":"dB"}]}]}';
+  let i = 'url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > [a, b]';
+  let i_ = '{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},[{"type":"a"},{"type":"b"}]]}';
   let j = 'triangle(144hz) > peaking(120hz, 25dB, 10hz)';
   let j_ = '{"type":">","args":[{"type":"triangle","args":[{"type":"num","value":144,"unit":"hz"}]},{"type":"peaking","args":[{"type":"num","value":120,"unit":"hz"},{"type":"num","value":25,"unit":"dB"},{"type":"num","value":10,"unit":"hz"}]}]}';
   let k = 'noise > bandpass(140hz, 12dB, 300hz)';
@@ -39,15 +39,25 @@
   let q_ = '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"--","value":"--my-mode"}]]}]}';
   let r = 'sine(F#4/plus(2,2))';
   let r_ = '{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"plus","args":[{"type":"num","value":2,"unit":""},{"type":"num","value":2,"unit":""}]}]]}]}';
+  let s = 'url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)';
+  let s_ = 'InfiniteSound: Illegal token: ://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1))';
+
   function test(msg, tst, name) {
-    let obj = parse(msg);
-    let stringify = JSON.stringify(obj);
-//    console.log(`let ${name} = '${msg}'`);
-//    console.log(`let ${name}_ = '${stringify}'`);
+    let stringify, obj;
+    try {
+      obj = parse(msg);
+      stringify = JSON.stringify(obj);
+    } catch (e) {
+      obj = e;
+      stringify = e.message;
+    }
     if (tst === stringify)
-      console.log("success: ", msg, obj);
-    else
-      console.error("error: ", msg, obj);
+      console.log(name + " success: ", msg, obj);
+    else {
+      console.error(name + " error: ", msg, obj);
+      console.log(`let ${name} = '${msg}';`);
+      console.log(`let ${name}_ = '${stringify}';`);
+    }
   }
 
   test(a, a_, "a");
@@ -56,7 +66,7 @@
   test(d, d_, "d");
   test(e, e_, "e");
   test(f, f_, "f");
-  test(f2, f2_);
+  test(f2, f2_, "f2");
   test(g, g_, "g");
   test(h, h_, "h");
   test(i, i_, "i");
@@ -69,4 +79,5 @@
   test(p, p_, "p");
   test(q, q_, "q");
   test(r, r_, "r");
+  test(s, s_, "s");
 </script>

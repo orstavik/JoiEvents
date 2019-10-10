@@ -68,6 +68,7 @@ async function interpretNode(ctx, node, table) {
     args = await interpretArray(args, ctx, table);
   const match = table[node.type];
   if (match)                                //try to execute the function using table and arguments
+    //todo here I can unwrap complex string objects that will be used as argument strings.
     return await (args instanceof Array ? match(ctx, ...args) : match(ctx));
   if (args === node.args)
     return node;                              //if not, just return the node with arguments processed
@@ -85,11 +86,12 @@ export class InfiniteSound extends AudioContext {
     result = cachedResults[sound];
     if (!result) {
       result = parse(sound);
+      //todo replace CSS variables here?
+      //todo and then check if there is a cached result again?
       for (let table of [ScaleFunctions, Notes])
         result = await interpretNode(null, result, table);
       cachedResults[sound] = result;
     }
-    //todo implement a table that gets the CSS variables
 
     //turn the result into an Offline AudioBuffer that we can reuse..
     /**
