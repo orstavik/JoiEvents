@@ -27,6 +27,7 @@
 <sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]])"></sound-strip>
 <sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]]) > delay(0.5)"></sound-strip>
 <sound-strip sound="sine(C#4) > convolver"></sound-strip>
+<sound-strip sound="sawtooth(C#4) > [gain(0.9), (convolver > gain(0.5))]"></sound-strip>
 
 <!--
 1. fix the parser
@@ -42,8 +43,8 @@ This means that our context now will include two maps, one for fetched files, an
 But this is a different type of context. I don't want to mix this global context with the local one. The function should instead have two context inputs.
 LocalCtx and GlobalCtx.
 
-2. Add delaynode
-3. Add Convolvernode (reverb)
+3. Make a composite reverb = [gain(0.9), convolver() > gain(0.5)]
+                    reverb(dry, wet, room) = [gain($1), convolver($3) > gain($2)]
 4. Add css variables also with arguments (css var functions)
 5. To do css var functions, i think that i need to make a to string function, so that i can make strings of bits that has been parsed. Thus, i think that the parser should observe the nodes consumed. So instead of unshifting nodes, i think that i should use an index.
 

@@ -2,17 +2,83 @@ import {parse} from "../Parser.js";
 
 describe('pipe', function () {
   it("a > b > c", function () {
-    const tst  = parse('a > b > c');
+    const tst = parse('a > b > c');
     const result = JSON.parse('{"type":">","args":[{"type":"a"},{"type":"b"},{"type":"c"}]}');
     expect(tst).to.deep.equal(result);
   });
-  
+
   it("a > b > [c, d]", function () {
     const tst = parse('a > b > [c, d]');
     const result = JSON.parse('{"type":">","args":[{"type":"a"},{"type":"b"},[{"type":"c"},{"type":"d"}]]}');
     expect(tst).to.deep.equal(result);
   });
+  it("a > (b > c)", function () {
+    const tst = parse('a > (b > c)');
+    const res = {
+      type: ">",
+      args: [{
+        type: "a",
+      }, {
+        type: ">",
+        args: [{
+          type: "b",
+        }, {
+          type: "c",
+        }]
+      }]
+    };
+    expect(tst).to.deep.equal(res);
+  });
 });
+
+describe('array', function () {
+  it('[a,b,c]', function () {
+    const tst = parse('[a,b,c]');
+    const result = JSON.parse('{"type":">","args":[[{"type":"a"},{"type":"b"},{"type":"c"}]]}');
+    expect(tst).to.deep.equal(result);
+  });
+  it('a > [b, (c > d)]', function () {
+    const tst = parse('a > [b, (c > d)]');
+    const result = {
+      type: ">",
+      args: [{
+        type: "a",
+      }, [{
+        type: "b",
+      }, {
+        type: ">",
+        args: [{
+          type: "c",
+        }, {
+          type: "d",
+        }]
+      }]
+      ]
+    };
+    expect(tst).to.deep.equal(result);
+  });
+  it('a > ([b, (c > d)])', function () {
+    const tst = parse('a > ([b, (c > d)])');
+    const result = {
+      type: ">",
+      args: [{
+        type: "a",
+      }, [{
+        type: "b",
+      }, {
+        type: ">",
+        args: [{
+          type: "c",
+        }, {
+          type: "d",
+        }]
+      }]
+      ]
+    };
+    expect(tst).to.deep.equal(result);
+  });
+});
+
 
 describe('--css-var', function () {
   it("a > --audio-var > c", function () {
@@ -125,6 +191,18 @@ describe('Notes', function () {
     const result = JSON.parse('{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"plus","args":[{"type":"num","value":2,"unit":""},{"type":"num","value":2,"unit":""}]}]]}]}');
     expect(tst).to.deep.equal(result);
   });
+
+  // it('sine(F#4) > [gain(0.9), convolver() > gain(0.5)]', function () {
+  //   const tst = parse('sine(F#4) > [gain(0.9), convolver() > gain(0.5)]');
+  //   const result = JSON.parse('{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"plus","args":[{"type":"num","value":2,"unit":""},{"type":"num","value":2,"unit":""}]}]]}]}');
+  //   expect(tst).to.deep.equal(result);
+  // });
+  //
+  // it('sine(F#4) > ([gain(0.9), (convolver() > gain(0.5))])', function () {
+  //   const tst = parse('sine(F#4) > [gain(0.9), convolver() > gain(0.5)]');
+  //   const result = JSON.parse('{"type":">","args":[{"type":"sine","args":[[{"type":"F#4"},{"type":"plus","args":[{"type":"num","value":2,"unit":""},{"type":"num","value":2,"unit":""}]}]]}]}');
+  //   expect(tst).to.deep.equal(result);
+  // });
 });
 
 describe("Error test", function () {
