@@ -64,6 +64,18 @@ function makeNoiseNode(duration, sampleRate) {
   return buffer;
 }
 
+function convertConvolverBuffer(data) {
+  return new Uint8Array(data).buffer;
+}
+
+async function fetchAConvolverBuffer(url) {
+  const file = await fetch(url);
+  const data = await file.json();
+  return convertConvolverBuffer(data);
+}
+
+const aConvolverBuffer = fetchAConvolverBuffer("https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json");
+
 class AudioFileRegister {
   static async getFileBuffer(url) {
     let cache = cachedFiles[url];
@@ -75,12 +87,17 @@ class AudioFileRegister {
   }
 
   static noise() {
-    return noise || (noise = makeNoiseNode(3, 44100));
+    return (noise || (noise = makeNoiseNode(3, 44100))).slice(); //todo test if I need to slice the noise buffer?
+    // return noise || (noise = makeNoiseNode(3, 44100));
   }
 
   //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
   //to max: this makes me think that the method .createBuffer could have been static
   //to max: but it means that the AudioBuffer objects are context free. Also for OfflineAudioContexts.
+
+  static async aConvolverBuffer() {
+    return (await aConvolverBuffer).slice();
+  }
 }
 
 export class InterpreterFunctions {
@@ -120,23 +137,27 @@ export class InterpreterFunctions {
     return oscillator;
   }
 
-  // //todo reverb/convolver
-  // static async reverb(ctx, array, gain) {
-  //   const convolver = ctx.createConvolver();
-  //   if (array instanceof Array)
-  //     convolver.buffer = await convertToAudioBuffer(ctx, array);
-  //   else if (array.type === "_url")
-  //     convolver.buffer = await getAudioBuffer(ctx, array);
-  //   else if (array.type === "base64")
-  //     convolver.buffer = await convertToAudioBuffer(ctx, array);
-  //   else
-  //     throw new Error("omg, cannot reverb without array");
-  //   convolver.gain = ctx.createGain();
-  //   convolver.gain = gain;
-  //   return convolver;
-  // }
+  //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
+  static async convolver(ctx, array) {
+    const convolver = ctx.createConvolver();
+    const buffer = await (
+      !array ? AudioFileRegister.aConvolverBuffer() :
+        array instanceof Array ? convertColvolverBuffer(array) :
+          array.startsWith('"') ? fetchAConvolverBuffer(array) :
+            array.type === "base64" ? convertToAudioBuffer(array) :
+              null);
 
-  static async delay(ctx, goal = {type:"num", value: "0"}, max = {type:"num", value: "1"}) {
+    if (!buffer)
+      throw new Error("omg, cannot reverb without array");
+    ctx.decodeAudioData(buffer, function (audioBuffer) {
+      convolver.buffer = audioBuffer;
+    });
+    // convolver.gain = ctx.createGain();
+    // convolver.gain = gain;
+    return convolver;
+  }
+
+  static async delay(ctx, goal = {type: "num", value: "0"}, max = {type: "num", value: "1"}) {
     // if (typeof goal !== "number" || typeof max !== "number")
     //   throw new Error("omg, cannot delay without a number.");
     if (goal.type !== "num" || max.type !== "num")
