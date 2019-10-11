@@ -135,17 +135,18 @@ export class InterpreterFunctions {
   //   convolver.gain = gain;
   //   return convolver;
   // }
-  //
-  // //todo delay
-  // static async delay(ctx, goal = 0, max = 1) {
-  //   if (!isNumber(goal)|| !isNumber(max))
-  //     throw new Error("omg, cannot delay without a number.");
-  //   return new DelayNode(ctx, {
-  //     delayTime: goal,
-  //     maxDelayTime: max
-  //   });
-  // }
-  //
+
+  static async delay(ctx, goal = {type:"num", value: "0"}, max = {type:"num", value: "1"}) {
+    // if (typeof goal !== "number" || typeof max !== "number")
+    //   throw new Error("omg, cannot delay without a number.");
+    if (goal.type !== "num" || max.type !== "num")
+      throw new Error("omg, cannot delay without a number.");
+    return new DelayNode(ctx, {
+      delayTime: parseFloat(goal.value),
+      maxDelayTime: parseFloat(max.value)
+    });
+  }
+
   static async createPeriodicTable(ctx, wave) {
     if (wave[0] === '"') {
       let tst = wave.substring(1, wave.length - 1);
