@@ -1,29 +1,38 @@
 import {parse} from "../Parser.js";
 
 describe('pipe', function () {
-  it("a > b > c", function () {
-    const tst = parse('a > b > c');
-    const result = JSON.parse('{"type":">","args":[{"type":"a"},{"type":"b"},{"type":"c"}]}');
+  it("x > y > z", function () {
+    const tst = parse('x > y > z');
+    const result = {
+      type: ">",
+      args: [{
+        type: "x"
+      }, {
+        type: "y"
+      }, {
+        type: "z"
+      }]
+    };
     expect(tst).to.deep.equal(result);
   });
 
-  it("a > b > [c, d]", function () {
-    const tst = parse('a > b > [c, d]');
-    const result = JSON.parse('{"type":">","args":[{"type":"a"},{"type":"b"},[{"type":"c"},{"type":"d"}]]}');
+  it("x > y > [z, q]", function () {
+    const tst = parse('x > y > [z, q]');
+    const result = JSON.parse('{"type":">","args":[{"type":"x"},{"type":"y"},[{"type":"z"},{"type":"q"}]]}');
     expect(tst).to.deep.equal(result);
   });
-  it("a > (b > c)", function () {
-    const tst = parse('a > (b > c)');
+  it("x > (y > c)", function () {
+    const tst = parse('x > (y > z)');
     const res = {
       type: ">",
       args: [{
-        type: "a",
+        type: "x",
       }, {
         type: ">",
         args: [{
-          type: "b",
+          type: "y",
         }, {
-          type: "c",
+          type: "z",
         }]
       }]
     };
@@ -32,45 +41,45 @@ describe('pipe', function () {
 });
 
 describe('array', function () {
-  it('[a,b,c]', function () {
-    const tst = parse('[a,b,c]');
-    const result = JSON.parse('{"type":">","args":[[{"type":"a"},{"type":"b"},{"type":"c"}]]}');
+  it('[x,y,z]', function () {
+    const tst = parse('[x,y,z]');
+    const result = JSON.parse('{"type":">","args":[[{"type":"x"},{"type":"y"},{"type":"z"}]]}');
     expect(tst).to.deep.equal(result);
   });
-  it('a > [b, (c > d)]', function () {
-    const tst = parse('a > [b, (c > d)]');
+  it('x > [y, (z > q)]', function () {
+    const tst = parse('x > [y, (z > q)]');
     const result = {
       type: ">",
       args: [{
-        type: "a",
+        type: "x",
       }, [{
-        type: "b",
+        type: "y",
       }, {
         type: ">",
         args: [{
-          type: "c",
+          type: "z",
         }, {
-          type: "d",
+          type: "q",
         }]
       }]
       ]
     };
     expect(tst).to.deep.equal(result);
   });
-  it('a > ([b, (c > d)])', function () {
-    const tst = parse('a > ([b, (c > d)])');
+  it('x > ([y, (z > q)])', function () {
+    const tst = parse('x > ([y, (z > q)])');
     const result = {
       type: ">",
       args: [{
-        type: "a",
+        type: "x",
       }, [{
-        type: "b",
+        type: "y",
       }, {
         type: ">",
         args: [{
-          type: "c",
+          type: "z",
         }, {
-          type: "d",
+          type: "q",
         }]
       }]
       ]
@@ -81,15 +90,15 @@ describe('array', function () {
 
 
 describe('--css-var', function () {
-  it("a > --audio-var > c", function () {
-    const tst = parse('a > --audio-var > c');
-    const result = JSON.parse('{"type":">","args":[{"type":"a"},{"type":"--","varName":"--audio-var"},{"type":"c"}]}');
+  it("x > --audio-var > z", function () {
+    const tst = parse('x > --audio-var > z');
+    const result = JSON.parse('{"type":">","args":[{"type":"x"},{"type":"--","varName":"--audio-var"},{"type":"z"}]}');
     expect(tst).to.deep.equal(result);
   });
 
-  it('a > --audio-var > peaking(120hz, 25dB, 1hz)', function () {
-    const tst = parse('a > --audio-var > peaking(120hz, 25dB, 1hz)');
-    const result = JSON.parse('{"type":">","args":[{"type":"a"},{"type":"--","varName":"--audio-var"},{"type":"peaking","args":[{"type":"num","value":120,"unit":"hz"},{"type":"num","value":25,"unit":"dB"},{"type":"num","value":1,"unit":"hz"}]}]}');
+  it('x > --audio-var > peaking(120hz, 25dB, 1hz)', function () {
+    const tst = parse('x > --audio-var > peaking(120hz, 25dB, 1hz)');
+    const result = JSON.parse('{"type":">","args":[{"type":"x"},{"type":"--","varName":"--audio-var"},{"type":"peaking","args":[{"type":"num","value":120,"unit":"hz"},{"type":"num","value":25,"unit":"dB"},{"type":"num","value":1,"unit":"hz"}]}]}');
     expect(tst).to.deep.equal(result);
   });
 });
@@ -140,9 +149,9 @@ describe('url', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it('url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > [a, b]', function () {
-    const tst = parse('url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > [a, b]');
-    const result = JSON.parse('{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},[{"type":"a"},{"type":"b"}]]}');
+  it('url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > [x, y]', function () {
+    const tst = parse('url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3") > [x, y]');
+    const result = JSON.parse('{"type":">","args":[{"type":"url","args":["\\"https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3\\""]},[{"type":"x"},{"type":"y"}]]}');
     expect(tst).to.deep.equal(result);
   });
 
@@ -206,13 +215,13 @@ describe('Notes', function () {
 });
 
 describe("Error test", function () {
-  it('url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)', function () {
+  it('url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)', function (done) {
     try {
-      const tst = parse('url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)');
+      parse('url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1)');
     } catch (e) {
       const result = 'InfiniteSound: Illegal token: ://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3, 1))';
       expect(e.message).to.be.equal(result);
-
+      done();
     }
   });
 });

@@ -12,16 +12,17 @@
 //1. quotes are used for base64 and urls. All quotes are converted to double quotes
 //urls and base64 should be wrapped in quotes: "azs1234SAKDJHQPOWEIHT+/dkfhsdkgj=" / "https://some.where.com/help.me" / "my.file"
 
-//space | pipe | comma | parenthesis | brackets | slash | double quotes | single quotes | word | number | cssVariable | $var | error
-const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|("(?:[^\\"]|\\.)*")|'((?:[^\\']|\\.)*)'|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)|(\$[\d]+)|(.+)/g;
+//todo note = /([a-gA-G])([#b]?)([\d]?)/ this has to be in front of word
+//space | pipe | comma | parenthesis | brackets | slash | double quotes | single quotes | note | word | number | cssVariable | $var | error
+const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|("(?:[^\\"]|\\.)*")|'((?:[^\\']|\\.)*)'|([a-gA-G])([#b]?)([\d]?)?![_a-zA-Z\d#-]|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)|(\$[\d]+)|(.+)/g;
 
 function skipWhite(tokens) {
   tokens.length && tokens[0][1] && tokens.shift();
 }
 
 function error(tokens) {
-  if (tokens.length && tokens[0][9])
-    throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][9]);
+  if (tokens.length && tokens[0][12])
+    throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][0]);
 }
 
 function nextToken(tokens) {
@@ -72,14 +73,21 @@ function parseNameOrFunction(tokens) {
  * @param tokens
  */
 function parseNameOrVar(tokens) {
-  if (tokens[0][4] || tokens[0][8] || tokens[0][7])
+  if (tokens[0][7] || tokens[0][11] || tokens[0][10])
     return nextToken(tokens)[0];
 }
 
 function parseNumber(tokens) {
-  if (tokens[0][5]) {
+  if (tokens[0][8]) {
     const t = nextToken(tokens);
-    return {type: "num", value: parseFloat(t[5]), unit: t[6]};
+    return {type: "num", value: parseFloat(t[8]), unit: t[9]};
+  }
+}
+
+function parseTone(tokens) {
+  if (tokens[0][4]) {
+    const t = nextToken(tokens);
+    return {type: "tone", note: t[4], mode: t[5], scale: t[6]};
   }
 }
 
@@ -91,6 +99,7 @@ function parseQuote(tokens) {
 function parseValue(tokens) {
   return parseNameOrFunction(tokens) ||
     parseNumber(tokens) ||
+    parseTone(tokens) ||
     parseQuote(tokens);
 }
 
