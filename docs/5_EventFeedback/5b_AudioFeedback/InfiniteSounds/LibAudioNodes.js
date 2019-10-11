@@ -86,9 +86,22 @@ class AudioFileRegister {
     return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
 
-  static noise() {
-    return (noise || (noise = makeNoiseNode(3, 44100))).slice(); //todo test if I need to slice the noise buffer?
-    // return noise || (noise = makeNoiseNode(3, 44100));
+  static async makeFileBufferSource(ctx, url, loop) {
+    const tst = url.substring(1, url.length - 1);
+    const data = await AudioFileRegister.getFileBuffer(tst);
+    const bufferSource = ctx.createBufferSource();
+    bufferSource.buffer = await ctx.decodeAudioData(data);
+    bufferSource.loop = !!loop;
+    bufferSource.start();
+    return bufferSource;
+  }
+
+  static async noise(ctx) {
+    const aNoise = ctx.createBufferSource();
+    aNoise.buffer = await (noise || (noise = makeNoiseNode(3, 44100)));
+    aNoise.loop = true;
+    aNoise.start();
+    return aNoise;
   }
 
   //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
@@ -100,151 +113,141 @@ class AudioFileRegister {
   }
 }
 
-export class InterpreterFunctions {
-
-  static async sine(ctx, freq, wave) {
-    return InterpreterFunctions.makeOscillator(ctx, "sine", freq, wave);
+async function makeOscillator(ctx, type, freq, wave) {
+  //todo convert the factory methods to constructors as specified by MDN
+  const oscillator = ctx.createOscillator();
+  oscillator.type = type;
+  setAudioParameter(oscillator.frequency, freq);
+  if (wave) {
+    const table = await InterpreterFunctions.createPeriodicTable(ctx, wave);
+    oscillator.setPeriodicWave(table);
   }
-
-  static async square(ctx, freq, wave) {
-    return InterpreterFunctions.makeOscillator(ctx, "square", freq, wave);
-  }
-
-  static async sawtooth(ctx, freq, wave) {
-    return InterpreterFunctions.makeOscillator(ctx, "sawtooth", freq, wave);
-  }
-
-  static async triangle(ctx, freq, wave) {
-    return InterpreterFunctions.makeOscillator(ctx, "triangle", freq, wave);
-  }
-
-  static gain(ctx, gainParam) {
-    const node = ctx.createGain();
-    setAudioParameter(node.gain, gainParam);
-    return node;
-  }
-
-  static async makeOscillator(ctx, type, freq, wave) {
-    //todo convert the factory methods to constructors as specified by MDN
-    const oscillator = ctx.createOscillator();
-    oscillator.type = type;
-    setAudioParameter(oscillator.frequency, freq);
-    if (wave) {
-      const table = await InterpreterFunctions.createPeriodicTable(ctx, wave);
-      oscillator.setPeriodicWave(table);
-    }
-    oscillator.start();
-    return oscillator;
-  }
-
-  //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
-  static async convolver(ctx, array) {
-    const convolver = ctx.createConvolver();
-    const buffer = await (
-      !array ? AudioFileRegister.aConvolverBuffer() :
-        array instanceof Array ? convertColvolverBuffer(array) :
-          array.startsWith('"') ? fetchAConvolverBuffer(array) :
-            array.type === "base64" ? convertToAudioBuffer(array) :
-              null);
-
-    if (!buffer)
-      throw new Error("omg, cannot reverb without array");
-    ctx.decodeAudioData(buffer, function (audioBuffer) {
-      convolver.buffer = audioBuffer;
-    });
-    // convolver.gain = ctx.createGain();
-    // convolver.gain = gain;
-    return convolver;
-  }
-
-  static async delay(ctx, goal = {type: "num", value: "0"}, max = {type: "num", value: "1"}) {
-    // if (typeof goal !== "number" || typeof max !== "number")
-    //   throw new Error("omg, cannot delay without a number.");
-    if (goal.type !== "num" || max.type !== "num")
-      throw new Error("omg, cannot delay without a number.");
-    return new DelayNode(ctx, {
-      delayTime: parseFloat(goal.value),
-      maxDelayTime: parseFloat(max.value)
-    });
-  }
-
-  static async createPeriodicTable(ctx, wave) {
-    if (wave[0] === '"') {
-      let tst = wave.substring(1, wave.length - 1);
-      const file = await fetch(tst);
-      const data = await file.json();
-      return ctx.createPeriodicWave(data.real, data.imag);
-    }
-    if (!(wave instanceof Array))
-      throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
-    const real = wave[0].map(num => parseFloat(num.value));
-    const imag = wave[1] ? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
-    return ctx.createPeriodicWave(real, imag);
-  }
-
-  static lowpass(ctx, freq, q, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "lowpass", {freq, q, detune});
-  }
-
-  static highpass(ctx, freq, q, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "highpass", {freq, q, detune});
-  }
-
-  static bandpass(ctx, freq, q, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "bandpass", {freq, q, detune});
-  }
-
-  static lowshelf(ctx, freq, gain, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "lowshelf", {freq, gain, detune});
-  }
-
-  static highshelf(ctx, freq, gain, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "highshelf", {freq, gain, detune});
-  }
-
-  static peaking(ctx, freq, q, gain, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "peaking", {freq, q, gain, detune});
-  }
-
-  static notch(ctx, freq, q, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "notch", {freq, q, detune});
-  }
-
-  static allpass(ctx, freq, q, detune) {
-    return InterpreterFunctions.makeFilter(ctx, "allpass", {freq, q, detune});
-  }
-
-  static makeFilter(ctx, type, p) {
-    //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
-    //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
-    const filterNode = ctx.createBiquadFilter();
-    filterNode.type = type;
-    setAudioParameter(filterNode.frequency, p.freq);
-    setAudioParameter(filterNode.Q, p.q);
-    setAudioParameter(filterNode.gain, p.gain);
-    setAudioParameter(filterNode.detune, p.detune);
-    return filterNode;
-  }
-
-  /**
-   * url(https://some.com/sound.file) plays the sound file once
-   * url(https://some.com/sound.file, 1) plays the sound file in a loop
-   */
-  static async url(ctx, url, loop) {
-    let tst = url.substring(1, url.length - 1);
-    const data = await AudioFileRegister.getFileBuffer(tst);
-    const bufferSource = ctx.createBufferSource();
-    bufferSource.buffer = await ctx.decodeAudioData(data);
-    bufferSource.loop = !!loop;
-    bufferSource.start();
-    return bufferSource;
-  }
-
-  static async noise(ctx) {
-    const noise = ctx.createBufferSource();
-    noise.buffer = AudioFileRegister.noise();
-    noise.loop = true;
-    noise.start();
-    return noise;
-  }
+  oscillator.start();
+  return oscillator;
 }
+
+function makeFilter(ctx, type, p) {
+  //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
+  //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
+  const filterNode = ctx.createBiquadFilter();
+  filterNode.type = type;
+  setAudioParameter(filterNode.frequency, p.freq);
+  setAudioParameter(filterNode.Q, p.q);
+  setAudioParameter(filterNode.gain, p.gain);
+  setAudioParameter(filterNode.detune, p.detune);
+  return filterNode;
+}
+
+export const InterpreterFunctions = {};
+
+InterpreterFunctions.sine = async function (ctx, freq, wave) {
+  return makeOscillator(ctx, "sine", freq, wave);
+};
+
+InterpreterFunctions.square = async function (ctx, freq, wave) {
+  return makeOscillator(ctx, "square", freq, wave);
+};
+
+InterpreterFunctions.sawtooth = async function (ctx, freq, wave) {
+  return makeOscillator(ctx, "sawtooth", freq, wave);
+};
+
+InterpreterFunctions.triangle = async function (ctx, freq, wave) {
+  return makeOscillator(ctx, "triangle", freq, wave);
+};
+
+InterpreterFunctions.gain = function (ctx, gainParam) {
+  const node = ctx.createGain();
+  setAudioParameter(node.gain, gainParam);
+  return node;
+};
+
+
+//todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
+InterpreterFunctions.convolver = async function (ctx, array) {
+  const convolver = ctx.createConvolver();
+  const buffer = await (
+    !array ? AudioFileRegister.aConvolverBuffer() :
+      array instanceof Array ? convertColvolverBuffer(array) :
+        array.startsWith('"') ? fetchAConvolverBuffer(array) :
+          array.type === "base64" ? convertToAudioBuffer(array) :
+            null);
+
+  if (!buffer)
+    throw new Error("omg, cannot reverb without array");
+  const audioBuffer = await ctx.decodeAudioData(buffer);
+  convolver.buffer = audioBuffer;
+  // convolver.gain = ctx.createGain();
+  // convolver.gain = gain;
+  return convolver;
+};
+
+InterpreterFunctions.delay = function (ctx, goal = {type: "num", value: "0"}, max = {type: "num", value: "1"}) {
+  // if (typeof goal !== "number" || typeof max !== "number")
+  //   throw new Error("omg, cannot delay without a number.");
+  if (goal.type !== "num" || max.type !== "num")
+    throw new Error("omg, cannot delay without a number.");
+  return new DelayNode(ctx, {
+    delayTime: parseFloat(goal.value),
+    maxDelayTime: parseFloat(max.value)
+  });
+};
+
+InterpreterFunctions.createPeriodicTable = async function (ctx, wave) {
+  if (wave[0] === '"') {
+    let tst = wave.substring(1, wave.length - 1);
+    const file = await fetch(tst);
+    const data = await file.json();
+    return ctx.createPeriodicWave(data.real, data.imag);
+  }
+  if (!(wave instanceof Array))
+    throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
+  const real = wave[0].map(num => parseFloat(num.value));
+  const imag = wave[1] ? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
+  return ctx.createPeriodicWave(real, imag);
+};
+
+InterpreterFunctions.lowpass = function (ctx, freq, q, detune) {
+  return makeFilter(ctx, "lowpass", {freq, q, detune});
+};
+
+InterpreterFunctions.highpass = function (ctx, freq, q, detune) {
+  return makeFilter(ctx, "highpass", {freq, q, detune});
+};
+
+InterpreterFunctions.bandpass = function (ctx, freq, q, detune) {
+  return makeFilter(ctx, "bandpass", {freq, q, detune});
+};
+
+InterpreterFunctions.lowshelf = function (ctx, freq, gain, detune) {
+  return makeFilter(ctx, "lowshelf", {freq, gain, detune});
+};
+
+InterpreterFunctions.highshelf = function (ctx, freq, gain, detune) {
+  return makeFilter(ctx, "highshelf", {freq, gain, detune});
+};
+
+InterpreterFunctions.peaking = function (ctx, freq, q, gain, detune) {
+  return makeFilter(ctx, "peaking", {freq, q, gain, detune});
+};
+
+InterpreterFunctions.notch = function (ctx, freq, q, detune) {
+  return makeFilter(ctx, "notch", {freq, q, detune});
+};
+
+InterpreterFunctions.allpass = function (ctx, freq, q, detune) {
+  return makeFilter(ctx, "allpass", {freq, q, detune});
+};
+
+
+/**
+ * url(https://some.com/sound.file) plays the sound file once
+ * url(https://some.com/sound.file, 1) plays the sound file in a loop
+ */
+InterpreterFunctions.url = async function (ctx, url, loop) {
+  return await AudioFileRegister.makeFileBufferSource(ctx, url, loop);
+};
+
+InterpreterFunctions.noise = async function (ctx) {
+  return await AudioFileRegister.noise(ctx);
+};

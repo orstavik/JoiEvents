@@ -1,3 +1,5 @@
+//todo should I add bars "|" to signify tempo bars as in music, and then convert that into delay nodes? We have the problem of relative time and absolute time.. That we might need to signify both relative and absolute time as textual values..
+
 //todo numbers as primitive floats?
 
 //todo names, --css-variables, and $1 variables are all treated as functions
@@ -108,7 +110,6 @@ function parseExpression(tokens) {
 }
 
 function parseNode(tokens) {
-
   return parseGroup(tokens, "(", ">", ")") ||
     parseGroup(tokens, "[", ",", "]") ||
     parseExpression(tokens);
@@ -120,6 +121,10 @@ function parseNodeList(tokens, separator) {
     nextToken(tokens);
     nodes.push(parseNode(tokens));
   }
+  //todo if I have a list like this [a, b > c, d], then when I reach ">", then we might want to allow "b > c" to be parsed as a pipe. If so, we should do it here.
+  //todo, then we only pull out the last node added to the array list, and then parse the rest of the array with the "," or "]" as the end token and the ">" as the separator.
+  //todo, this we could do the other way round too, from the pipe chain ">" to the array "," list.
+  //todo, that would be elegant syntactically. It would add lots of meaning from very few signs..
   return nodes;
 }
 
@@ -133,23 +138,6 @@ export function parse(str) {
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
 }
-
-
+//todo add an array of all the variables?
 //todo add the table for urls? should I return a table, or should i start fetching and then return a table?
 //todo no, that kind of preemptive speed optimization is bad, return the ast and a list of urls?
-
-/*
-* the parser should maybe specify if there is a list of urls, or a list of css variables, or a list of expressions.
-* if we return such lists, then we do not need to iterate the tree, we only need to iterate the different lists.
-* this is more efficient, but it gives us to parallel structures.
-* we don't have one source of truth, we have two.
-
-* --my-audio: sine($1) > gain([1/0.015, $2/0.01, $2/$3, 0/0.3])
-* --play-note: --my-audio(F4, 0.8, 2.3) > gain(0.7)
-*
-"--my-audio(F4, 0.8, 2.3)".replace(/--[\w]+\(([^,]*,)/, myAudio)
-
-var rxs = [/\$1/, /\$2/, /\$3/, /\$4/, /\$5/];
-for (let i = 0; i < args.length; i++)
-  myAudio = myAudio.replace(rxs[i], args[i]);
-**/

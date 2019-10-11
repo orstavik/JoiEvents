@@ -76,39 +76,38 @@ function parseKeyModeCoordinate(coor) {
   return [startKey, startMode];
 }
 
-export class ScaleFunctions {
-  static circle5(ctx, coor, key, mode) {
-    if (coor instanceof Array) {
-      const [startKey, startMode] = parseKeyModeCoordinate(coor);
-      let [note, newMode] = circleOfFifth(startKey, startMode, key ? parseInt(key.value) : 0, mode ? parseInt(mode.value) : 0);
-      note = notes[note % 12] + Math.floor(note / 12);
-      newMode = modeNames[newMode];
-      return [{type: note}, {type: newMode}];
-    }
-    if (coor.type && !coor.args) {
-      const [startKey, startMode] = parseKeyModeCoordinate(coor);
-      let [note, newMode] = circleOfFifth(startKey, 0, key ? parseInt(key.value) : 0, mode ? parseInt(mode.value) : 0);
-      note = notes[note % 12] + Math.floor(note / 12);
-      return {type: note};
-    }
-    throw new Error("omg: wrong error to circle of fifths..");
+export const ScaleFunctions = {};
+ScaleFunctions.circle5 = function (ctx, coor, key, mode) {
+  if (coor instanceof Array) {
+    const [startKey, startMode] = parseKeyModeCoordinate(coor);
+    let [note, newMode] = circleOfFifth(startKey, startMode, key ? parseInt(key.value) : 0, mode ? parseInt(mode.value) : 0);
+    note = notes[note % 12] + Math.floor(note / 12);
+    newMode = modeNames[newMode];
+    return [{type: note}, {type: newMode}];
   }
+  if (coor.type && !coor.args) {
+    const [startKey, startMode] = parseKeyModeCoordinate(coor);
+    let [note, newMode] = circleOfFifth(startKey, 0, key ? parseInt(key.value) : 0, mode ? parseInt(mode.value) : 0);
+    note = notes[note % 12] + Math.floor(note / 12);
+    return {type: note};
+  }
+  throw new Error("omg: wrong error to circle of fifths..");
+};
 
-  static scale(coor) {
-    const [note, mode] = parseKeyModeCoordinate(coor);
-    return modeScales[mode].map(pos => note + pos);
-  }
+ScaleFunctions.scale = function (coor) {
+  const [note, mode] = parseKeyModeCoordinate(coor);
+  return modeScales[mode].map(pos => note + pos);
+};
 
-  static chord(coor, notes) {
-    const [note, mode] = parseKeyModeCoordinate(coor);
-    const scale = modeScales[mode];
-    return notes.map(pos => absoluteTonePosition(scale, pos) + note);
-  }
+ScaleFunctions.chord = function (coor, notes) {
+  const [note, mode] = parseKeyModeCoordinate(coor);
+  const scale = modeScales[mode];
+  return notes.map(pos => absoluteTonePosition(scale, pos) + note);
+};
 
-  static makeChord(coor, count, skips) {
-    const notes = [];
-    for (let i = 0; count--; i += skips)
-      notes.push(i);
-    return chord(coor, notes);
-  }
-}
+ScaleFunctions.makeChord = function (coor, count, skips) {
+  const notes = [];
+  for (let i = 0; count--; i += skips)
+    notes.push(i);
+  return chord(coor, notes);
+};

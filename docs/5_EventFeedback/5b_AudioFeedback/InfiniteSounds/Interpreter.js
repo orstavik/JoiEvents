@@ -24,6 +24,47 @@ Pipe[">"] = function (ctx, ...nodes) {
   return nodes[nodes.length - 1];
 };
 
+/*
+* the parser should maybe specify if there is a list of urls, or a list of css variables, or a list of expressions.
+* if we return such lists, then we do not need to iterate the tree, we only need to iterate the different lists.
+* this is more efficient, but it gives us to parallel structures.
+* we don't have one source of truth, we have two.
+
+* --my-audio: sine($1) > gain([1/0.015, $2/0.01, $2/$3, 0/0.3])
+* --play-note: --my-audio(F4, 0.8, 2.3) > gain(0.7)
+*
+"--my-audio(F4, 0.8, 2.3)".replace(/--[\w]+\(([^,]*,)/, myAudio)
+
+**/
+
+var rxs = [/\$1/, /\$2/, /\$3/, /\$4/, /\$5/];
+
+const VariableResolver = Object.create(null);
+VariableResolver["--"] = function (ctx, node) {
+  //the context in is a table with variables.
+  const varName = node.varName;
+  let varText = ctx[varName];
+  const args = node.args;
+  //todo the problem is that the arguments in a variable function are processed, but only needed as strings.
+  //todo, thus, it would be better if the variable expression is completely parsed, and then variables are only saved as
+  //todo pointers. But.. This would add a great deal of complexity.. or.. how would it look.
+
+  //a --var would point to another Node. this node can be something as simple as a number or a piece of text, but it can also be a whole pipe.
+  //a $variable points the other way round. it points to a Node that was the argument of a --variable function.
+  //the problem is cyclical references, that can go via third parties. This means that when a variable is resolved
+  //it should be added to a blacklist or removed from the ctx table of available variables.
+
+  //otherwise, we only need to add a link to variable functions. And then we can flatten everything when we finish.
+  //or, we flatten immediately, and then remove variables from the ctx.
+  //yeah, it is doable)
+
+  for (let i = 0; i < args.length; i++){
+    //if the variable is in front of a (),
+    //then that means the thing replacing it must be a string, otherwise variable error
+    varText = varText.replace(rxs[i], args[i]);
+  }
+};
+
 async function interpretArray(input, ctx, table) {
   let output;
   for (let i = 0; i < input.length; i++) {
@@ -86,12 +127,13 @@ export class InfiniteSound extends AudioContext {
     result = cachedResults[sound];
     if (!result) {
       result = parse(sound);
+      cachedResults[sound] = result;
       //todo replace CSS variables here?
       //todo and then check if there is a cached result again?
-      for (let table of [ScaleFunctions, Notes])
-        result = await interpretNode(null, result, table);
-      cachedResults[sound] = result;
     }
+
+    //todo I can't split the tables in individual passes.. It doesn't work. I have to make them run at the same time.
+    //todo the problem is the
 
     //turn the result into an Offline AudioBuffer that we can reuse..
     /**
@@ -104,8 +146,15 @@ export class InfiniteSound extends AudioContext {
      * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
      */
     const ctx = new InfiniteSound();
-    for (let table of [Random, InterpreterFunctions, Pipe])
-      result = await interpretNode(ctx, result, table);
+
+    //todo merge the function tables..
+    const functions = Object.assign({}, ScaleFunctions, Notes, Random, InterpreterFunctions, Pipe);
+    // for (let table of [ScaleFunctions, Notes])
+    //   result = await interpretNode(null, result, table);
+    // for (let table of [Random, InterpreterFunctions, Pipe])
+    // for (let table of functions)
+      result = await interpretNode(ctx, result, functions);
+      // result = await interpretNode(ctx, result, Pipe);
 
     if (result instanceof Array) {
       for (let audioNode of result) {
