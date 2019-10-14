@@ -1,5 +1,31 @@
 import {parse} from "../Parser.js";
 
+//bpm(60, 4, [
+//  piano(c4) |                                  delay(0)
+//  piano(d4) |                                  delay(1)
+//  piano(e4) |                                  delay(2)
+//  piano(f4) |                                  delay(3)
+//  piano(g4, 2) |  |                            delay(4)
+//  piano(g4, 2) |  |                            delay(5)
+//  piano(a4) |                                         .
+//  piano(a4) |                                          .
+//  piano(a4) |                                           .
+//  piano(a4) |                                            .
+//  piano(g4, 4) ||||                                       .
+//  piano(f4) |                                              .
+//  piano(f4) |                                               .
+//  piano(f4) |
+//  piano(f4) |
+//  piano(e4, 2) ||
+//  piano(e4, 2) ||
+//  piano(d4) |
+//  piano(d4) |
+//  piano(d4) |
+//  piano(d4) |
+//  piano(c4, 4) ||||
+// |
+//])~C4~~ionian
+
 describe('pipe', function () {
   it("x > y > z", function () {
     const tst = parse('x > y > z');
@@ -18,7 +44,15 @@ describe('pipe', function () {
 
   it("x > y > [z, q]", function () {
     const tst = parse('x > y > [z, q]');
-    const result = JSON.parse('{"type":">","args":[{"type":"x"},{"type":"y"},[{"type":"z"},{"type":"q"}]]}');
+    const result = {
+      type: ">",
+      args: [{
+      "type": "x"},
+        {"type": "y"},
+        [
+          {"type": "z"},
+          {"type": "q"}
+        ]]};
     expect(tst).to.deep.equal(result);
   });
   it("x > (y > c)", function () {

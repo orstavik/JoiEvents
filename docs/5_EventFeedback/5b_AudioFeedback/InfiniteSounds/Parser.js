@@ -1,3 +1,10 @@
+//todo 1. primitive floats?
+//todo array bars
+//todo empty argument list
+//todo parse argument list different?
+
+//todo implement bpm? or make bpm into "[64:4 | guitar(g5) | guitar(d4) | guitar(e3) | ...]~C4~~lydian"
+
 //todo should I add bars "|" to signify tempo bars as in music, and then convert that into delay nodes? We have the problem of relative time and absolute time.. That we might need to signify both relative and absolute time as textual values..
 
 //todo numbers as primitive floats?
@@ -14,6 +21,11 @@
 
 //todo note = /([a-gA-G])([#b]?)([\d]?)/ this has to be in front of word
 //space | pipe | comma | parenthesis | brackets | slash | double quotes | single quotes | note | word | number | cssVariable | $var | error
+//todo | is an alternative separator in array syntax. You can use bars instead of ","
+//todo make it possible with empty arguments in lists.
+
+//todo parse notes as primitive types
+
 const tokenizer = /(\s+)|>|\,|\(|\)|\[|\]|\/|("(?:[^\\"]|\\.)*")|'((?:[^\\']|\\.)*)'|([a-gA-G])([#b]?)([\d]?)?![_a-zA-Z\d#-]|([_a-zA-Z][_a-zA-Z\d#-]*)|([+-]?[\d][\d\.e\+-]*)([_a-zA-Z-]*)|(--[_a-zA-Z][_a-zA-Z-]*)|(\$[\d]+)|(.+)/g;
 
 function skipWhite(tokens) {
@@ -35,6 +47,17 @@ function nextToken(tokens) {
 function parseGroup(tokens, start, separator, end) {
   if (!tokens[0] || tokens[0][0] !== start)
     return undefined;
+//todo array bars
+//todo empty argument list
+//todo parse argument list different?
+  //todo parse group with the possibility of mixing "[]" and "()" and implied start/end with | , : > in as many combinations as
+  //ok, if it is an implied beginning, it will be an implied end
+  //otherwise, see if the first sign is an [ or a (, if it is, we have a list of some kind, and then we will parse it as such
+  //no.. this will not work
+  // ":" is an array with low priority
+  // "," is an array with high priority, if I am parsing 
+  // ">" is an object with low priority
+  // "|" is an object with high priority
   nextToken(tokens);
   const nodes = parseNodeList(tokens, separator);
   if (!tokens[0] || tokens[0][0] !== end)
@@ -134,6 +157,9 @@ function parseNodeList(tokens, separator) {
   //todo, then we only pull out the last node added to the array list, and then parse the rest of the array with the "," or "]" as the end token and the ">" as the separator.
   //todo, this we could do the other way round too, from the pipe chain ">" to the array "," list.
   //todo, that would be elegant syntactically. It would add lots of meaning from very few signs..
+  //todo, if we switch different separator symbols (":", ">", "|", ",", then we can switch different arrays. And they all return a list. And the list remembers which symbol.)
+  //todo the ":" and the "," just create a primitive js array
+  //todo the "|" and the ">" creates objects with the "|" and the ">" as their type.
   return nodes;
 }
 
