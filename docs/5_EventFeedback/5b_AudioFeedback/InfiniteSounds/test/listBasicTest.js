@@ -1,5 +1,5 @@
 import {parse} from "../Parser2.js";
-import {interpretNode, GroupAndArray} from "../Interpreter3.js";
+import {interpretNode, Operators} from "../Interpreter3.js";
 
 describe('basic arrays', function () {
 
@@ -18,7 +18,7 @@ describe('basic arrays', function () {
   });
 
   it("x:y:z - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('x:y:z'), GroupAndArray);
+    const tst2 = interpretNode(parse('x:y:z'), Operators);
     const result2 = [
       {type: "x"},
       {type: "y"},
@@ -45,7 +45,7 @@ describe('basic arrays', function () {
   });
 
   it("[x,y,z] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[x,y,z]'), GroupAndArray);
+    const tst2 = interpretNode(parse('[x,y,z]'), Operators);
     const result2 = [
       {type: "x"},
       {type: "y"},
@@ -72,7 +72,7 @@ describe('basic arrays', function () {
   });
 
   it("[x:y:z] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[x:y:z]'), GroupAndArray);
+    const tst2 = interpretNode(parse('[x:y:z]'), Operators);
     const result2 = [
       [
         {type: "x"},
@@ -84,7 +84,7 @@ describe('basic arrays', function () {
   });
 });
 
-describe('basic implied', function () {
+describe('basic pipe and bar', function () {
   it("x > y > z", function () {
     const tst = parse('x > y > z');
     const result = {
@@ -170,7 +170,7 @@ describe('basic wrapped', function () {
   });
 });
 
-describe('missed arguments', function () {
+describe('missing arguments', function () {
   it("x > > z", function () {
     const tst = parse('x > > z');
     const result = {

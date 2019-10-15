@@ -66,6 +66,54 @@ function parseGroup(tokens, start, separator, end) {
   return (start === "[") ? nodes : {type: separator, args: nodes};
 }
 
+// const separators = {
+//   ",fn": 4,
+//   "|": 4,
+//   ">": 3,
+//   ",ar": 2,
+//   ":": 1,
+// };
+//
+// function hasHigherPriority(newSep, oldSep) {
+//   return separators[newSep] > separators[oldSep];
+// }
+//
+// function getNextIfSubSeparator(token, separator) {
+//   let t = token[0][0];
+//   if (t !== separator && t !== "," && separators[t]) {
+//     if (separators[t] < separators[separator]) {
+//       return nextToken(tokens);
+//     }
+//   }
+// }
+//
+// function parseGroupTail(tokens, array, separator, endSign) {
+//   //add empty list items
+//   while (tokens[0] || tokens[0][0] === separator) {
+//     array.push(null);
+//     nextToken(tokens);
+//   }
+//   const nextSubSeparator = getNextIfSubSeparator(tokens, separator);
+//   if (nextSubSeparator) {
+//     const childArray = [array.pop()];
+//     array.push(parseGroupTail(tokens, childArray, nextSubSeparator));
+//   }
+//
+//     if (nextSep === ",")
+//       return
+//
+//     if (hasHigherPriority(nextSubSeparator, separator)) {
+//       return parseGroupTail(tokens, [array], nextSubSeparator)
+//     } else {
+//     }
+//     //if the separator has a lower priority, then we pop the last in the array, and use as the first in the array her
+//   }
+//   if (tokens[0] || tokens[0][0] === endSign) {
+//     nextToken(tokens);
+//     return array;
+//   }
+// }
+//
 function parseNameOrFunction(tokens) {
   let name = parseNameOrVar(tokens);
   if (!name)
@@ -130,11 +178,15 @@ function parseExpression(tokens) {
   const left = parseValue(tokens);
   //todo here we can have more expressions, but we also have the problem of priorities of operators here..
   //todo only slash as in coordinate here thus far
-  if (tokens[0] && tokens[0][0] === "/") {
+  if (!tokens[0])
+    return left;
+  if (tokens[0][0] === ":") {
     nextToken(tokens);
+    if (!tokens[0])
+      throw new SyntaxError("Something ends with a ':': " + tokens[0]);
     const right = parseExpression(tokens);
     if (!right)
-      throw new SyntaxError("Something ends with a '/': " + tokens[0]);
+      throw new SyntaxError("Something ends with a ':': " + tokens[0]);
     return [left, right];
     // return {type: "/", args: [left, right]};
   }
@@ -142,9 +194,8 @@ function parseExpression(tokens) {
 }
 
 function parseNode(tokens) {
-  return parseGroup(tokens, "(", ">", ")") ||
-    parseGroup(tokens, "[", ",", "]") ||
-    parseExpression(tokens);
+  return parseGroup(tokens /*, "(", ">", ")"*/) || parseArray(tokens) || parseExpression(tokens);
+  return /* parseGroup(tokens, "(", ">", ")") ||*/  parseGroup(tokens, "[", ",", "]") || parseExpression(tokens);
 }
 
 function parseNodeList(tokens, separator) {
@@ -173,6 +224,7 @@ export function parse(str) {
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
 }
+
 //todo add an array of all the variables?
 //todo add the table for urls? should I return a table, or should i start fetching and then return a table?
 //todo no, that kind of preemptive speed optimization is bad, return the ast and a list of urls?

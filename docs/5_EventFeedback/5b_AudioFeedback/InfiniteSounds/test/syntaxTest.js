@@ -1,4 +1,4 @@
-import {parse} from "../Parser.js";
+import {parse} from "../Parser2.js";
 
 //bpm(60, 4, [
 //  piano(c4) |                                  delay(0)

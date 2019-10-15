@@ -1,4 +1,5 @@
 import {parse} from "../Parser2.js";
+import {interpretNode, Operators} from "../Interpreter3.js";
 
 describe('numbers', function () {
   it("OK: 12", function () {
@@ -57,3 +58,53 @@ describe("Matches Java and JavaScript numbers (except Infinity and NaN)", functi
     }
   });
 });
+
+describe("Comma bubble past other operators", function () {
+  it("[1+1,2+2,3+3]", function () {
+    const tst = parse('[1+1,2+2,3+3]');
+    const result = {
+      type: "[]",
+      body: {
+        type: "+",
+        left: 1,
+        right: {
+          type: ",",
+          left: 1,
+          right: {
+            type: "+",
+            left: 2,
+            right: {
+              type: ",",
+              left: 2,
+              right: {
+                type: "+",
+                left: 3,
+                right: 3
+              }
+            }
+          }
+        }
+      }
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("[1+1,2+2,3+3] - syntax interpreted", function () {
+    const tst2 = interpretNode(parse('[1+1,2+2,3+3]'), Operators);
+    const result2 = [{
+      type: "+",
+      left: 1,
+      right: 1
+    }, {
+      type: "+",
+      left: 2,
+      right: 2
+    }, {
+      type: "+",
+      left: 3,
+      right: 3
+    }];
+    expect(tst2).to.deep.equal(result2);
+  });
+});
+

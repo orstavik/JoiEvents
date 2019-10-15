@@ -90,6 +90,40 @@ describe(': outside, [ inside', function () {
   });
 });
 
+describe('> combined with array [...] and group (...)', function () {
+  it("x > y > [z, q]", function () {
+    const tst = parse('x > y > [z, q]');
+    const result = {
+      type: ">",
+      args: [{
+        "type": "x"
+      },
+        {"type": "y"},
+        [
+          {"type": "z"},
+          {"type": "q"}
+        ]]
+    };
+    expect(tst).to.deep.equal(result);
+  });
+  it("x > (y > c)", function () {
+    const tst = parse('x > (y > z)');
+    const res = {
+      type: ">",
+      args: [{
+        type: "x",
+      }, {
+        type: ">",
+        args: [{
+          type: "y",
+        }, {
+          type: "z",
+        }]
+      }]
+    };
+    expect(tst).to.deep.equal(res);
+  });
+});
 describe('| and > combined', function () {
 
   it("1 | 2 > 3", function () {
@@ -187,6 +221,71 @@ describe('ALL combined', function () {
             3
           ]
         }
+      ]
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("[1:2,] > 3 | 4", function () {
+    const tst = parse('[1:2,] | 3 > 4');
+    const result = {
+      type: "|",
+      args: [
+        [
+          [1, 2],
+          null
+        ],
+        {
+          type: ">",
+          args: [
+            2,
+            3
+          ]
+        }
+      ]
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("1 | 2 > [3, 4:5]", function () {
+    const tst = parse('1 | 2 > [3, 4:5]');
+    const result = {
+      type: "|",
+      args: [
+        1,
+        {
+          type: ">",
+          args: [
+            2,
+            [3,
+              [4, 5]
+            ]
+          ]
+        }
+      ]
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("1 | 2 > [3, 4:5, ] > 6 | 7", function () {
+    const tst = parse('1 | 2 > [3, 4:5, ] > 6 | 7');
+    const result = {
+      type: "|",
+      args: [
+        1,
+        {
+          type: ">",
+          args: [
+            2,
+            [
+              3,
+              [4, 5],
+              null
+            ],
+            6
+          ]
+        },
+        7
       ]
     };
     expect(tst).to.deep.equal(result);
