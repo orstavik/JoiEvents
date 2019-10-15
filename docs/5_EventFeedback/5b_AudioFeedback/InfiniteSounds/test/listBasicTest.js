@@ -1,4 +1,88 @@
 import {parse} from "../Parser2.js";
+import {interpretNode, GroupAndArray} from "../Interpreter3.js";
+
+describe('basic arrays', function () {
+
+  it("x:y:z", function () {
+    const tst = parse('x:y:z');
+    const result = {
+      type: ":",
+      left: {type: "x"},
+      right: {
+        type: ":",
+        left: {type: "y"},
+        right: {type: "z"}
+      }
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("x:y:z - syntax interpreted", function () {
+    const tst2 = interpretNode(parse('x:y:z'), GroupAndArray);
+    const result2 = [
+      {type: "x"},
+      {type: "y"},
+      {type: "z"}
+    ];
+    expect(tst2).to.deep.equal(result2);
+  });
+
+  it("[x,y,z]", function () {
+    const tst = parse('[x,y,z]');
+    const result = {
+      type: "[]",
+      body: {
+        type: ",",
+        left: {type: "x"},
+        right: {
+          type: ",",
+          left: {type: "y"},
+          right: {type: "z"}
+        }
+      }
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("[x,y,z] - syntax interpreted", function () {
+    const tst2 = interpretNode(parse('[x,y,z]'), GroupAndArray);
+    const result2 = [
+      {type: "x"},
+      {type: "y"},
+      {type: "z"}
+    ];
+    expect(tst2).to.deep.equal(result2);
+  });
+
+  it("[x:y:z]", function () {
+    const tst = parse('[x:y:z]');
+    const result = {
+      type: "[]",
+      body: {
+        type: ":",
+        left: {type: "x"},
+        right: {
+          type: ":",
+          left: {type: "y"},
+          right: {type: "z"}
+        }
+      }
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("[x:y:z] - syntax interpreted", function () {
+    const tst2 = interpretNode(parse('[x:y:z]'), GroupAndArray);
+    const result2 = [
+      [
+        {type: "x"},
+        {type: "y"},
+        {type: "z"}
+      ]
+    ];
+    expect(tst2).to.deep.equal(result2);
+  });
+});
 
 describe('basic implied', function () {
   it("x > y > z", function () {
@@ -22,20 +106,6 @@ describe('basic implied', function () {
       left: {type: "x"},
       right: {
         type: "|",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
-    };
-    expect(tst).to.deep.equal(result);
-  });
-
-  it("x:y:z", function () {
-    const tst = parse('x:y:z');
-    const result = {
-      type: ":",
-      left: {type: "x"},
-      right: {
-        type: ":",
         left: {type: "y"},
         right: {type: "z"}
       }
@@ -71,40 +141,6 @@ describe('basic wrapped', function () {
         left: {type: "x"},
         right: {
           type: "|",
-          left: {type: "y"},
-          right: {type: "z"}
-        }
-      }
-    };
-    expect(tst).to.deep.equal(result);
-  });
-
-  it("[x:y:z]", function () {
-    const tst = parse('[x:y:z]');
-    const result = {
-      type: "[]",
-      body: {
-        type: ":",
-        left: {type: "x"},
-        right: {
-          type: ":",
-          left: {type: "y"},
-          right: {type: "z"}
-        }
-      }
-    };
-    expect(tst).to.deep.equal(result);
-  });
-
-  it("[x,y,z]", function () {
-    const tst = parse('[x,y,z]');
-    const result = {
-      type: "[]",
-      body: {
-        type: ",",
-        left: {type: "x"},
-        right: {
-          type: ",",
           left: {type: "y"},
           right: {type: "z"}
         }
@@ -395,16 +431,16 @@ describe('todo: should these become errors in syntactic interpretation?', functi
     //   const tst = parse(':y:z');
     // } catch (e) {
     //  todo should this be a url?
-      // expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
-      done();
+    // expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
+    done();
     // }
   });
   it("x:y:", function (done) {
     // try {
     //   const tst = parse(':y:z');
     // } catch (e) {
-      // expect(e.message).to.deep.equal("Illegal end of colon implied list, missing final argument.");
-      done();
+    // expect(e.message).to.deep.equal("Illegal end of colon implied list, missing final argument.");
+    done();
     // }
   });
 });
