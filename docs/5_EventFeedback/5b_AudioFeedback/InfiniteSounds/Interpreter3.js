@@ -52,32 +52,26 @@ MathOps["+"] = function ({left, right}) {
   return node;
 };
 
-function interpretExpression(node, table) {
-  const type = node.type;
+function interpretExpressionArgs(node, table) {
   const left = interpretNode(node.left, table);
   const right = interpretNode(node.right, table);
   if (left !== node.left || right !== node.right)
-    node = {type, left, right};
-  const fun = table[type];
-  if (fun)
-    return fun(node);
+    return {type: node.type, left, right};
   return node;
 }
 
 function interpretBody(node, table) {
-  const type = node.type;
-  const fun = table[type];
   let body = interpretNode(node.body, table);
   if (body !== node.body)
-    node = {type, body};
-  return fun ? fun(node) : body;
+    return {type: node.type, body};
+  return node;
 }
 
 function interpretArray(node, table) {
   const res = [];
   let mutated = false;
   for (let item of node) {
-    const interpretedItem = interpretNode(item, table);
+    let interpretedItem = interpretNode(item, table);
     if (interpretedItem !== item)
       mutated = true;
     res.push(interpretedItem);
@@ -91,9 +85,9 @@ export function interpretNode(node, table) {
   if (node instanceof Array)
     return interpretArray(node, table);
   if (node.left || node.right)
-    return interpretExpression(node, table);
+    node = interpretExpressionArgs(node, table);
   if (node.body)
-    return interpretBody(node, table);
+    node = interpretBody(node, table);
   const fun = table[node.type];
   return fun ? fun(node) : node;
 }
