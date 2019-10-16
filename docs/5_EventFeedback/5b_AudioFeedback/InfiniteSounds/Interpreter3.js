@@ -38,7 +38,7 @@ ListOps["[]"] = function (node, body) {
   return res.map(row => row[0]);
 };
 
-ListOps[":"] = function (node, left, right) {
+ListOps[":"] = function ({left, right}) {
   if (!right || !(right instanceof Array))
     return [left, right];
   right.unshift(left);
@@ -46,7 +46,7 @@ ListOps[":"] = function (node, left, right) {
 };
 
 export const MathOps = Object.create(null);
-MathOps["+"] = function (node, left, right) {
+MathOps["+"] = function ({left, right}) {
   if (typeof left === "number" && typeof right === "number")
     return left + right;
   return node;
@@ -56,10 +56,12 @@ function interpretExpression(node, table) {
   const type = node.type;
   const left = interpretNode(node.left, table);
   const right = interpretNode(node.right, table);
+  if (left !== node.left || right !== node.right)
+    node = {type, left, right};
   const fun = table[type];
   if (fun)
-    return fun(node, left, right);
-  return right === node.right ? node : {type, left, right};
+    return fun(node);
+  return node;
 }
 
 function interpretBody(node, table) {
