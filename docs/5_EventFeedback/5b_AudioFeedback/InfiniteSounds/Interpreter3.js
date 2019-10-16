@@ -2,7 +2,7 @@ import {parse} from "./Parser2.js";
 
 export const ListOps = Object.create(null);
 
-ListOps["()"] = function (node, body) {
+ListOps["()"] = function ({body}) {
   return {type: "()", body: ListOps["[]"](node, body)};
 };
 
@@ -21,7 +21,7 @@ function commaTreeToArray(body) {
   return res;
 }
 
-ListOps["[]"] = function (node, body) {
+ListOps["[]"] = function ({body}) {
   if (!body)
     return [];
   if (!body.left && !body.right)            //no operators, single body
@@ -68,9 +68,9 @@ function interpretBody(node, table) {
   const type = node.type;
   const fun = table[type];
   let body = interpretNode(node.body, table);
-  if (fun)
-    return fun(node, body);
-  return body === node.body ? body : {type, body};
+  if (body !== node.body)
+    node = {type, body};
+  return fun ? fun(node) : body;
 }
 
 function interpretArray(node, table) {
