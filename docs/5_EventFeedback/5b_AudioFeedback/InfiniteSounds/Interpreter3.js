@@ -1,6 +1,7 @@
 import {parse} from "./Parser2.js";
 
 export const ListOps = Object.create(null);
+ListOps.topDown = {"+": 1, "-": 1};
 
 ListOps["()"] = function ({body}) {
   return {type: "()", body: ListOps["[]"](node, body)};
@@ -45,12 +46,20 @@ ListOps[":"] = function ({left, right}) {
   return right;
 };
 
-export const MathOps = Object.create(null);
-MathOps["+"] = function (n) {
+export const MathOps1 = Object.create(null);
+MathOps1.topDown = {"+": 1, "-": 1};
+export const MathOps2 = Object.create(null);
+MathOps2.topDown = {"+": 1, "-": 1};
+
+MathOps2["+"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left + n.right;
   if (typeof n.left === "string" && typeof n.right === "string")
     return n.left + n.right;
+  if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
+    const sum = n.left + n.right.left;
+    return {type: n.right.type, left: sum, right: n.right.right};
+  }
   //if there are two quotes, then merge it into a single quote.
   //if there are two notes?
   //if there are two names without body, merge into a single name
@@ -64,43 +73,58 @@ MathOps["+"] = function (n) {
 //2. ^~~ morphing the mode
 //3. up a tone in the scale of
 
-MathOps["-"] = function (n) {
+MathOps2["-"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left - n.right;
+  if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
+    const sum = n.left - n.right.left;
+    return {type: n.right.type, left: sum, right: n.right.right};
+  }
   //todo research regex for strings -, do a replace //g with the right side argument?
   //if there are two notes?
   return n;
 };
 
-MathOps["*"] = function (n) {
+MathOps1["*"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * n.right;
+  if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
+    const product = n.left * n.right.left;
+    return {type: n.right.type, left: product, right: n.right.right};
+  }
   //if there are two notes?
   return n;
 };
 
-MathOps["/"] = function (n) {
+MathOps1["/"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left / n.right;
+  if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
+    return {
+      type: n.right.type,
+      left: n.left / n.right.left,
+      right: n.right.right
+    };
+  }
   //if there are two notes?
   return n;
 };
 
-MathOps["^"] = function (n) {
+MathOps1["^"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return Math.pow(n.left, n.right);
   //if there are two notes?
   return n;
 };
 
-MathOps["^^"] = function (n) {
+MathOps1["^^"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * Math.pow(2, n.right);
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
   //   return left up right octaves;                                        //todo
   return n;
 };
-MathOps["^*"] = function (n) {
+MathOps1["^*"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * Math.pow(1.5, n.right);
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
@@ -108,13 +132,13 @@ MathOps["^*"] = function (n) {
   return n;
 };
 /*
-MathOps["^~"] = function (n) {
+MathOps1["^~"] = function (n) {
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
   //   return note left turned right on the mode scale;                //todo
   return n;
 };
 
-MathOps["^+"] = function (n) {
+MathOps1["^+"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * Math.pow(1.5, n.right);
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
@@ -153,17 +177,24 @@ export function interpretNode(node, table) {
     return node;
   if (node instanceof Array)
     return interpretArray(node, table);
+  let fun = table[node.type];
+  if (fun && table.topDown[node.type]){
+    const res = fun(node);   //todo this might produce a new node, even a new node type to be interpreted
+    if (res !== node)
+      return interpretNode(res, table);     //if the ltr operation triggers, then the result of that operation needs to be interpreted from scratch as it might contain a new ltr
+    //if its the same, then the arguments needs to be processed
+    node = res;
+  }
   if (node.left || node.right)
     node = interpretExpressionArgs(node, table);
   if (node.body)
     node = interpretBody(node, table);
-  const fun = table[node.type];
   return fun ? fun(node) : node;
 }
 
 export function staticInterpret(str) {
   let node = parse(str);
-  for (let table of [ListOps, MathOps])
+  for (let table of [ListOps, MathOps1, MathOps2])
     node = interpretNode(node, table);
   return node;
 }

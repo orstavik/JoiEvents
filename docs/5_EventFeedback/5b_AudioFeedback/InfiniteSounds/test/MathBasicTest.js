@@ -31,10 +31,7 @@ describe('basic math', function () {
     const tst2 = staticInterpret('0+1');
     expect(tst2).to.deep.equal(1);
   });
-
-
-})
-;
+});
 
 describe('math priority', function () {
 
@@ -47,6 +44,5 @@ describe('math priority', function () {
     const tst2 = staticInterpret('5-3/2+5');
     expect(tst2).to.be.equal(5 - 3 / 2 + 5);
   });
-
 });
 
