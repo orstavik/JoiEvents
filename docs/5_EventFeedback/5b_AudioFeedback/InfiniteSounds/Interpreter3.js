@@ -46,25 +46,94 @@ ListOps[":"] = function ({left, right}) {
 };
 
 export const MathOps = Object.create(null);
-MathOps["+"] = function ({left, right}) {
-  if (typeof left === "number" && typeof right === "number")
-    return left + right;
-  return node;
+MathOps["+"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left + n.right;
+  if (typeof n.left === "string" && typeof n.right === "string")
+    return n.left + n.right;
+  //if there are two quotes, then merge it into a single quote.
+  //if there are two notes?
+  //if there are two names without body, merge into a single name
+  return n;
 };
+
+//priorities, first the setting of musical keys
+//1. ~= setting the key
+//2. ^^ morphing the scale
+//2. ^~ morphing the key circle of fifth
+//2. ^~~ morphing the mode
+//3. up a tone in the scale of
+
+MathOps["-"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left - n.right;
+  //todo research regex for strings -, do a replace //g with the right side argument?
+  //if there are two notes?
+  return n;
+};
+
+MathOps["*"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left * n.right;
+  //if there are two notes?
+  return n;
+};
+
+MathOps["/"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left / n.right;
+  //if there are two notes?
+  return n;
+};
+
+MathOps["^"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return Math.pow(n.left, n.right);
+  //if there are two notes?
+  return n;
+};
+
+MathOps["^^"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left * Math.pow(2, n.right);
+  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
+  //   return left up right octaves;                                        //todo
+  return n;
+};
+MathOps["^*"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left * Math.pow(1.5, n.right);
+  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
+  //   return note left turned right on the circle of fifth;                //todo
+  return n;
+};
+/*
+MathOps["^~"] = function (n) {
+  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
+  //   return note left turned right on the mode scale;                //todo
+  return n;
+};
+
+MathOps["^+"] = function (n) {
+  if (typeof n.left === "number" && typeof n.right === "number")
+    return n.left * Math.pow(1.5, n.right);
+  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
+  //   return note left turned right on the mode scale;                //todo
+  return n;
+};
+*/
 
 function interpretExpressionArgs(node, table) {
   const left = interpretNode(node.left, table);
   const right = interpretNode(node.right, table);
-  if (left !== node.left || right !== node.right)
-    return {type: node.type, left, right};
-  return node;
+  return left === node.left && right === node.right ?
+    node :
+    {type: node.type, left, right};
 }
 
 function interpretBody(node, table) {
-  let body = interpretNode(node.body, table);
-  if (body !== node.body)
-    return {type: node.type, body};
-  return node;
+  const body = interpretNode(node.body, table);
+  return body === node.body ? node : {type: node.type, body};
 }
 
 function interpretArray(node, table) {
@@ -81,7 +150,7 @@ function interpretArray(node, table) {
 
 export function interpretNode(node, table) {
   if (!node)
-    return;
+    return node;
   if (node instanceof Array)
     return interpretArray(node, table);
   if (node.left || node.right)

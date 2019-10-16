@@ -27,6 +27,7 @@ describe('numbers', function () {
 
 describe("Matches Java and JavaScript numbers (except Infinity and NaN)", function () {
   it("integers and float", function () {
+    expect(parse("0")).to.be.equal(0);
     expect(parse("1")).to.be.equal(1);
     expect(parse("0.2")).to.be.equal(0.2);
     expect(parse("-55")).to.be.equal(-55);
@@ -43,6 +44,10 @@ describe("Matches Java and JavaScript numbers (except Infinity and NaN)", functi
     expect(parse("-.3")).to.be.equal(-.3);
     expect(parse(".3e-4")).to.be.equal(.3e-4);
   });
+  it("postfix minus/pluss", function () {
+    expect(parse("1-")).to.deep.equal({type: "-", left: 1, right: undefined});
+    expect(parse("1+")).to.deep.equal({type: "+", left: 1, right: undefined});
+  });
   // it("possible errors", function () {
   //   expect(parse(".")).to.be.equal(false);
   //   expect(parse("9.")).to.be.equal(false);
@@ -56,6 +61,18 @@ describe("Matches Java and JavaScript numbers (except Infinity and NaN)", functi
       expect(e.message).to.deep.equal("the main css audio pipe is broken");
       done();
     }
+  });
+});
+
+describe("expression test: 0+1", function () {
+  it("0+1", function () {
+    const tst = parse('0+1');
+    const result = {
+      type: "+",
+      left: 0,
+      right: 1
+    };
+    expect(tst).to.deep.equal(result);
   });
 });
 
