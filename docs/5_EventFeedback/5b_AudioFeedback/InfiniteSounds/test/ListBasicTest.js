@@ -1,5 +1,5 @@
 import {parse} from "../Parser2.js";
-import {interpretNode, Operators} from "../Interpreter3.js";
+import {interpretNode, ListOps} from "../Interpreter3.js";
 
 describe('basic arrays', function () {
 
@@ -18,7 +18,7 @@ describe('basic arrays', function () {
   });
 
   it("x:y:z - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('x:y:z'), Operators);
+    const tst2 = interpretNode(parse('x:y:z'), ListOps);
     const result2 = [
       {type: "x"},
       {type: "y"},
@@ -45,7 +45,7 @@ describe('basic arrays', function () {
   });
 
   it("[x,y,z] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[x,y,z]'), Operators);
+    const tst2 = interpretNode(parse('[x,y,z]'), ListOps);
     const result2 = [
       {type: "x"},
       {type: "y"},
@@ -72,7 +72,7 @@ describe('basic arrays', function () {
   });
 
   it("[x:y:z] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[x:y:z]'), Operators);
+    const tst2 = interpretNode(parse('[x:y:z]'), ListOps);
     const result2 = [
       [
         {type: "x"},
@@ -80,6 +80,22 @@ describe('basic arrays', function () {
         {type: "z"}
       ]
     ];
+    expect(tst2).to.deep.equal(result2);
+  });
+
+  it("[]", function () {
+    const tst = parse('[]');
+    const result = {
+      type: "[]",
+      body: undefined
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("[] - syntax interpreted", function () {
+    let ast = parse('[]');
+    const tst2 = interpretNode(ast, ListOps);
+    const result2 = [];
     expect(tst2).to.deep.equal(result2);
   });
 });

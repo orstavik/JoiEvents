@@ -1,5 +1,5 @@
 import {parse} from "../Parser2.js";
-import {interpretNode, Operators} from "../Interpreter3.js";
+import {interpretNode, ListOps} from "../Interpreter3.js";
 
 describe('numbers', function () {
   it("OK: 12", function () {
@@ -90,7 +90,7 @@ describe("Comma bubble past other operators", function () {
   });
 
   it("[1+1,2+2,3+3] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[1+1,2+2,3+3]'), Operators);
+    const tst2 = interpretNode(parse('[1+1,2+2,3+3]'), ListOps);
     const result2 = [{
       type: "+",
       left: 1,
