@@ -31,13 +31,15 @@ function nextToken(tokens) {
 }
 
 function parseNode(tokens) {
+  if (!tokens[0])
+    return;
   return parseGroupArray(tokens, "(", ")") ||
     parseGroupArray(tokens, "[", "]") ||
-    parseExpression(tokens);
+    parseUnit(tokens);
 }
 
 function parseGroupArray(tokens, start, end) {
-  if (!tokens[0])
+  if (!tokens[0])                                 //todo move this check into the parseFunction after name
     return;
   if (tokens[0][0] !== start)
     return;
@@ -62,14 +64,12 @@ function parseGroupArray(tokens, start, end) {
     }
     if (previous !== "," && previous !== start)
       throw new SyntaxError("Forgot ',' or '"+end+"' after: " + previous);
-    args.push(previous = parseNode(tokens));
+    args.push(previous = parseExpression(tokens));
   }
 }
 
 function parseExpression(tokens) {
-  if (!tokens[0])
-    return;
-  const left = parseUnit(tokens);
+  const left = parseNode(tokens);
   if (!tokens[0])
     return left;
   const tail = parseExpressionTail(tokens);
@@ -124,7 +124,7 @@ function parsePrimitive(tokens) {
 
 export function parse(str) {
   const tokens = tokenize(str);
-  let args = parseNode(tokens);
+  let args = parseExpression(tokens);
   if (tokens.length)
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
