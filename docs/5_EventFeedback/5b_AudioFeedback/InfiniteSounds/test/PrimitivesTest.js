@@ -77,38 +77,10 @@ describe("expression test: 0+1", function () {
   });
 });
 
-describe("Comma bubble past other operators", function () {
-  it("[1+1,2+2,3+3]", function () {
-    const tst = parse('[1+1,2+2,3+3]');
-    const result = {
-      type: "[]",
-      body: {
-        type: "+",
-        left: 1,
-        right: {
-          type: ",",
-          left: 1,
-          right: {
-            type: "+",
-            left: 2,
-            right: {
-              type: ",",
-              left: 2,
-              right: {
-                type: "+",
-                left: 3,
-                right: 3
-              }
-            }
-          }
-        }
-      }
-    };
-    expect(tst).to.deep.equal(result);
-  });
+describe("Comma and operators", function () {
 
   it("[1+1,2+2,3+3] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[1+1,2+2,3+3]'), ListOps);
+    const tst2 = parse('[1+1,2+2,3+3]');
     const result2 = [{
       type: "+",
       left: 1,

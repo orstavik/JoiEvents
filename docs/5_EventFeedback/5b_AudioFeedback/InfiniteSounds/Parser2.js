@@ -4,8 +4,8 @@ const tokens = [
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[E|e][+|-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
-  /[()[\]]/,                                 //bracket operators:
-  /\^\*|\^\^|\^~|[,~|>:+*/%^-]/,                  //other operators:
+  /[(),[\]]/,                                 //bracket operators:
+  /\^\*|\^\^|\^~|[~|>:+*/%^-]/,                  //other operators:
   /"(?:[^\\"]|\\.)*"/,                       //doubleQuote:
   /'(?:[^\\']|\\.)*'/,                       //singleQuote:
   /.+/                                       //error:
@@ -41,12 +41,29 @@ function parseGroupArray(tokens, start, end) {
     return;
   if (tokens[0][0] !== start)
     return;
-  nextToken(tokens); //skip (
-  const body = parseNode(tokens);
-  const mustBeEnd = nextToken(tokens);
-  if (!mustBeEnd || mustBeEnd[0] !== end)
-    throw new SyntaxError("Illegal ending for group: " + mustBeEnd);
-  return {type: start + end, body};
+  nextToken(tokens); //eat ( [
+  const args = [];
+  let previous = start;
+  while (true) {
+    if (tokens[0][0] === end){
+      nextToken(tokens);    //eat ] )
+      if (previous === ",")
+        args.push(undefined);
+      if (start === "[")
+        return args;
+      return {type: "()", body: args}; //todo bug here if the body is an empty array
+    }
+    if (tokens[0][0] === ","){
+      if (previous === "," || previous === start)
+        args.push(undefined);
+      previous = ",";
+      nextToken(tokens);    //eat ,
+      continue;
+    }
+    if (previous !== "," && previous !== start)
+      throw new SyntaxError("Forgot ',' or '"+end+"' after: " + previous);
+    args.push(previous = parseNode(tokens));
+  }
 }
 
 function parseExpression(tokens) {
