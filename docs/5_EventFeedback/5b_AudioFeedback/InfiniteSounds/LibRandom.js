@@ -6,8 +6,7 @@ export const Random = {};
  * random(a, b, step) will return a random "step" between numbers "a" and "b".
  */
 Random.topDown = {};
-Random.random = function (n) {
-  const a = n.body.body[0], b = n.body.body[1], steps = n.body.body[2];
+Random.random = function ({body: [a, b, steps]}) {
   if (a instanceof Array)
     return a[Math.floor(Math.random() * a.length)];
   if (typeof a === "number" && b === undefined && steps === undefined)

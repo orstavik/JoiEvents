@@ -4,7 +4,6 @@ import {MathOps1, MathOps2} from "./LibMath.js";
 import {ListOps} from "./LibSyntax.js";
 
 function interpretExpressionArgs(node, table) {
-  // if (!node.left && !node.right) return node; speedup, but not strictly necessary
   const left = interpretNode(node.left, table);
   const right = interpretNode(node.right, table);
   return left === node.left && right === node.right ?
@@ -13,8 +12,9 @@ function interpretExpressionArgs(node, table) {
 }
 
 function interpretBody(node, table) {
-  // if (!node.body) return node; speedup, but not strictly necessary
-  const body = interpretNode(node.body, table);
+  let body = interpretNode(node.body, table);
+  if (body.type === "()")
+    body = body.body;
   return body === node.body ? node : {type: node.type, body};
 }
 
