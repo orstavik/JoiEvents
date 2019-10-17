@@ -1,43 +1,30 @@
-import {parse} from "../Parser.js";
+import {staticInterpret} from "../Interpreter3.js";
 
 describe('[ outside, : inside', function () {
 
   it("[1:2,3]", function () {
-    const tst = parse('[1:2,3]');
-    const result = [
-      [1, 2],
-      3
-    ];
+    const tst = staticInterpret('[1:2,3]');
+    const result = [[1, 2], 3];
     expect(tst).to.deep.equal(result);
   });
   it("[1:2:3,4]", function () {
-    const tst = parse('[1:2:3,4]');
-    const result = [
-      [1, 2, 3],
-      4
-    ];
+    const tst = staticInterpret('[1:2:3,4]');
+    const result = [[1, 2, 3], 4];
     expect(tst).to.deep.equal(result);
   });
   it("[1,2:3,4]", function () {
-    const tst = parse('[1,2:3,4]');
-    const result = [
-      1,
-      [2, 3],
-      4
-    ];
+    const tst = staticInterpret('[1,2:3,4]');
+    const result = [1, [2, 3], 4];
     expect(tst).to.deep.equal(result);
   });
   it("[1:2,3:4]", function () {
-    const tst = parse('[1:2,3:4]');
-    const result = [
-      [1, 2],
-      [3, 4]
-    ];
+    const tst = staticInterpret('[1:2,3:4]');
+    const result = [[1, 2], [3, 4]];
     expect(tst).to.deep.equal(result);
   });
   it("[1:2:,4]", function () {
     try {
-      const tst = parse('[1:2:,4]');
+      const tst = staticInterpret('[1:2:,4]');
     } catch (e) {
       expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
     }
@@ -47,7 +34,7 @@ describe('[ outside, : inside', function () {
 describe(': outside, [ inside', function () {
 
   it("1:[2,3]", function () {
-    const tst = parse('1:[2,3]');
+    const tst = staticInterpret('1:[2,3]');
     const result = [
       1,
       [2, 3]
@@ -55,7 +42,7 @@ describe(': outside, [ inside', function () {
     expect(tst).to.deep.equal(result);
   });
   it("[1,2]:3", function () {
-    const tst = parse('[1,2]:3');
+    const tst = staticInterpret('[1,2]:3');
     const result = [
       [1, 2],
       3
@@ -63,7 +50,7 @@ describe(': outside, [ inside', function () {
     expect(tst).to.deep.equal(result);
   });
   it("1:2:[3,4]", function () {
-    const tst = parse('1:2:[3,4]');
+    const tst = staticInterpret('1:2:[3,4]');
     const result = [
       1, 2,
       [3, 4]
@@ -71,7 +58,7 @@ describe(': outside, [ inside', function () {
     expect(tst).to.deep.equal(result);
   });
   it("[1,2]:3:4", function () {
-    const tst = parse('[1,2]:3:4');
+    const tst = staticInterpret('[1,2]:3:4');
     const result = [
       [1, 2],
       3,
@@ -80,7 +67,7 @@ describe(': outside, [ inside', function () {
     expect(tst).to.deep.equal(result);
   });
   it("1:[2,3]:4", function () {
-    const tst = parse('1:[2,3]:4');
+    const tst = staticInterpret('1:[2,3]:4');
     const result = [
       1,
       [2, 3],
@@ -92,7 +79,7 @@ describe(': outside, [ inside', function () {
 
 describe('> combined with array [...] and group (...)', function () {
   it("x > y > [z, q]", function () {
-    const tst = parse('x > y > [z, q]');
+    const tst = staticInterpret('x > y > [z, q]');
     const result = {
       type: ">",
       args: [{
@@ -107,7 +94,7 @@ describe('> combined with array [...] and group (...)', function () {
     expect(tst).to.deep.equal(result);
   });
   it("x > (y > c)", function () {
-    const tst = parse('x > (y > z)');
+    const tst = staticInterpret('x > (y > z)');
     const res = {
       type: ">",
       args: [{
@@ -127,8 +114,8 @@ describe('> combined with array [...] and group (...)', function () {
 describe('| and > combined', function () {
 
   it("1 | 2 > 3", function () {
-    const tst = parse('1 | 2 > 3');
-    const tst2 = parse('1 | (2 > 3)');
+    const tst = staticInterpret('1 | 2 > 3');
+    const tst2 = staticInterpret('1 | (2 > 3)');
     const result = {
       type: "|",
       args: [
@@ -147,8 +134,8 @@ describe('| and > combined', function () {
   });
 
   it("1 > 2 | 3", function () {
-    const tst = parse('1 > 2 | 3');
-    const tst2 = parse('(1 > 2) | 3');
+    const tst = staticInterpret('1 > 2 | 3');
+    const tst2 = staticInterpret('(1 > 2) | 3');
     const result = {
       type: "|",
       args: [
@@ -167,7 +154,7 @@ describe('| and > combined', function () {
   });
 
   it("1 > {2 | 3}", function () {
-    const tst = parse('1 > {2 | 3}');
+    const tst = staticInterpret('1 > {2 | 3}');
     const result = {
       type: ">",
       args: [
@@ -185,7 +172,7 @@ describe('| and > combined', function () {
   });
 
   it("{1 | 2} > 3", function () {
-    const tst = parse('{1 | 2} > 3');
+    const tst = staticInterpret('{1 | 2} > 3');
     const result = {
       type: ">",
       args: [
@@ -206,7 +193,7 @@ describe('| and > combined', function () {
 describe('ALL combined', function () {
 
   it("[1:2,] | 3 > 4", function () {
-    const tst = parse('[1:2,] | 3 > 4');
+    const tst = staticInterpret('[1:2,] | 3 > 4');
     const result = {
       type: "|",
       args: [
@@ -227,7 +214,7 @@ describe('ALL combined', function () {
   });
 
   it("[1:2,] > 3 | 4", function () {
-    const tst = parse('[1:2,] | 3 > 4');
+    const tst = staticInterpret('[1:2,] | 3 > 4');
     const result = {
       type: "|",
       args: [
@@ -248,7 +235,7 @@ describe('ALL combined', function () {
   });
 
   it("1 | 2 > [3, 4:5]", function () {
-    const tst = parse('1 | 2 > [3, 4:5]');
+    const tst = staticInterpret('1 | 2 > [3, 4:5]');
     const result = {
       type: "|",
       args: [
@@ -268,7 +255,7 @@ describe('ALL combined', function () {
   });
 
   it("1 | 2 > [3, 4:5, ] > 6 | 7", function () {
-    const tst = parse('1 | 2 > [3, 4:5, ] > 6 | 7');
+    const tst = staticInterpret('1 | 2 > [3, 4:5, ] > 6 | 7');
     const result = {
       type: "|",
       args: [
@@ -295,7 +282,7 @@ describe('ALL combined', function () {
 describe('errors', function () {
   it("[1:2:,4]", function () {
     try {
-      const tst = parse('[1:2:,4]');
+      const tst = staticInterpret('[1:2:,4]');
     } catch (e) {
       expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
     }
