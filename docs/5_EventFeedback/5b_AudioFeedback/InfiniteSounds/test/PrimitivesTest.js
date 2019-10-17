@@ -1,5 +1,6 @@
 import {parse} from "../Parser2.js";
-import {interpretNode, ListOps} from "../Interpreter3.js";
+import {interpretNode} from "../Interpreter3.js";
+import {ListOps} from "../LibSyntax.js";
 
 describe('numbers', function () {
   it("OK: 12", function () {

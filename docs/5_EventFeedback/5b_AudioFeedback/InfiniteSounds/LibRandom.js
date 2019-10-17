@@ -5,15 +5,20 @@ export const Random = {};
  * random(a, b) will return a random value the numbers "a" and "b".
  * random(a, b, step) will return a random "step" between numbers "a" and "b".
  */
-Random.random = function (ctx, a, b, steps) {
+Random.topDown = {};
+Random.random = function (n) {
+  const a = n.body.body[0], b = n.body.body[1], steps = n.body.body[2];
   if (a instanceof Array)
     return a[Math.floor(Math.random() * a.length)];
-  let value;
-  if (a.value && !b)
-    value = Math.random() * a.value;
-  else if (steps === undefined)
-    value = Math.random() * (b.value - a.value) + b.value;
-  else
-    value = (Math.random() * ((b.value - a.value) / steps.value) * steps.value) + b.value;
-  return {value: value, unit: a.unit};
+  if (typeof a === "number" && b === undefined && steps === undefined)
+    return Math.random() * a;
+  if (typeof a === "number" && typeof b === "number" && steps === undefined)
+    return (Math.random() * (b - a)) + a;
+  if (steps < 0)
+    throw new SyntaxError("Random function broken, illegal parameter: step must be a positive number" + steps);
+  if (typeof a === "number" && typeof b === "number" && typeof steps === "number")
+    return (Math.round((Math.random() * (b - a)) / steps) * steps) + a;
+  if (a === undefined  && typeof b === "number" && typeof steps === "number")
+    return Math.round((Math.random() * b) / steps) * steps;
+  throw new SyntaxError("Random function broken, illegal parameters: " + n);
 };
