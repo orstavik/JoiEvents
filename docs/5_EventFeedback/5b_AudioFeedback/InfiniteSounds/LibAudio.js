@@ -16,8 +16,8 @@ function plotEnvelope(target, points) {
 function setAudioParameter(target, param) {
   if (param === undefined) {
     return;
-  } else if (param instanceof AudioNode) {
-    param.connect(target);
+  } else if (param.output) {
+    param.output.connect(target);
   } else if (typeof param === "number") {
     target.value = param;
   } else if (param.hasOwnProperty("num")) {
@@ -143,7 +143,7 @@ async function makeOscillator(node, ctx, type) {
   return {graph: node, output: oscillator};
 }
 
-function makeFilter(ctx, type, p) {
+function makeFilter(ctx, type, node, p) {
   //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
   //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
   const filterNode = ctx.createBiquadFilter();
@@ -152,7 +152,7 @@ function makeFilter(ctx, type, p) {
   setAudioParameter(filterNode.Q, p.q);
   setAudioParameter(filterNode.gain, p.gain);
   setAudioParameter(filterNode.detune, p.detune);
-  return filterNode;
+  return {graph: node, input: filterNode, output: filterNode};
 }
 
 function makeGain(node, ctx) {
@@ -211,36 +211,44 @@ InterpreterFunctions.convolver = async function (node, ctx) {
 
 InterpreterFunctions.delay = (node, ctx) => makeDelay(node, ctx);
 
-InterpreterFunctions.lowpass = function ({body: [freq, q, detune]}, ctx) {
-  return makeFilter(ctx, "lowpass", {freq, q, detune});
+InterpreterFunctions.lowpass = function (node, ctx) {
+  const {body: [freq, q, detune]} = node;
+  return makeFilter(ctx, "lowpass", node, {freq, q, detune});
 };
 
-InterpreterFunctions.highpass = function ({body: [freq, q, detune]}, ctx) {
-  return makeFilter(ctx, "highpass", {freq, q, detune});
+InterpreterFunctions.highpass = function (node, ctx) {
+  const {body: [freq, q, detune]} = node;
+  return makeFilter(ctx, "highpass",node,  {freq, q, detune});
 };
 
-InterpreterFunctions.bandpass = function ({body: [freq, q, detune]}, ctx) {
-  return makeFilter(ctx, "bandpass", {freq, q, detune});
+InterpreterFunctions.bandpass = function (node, ctx) {
+  const {body: [freq, q, detune]} = node;
+  return makeFilter(ctx, "bandpass", node, {freq, q, detune});
 };
 
-InterpreterFunctions.lowshelf = function ({body: [freq, gain, detune]}, ctx) {
-  return makeFilter(ctx, "lowshelf", {freq, gain, detune});
+InterpreterFunctions.lowshelf = function (node, ctx) {
+  const {body: [freq, gain, detune]} = node;
+  return makeFilter(ctx, "lowshelf", node, {freq, gain, detune});
 };
 
-InterpreterFunctions.highshelf = function ({body: [freq, gain, detune]}, ctx) {
-  return makeFilter(ctx, "highshelf", {freq, gain, detune});
+InterpreterFunctions.highshelf = function (node, ctx) {
+  const {body: [freq, gain, detune]} = node;
+  return makeFilter(ctx, "highshelf", node, {freq, gain, detune});
 };
 
-InterpreterFunctions.peaking = function ({body: [freq, q, gain, detune]}, ctx) {
-  return makeFilter(ctx, "peaking", {freq, q, gain, detune});
+InterpreterFunctions.peaking = function (node, ctx) {
+  const {body: [freq, q, gain, detune]} = node;
+  return makeFilter(ctx, "peaking", node, {freq, q, gain, detune});
 };
 
-InterpreterFunctions.notch = function ({body: [freq, q, detune]}, ctx) {
-  return makeFilter(ctx, "notch", {freq, q, detune});
+InterpreterFunctions.notch = function (node, ctx) {
+  const {body: [freq, q, detune]} = node;
+  return makeFilter(ctx, "notch", node, {freq, q, detune});
 };
 
-InterpreterFunctions.allpass = function ({body: [freq, q, detune]}, ctx) {
-  return makeFilter(ctx, "allpass", {freq, q, detune});
+InterpreterFunctions.allpass = function (node, ctx) {
+  const {body: [freq, q, detune]} = node;
+  return makeFilter(ctx, "allpass", node, {freq, q, detune});
 };
 
 
