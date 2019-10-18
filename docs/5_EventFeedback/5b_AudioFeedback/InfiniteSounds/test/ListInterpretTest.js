@@ -23,11 +23,13 @@ describe('[ outside, : inside', function () {
     expect(tst).to.deep.equal(result);
   });
   it("[1:2:,4]", function () {
-    try {
-      const tst = staticInterpret('[1:2:,4]');
-    } catch (e) {
-      expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
-    }
+    // try {
+    const tst = staticInterpret('[1:2:,4]');
+    const result = [[1, 2, undefined], 4];
+    expect(tst).to.deep.equal(result);
+    // } catch (e) {
+    //   expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
+    // }
   });
 });
 
@@ -35,44 +37,27 @@ describe(': outside, [ inside', function () {
 
   it("1:[2,3]", function () {
     const tst = staticInterpret('1:[2,3]');
-    const result = [
-      1,
-      [2, 3]
-    ];
+    const result = [1, [2, 3]];
     expect(tst).to.deep.equal(result);
   });
   it("[1,2]:3", function () {
     const tst = staticInterpret('[1,2]:3');
-    const result = [
-      [1, 2],
-      3
-    ];
+    const result = [[1, 2], 3];
     expect(tst).to.deep.equal(result);
   });
   it("1:2:[3,4]", function () {
     const tst = staticInterpret('1:2:[3,4]');
-    const result = [
-      1, 2,
-      [3, 4]
-    ];
+    const result = [1, 2, [3, 4]];
     expect(tst).to.deep.equal(result);
   });
   it("[1,2]:3:4", function () {
     const tst = staticInterpret('[1,2]:3:4');
-    const result = [
-      [1, 2],
-      3,
-      4
-    ];
+    const result = [[1, 2], 3, 4];
     expect(tst).to.deep.equal(result);
   });
   it("1:[2,3]:4", function () {
     const tst = staticInterpret('1:[2,3]:4');
-    const result = [
-      1,
-      [2, 3],
-      4
-    ];
+    const result = [1, [2, 3], 4];
     expect(tst).to.deep.equal(result);
   });
 });
