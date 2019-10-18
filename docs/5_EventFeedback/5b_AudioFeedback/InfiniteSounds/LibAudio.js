@@ -173,7 +173,8 @@ InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx, "sawtoo
 InterpreterFunctions.gain = makeGain;
 
 //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
-InterpreterFunctions.convolver = async function ({body: [array]}, ctx) {
+InterpreterFunctions.convolver = async function (node, ctx) {
+  const array = node.body;
   const convolver = ctx.createConvolver();
   const buffer = await (
     !array ? AudioFileRegister.aConvolverBuffer() :
@@ -186,7 +187,7 @@ InterpreterFunctions.convolver = async function ({body: [array]}, ctx) {
     throw new Error("omg, cannot reverb without array");
   const audioBuffer = await ctx.decodeAudioData(buffer);
   convolver.buffer = audioBuffer;
-  return convolver;
+  return {graph: node, input: convolver, output: convolver};
 };
 
 InterpreterFunctions.delay = function (ctx, goal = {type: "num", value: "0"}, max = {type: "num", value: "1"}) {
