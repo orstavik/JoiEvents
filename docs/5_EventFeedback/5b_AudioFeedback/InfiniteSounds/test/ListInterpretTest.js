@@ -183,40 +183,12 @@ describe('ALL combined', function () {
     const tst = staticInterpret('[1:2,] | 3 > 4');
     const result = {
       type: "|",
-      args: [
-        [
-          [1, 2],
-          null
-        ],
-        {
-          type: ">",
-          args: [
-            2,
-            3
-          ]
-        }
-      ]
-    };
-    expect(tst).to.deep.equal(result);
-  });
-
-  it("[1:2,] > 3 | 4", function () {
-    const tst = staticInterpret('[1:2,] | 3 > 4');
-    const result = {
-      type: "|",
-      args: [
-        [
-          [1, 2],
-          null
-        ],
-        {
-          type: ">",
-          args: [
-            2,
-            3
-          ]
-        }
-      ]
+      left: [[1, 2], undefined],
+      right: {
+        type: ">",
+        left: 3,
+        right: 4
+      }
     };
     expect(tst).to.deep.equal(result);
   });
@@ -225,18 +197,12 @@ describe('ALL combined', function () {
     const tst = staticInterpret('1 | 2 > [3, 4:5]');
     const result = {
       type: "|",
-      args: [
-        1,
-        {
-          type: ">",
-          args: [
-            2,
-            [3,
-              [4, 5]
-            ]
-          ]
-        }
-      ]
+      left: 1,
+      right: {
+        type: ">",
+        left: 2,
+        right: [3, [4, 5]]
+      }
     };
     expect(tst).to.deep.equal(result);
   });
@@ -245,33 +211,40 @@ describe('ALL combined', function () {
     const tst = staticInterpret('1 | 2 > [3, 4:5, ] > 6 | 7');
     const result = {
       type: "|",
-      args: [
-        1,
-        {
+      left: 1,
+      right: {
+        type: ">",
+        left: 2,
+        right: {
           type: ">",
-          args: [
-            2,
-            [
-              3,
-              [4, 5],
-              null
-            ],
-            6
-          ]
-        },
-        7
-      ]
+          left: [3, [4, 5], undefined],
+          right: {
+            type: "|",
+            left: 6,
+            right: 7
+          }
+        }
+      }
     };
     expect(tst).to.deep.equal(result);
   });
 });
 
 describe('errors', function () {
-  it("[1:2:,4]", function () {
+  it("missing ] end", function (done) {
     try {
-      const tst = staticInterpret('[1:2:,4]');
+      const tst = staticInterpret('[[1,2,3,]');
     } catch (e) {
-      expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
+      expect(e.message).to.deep.equal("Forgot to close [-block.");
+      done();
+    }
+  });
+  it("missing ) end", function (done) {
+    try {
+      const tst = staticInterpret('((1)');
+    } catch (e) {
+      expect(e.message).to.deep.equal("Forgot to close (-block.");
+      done();
     }
   });
 });

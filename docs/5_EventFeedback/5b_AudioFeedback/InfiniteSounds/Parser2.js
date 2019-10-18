@@ -47,6 +47,8 @@ function parseGroupArray(tokens, start, end) {
   const args = [];
   let previous = start;
   while (true) {
+    if (!tokens[0])
+      throw new SyntaxError(`Forgot to close ${start}-block.`);
     if (tokens[0][0] === end){
       nextToken(tokens);    //eat ] )
       if (previous === ",")
