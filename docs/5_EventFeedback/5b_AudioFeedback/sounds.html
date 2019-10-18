@@ -4,30 +4,53 @@
     display: block;
   }
 </style>
-
-<sound-strip sound="sine(160hz, 'https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/wavetables/trombone.json')"></sound-strip>
+<h1>Oscillators:</h1>
+<sound-strip sound="sine(440)"></sound-strip>
+<sound-strip sound="sine(440Hz)"></sound-strip>
+<sound-strip sound="square(440Hz)"></sound-strip>
+<sound-strip sound="sawtooth(440Hz)"></sound-strip>
 <sound-strip sound="square(500Hz)" sound-two="square(500Hz)"></sound-strip>
-<sound-strip sound="noise > bandpass(500Hz)"></sound-strip>
-<sound-strip sound="noise"></sound-strip>
-<sound-strip sound="sine(340hz) > gain(square(2hz))"></sound-strip>
-<sound-strip sound="sine(340hz) > gain([0.9/0.9, 0.6/0.001, 0.6/0.4, 0/0.02])"></sound-strip>
+<h2>Oscillators with periodic wave:</h2>
+<sound-strip sound="sine(160hz, 'https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/wavetables/trombone.json')"></sound-strip>
+<sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]])"></sound-strip>
+
+<h1>Pipe through gain</h1>
+<sound-strip sound="sine(340hz) > gain([0.9:0.9, 0.6:0.001, 0.6:0.4, 0:0.02])"></sound-strip>
 <sound-strip sound="sine(340hz) > gain(0.2)"></sound-strip>
+
+<h1>File sounds and WhiteNoise</h1>
+<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3')"></sound-strip>
+<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3', 1)" dont-stop></sound-strip>
+<sound-strip sound="noise"></sound-strip>
+
+<h1>Random</h1>
 <sound-strip sound="square(random([160hz, 1340hz, 4000hz, 340hz])) > gain(0.1)"></sound-strip>
 <sound-strip sound="sine(random(1340hz)) > gain(0.1)"></sound-strip>
 <sound-strip sound="sine(random(1600hz, 3040hz)) > gain(0.1)"></sound-strip>
 <sound-strip sound="sine(random(0, 6000hz, 1000hz)) > gain(0.1)"></sound-strip>
-<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3')"></sound-strip>
-<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3', 1)" dont-stop></sound-strip>
+
+<h1>Convolver</h1>
+<sound-strip sound="sine(440) > convolver"></sound-strip>
+<sound-strip sound="sawtooth(440) > [gain(0.9), (convolver > gain(0.5))]"></sound-strip>
+
+<h1>Delay</h1>
+<sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]]) > delay(0.5)"></sound-strip>
+
+
+<h1>Filters</h1>
+<sound-strip sound="noise > bandpass(500Hz)"></sound-strip>
+<sound-strip sound="sawtooth(220) > gain([1:0.0015, 0:1.2]) > lowpass(244.5hz) > gain([1.0:0.001, 0:0.8])"></sound-strip>
+
+
+<h1>LFOs</h1>
+<sound-strip sound="sine(340hz) > gain(square(2hz))"></sound-strip>
+<h1>Notes</h1>
 <sound-strip sound="sine(F4)"></sound-strip>
 <sound-strip sound="sine(Ab4)"></sound-strip>
 <sound-strip sound="sine(C#4)"></sound-strip>
 <sound-strip sound="sine(random([C4, E4, G4]))"></sound-strip>
 <sound-strip sound="sine(circle5(F4,1))"></sound-strip>
 <sound-strip sound="sawtooth(random([C2, E2, G2])) > gain([1/0.0015, 0/1.2]) > lowpass(244.5hz) > gain([1.0/0.001, 0/0.8])"></sound-strip>
-<sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]])"></sound-strip>
-<sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]]) > delay(0.5)"></sound-strip>
-<sound-strip sound="sine(C#4) > convolver"></sound-strip>
-<sound-strip sound="sawtooth(C#4) > [gain(0.9), (convolver > gain(0.5))]"></sound-strip>
 
 <!--
 1. fix the parser
@@ -56,7 +79,7 @@ y. make atob function? or should this be implied? I think it is better if it is 
 -->
 
 <script type="module">
-  import {InfiniteSound} from "./InfiniteSounds/Interpreter2.js";
+  import {CssMusic} from "./InfiniteSounds/CssMusic.js";
 
   class SoundStrip extends HTMLElement {
     constructor() {
@@ -87,7 +110,7 @@ y. make atob function? or should this be implied? I think it is better if it is 
     async start() {
       this.stop();
       const x = this.shadowRoot.children[0].value;
-      this.ctx = await InfiniteSound.load(x);
+      this.ctx = await CssMusic.load(x);
       this.ctx.resume();
       if (!this.hasAttribute("dont-stop"))
         this.timer = setTimeout(() => this.stop(), 1000);
@@ -97,7 +120,7 @@ y. make atob function? or should this be implied? I think it is better if it is 
       const x = this.shadowRoot.children[1].value;
       if (x === "")
         return this.stop();
-      const nextCtx = await InfiniteSound.load(x);
+      const nextCtx = await CssMusic.load(x);
 
       nextCtx.replace(this.ctx);
       this.stop();
