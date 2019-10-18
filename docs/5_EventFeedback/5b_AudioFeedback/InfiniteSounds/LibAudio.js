@@ -89,22 +89,22 @@ class AudioFileRegister {
     return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
 
-  static async makeFileBufferSource(ctx, url, loop) {
-    const tst = url.substring(1, url.length - 1);
-    const data = await AudioFileRegister.getFileBuffer(tst);
+  static async makeFileBufferSource(node, ctx) {
+    const {body: [url, loop]} = node;
+    const data = await AudioFileRegister.getFileBuffer(url.value);
     const bufferSource = ctx.createBufferSource();
     bufferSource.buffer = await ctx.decodeAudioData(data);
     bufferSource.loop = !!loop;
     bufferSource.start();
-    return bufferSource;
+    return {graph: node, output: bufferSource};
   }
 
-  static async noise(ctx) {
+  static async noise(node, ctx) {
     const aNoise = ctx.createBufferSource();
     aNoise.buffer = await (noise || (noise = makeNoiseNode(3, 44100)));
     aNoise.loop = true;
     aNoise.start();
-    return aNoise;
+    return {graph: node, output: aNoise};
   }
 
   //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
@@ -237,10 +237,6 @@ InterpreterFunctions.allpass = function ({body: [freq, q, detune]}, ctx) {
  * url(https://some.com/sound.file) plays the sound file once
  * url(https://some.com/sound.file, 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = async function ({body: [url, loop]}, ctx) {
-  return await AudioFileRegister.makeFileBufferSource(ctx, url, loop);
-};
+InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
 
-InterpreterFunctions.noise = async function (ctx) {
-  return await AudioFileRegister.noise(ctx);
-};
+InterpreterFunctions.noise = AudioFileRegister.noise;
