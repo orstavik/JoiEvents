@@ -4,10 +4,11 @@ const tokens = [
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
-  /[(),[\]]/,                                 //bracket operators:
-  /\^\*|\^\^|\^~|[~|>:+*/%^-]/,                  //other operators:
-  /"(?:[^\\"]|\\.)*"/,                       //doubleQuote:
-  /'(?:[^\\']|\\.)*'/,                       //singleQuote:
+  /[(),[\]]/,                                //bracket operators:
+  /\^\*|\^\^|\^~|[~|>:+*/%^-]/,              //other operators:
+  /"((?:\\\\|\\"|[^"]|\.)*)"/,               //doubleQuote
+  /'((?:\\\\|\\'|[^']|\.)*)'/,               //singleQuote
+  /\s+/,                                     //whitespace
   /.+/                                       //error:
 ];
 
@@ -15,17 +16,16 @@ const tokens = [
 const tokenizer = new RegExp(tokens.map(rx => "(" + rx.source + ")").join("|"), "g");
 
 function tokenize(str) {
-  str = str.replace(/\s+/g, "");   //whitespace is definitively meaningless now
   const tokens = [];
   for (let array1; (array1 = tokenizer.exec(str)) !== null;)
     tokens.push(array1);
-  return tokens;
+  return tokens.filter(t => !t[17]);  //whitespace is definitively meaningless now
 }
 
 function nextToken(tokens) {
   if (!tokens.length)
     return undefined;
-  if (tokens[0][17])
+  if (tokens[0][18])
     throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][0]);
   return tokens.shift();
 }

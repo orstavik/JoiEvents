@@ -1,5 +1,30 @@
 import {parse} from "../Parser2.js";
 
+describe('quotes', function () {
+  it("'hello world!'", function () {
+    const tst = parse("'hello world!'");
+    const result = {type: "'", value: "hello world!"};
+    expect(tst).to.deep.equal(result);
+  });
+
+  it('"hello world!"', function () {
+    const tst = parse('"hello world!"');
+    const result = {type: '"', value: "hello world!"};
+    expect(tst).to.deep.equal(result);
+  });
+
+  it('"hello \\\"world!"', function () {
+    const tst = parse('"hello \\\"world!"');
+    const result = {type: '"', value: "hello \\\"world!"};
+    expect(tst).to.deep.equal(result);
+  });
+  it('"hello \\\\\\\"world!"', function () {
+    const tst = parse('"hello \\\\\\\"world!"');
+    const result = {type: '"', value: "hello \\\\\\\"world!"};
+    expect(tst).to.deep.equal(result);
+  });
+});
+
 describe('numbers', function () {
   it("OK: 12", function () {
     const tst = parse('12');
