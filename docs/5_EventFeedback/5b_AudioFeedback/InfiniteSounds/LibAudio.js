@@ -116,17 +116,16 @@ class AudioFileRegister {
   }
 }
 
-async function createPeriodicTable({body: [wave]}, ctx) {
-  if (wave[0] === '"') {
-    let tst = wave.substring(1, wave.length - 1);
-    const file = await fetch(tst);
+async function createPeriodicWave(ctx, wave) {
+  if (wave.type === '"' || wave.type === "'") {
+    const file = await fetch(wave.value);
     const data = await file.json();
     return ctx.createPeriodicWave(data.real, data.imag);
   }
   if (!(wave instanceof Array))
-    throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
-  const real = wave[0].map(num => parseFloat(num.value));
-  const imag = wave[1] ? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
+    throw new SyntaxError("Semantics: A periodic wavetable must be an array of raw numbers or a URL point to a json file with such an array");
+  const real = wave[0];//.map(num => parseFloat(num.value));
+  const imag = !wave[1] ? new Float32Array(real.length) : wave[1];  //.map(num => parseFloat(num.value))
   return ctx.createPeriodicWave(real, imag);
 }
 
@@ -137,7 +136,7 @@ async function makeOscillator(node, ctx, type) {
   oscillator.type = type;
   setAudioParameter(oscillator.frequency, freq);
   if (wave) {
-    const table = await createPeriodicTable(ctx, wave);
+    const table = await createPeriodicWave(ctx, wave);
     oscillator.setPeriodicWave(table);
   }
   oscillator.start();
@@ -156,7 +155,7 @@ function makeFilter(ctx, type, p) {
   return filterNode;
 }
 
-function makeGain (node, ctx) {
+function makeGain(node, ctx) {
   const {body: [gainParam]} = node;
   const audio = ctx.createGain();
   setAudioParameter(audio.gain, gainParam);
