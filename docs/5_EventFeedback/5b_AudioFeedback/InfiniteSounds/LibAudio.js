@@ -2,9 +2,9 @@ function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
   for (let point of points) {
-    let vol = point[0].value;
-    let time = point[1].value;
-    if (point[1].unit === "" || point[1].unit === "e")
+    let vol = point[0].num || point[0];
+    let time = point[1].num || point[1];
+    if (typeof point[1] === "number" || point[1].unit === "" || point[1].unit === "e")
       target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
     else
       throw new Error("todo: implement 'l' or 'a' type of time coordinate.");
