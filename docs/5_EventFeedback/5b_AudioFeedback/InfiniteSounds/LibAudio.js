@@ -259,3 +259,9 @@ InterpreterFunctions.allpass = function (node, ctx) {
 InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
 
 InterpreterFunctions.noise = AudioFileRegister.noise;
+
+//todo lfo function (type, hz, min, max).
+//This converts into a set of two oscillators, one square thst fills the min,
+//and then another of the type and hz that oscillates up to max.
+//The calculation varies from square (0-1),and sine (-1-1). verify.
+//Make audioparam accept array of audio nodes.

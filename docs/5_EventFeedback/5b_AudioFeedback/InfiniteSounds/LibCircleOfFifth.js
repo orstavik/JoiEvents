@@ -1,3 +1,11 @@
+/**
+ * todo ~   the "set key" operator
+ * I need to make a setup for the notes first, and then experiment with setting the mode.
+ * I think and inside out running of ~set first. The first ~ doesn't tune.
+ * Setting ~set key on a tone that has been set already, will convert the note in an absolute scale.
+ * The first ~ assigns, the second ~sets. That means the default is not set, it is just used in calculations.
+ */
+
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const modeNames = ["locrian", "phrygian", "aeolian", "dorian", "mixolydian", "ionian", "lydian"];
 const minors = {
