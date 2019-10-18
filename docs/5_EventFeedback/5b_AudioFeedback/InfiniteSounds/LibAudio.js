@@ -162,6 +162,25 @@ function makeGain(node, ctx) {
   return {graph: node, input: audio, output: audio};
 }
 
+function makeDelay(node, ctx) {
+  let goal, max;
+  if (!node.body)
+    goal = 0, max=1;
+  else
+    [goal, max] = node.body;
+  if (goal === undefined) goal = 0;
+  if (max === undefined) max= 1;
+  if (goal.num) goal = goal.num;
+  if (max.num) max = max.num;
+  if (typeof goal !== "number" || typeof max !== "number")
+    throw new Error("omg, cannot delay without a number.");
+  let delayNode = new DelayNode(ctx, {
+    delayTime: goal,
+    maxDelayTime: max
+  });
+  return {graph: node, output: delayNode, input: delayNode};
+}
+
 export const InterpreterFunctions = {};
 InterpreterFunctions.topDown = {};
 
@@ -190,16 +209,7 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   return {graph: node, input: convolver, output: convolver};
 };
 
-InterpreterFunctions.delay = function (ctx, goal = {type: "num", value: "0"}, max = {type: "num", value: "1"}) {
-  // if (typeof goal !== "number" || typeof max !== "number")
-  //   throw new Error("omg, cannot delay without a number.");
-  if (goal.type !== "num" || max.type !== "num")
-    throw new Error("omg, cannot delay without a number.");
-  return new DelayNode(ctx, {
-    delayTime: parseFloat(goal.value),
-    maxDelayTime: parseFloat(max.value)
-  });
-};
+InterpreterFunctions.delay = (node, ctx) => makeDelay(node, ctx);
 
 InterpreterFunctions.lowpass = function ({body: [freq, q, detune]}, ctx) {
   return makeFilter(ctx, "lowpass", {freq, q, detune});
