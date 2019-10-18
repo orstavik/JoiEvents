@@ -20,10 +20,10 @@ function setAudioParameter(target, param) {
     param.connect(target);
   } else if (typeof param === "number") {
     target.value = param;
-  } else if (param.hasOwnProperty("value")) {
+  } else if (param.hasOwnProperty("num")) {
     //todo if the number is not parsed outside, then the units will be universal to all nodes..
     //todo I have not implemented any interpretation of "Hz" or "db" or "ms" or whatever
-    target.value = param.value;
+    target.value = param.num;
   } else if (param instanceof Array) {
     plotEnvelope(target, param);
     // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
