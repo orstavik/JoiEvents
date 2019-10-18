@@ -3,7 +3,7 @@ const tokens = [
   /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
-  /(-?(?:\d*\.\d+|\d+)(?:[E|e][+|-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
+  /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
   /[(),[\]]/,                                 //bracket operators:
   /\^\*|\^\^|\^~|[~|>:+*/%^-]/,                  //other operators:
   /"(?:[^\\"]|\\.)*"/,                       //doubleQuote:

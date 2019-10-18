@@ -82,14 +82,15 @@ describe('> combined with array [...] and group (...)', function () {
     const tst = staticInterpret('x > y > [z, q]');
     const result = {
       type: ">",
-      args: [{
-        "type": "x"
-      },
-        {"type": "y"},
-        [
+      left: {"type": "x"},
+      right: {
+        type: ">",
+        left: {"type": "y"},
+        right: [
           {"type": "z"},
-          {"type": "q"}
-        ]]
+
+          {"type": "q"}]
+      }
     };
     expect(tst).to.deep.equal(result);
   });
@@ -97,16 +98,15 @@ describe('> combined with array [...] and group (...)', function () {
     const tst = staticInterpret('x > (y > z)');
     const res = {
       type: ">",
-      args: [{
-        type: "x",
-      }, {
-        type: ">",
-        args: [{
-          type: "y",
-        }, {
-          type: "z",
+      left: {"type": "x"},
+      right: {
+        type: "()",
+        body: [{
+          type: ">",
+          left: {"type": "y"},
+          right: {"type": "z"}
         }]
-      }]
+      }
     };
     expect(tst).to.deep.equal(res);
   });
@@ -115,79 +115,66 @@ describe('| and > combined', function () {
 
   it("1 | 2 > 3", function () {
     const tst = staticInterpret('1 | 2 > 3');
-    const tst2 = staticInterpret('1 | (2 > 3)');
     const result = {
       type: "|",
-      args: [
-        1,
-        {
-          type: ">",
-          args: [
-            2,
-            3
-          ]
-        }
-      ]
+      left: 1,
+      right: {
+        type: ">",
+        left: 2,
+        right: 3
+      }
     };
     expect(tst).to.deep.equal(result);
-    expect(tst2).to.deep.equal(result);
+  });
+
+  it("1 | (2 > 3)", function () {
+    const tst2 = staticInterpret('1 | (2 > 3)');
+    const res = {
+      type: "|",
+      left: 1,
+      right: {
+        type: "()",
+        body: [{
+          type: ">",
+          left: 2,
+          right: 3
+        }]
+      }
+    };
+    expect(tst2).to.deep.equal(res);
   });
 
   it("1 > 2 | 3", function () {
     const tst = staticInterpret('1 > 2 | 3');
+    const result = {
+      type: ">",
+      left: 1,
+      right: {
+        type: "|",
+        left: 2,
+        right: 3
+      }
+    };
+    expect(tst).to.deep.equal(result);
+  });
+
+  it("(1 > 2) | 3", function () {
     const tst2 = staticInterpret('(1 > 2) | 3');
-    const result = {
+    const res = {
       type: "|",
-      args: [
-        {
+      left: {
+        type: "()",
+        body: [{
           type: ">",
-          args: [
-            1,
-            2
-          ]
-        },
-        3
-      ]
+          left: 1,
+          right: 2
+        }]
+      },
+      right: 3
     };
-    expect(tst).to.deep.equal(result);
-    expect(tst2).to.deep.equal(result);
+    expect(tst2).to.deep.equal(res);
   });
 
-  it("1 > {2 | 3}", function () {
-    const tst = staticInterpret('1 > {2 | 3}');
-    const result = {
-      type: ">",
-      args: [
-        1,
-        {
-          type: "|",
-          args: [
-            2,
-            3
-          ]
-        }
-      ]
-    };
-    expect(tst).to.deep.equal(result);
-  });
-
-  it("{1 | 2} > 3", function () {
-    const tst = staticInterpret('{1 | 2} > 3');
-    const result = {
-      type: ">",
-      args: [
-        {
-          type: "|",
-          args: [
-            1,
-            2
-          ]
-        },
-        3
-      ]
-    };
-    expect(tst).to.deep.equal(result);
-  });
 });
 
 describe('ALL combined', function () {
