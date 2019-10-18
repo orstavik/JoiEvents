@@ -6,6 +6,7 @@ export const Random = {};
  * random(a, b, step) will return a random "step" between numbers "a" and "b".
  */
 Random.topDown = {};
+Random.topDownAndBottomUp = {};
 Random.random = function (node) {
   let {body: [a, b, steps]} = node;
   if (a instanceof Array)

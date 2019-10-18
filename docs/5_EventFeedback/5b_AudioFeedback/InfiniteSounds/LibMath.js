@@ -1,5 +1,6 @@
 export const MathOps2 = Object.create(null);
 MathOps2.topDown = {"+": 1, "-": 1};
+MathOps2.topDownAndBottomUp = {};
 
 MathOps2["+"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
@@ -37,6 +38,7 @@ MathOps2["-"] = function (n) {
 
 export const MathOps1 = Object.create(null);
 MathOps1.topDown = {"^": 1};
+MathOps1.topDownAndBottomUp = {};
 
 MathOps1["*"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
