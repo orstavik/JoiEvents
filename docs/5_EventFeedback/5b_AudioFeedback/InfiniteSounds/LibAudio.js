@@ -116,17 +116,32 @@ class AudioFileRegister {
   }
 }
 
-async function makeOscillator(ctx, type, freq, wave) {
-  //todo convert the factory methods to constructors as specified by MDN
+async function createPeriodicTable({body: [wave]}, ctx) {
+  if (wave[0] === '"') {
+    let tst = wave.substring(1, wave.length - 1);
+    const file = await fetch(tst);
+    const data = await file.json();
+    return ctx.createPeriodicWave(data.real, data.imag);
+  }
+  if (!(wave instanceof Array))
+    throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
+  const real = wave[0].map(num => parseFloat(num.value));
+  const imag = wave[1] ? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
+  return ctx.createPeriodicWave(real, imag);
+}
+
+async function makeOscillator(node, ctx, type) {
+  const {body: [freq, wave]} = node;
+  //todo convert the factory methods to constructors as specified by MDN?
   const oscillator = ctx.createOscillator();
   oscillator.type = type;
   setAudioParameter(oscillator.frequency, freq);
   if (wave) {
-    const table = await InterpreterFunctions.createPeriodicTable(ctx, wave);
+    const table = await createPeriodicTable(ctx, wave);
     oscillator.setPeriodicWave(table);
   }
   oscillator.start();
-  return oscillator;
+  return {graph: node, audio: oscillator};
 }
 
 function makeFilter(ctx, type, p) {
@@ -144,28 +159,17 @@ function makeFilter(ctx, type, p) {
 export const InterpreterFunctions = {};
 InterpreterFunctions.topDown = {};
 
-InterpreterFunctions.sine = async function ({body: [freq, wave]}, ctx) {
-  return makeOscillator(ctx, "sine", freq, wave);
-};
+InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx, "sine");
+InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx, "square");
+InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx, "triangle");
+InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx, "sawtooth");
 
-InterpreterFunctions.square = async function ({body: [freq, wave]}, ctx) {
-  return makeOscillator(ctx, "square", freq, wave);
+InterpreterFunctions.gain = function (node, ctx) {
+  const {body: [gainParam]} = node;
+  const audio = ctx.createGain();
+  setAudioParameter(audio.gain, gainParam);
+  return {graph: node, audio};
 };
-
-InterpreterFunctions.sawtooth = async function ({body: [freq, wave]}, ctx) {
-  return makeOscillator(ctx, "sawtooth", freq, wave);
-};
-
-InterpreterFunctions.triangle = async function ({body: [freq, wave]}, ctx) {
-  return makeOscillator(ctx, "triangle", freq, wave);
-};
-
-InterpreterFunctions.gain = function ({body: [gainParam]}, ctx) {
-  const node = ctx.createGain();
-  setAudioParameter(node.gain, gainParam);
-  return node;
-};
-
 
 //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
 InterpreterFunctions.convolver = async function ({body: [array]}, ctx) {
@@ -181,8 +185,6 @@ InterpreterFunctions.convolver = async function ({body: [array]}, ctx) {
     throw new Error("omg, cannot reverb without array");
   const audioBuffer = await ctx.decodeAudioData(buffer);
   convolver.buffer = audioBuffer;
-  // convolver.gain = ctx.createGain();
-  // convolver.gain = gain;
   return convolver;
 };
 
@@ -195,20 +197,6 @@ InterpreterFunctions.delay = function (ctx, goal = {type: "num", value: "0"}, ma
     delayTime: parseFloat(goal.value),
     maxDelayTime: parseFloat(max.value)
   });
-};
-
-InterpreterFunctions.createPeriodicTable = async function ({body: [wave]}, ctx) {
-  if (wave[0] === '"') {
-    let tst = wave.substring(1, wave.length - 1);
-    const file = await fetch(tst);
-    const data = await file.json();
-    return ctx.createPeriodicWave(data.real, data.imag);
-  }
-  if (!(wave instanceof Array))
-    throw new SyntaxError("Semantics: A periodic wavetable must be an array of numbers");
-  const real = wave[0].map(num => parseFloat(num.value));
-  const imag = wave[1] ? wave[1].map(num => parseFloat(num.value)) : new Float32Array(real.length);
-  return ctx.createPeriodicWave(real, imag);
 };
 
 InterpreterFunctions.lowpass = function ({body: [freq, q, detune]}, ctx) {

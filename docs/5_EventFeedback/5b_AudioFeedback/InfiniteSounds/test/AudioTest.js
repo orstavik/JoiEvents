@@ -1,12 +1,23 @@
-import {interpret} from "../Interpreter3.js";
+import {interpret, staticInterpret} from "../Interpreter3.js";
 
 describe('audio - interpreted', function () {
 
   it("sine(144)", async function () {
+    // const graph = staticInterpret('sine(144)');
+    // console.log(JSON.stringify(graph, null, 2));
+    const graph = {
+      type: "sine",
+      body: [
+        144
+      ]
+    };
     const tst2 = await interpret('sine(144)');
-    expect(tst2).to.be.an.instanceof(AudioNode);
-    expect(tst2.frequency.value).to.be.equal(144);
+    expect(tst2.audio).to.be.an.instanceof(AudioNode);
+    expect(tst2.audio.frequency.value).to.be.equal(144);
+    expect(tst2.graph).to.deep.equal(graph);
   });
+
+  //todo max: duplicate this type of check for all the oscillators and filters and the other builtin audio nodes (noise, etc.)
 });
 
 describe('audio - error', function () {
