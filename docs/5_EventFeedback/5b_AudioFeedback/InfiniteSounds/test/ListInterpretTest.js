@@ -2,29 +2,29 @@ import {staticInterpret} from "../Interpreter3.js";
 
 describe('[ outside, : inside', function () {
 
-  it("[1:2,3]", function () {
-    const tst = staticInterpret('[1:2,3]');
+  it("[1:2,3]", async function () {
+    const tst = await staticInterpret('[1:2,3]');
     const result = [[1, 2], 3];
     expect(tst).to.deep.equal(result);
   });
-  it("[1:2:3,4]", function () {
-    const tst = staticInterpret('[1:2:3,4]');
+  it("[1:2:3,4]", async function () {
+    const tst = await staticInterpret('[1:2:3,4]');
     const result = [[1, 2, 3], 4];
     expect(tst).to.deep.equal(result);
   });
-  it("[1,2:3,4]", function () {
-    const tst = staticInterpret('[1,2:3,4]');
+  it("[1,2:3,4]", async function () {
+    const tst = await staticInterpret('[1,2:3,4]');
     const result = [1, [2, 3], 4];
     expect(tst).to.deep.equal(result);
   });
-  it("[1:2,3:4]", function () {
-    const tst = staticInterpret('[1:2,3:4]');
+  it("[1:2,3:4]", async function () {
+    const tst = await staticInterpret('[1:2,3:4]');
     const result = [[1, 2], [3, 4]];
     expect(tst).to.deep.equal(result);
   });
-  it("[1:2:,4]", function () {
+  it("[1:2:,4]", async function () {
     // try {
-    const tst = staticInterpret('[1:2:,4]');
+    const tst = await staticInterpret('[1:2:,4]');
     const result = [[1, 2, undefined], 4];
     expect(tst).to.deep.equal(result);
     // } catch (e) {
@@ -35,36 +35,36 @@ describe('[ outside, : inside', function () {
 
 describe(': outside, [ inside', function () {
 
-  it("1:[2,3]", function () {
-    const tst = staticInterpret('1:[2,3]');
+  it("1:[2,3]", async function () {
+    const tst = await staticInterpret('1:[2,3]');
     const result = [1, [2, 3]];
     expect(tst).to.deep.equal(result);
   });
-  it("[1,2]:3", function () {
-    const tst = staticInterpret('[1,2]:3');
+  it("[1,2]:3", async function () {
+    const tst = await staticInterpret('[1,2]:3');
     const result = [[1, 2], 3];
     expect(tst).to.deep.equal(result);
   });
-  it("1:2:[3,4]", function () {
-    const tst = staticInterpret('1:2:[3,4]');
+  it("1:2:[3,4]", async function () {
+    const tst = await staticInterpret('1:2:[3,4]');
     const result = [1, 2, [3, 4]];
     expect(tst).to.deep.equal(result);
   });
-  it("[1,2]:3:4", function () {
-    const tst = staticInterpret('[1,2]:3:4');
+  it("[1,2]:3:4", async function () {
+    const tst = await staticInterpret('[1,2]:3:4');
     const result = [[1, 2], 3, 4];
     expect(tst).to.deep.equal(result);
   });
-  it("1:[2,3]:4", function () {
-    const tst = staticInterpret('1:[2,3]:4');
+  it("1:[2,3]:4", async function () {
+    const tst = await staticInterpret('1:[2,3]:4');
     const result = [1, [2, 3], 4];
     expect(tst).to.deep.equal(result);
   });
 });
 
 describe('> combined with array [...] and group (...)', function () {
-  it("x > y > [z, q]", function () {
-    const tst = staticInterpret('x > y > [z, q]');
+  it("x > y > [z, q]", async function () {
+    const tst = await staticInterpret('x > y > [z, q]');
     const result = {
       type: ">",
       left: {"type": "x"},
@@ -79,8 +79,8 @@ describe('> combined with array [...] and group (...)', function () {
     };
     expect(tst).to.deep.equal(result);
   });
-  it("x > (y > c)", function () {
-    const tst = staticInterpret('x > (y > z)');
+  it("x > (y > c)", async function () {
+    const tst = await staticInterpret('x > (y > z)');
     const res = {
       type: ">",
       left: {"type": "x"},
@@ -98,8 +98,8 @@ describe('> combined with array [...] and group (...)', function () {
 });
 describe('| and > combined', function () {
 
-  it("1 | 2 > 3", function () {
-    const tst = staticInterpret('1 | 2 > 3');
+  it("1 | 2 > 3", async function () {
+    const tst = await staticInterpret('1 | 2 > 3');
     const result = {
       type: "|",
       left: 1,
@@ -112,8 +112,8 @@ describe('| and > combined', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("1 | (2 > 3)", function () {
-    const tst2 = staticInterpret('1 | (2 > 3)');
+  it("1 | (2 > 3)", async function () {
+    const tst2 = await staticInterpret('1 | (2 > 3)');
     const res = {
       type: "|",
       left: 1,
@@ -129,8 +129,8 @@ describe('| and > combined', function () {
     expect(tst2).to.deep.equal(res);
   });
 
-  it("1 > 2 | 3", function () {
-    const tst = staticInterpret('1 > 2 | 3');
+  it("1 > 2 | 3", async function () {
+    const tst = await staticInterpret('1 > 2 | 3');
     const result = {
       type: ">",
       left: 1,
@@ -143,8 +143,8 @@ describe('| and > combined', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("(1 > 2) | 3", function () {
-    const tst2 = staticInterpret('(1 > 2) | 3');
+  it("(1 > 2) | 3", async function () {
+    const tst2 = await staticInterpret('(1 > 2) | 3');
     const res = {
       type: "|",
       left: {
@@ -164,8 +164,8 @@ describe('| and > combined', function () {
 
 describe('ALL combined', function () {
 
-  it("[1:2,] | 3 > 4", function () {
-    const tst = staticInterpret('[1:2,] | 3 > 4');
+  it("[1:2,] | 3 > 4", async function () {
+    const tst = await staticInterpret('[1:2,] | 3 > 4');
     const result = {
       type: "|",
       left: [[1, 2], undefined],
@@ -178,8 +178,8 @@ describe('ALL combined', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("1 | 2 > [3, 4:5]", function () {
-    const tst = staticInterpret('1 | 2 > [3, 4:5]');
+  it("1 | 2 > [3, 4:5]", async function () {
+    const tst = await staticInterpret('1 | 2 > [3, 4:5]');
     const result = {
       type: "|",
       left: 1,
@@ -192,8 +192,8 @@ describe('ALL combined', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("1 | 2 > [3, 4:5, ] > 6 | 7", function () {
-    const tst = staticInterpret('1 | 2 > [3, 4:5, ] > 6 | 7');
+  it("1 | 2 > [3, 4:5, ] > 6 | 7", async function () {
+    const tst = await staticInterpret('1 | 2 > [3, 4:5, ] > 6 | 7');
     const result = {
       type: "|",
       left: 1,
@@ -216,21 +216,25 @@ describe('ALL combined', function () {
 });
 
 describe('errors', function () {
-  it("missing ] end", function (done) {
+  it("missing ] end", async function () {
+    let tst;
     try {
-      const tst = staticInterpret('[[1,2,3,]');
+      tst = await staticInterpret('[[1,2,3,]');
     } catch (e) {
       expect(e.message).to.deep.equal("Forgot to close [-block.");
-      done();
+      // done();
     }
+    assert(tst === undefined);
   });
-  it("missing ) end", function (done) {
+  it("missing ) end", async function () {
+    let tst;
     try {
-      const tst = staticInterpret('((1)');
+      tst = await staticInterpret('((1)');
     } catch (e) {
       expect(e.message).to.deep.equal("Forgot to close (-block.");
-      done();
+      // done();
     }
+    assert(tst === undefined);
   });
 });
 

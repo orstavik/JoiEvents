@@ -141,7 +141,7 @@ async function makeOscillator(node, ctx, type) {
     oscillator.setPeriodicWave(table);
   }
   oscillator.start();
-  return {graph: node, audio: oscillator};
+  return {graph: node, output: oscillator};
 }
 
 function makeFilter(ctx, type, p) {
@@ -156,6 +156,13 @@ function makeFilter(ctx, type, p) {
   return filterNode;
 }
 
+function makeGain (node, ctx) {
+  const {body: [gainParam]} = node;
+  const audio = ctx.createGain();
+  setAudioParameter(audio.gain, gainParam);
+  return {graph: node, input: audio, output: audio};
+}
+
 export const InterpreterFunctions = {};
 InterpreterFunctions.topDown = {};
 
@@ -164,12 +171,7 @@ InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx, "square")
 InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx, "triangle");
 InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx, "sawtooth");
 
-InterpreterFunctions.gain = function (node, ctx) {
-  const {body: [gainParam]} = node;
-  const audio = ctx.createGain();
-  setAudioParameter(audio.gain, gainParam);
-  return {graph: node, audio};
-};
+InterpreterFunctions.gain = makeGain;
 
 //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
 InterpreterFunctions.convolver = async function ({body: [array]}, ctx) {

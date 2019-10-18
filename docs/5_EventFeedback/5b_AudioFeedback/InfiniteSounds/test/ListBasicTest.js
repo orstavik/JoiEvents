@@ -18,8 +18,8 @@ describe('basic arrays', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("x:y:z - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('x:y:z'), ListOps);
+  it("x:y:z - syntax interpreted", async function () {
+    const tst2 = await interpretNode(parse('x:y:z'), ListOps);
     const result2 = [
       {type: "x"},
       {type: "y"},
@@ -53,8 +53,8 @@ describe('basic arrays', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("[x:y:z] - syntax interpreted", function () {
-    const tst2 = interpretNode(parse('[x:y:z]'), ListOps);
+  it("[x:y:z] - syntax interpreted", async function () {
+    const tst2 = await interpretNode(parse('[x:y:z]'), ListOps);
     const result2 = [
       [
         {type: "x"},
