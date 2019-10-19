@@ -9,6 +9,11 @@ describe('random - interpreted', function () {
     const alternatives = [13, 27, 31];
     expect(tst2).to.be.oneOf(alternatives);
   });
+  it("random([13,27,31])+1", async function () {
+    const tst2 = await interpret('random([13,27,31])+1', new AudioContext());
+    const alternatives = [14, 28, 32];
+    expect(tst2).to.be.oneOf(alternatives);
+  });
   it("random(randomArray) 40 times", async function () {
     let str = 'random([' + randomArray + '])';
     for (let x of randomArray) {

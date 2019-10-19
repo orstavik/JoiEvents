@@ -53,6 +53,10 @@ export async function interpretNode(node, table, ctx) {
 
 export async function staticInterpret(str) {
   let node = parse(str);
+  //todo merge tables. Because I need to process the operators in the correct order.
+  //todo, when I have operator graph, I should rearrange it grammatically, so that the bottom nodes are the ones being processed first.
+  //todo, then, I can just run a bottom up pass on everything.
+  //todo, yes, keep the structure smart.
   node = await interpretNode(node, ListOps);
   node = await interpretNode(node, MathOps1);
   node = await interpretNode(node, MathOps2);
@@ -64,7 +68,13 @@ export async function staticInterpret(str) {
 
 export async function interpret(str, ctx) {
   let node = await staticInterpret(str);
+  //todo no, cannot merge tables. Because I need to process the operators in the correct order.
+  //todo, when I have operator graph, I should rearrange it grammatically, so that the bottom nodes are the ones being processed first.
+  //todo, then, I can just run a bottom up pass on everything.
+  //todo, yes, keep the structure smart.
   node = await interpretNode(node, Random);
+  node = await interpretNode(node, MathOps1);
+  node = await interpretNode(node, MathOps2);
   node = await interpretNode(node, InterpreterFunctions, ctx);
   node = await interpretNode(node, AudioPiping);
   return node;
