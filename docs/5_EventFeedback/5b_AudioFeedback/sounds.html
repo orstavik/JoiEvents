@@ -121,7 +121,7 @@ y. make atob function? or should this be implied? I think it is better if it is 
       this.stop();
       const x = this.shadowRoot.children[0].value;
       this.ctx = await CssMusic.load(x);
-      this.ctx.start(performance.now());
+      this.ctx.resume(performance.now());
       if (!this.hasAttribute("dont-stop"))
         this.timer = setTimeout(() => this.stop(), 5000);
     }
