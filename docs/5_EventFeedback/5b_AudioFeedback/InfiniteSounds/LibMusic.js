@@ -1,6 +1,4 @@
 export const Music = Object.create(null);
-Music.topDown = {};
-Music.topDownAndBottomUp = {"~": 1};
 
 //todo speedup is possible by mutating the note object. Here, the structure remains immutable
 function morphNote(note, newKey) {

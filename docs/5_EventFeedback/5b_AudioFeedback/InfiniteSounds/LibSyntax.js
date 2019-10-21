@@ -1,6 +1,4 @@
 export const ListOps = Object.create(null);
-// ListOps.topDown = {":": 1};
-// ListOps.topDownAndBottomUp = {};
 
 ListOps[":"] = function ({left, right}) {
   if (left[":"]) {
@@ -12,16 +10,6 @@ ListOps[":"] = function ({left, right}) {
   return res;
 };
 
-// ListOps[":"] = function ({left, right}) {
-//   const res = [left];
-//   while (right && right.type === ":") {
-//     res.push(right.left);
-//     right = right.right;
-//   }
-//   res.push(right);
-//   return res;
-// };
-//
 function connectMtoN(a, b) {
   if (a instanceof Array) {
     for (let x of a)
@@ -37,8 +25,6 @@ function connectMtoN(a, b) {
 }
 
 export const AudioPiping = Object.create(null);
-// AudioPiping.topDown = {/*">": 1*/};
-// AudioPiping.topDownAndBottomUp = {/*">": 1*/};
 
 function extractAudioArray(node, outputInput) {
   return node.flat(Infinity).map(node => {

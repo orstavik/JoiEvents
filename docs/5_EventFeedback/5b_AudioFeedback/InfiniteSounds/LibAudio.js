@@ -182,8 +182,6 @@ function makeDelay(node, ctx) {
 }
 
 export const InterpreterFunctions = {};
-InterpreterFunctions.topDown = {};
-InterpreterFunctions.topDownAndBottomUp = {};
 
 InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx, "sine");
 InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx, "square");

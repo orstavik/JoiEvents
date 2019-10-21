@@ -1,12 +1,6 @@
-export const MathOps1 = Object.create(null);
-MathOps1.topDown = {"^": 1};
-MathOps1.topDownAndBottomUp = {};
+export const MathOps = Object.create(null);
 
-export const MathOps2 = Object.create(null);
-MathOps2.topDown = {"+": 1, "-": 1};
-MathOps2.topDownAndBottomUp = {};
-
-MathOps1["+"] = function (n) {
+MathOps["+"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left + n.right;
   if (typeof n.left === "string" && typeof n.right === "string")
@@ -28,7 +22,7 @@ MathOps1["+"] = function (n) {
 //2. ^~~ morphing the mode
 //3. up a tone in the scale of
 
-MathOps1["-"] = function (n) {
+MathOps["-"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left - n.right;
   if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
@@ -41,7 +35,7 @@ MathOps1["-"] = function (n) {
 };
 
 
-MathOps1["*"] = function (n) {
+MathOps["*"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * n.right;
   if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
@@ -52,7 +46,7 @@ MathOps1["*"] = function (n) {
   return n;
 };
 
-MathOps1["/"] = function (n) {
+MathOps["/"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left / n.right;
   if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
@@ -66,21 +60,21 @@ MathOps1["/"] = function (n) {
   return n;
 };
 
-MathOps1["^"] = function (n) {
+MathOps["^"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return Math.pow(n.left, n.right);
   //if there are two notes?
   return n;
 };
 
-MathOps1["^^"] = function (n) {
+MathOps["^^"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * Math.pow(2, n.right);
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
   //   return left up right octaves;                                        //todo
   return n;
 };
-MathOps1["^*"] = function (n) {
+MathOps["^*"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * Math.pow(1.5, n.right);
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
@@ -89,13 +83,13 @@ MathOps1["^*"] = function (n) {
 };
 
 /*
-MathOps1["^~"] = function (n) {
+MathOps["^~"] = function (n) {
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
   //   return note left turned right on the mode scale;                //todo
   return n;
 };
 
-MathOps1["^+"] = function (n) {
+MathOps["^+"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left * Math.pow(1.5, n.right);
   // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
