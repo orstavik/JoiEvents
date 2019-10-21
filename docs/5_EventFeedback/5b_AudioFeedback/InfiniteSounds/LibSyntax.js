@@ -1,17 +1,27 @@
 export const ListOps = Object.create(null);
-ListOps.topDown = {":": 1};
-ListOps.topDownAndBottomUp  = {};
+// ListOps.topDown = {":": 1};
+// ListOps.topDownAndBottomUp = {};
 
 ListOps[":"] = function ({left, right}) {
-  const res = [left];
-  while (right && right.type === ":") {
-    res.push(right.left);
-    right = right.right;
+  if (left[":"]) {
+    left.push(right);
+    return left;
   }
-  res.push(right);
+  const res = [left, right];
+  res[":"] = true;
   return res;
 };
 
+// ListOps[":"] = function ({left, right}) {
+//   const res = [left];
+//   while (right && right.type === ":") {
+//     res.push(right.left);
+//     right = right.right;
+//   }
+//   res.push(right);
+//   return res;
+// };
+//
 function connectMtoN(a, b) {
   if (a instanceof Array) {
     for (let x of a)
@@ -27,8 +37,8 @@ function connectMtoN(a, b) {
 }
 
 export const AudioPiping = Object.create(null);
-AudioPiping.topDown = {/*">": 1*/};
-AudioPiping.topDownAndBottomUp = {/*">": 1*/};
+// AudioPiping.topDown = {/*">": 1*/};
+// AudioPiping.topDownAndBottomUp = {/*">": 1*/};
 
 function extractAudioArray(node, outputInput) {
   return node.flat(Infinity).map(node => {
@@ -50,8 +60,8 @@ AudioPiping[">"] = function (node, ctx) {
   const left = (node.left instanceof Array) ? extractAudioArray(node.left, "output") : node.left.output;
   const right = (node.right instanceof Array) ? extractAudioArray(node.right, "input") : node.right.input;
   connectMtoN(left, right);
-  const endOutput = node.right.endOutput || right;
-  return {graph: node, input: left, output: right, endOutput};
+  const ogInput = node.left.ogInput  || left;
+  return {graph: node, input: left, output: right, ogInput};
 };
 
 //this doesn't really mean anything special, as the > is normally processed ltr

@@ -37,18 +37,20 @@ export async function interpretNode(node, table, ctx) {
     return node;
   if (node instanceof Array)
     return await interpretArray(node, table, ctx);
-  let fun = table[node.type];
-  if (fun && (table.topDown[node.type] || table.topDownAndBottomUp[node.type])) {
+/*
+  if (fun /!*&& (table.topDown[node.type] || table.topDownAndBottomUp[node.type])*!/) {
     const res = fun(node, ctx);   //if the result is a new node, this node too must be interpreted.
     if (res !== node)
       return await interpretNode(res, table);     //if the ltr operation triggers, then the result of that operation needs to be interpreted from scratch as it might contain a new ltr
     //if its the same, then the arguments needs to be processed
   }
+*/
   if (node.left || node.right)
     node = await interpretExpressionArgs(node, table, ctx);
   if (node.body)
     node = await interpretBody(node, table, ctx);
-  return (fun && !table.topDown[node.type]) ? (await fun(node, ctx)) : node;
+  let fun = table[node.type];
+  return (fun /*&& !table.topDown[node.type]*/) ? (await fun(node, ctx)) : node;
 }
 
 export async function staticInterpret(str) {
@@ -59,7 +61,7 @@ export async function staticInterpret(str) {
   //todo, yes, keep the structure smart.
   node = await interpretNode(node, ListOps);
   node = await interpretNode(node, MathOps1);
-  node = await interpretNode(node, MathOps2);
+  // node = await interpretNode(node, MathOps2);
   node = await interpretNode(node, Music, {activeKeys: new Set()});
   //variables: declare and replace
   //cache temporarily
@@ -74,7 +76,7 @@ export async function interpret(str, ctx) {
   //todo, yes, keep the structure smart.
   node = await interpretNode(node, Random);
   node = await interpretNode(node, MathOps1);
-  node = await interpretNode(node, MathOps2);
+  // node = await interpretNode(node, MathOps2);
   node = await interpretNode(node, InterpreterFunctions, ctx);
   node = await interpretNode(node, AudioPiping);
   return node;

@@ -1,8 +1,12 @@
+export const MathOps1 = Object.create(null);
+MathOps1.topDown = {"^": 1};
+MathOps1.topDownAndBottomUp = {};
+
 export const MathOps2 = Object.create(null);
 MathOps2.topDown = {"+": 1, "-": 1};
 MathOps2.topDownAndBottomUp = {};
 
-MathOps2["+"] = function (n) {
+MathOps1["+"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left + n.right;
   if (typeof n.left === "string" && typeof n.right === "string")
@@ -24,7 +28,7 @@ MathOps2["+"] = function (n) {
 //2. ^~~ morphing the mode
 //3. up a tone in the scale of
 
-MathOps2["-"] = function (n) {
+MathOps1["-"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")
     return n.left - n.right;
   if (typeof n.left === "number" && n.right && typeof n.right.left === "number") {
@@ -36,9 +40,6 @@ MathOps2["-"] = function (n) {
   return n;
 };
 
-export const MathOps1 = Object.create(null);
-MathOps1.topDown = {"^": 1};
-MathOps1.topDownAndBottomUp = {};
 
 MathOps1["*"] = function (n) {
   if (typeof n.left === "number" && typeof n.right === "number")

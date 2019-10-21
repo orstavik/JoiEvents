@@ -40,9 +40,9 @@ describe('math priority', function () {
     expect(tst2).to.be.equal(1 - 1 * 0 + 5);
   });
 
-  it("5-3/2+5 - syntax interpreted", async function () {
-    const tst2 = await staticInterpret('5-3/2+5');
-    expect(tst2).to.be.equal(5 - 3 / 2 + 5);
+  it("1+3/2-9-13 - syntax interpreted", async function () {
+    const tst2 = await staticInterpret('1+3/2-9-13');
+    expect(tst2).to.be.equal(1 + 3 / 2 - 9 - 13);
   });
 });
 

@@ -35,7 +35,7 @@ describe('audio - interpreted', function () {
     expect(tst2.input.frequency.value).to.be.equal(440);
     expect(tst2.output).to.be.an.instanceof(AudioNode);
     expect(tst2.output.gain.value).to.be.closeTo(0.2, 0.00005);
-    expect(tst2.endOutput).to.be.equal(tst2.output);
+    expect(tst2.ogInput).to.be.equal(tst2.input);
   });
 
   it("sine(440) > gain(0.2) > gain(0.1)", async function () {
@@ -51,14 +51,16 @@ describe('audio - interpreted', function () {
       body: [0.1]
     };
     const tst2 = await interpret(tstString, new AudioContext());
-    expect(tst2.graph.left.graph).to.deep.equal(graph1);
-    expect(tst2.graph.right.graph.right.graph).to.deep.equal(graph2);
-    expect(tst2.input).to.be.an.instanceof(AudioNode);
-    expect(tst2.input.frequency.value).to.be.equal(440);
-    expect(tst2.output).to.be.an.instanceof(AudioNode);
-    expect(tst2.output.gain.value).to.be.closeTo(0.2, 0.00005);
-    expect(tst2.endOutput).to.be.an.instanceof(AudioNode);
-    expect(tst2.endOutput.gain.value).to.be.closeTo(0.1, 0.00005);
+    expect(tst2.graph.left.graph.left.graph).to.deep.equal(graph1);
+    expect(tst2.graph.right.graph).to.deep.equal(graph2);
+    // expect(tst2.input).to.be.an.instanceof(AudioNode);
+    // expect(tst2.input.frequency.value).to.be.equal(440);
+    expect(tst2.input).to.be.an.instanceof(GainNode);
+    expect(tst2.input.gain.value).to.be.closeTo(0.2, 0.00005);
+    expect(tst2.output).to.be.an.instanceof(GainNode);
+    expect(tst2.output.gain.value).to.be.closeTo(0.1, 0.00005);
+    expect(tst2.ogInput).to.be.an.instanceof(OscillatorNode);
+    expect(tst2.ogInput.frequency.value).to.be.equal(440);
   });
 
   //todo max: duplicate this type of check for all the oscillators and filters and the other builtin audio nodes (noise, etc.)

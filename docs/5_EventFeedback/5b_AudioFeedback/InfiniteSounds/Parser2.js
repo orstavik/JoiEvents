@@ -67,35 +67,52 @@ function parseGroupArray(tokens, start, end) {
     }
     if (previous !== "," && previous !== start)
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
-    args.push(previous = parseExpression(tokens));
+    args.push(previous = parseExpressions(tokens));
   }
 }
 
-function parseExpression(tokens) {
-  const left = parseNode(tokens);
+function parseOperator(tokens) {
+  //isNegativeNumber: <number><negativeNumber> that should have been <number><minus-operator><positiveNumber>
   if (!tokens[0])
-    return left;
-  const tail = parseExpressionTail(tokens);
-  if (!tail)
-    return left;
-  tail.left = left;
-  return tail;
-}
-
-function parseExpressionTail(tokens) {
-  let op;
+    return;
   if (tokens[0][7] && tokens[0][7].startsWith("-")) {
-    op = "-";
     tokens[0][0] = tokens[0][0].substr(1);
     tokens[0][7] = tokens[0][7].substr(1);
     tokens[0][8] = tokens[0][8].substr(1);
-  } else {
-    if (!tokens[0][11])                         //!isOperator
-      return;
-    op = nextToken(tokens)[0];
+    return "-";
   }
-  let right = parseExpression(tokens);        //todo right can be undefined, thus
-  return {type: op, right: right};            //todo postfix operators are allowed
+  //!isOperator
+  if (tokens[0][11])
+    return nextToken(tokens)[0];
+}
+
+const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
+
+function sortOperators(nodeOpNode) {
+  while(nodeOpNode.length >1){
+    let min = Number.MAX_VALUE, I = 1;
+    for (let i = 1; i < nodeOpNode.length; i+=2) {
+      let op = nodeOpNode[i];
+      let pri = priTable[op] || Number.MAX_VALUE;
+      if (min > pri){
+        min = pri;
+        I = i;
+      }
+    }
+    let node = {type: nodeOpNode[I], left: nodeOpNode[I-1], right: nodeOpNode[I+1]};
+    nodeOpNode.splice(I-1, 3, node);
+  }
+  return nodeOpNode[0];
+}
+
+function parseExpressions(tokens) {
+  const nodeOps = [parseNode(tokens)];
+  let op;
+  while (op = parseOperator(tokens)) {
+    nodeOps.push(op);
+    nodeOps.push(parseNode(tokens));
+  }
+  return sortOperators(nodeOps);
 }
 
 function parseUnit(tokens) {
@@ -134,7 +151,7 @@ function parsePrimitive(tokens) {
 
 export function parse(str) {
   const tokens = tokenize(str);
-  let args = parseExpression(tokens);
+  let args = parseExpressions(tokens);
   if (tokens.length)
     throw new SyntaxError("the main css audio pipe is broken");
   return args;

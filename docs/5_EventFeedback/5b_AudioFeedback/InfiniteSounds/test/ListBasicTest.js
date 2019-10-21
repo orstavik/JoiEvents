@@ -8,12 +8,12 @@ describe('basic arrays', function () {
     const tst = parse('x:y:z');
     const result = {
       type: ":",
-      left: {type: "x"},
-      right: {
+      left: {
         type: ":",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
+        left: {type: "x"},
+        right: {type: "y"}
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -38,19 +38,19 @@ describe('basic arrays', function () {
     expect(tst).to.deep.equal(result);
   });
 
-  it("[x:y:z]", function () {
+  it("[x:y:z]", function (done) {
     const tst = parse('[x:y:z]');
     const result = [{
       type: ":",
-      left: {type: "x"},
-      right: {
+      left: {
         type: ":",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
-    }
-    ];
+        left: {type: "x"},
+        right: {type: "y"}
+      },
+      right: {type: "z"}
+    }];
     expect(tst).to.deep.equal(result);
+    done();
   });
 
   it("[x:y:z] - syntax interpreted", async function () {
@@ -76,12 +76,12 @@ describe('basic pipe and bar', function () {
     const tst = parse('x > y > z');
     const result = {
       type: ">",
-      left: {type: "x"},
-      right: {
+      left: {
         type: ">",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
+        left: {type: "x"},
+        right: {type: "y"}
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -90,12 +90,12 @@ describe('basic pipe and bar', function () {
     const tst = parse('x | y | z');
     const result = {
       type: "|",
-      left: {type: "x"},
-      right: {
+      left: {
         type: "|",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
+        left: {type: "x"},
+        right: {type: "y"}
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -108,12 +108,12 @@ describe('basic wrapped', function () {
       type: "()",
       body: [{
         type: ">",
-        left: {type: "x"},
-        right: {
+        left: {
           type: ">",
-          left: {type: "y"},
-          right: {type: "z"}
-        }
+          left: {type: "x"},
+          right: {type: "y"}
+        },
+        right: {type: "z"}
       }]
     };
     expect(tst).to.deep.equal(result);
@@ -125,12 +125,12 @@ describe('basic wrapped', function () {
       type: "()",
       body: [{
         type: "|",
-        left: {type: "x"},
-        right: {
+        left: {
           type: "|",
-          left: {type: "y"},
-          right: {type: "z"}
-        }
+          left: {type: "x"},
+          right: {type: "y"}
+        },
+        right: {type: "z"}
       }]
     };
     expect(tst).to.deep.equal(result);
@@ -158,12 +158,12 @@ describe('missing arguments', function () {
     const tst = parse('x > > z');
     const result = {
       type: ">",
-      left: {type: "x"},
-      right: {
+      left: {
         type: ">",
-        left: undefined,
-        right: {type: "z"}
-      }
+        left: {type: "x"},
+        right: undefined
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -172,12 +172,12 @@ describe('missing arguments', function () {
     const tst = parse(' > y > z');
     const result = {
       type: ">",
-      left: undefined,
-      right: {
+      left: {
         type: ">",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
+        left: undefined,
+        right: {type: "y"}
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -186,12 +186,12 @@ describe('missing arguments', function () {
     const tst = parse('x | | z');
     const result = {
       type: "|",
-      left: {type: "x"},
-      right: {
+      left: {
         type: "|",
-        left: undefined,
-        right: {type: "z"}
-      }
+        left: {type: "x"},
+        right: undefined
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -200,16 +200,16 @@ describe('missing arguments', function () {
     const tst = parse('x ||| z');
     const result = {
       type: "|",
-      left: {type: "x"},
-      right: {
+      left: {
         type: "|",
-        left: undefined,
-        right: {
+        left: {
           type: "|",
-          left: undefined,
-          right: {type: "z"}
-        }
-      }
+          left: {type: "x"},
+          right: undefined
+        },
+        right: undefined
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -218,12 +218,12 @@ describe('missing arguments', function () {
     const tst = parse(' | y | z');
     const result = {
       type: "|",
-      left: undefined,
-      right: {
+      left: {
         type: "|",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
+        left: undefined,
+        right: {type: "y"}
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -232,24 +232,24 @@ describe('missing arguments', function () {
     const tst = parse('x | y ||||');
     const result = {
       type: "|",
-      left: {type: "x"},
-      right: {
+      left: {
         type: "|",
-        left: {type: "y"},
-        right: {
+        left: {
           type: "|",
-          left: undefined,
-          right: {
+          left: {
             type: "|",
-            left: undefined,
-            right: {
+            left: {
               type: "|",
-              left: undefined,
-              right: undefined
-            }
-          }
-        }
-      }
+              left: {type: "x"},
+              right: {type: "y"}
+            },
+            right: undefined
+          },
+          right: undefined
+        },
+        right: undefined
+      },
+      right: undefined
     };
     expect(tst).to.deep.equal(result);
   });
@@ -258,12 +258,12 @@ describe('missing arguments', function () {
     const tst = parse('x::z');
     const result = {
       type: ":",
-      left: {type: "x"},
-      right: {
+      left: {
         type: ":",
-        left: undefined,
-        right: {type: "z"}
-      }
+        left: {type: "x"},
+        right: undefined
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -272,12 +272,12 @@ describe('missing arguments', function () {
     const tst = parse(':y:z');
     const result = {
       type: ":",
-      left: undefined,
-      right: {
+      left: {
         type: ":",
-        left: {type: "y"},
-        right: {type: "z"}
-      }
+        left:  undefined,
+        right:{type: "y"}
+      },
+      right: {type: "z"}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -286,12 +286,12 @@ describe('missing arguments', function () {
     const tst = parse('x:y:');
     const result = {
       type: ":",
-      left: {type: "x"},
-      right: {
+      left: {
         type: ":",
-        left: {type: "y"},
-        right: undefined
-      }
+        left: {type: "x"},
+        right: {type: "y"}
+      },
+      right: undefined
     };
     expect(tst).to.deep.equal(result);
   });
