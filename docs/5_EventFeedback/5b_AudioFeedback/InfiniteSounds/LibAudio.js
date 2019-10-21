@@ -115,8 +115,8 @@ class AudioFileRegister {
 }
 
 async function createPeriodicWave(ctx, wave) {
-  if (wave.type === '"' || wave.type === "'") {
-    const file = await fetch(wave.value);
+  if (typeof wave === "string") {
+    const file = await fetch(wave);
     const data = await file.json();
     return ctx.createPeriodicWave(data.real, data.imag);
   }
