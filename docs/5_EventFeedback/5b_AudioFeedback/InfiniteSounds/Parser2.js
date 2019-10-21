@@ -114,7 +114,7 @@ function sortOperators(nodeOpNode) {
         I = i;
       }
     }
-    let node = {type: nodeOpNode[I], left: nodeOpNode[I - 1], right: nodeOpNode[I + 1]};
+    let node = {type: nodeOpNode[I], body: [nodeOpNode[I - 1], nodeOpNode[I + 1]]};
     nodeOpNode.splice(I - 1, 3, node);
   }
   return nodeOpNode[0];

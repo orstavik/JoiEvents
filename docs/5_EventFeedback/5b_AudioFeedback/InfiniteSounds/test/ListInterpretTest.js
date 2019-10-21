@@ -67,14 +67,15 @@ describe('> combined with array [...] and group (...)', function () {
     const tst = await staticInterpret('x > y > [z, q]');
     const result = {
       type: ">",
-      left: {
-        type: ">",
-        left: {type: "x", body: []},
-        right: {type: "y", body: []}
-      },
-      right: [
-        {type: "z", body: []},
-        {type: "q", body: []}
+      body: [
+        {
+          type: ">",
+          body: [{type: "x", body: []}, {type: "y", body: []}]
+        },
+        [
+          {type: "z", body: []},
+          {type: "q", body: []}
+        ]
       ]
     };
     expect(tst).to.deep.equal(result);
@@ -83,12 +84,13 @@ describe('> combined with array [...] and group (...)', function () {
     const tst = await staticInterpret('x > (y > z)');
     const res = {
       type: ">",
-      left: {type: "x", body: []},
-      right: {
-        type: ">",
-        left: {type: "y", body: []},
-        right: {type: "z", body: []}
-      }
+      body: [
+        {type: "x", body: []},
+        {
+          type: ">",
+          body: [{type: "y", body: []}, {type: "z", body: []}]
+        }
+      ]
     };
     expect(tst).to.deep.equal(res);
   });
@@ -99,8 +101,7 @@ describe('| and > combined', function () {
     const tst = await staticInterpret('1 | 2 > 3');
     const result = [1, {
       type: ">",
-      left: 2,
-      right: 3
+      body: [2, 3]
     }];
     expect(tst).to.deep.equal(result);
   });
@@ -109,8 +110,7 @@ describe('| and > combined', function () {
     const tst2 = await staticInterpret('1 | (2 > 3)');
     const res = [1, {
       type: ">",
-      left: 2,
-      right: 3
+      body: [2, 3]
     }];
     expect(tst2).to.deep.equal(res);
   });
@@ -119,8 +119,7 @@ describe('| and > combined', function () {
     const tst = await staticInterpret('1 > 2 | 3');
     const result = [{
       type: ">",
-      left: 1,
-      right: 2
+      body: [1, 2]
     }, 3];
     expect(tst).to.deep.equal(result);
   });
@@ -129,8 +128,7 @@ describe('| and > combined', function () {
     const tst2 = await staticInterpret('(1 > 2) | 3');
     const res = [{
       type: ">",
-      left: 1,
-      right: 2
+      body: [1, 2]
     }, 3];
     expect(tst2).to.deep.equal(res);
   });
@@ -143,8 +141,7 @@ describe('ALL combined', function () {
     const tst = await staticInterpret('[1:2,] | 3 > 4');
     const result = [[[1, 2], undefined], {
       type: ">",
-      left: 3,
-      right: 4
+      body: [3, 4]
     }];
     expect(tst).to.deep.equal(result);
   });
@@ -153,8 +150,7 @@ describe('ALL combined', function () {
     const tst = await staticInterpret('1 | 2 > [3, 4:5]');
     const result = [1, {
       type: ">",
-      left: 2,
-      right: [3, [4, 5]]
+      body: [2, [3, [4, 5]]]
     }];
     expect(tst).to.deep.equal(result);
   });
@@ -163,12 +159,13 @@ describe('ALL combined', function () {
     const tst = await staticInterpret('1 | 2 > [3, 4:5, ] > 6 | 7');
     const result = [1, {
       type: ">",
-      left: {
-        type: ">",
-        left: 2,
-        right: [3, [4, 5], undefined]
-      },
-      right: 6
+      body: [
+        {
+          type: ">",
+          body: [2, [3, [4, 5], undefined]]
+        },
+        6
+      ]
     }, 7];
     expect(tst).to.deep.equal(result);
   });

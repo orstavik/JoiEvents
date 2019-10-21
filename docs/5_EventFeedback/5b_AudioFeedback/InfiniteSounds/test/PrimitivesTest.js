@@ -75,8 +75,7 @@ describe('numbers', function () {
     const tst = parse('1+2');
     const result = {
       type: "+",
-      left: 1,
-      right: 2
+      body: [1, 2]
     };
     expect(tst).to.deep.equal(result);
   });
@@ -102,8 +101,8 @@ describe("Matches Java and JavaScript numbers (except Infinity and NaN)", functi
     expect(parse(".3e-4")).to.be.equal(.3e-4);
   });
   it("postfix minus/pluss", function () {
-    expect(parse("1-")).to.deep.equal({type: "-", left: 1, right: undefined});
-    expect(parse("1+")).to.deep.equal({type: "+", left: 1, right: undefined});
+    expect(parse("1-")).to.deep.equal({type: "-", body: [1, undefined]});
+    expect(parse("1+")).to.deep.equal({type: "+", body: [1, undefined]});
   });
   // it("possible errors", function () {
   //   expect(parse(".")).to.be.equal(false);
@@ -126,8 +125,7 @@ describe("expression test: 0+1", function () {
     const tst = parse('0+1');
     const result = {
       type: "+",
-      left: 0,
-      right: 1
+      body: [0, 1]
     };
     expect(tst).to.deep.equal(result);
   });
@@ -139,16 +137,13 @@ describe("Comma and operators", function () {
     const tst2 = parse('[1+1,2+2,3+3]');
     const result2 = [{
       type: "+",
-      left: 1,
-      right: 1
+      body: [1, 1]
     }, {
       type: "+",
-      left: 2,
-      right: 2
+      body: [2, 2]
     }, {
       type: "+",
-      left: 3,
-      right: 3
+      body: [3, 3]
     }];
     expect(tst2).to.deep.equal(result2);
   });

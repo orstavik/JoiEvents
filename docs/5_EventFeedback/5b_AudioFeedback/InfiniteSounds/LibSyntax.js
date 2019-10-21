@@ -1,6 +1,6 @@
 export const ListOps = Object.create(null);
 
-ListOps[":"] = function ({left, right}) {
+ListOps[":"] = function ({body:[left, right]}) {
   if (left[":"]) {
     left.push(right);
     return left;
@@ -10,7 +10,7 @@ ListOps[":"] = function ({left, right}) {
   return res;
 };
 
-ListOps["|"] = function ({left, right}) {
+ListOps["|"] = function ({body:[left, right]}) {
   if (left["|"]) {
     left.push(right);
     return left;
@@ -49,14 +49,14 @@ function extractAudioArray(node, outputInput) {
 //   equals
 //   [a,b,c] > d
 AudioPiping[">"] = function (node, ctx) {
-  if (!node.left)
+  if (!node.body[0])
     throw new SyntaxError("'>' pipe must have an input. ", node);
-  if (!node.right)
+  if (!node.body[1])
     throw new SyntaxError("'>' pipe must have an input. ", node);
-  const left = (node.left instanceof Array) ? extractAudioArray(node.left, "output") : node.left.output;
-  const right = (node.right instanceof Array) ? extractAudioArray(node.right, "input") : node.right.input;
+  const left = (node.body[0] instanceof Array) ? extractAudioArray(node.body[0], "output") : node.body[0].output;
+  const right = (node.body[1] instanceof Array) ? extractAudioArray(node.body[1], "input") : node.body[1].input;
   connectMtoN(left, right);
-  const ogInput = node.left.ogInput || left;
+  const ogInput = node.body[0].ogInput || left;
   return {graph: node, input: left, output: right, ogInput};
 };
 
@@ -103,14 +103,16 @@ AudioPiping["()"] = function (node, ctx) {
 // };
 //
 
+//todo mutates the node..
 AudioPiping["bpm"] = function (node, ctx) {
   let [bpm, heavy, bars] = node.body;
   if (!(bars instanceof Array))
-    bars = [bars];
-  const beatS = 60 / bpm;
-  const delayMS = beatS * 1000;
+    throw new SyntaxError("cannot run bpm without any bars.. for now.");
+    // node.body[2] = [bars];
+  // const beatS = 60 / bpm;
+  // const delayMS = beatS * 1000;
   // const bars = bars;
-  for (let count = 0, root = barTree; root && root.type === "|"; count++, root = root.right)
-    bars.push(addDelay(ctx, count, beat, barTree.left));
-  return bars;
+  // for (let count = 0, root = barTree; root && root.type === "|"; count++, root = root.right)
+  //   bars.push(addDelay(ctx, count, beat, barTree.left));
+  return node;
 };

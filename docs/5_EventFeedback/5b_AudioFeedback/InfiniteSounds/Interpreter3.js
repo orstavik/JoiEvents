@@ -5,13 +5,13 @@ import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
 
-async function interpretExpressionArgs(node, table, ctx) {
-  const left = await interpretNode(node.left, table, ctx);
-  const right = await interpretNode(node.right, table, ctx);
-  return left === node.left && right === node.right ?
-    node :
-    {type: node.type, left, right};
-}
+// async function interpretExpressionArgs(node, table, ctx) {
+//   const left = await interpretNode(node.left, table, ctx);
+//   const right = await interpretNode(node.right, table, ctx);
+//   return left === node.left && right === node.right ?
+//     node :
+//     {type: node.type, left, right};
+// }
 
 async function interpretBody(node, table, ctx) {
   let body = await interpretArray(node.body, table, ctx);
@@ -42,8 +42,8 @@ export async function interpretNode(node, table, ctx) {
     return node;
   if (node instanceof Array)
     return await interpretArray(node, table, ctx);
-  if (node.left || node.right)
-    node = await interpretExpressionArgs(node, table, ctx);
+  // if (node.left || node.right)
+  //   node = await interpretExpressionArgs(node, table, ctx);
   if (node.body)
     node = await interpretBody(node, table, ctx);
   let fun = table[node.type];
