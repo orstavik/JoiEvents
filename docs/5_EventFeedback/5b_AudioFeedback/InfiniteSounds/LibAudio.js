@@ -4,7 +4,7 @@ function plotEnvelope(target, points) {
   for (let point of points) {
     let vol = point[0].num || point[0];
     let time = point[1].num || point[1];
-    if (typeof point[1] === "number" || point[1].unit === "" || point[1].unit === "e")
+    if (typeof point[1] === "number" || point[0].unit === "" || point[0].unit === "e")
       target.setTargetAtTime(vol, nextStart, time / 4);   //todo or /3? as mdn suggests
     else
       throw new Error("todo: implement 'l' or 'a' type of time coordinate.");
@@ -12,7 +12,7 @@ function plotEnvelope(target, points) {
   }
 }
 
-//todo, handle units with hz, db, ms, etc.
+//todo "gain()" or "gain", does that equal "mute" or "gain(1)"?
 function setAudioParameter(target, param) {
   if (param === undefined) {
     return;
@@ -21,13 +21,9 @@ function setAudioParameter(target, param) {
   } else if (typeof param === "number") {
     target.value = param;
   } else if (param.hasOwnProperty("num")) {
-    //todo if the number is not parsed outside, then the units will be universal to all nodes..
-    //todo I have not implemented any interpretation of "Hz" or "db" or "ms" or whatever
     target.value = param.num;
   } else if (param instanceof Array) {
     plotEnvelope(target, param);
-    // } else if (gain instanceof undefined) { //todo should I include this??  or call it "mute"??
-    //   node.gain.value = 0;
   } else
     throw new Error("CssAudio: Illegal input to gain node: " + param);
 }
@@ -165,11 +161,11 @@ function makeGain(node, ctx) {
 function makeDelay(node, ctx) {
   let goal, max;
   if (!node.body)
-    goal = 0, max=1;
+    goal = 0, max = 1;
   else
     [goal, max] = node.body;
   if (goal === undefined) goal = 0;
-  if (max === undefined) max= 1;
+  if (max === undefined) max = 1;
   if (goal.num) goal = goal.num;
   if (max.num) max = max.num;
   if (typeof goal !== "number" || typeof max !== "number")
@@ -179,6 +175,37 @@ function makeDelay(node, ctx) {
     maxDelayTime: max
   });
   return {graph: node, output: delayNode, input: delayNode};
+}
+
+//todo lfo function (min, max, type, hz).
+//creates an oscillator that goes from min to max at specified hz.
+//The calculation varies from square (0-1),and sine (-1-1). verify.
+//Make audioparam accept array of audio nodes.
+async function makeLfo(node, ctx) {
+  let [min, max, frequency, type] = node.body;
+  min = min || 0;
+  max = max || 1;
+  frequency = frequency || 1;
+  type = type.value || "sine";
+
+  const osc1 = ctx.createOscillator();
+  osc1.frequency.value = frequency;
+  osc1.type = type;
+  osc1.start();
+  const gainNode = ctx.createGain();
+  let diff = max - min;
+  gainNode.gain.value = type === "sine" ? diff / 2 : diff;
+  osc1.connect(gainNode);
+
+  const fixed = ctx.createConstantSource();
+  const fixedGain = ctx.createGain();
+  fixedGain.gain.value = min;
+  fixed.connect(fixedGain);
+
+  const merger = ctx.createGain();
+  fixedGain.connect(merger);
+  gainNode.connect(merger);
+  return {graph: node, output: merger};
 }
 
 export const InterpreterFunctions = {};
@@ -217,7 +244,7 @@ InterpreterFunctions.lowpass = function (node, ctx) {
 
 InterpreterFunctions.highpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx, "highpass",node,  {freq, q, detune});
+  return makeFilter(ctx, "highpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.bandpass = function (node, ctx) {
@@ -259,8 +286,4 @@ InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
 
 InterpreterFunctions.noise = AudioFileRegister.noise;
 
-//todo lfo function (type, hz, min, max).
-//This converts into a set of two oscillators, one square thst fills the min,
-//and then another of the type and hz that oscillates up to max.
-//The calculation varies from square (0-1),and sine (-1-1). verify.
-//Make audioparam accept array of audio nodes.
+InterpreterFunctions.lfo = makeLfo;
