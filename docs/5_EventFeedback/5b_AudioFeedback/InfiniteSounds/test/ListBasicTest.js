@@ -1,6 +1,5 @@
 import {parse} from "../Parser2.js";
-import {interpretNode} from "../Interpreter3.js";
-import {ListOps} from "../LibSyntax.js";
+import {staticInterpret} from "../Interpreter3.js";
 
 describe('basic arrays', function () {
 
@@ -19,7 +18,7 @@ describe('basic arrays', function () {
   });
 
   it("x:y:z - syntax interpreted", async function () {
-    const tst2 = await interpretNode(parse('x:y:z'), ListOps);
+    const tst2 = await staticInterpret('x:y:z');
     const result2 = [
       {type: "x"},
       {type: "y"},
@@ -54,7 +53,7 @@ describe('basic arrays', function () {
   });
 
   it("[x:y:z] - syntax interpreted", async function () {
-    const tst2 = await interpretNode(parse('[x:y:z]'), ListOps);
+    const tst2 = await staticInterpret('[x:y:z]');
     const result2 = [
       [
         {type: "x"},
