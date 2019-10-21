@@ -70,6 +70,13 @@ describe('basic arrays', function () {
   });
 });
 
+describe('basic ()', function () {
+  it("()", function () {
+    const tst = parse('()');
+    expect(tst).to.deep.equal(undefined);
+  });
+});
+
 describe('basic pipe and bar', function () {
   it("x > y > z", function () {
     const tst = parse('x > y > z');
