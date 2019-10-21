@@ -222,7 +222,7 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   const array = node.body;
   const convolver = ctx.createConvolver();
   const buffer = await (
-    !array ? AudioFileRegister.aConvolverBuffer() :
+    array.length === 0 ? AudioFileRegister.aConvolverBuffer() :
       array instanceof Array ? convertColvolverBuffer(array) :
         array.startsWith('"') ? fetchAConvolverBuffer(array) :
           array.type === "base64" ? convertToAudioBuffer(array) :

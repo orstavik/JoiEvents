@@ -9,10 +9,10 @@ describe('basic arrays', function () {
       type: ":",
       left: {
         type: ":",
-        left: {type: "x"},
-        right: {type: "y"}
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -20,9 +20,9 @@ describe('basic arrays', function () {
   it("x:y:z - syntax interpreted", async function () {
     const tst2 = await staticInterpret('x:y:z');
     const result2 = [
-      {type: "x"},
-      {type: "y"},
-      {type: "z"}
+      {type: "x", body: []},
+      {type: "y", body: []},
+      {type: "z", body: []}
     ];
     expect(tst2).to.deep.equal(result2);
   });
@@ -30,9 +30,9 @@ describe('basic arrays', function () {
   it("[x,y,z]", function () {
     const tst = parse('[x,y,z]');
     const result = [
-      {type: "x"},
-      {type: "y"},
-      {type: "z"}
+      {type: "x", body: []},
+      {type: "y", body: []},
+      {type: "z", body: []}
     ];
     expect(tst).to.deep.equal(result);
   });
@@ -43,10 +43,10 @@ describe('basic arrays', function () {
       type: ":",
       left: {
         type: ":",
-        left: {type: "x"},
-        right: {type: "y"}
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     }];
     expect(tst).to.deep.equal(result);
     done();
@@ -56,9 +56,9 @@ describe('basic arrays', function () {
     const tst2 = await staticInterpret('[x:y:z]');
     const result2 = [
       [
-        {type: "x"},
-        {type: "y"},
-        {type: "z"}
+        {type: "x", body: []},
+        {type: "y", body: []},
+        {type: "z", body: []}
       ]
     ];
     expect(tst2).to.deep.equal(result2);
@@ -77,10 +77,10 @@ describe('basic pipe and bar', function () {
       type: ">",
       left: {
         type: ">",
-        left: {type: "x"},
-        right: {type: "y"}
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -91,10 +91,10 @@ describe('basic pipe and bar', function () {
       type: "|",
       left: {
         type: "|",
-        left: {type: "x"},
-        right: {type: "y"}
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -109,10 +109,10 @@ describe('basic wrapped', function () {
         type: ">",
         left: {
           type: ">",
-          left: {type: "x"},
-          right: {type: "y"}
+          left: {type: "x", body: []},
+          right: {type: "y", body: []}
         },
-        right: {type: "z"}
+        right: {type: "z", body: []}
       }]
     };
     expect(tst).to.deep.equal(result);
@@ -126,10 +126,10 @@ describe('basic wrapped', function () {
         type: "|",
         left: {
           type: "|",
-          left: {type: "x"},
-          right: {type: "y"}
+          left: {type: "x", body: []},
+          right: {type: "y", body: []}
         },
-        right: {type: "z"}
+        right: {type: "z", body: []}
       }]
     };
     expect(tst).to.deep.equal(result);
@@ -142,9 +142,9 @@ describe('basic wrapped', function () {
       body: {
         type: "()",
         body: [
-          {type: "x"},
-          {type: "y"},
-          {type: "z"}
+          {type: "x", body: []},
+          {type: "y", body: []},
+          {type: "z", body: []}
         ]
       }
     };
@@ -159,10 +159,10 @@ describe('missing arguments', function () {
       type: ">",
       left: {
         type: ">",
-        left: {type: "x"},
+        left: {type: "x", body: []},
         right: undefined
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -174,9 +174,9 @@ describe('missing arguments', function () {
       left: {
         type: ">",
         left: undefined,
-        right: {type: "y"}
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -187,10 +187,10 @@ describe('missing arguments', function () {
       type: "|",
       left: {
         type: "|",
-        left: {type: "x"},
+        left: {type: "x", body: []},
         right: undefined
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -203,12 +203,12 @@ describe('missing arguments', function () {
         type: "|",
         left: {
           type: "|",
-          left: {type: "x"},
+          left: {type: "x", body: []},
           right: undefined
         },
         right: undefined
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -220,9 +220,9 @@ describe('missing arguments', function () {
       left: {
         type: "|",
         left: undefined,
-        right: {type: "y"}
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -239,8 +239,8 @@ describe('missing arguments', function () {
             type: "|",
             left: {
               type: "|",
-              left: {type: "x"},
-              right: {type: "y"}
+              left: {type: "x", body: []},
+              right: {type: "y", body: []}
             },
             right: undefined
           },
@@ -259,10 +259,10 @@ describe('missing arguments', function () {
       type: ":",
       left: {
         type: ":",
-        left: {type: "x"},
+        left: {type: "x", body: []},
         right: undefined
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -273,10 +273,10 @@ describe('missing arguments', function () {
       type: ":",
       left: {
         type: ":",
-        left:  undefined,
-        right:{type: "y"}
+        left: undefined,
+        right: {type: "y", body: []}
       },
-      right: {type: "z"}
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -287,8 +287,8 @@ describe('missing arguments', function () {
       type: ":",
       left: {
         type: ":",
-        left: {type: "x"},
-        right: {type: "y"}
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
       },
       right: undefined
     };
@@ -298,9 +298,9 @@ describe('missing arguments', function () {
   it("[x,,z]", function () {
     const tst = parse('[x,,z]');
     const result = [
-      {type: "x"},
+      {type: "x", body: []},
       undefined,
-      {type: "z"}
+      {type: "z", body: []}
     ];
     expect(tst).to.deep.equal(result);
   });
@@ -308,8 +308,8 @@ describe('missing arguments', function () {
   it("[,y,z]", function () {
     const tst = parse('[,y,z]');
     const result = [undefined,
-      {type: "y"},
-      {type: "z"}
+      {type: "y", body: []},
+      {type: "z", body: []}
     ];
     expect(tst).to.deep.equal(result);
   });
@@ -317,8 +317,8 @@ describe('missing arguments', function () {
   it("[x,y,]", function () {
     const tst = parse('[x,y,]');
     const result = [
-      {type: "x"},
-      {type: "y"},
+      {type: "x", body: []},
+      {type: "y", body: []},
       undefined
     ];
     expect(tst).to.deep.equal(result);
@@ -331,9 +331,9 @@ describe('missing arguments', function () {
       body: {
         type: "()",
         body: [
-          {type: "x"},
+          {type: "x", body: []},
           undefined,
-          {type: "z"}
+          {type: "z", body: []}
         ]
       }
     };
@@ -348,8 +348,8 @@ describe('missing arguments', function () {
         type: "()",
         body: [
           undefined,
-          {type: "y"},
-          {type: "z"}
+          {type: "y", body: []},
+          {type: "z", body: []}
         ]
       }
     };
@@ -363,8 +363,8 @@ describe('missing arguments', function () {
       body: {
         type: "()",
         body: [
-          {type: "x"},
-          {type: "y"},
+          {type: "x", body: []},
+          {type: "y", body: []},
           undefined,
         ]
       }

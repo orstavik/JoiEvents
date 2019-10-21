@@ -69,27 +69,27 @@ describe('> combined with array [...] and group (...)', function () {
       type: ">",
       left: {
         type: ">",
-        left: {"type": "x"},
-        right: {"type": "y"}
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
       },
       right: [
-        {"type": "z"},
-        {"type": "q"}
+        {type: "z", body: []},
+        {type: "q", body: []}
       ]
     };
     expect(tst).to.deep.equal(result);
   });
-  it("x > (y > c)", async function () {
+  it("x > (y > z)", async function () {
     const tst = await staticInterpret('x > (y > z)');
     const res = {
       type: ">",
-      left: {"type": "x"},
+      left: {type: "x", body: []},
       right: {
         type: "()",
         body: [{
           type: ">",
-          left: {"type": "y"},
-          right: {"type": "z"}
+          left: {type: "y", body: []},
+          right: {type: "z", body: []}
         }]
       }
     };

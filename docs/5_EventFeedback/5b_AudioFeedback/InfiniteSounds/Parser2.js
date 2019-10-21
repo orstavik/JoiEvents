@@ -40,8 +40,6 @@ function parseNode(tokens) {
 }
 
 function parseGroupArray(tokens, start, end) {
-  if (!tokens[0])                                 //todo move this check into the parseFunction after name
-    return;
   if (tokens[0][0] !== start)
     return;
   nextToken(tokens); //eat ( [
@@ -56,12 +54,16 @@ function parseGroupArray(tokens, start, end) {
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
       // if (onlyNumbers)
-      //   args.onlyNumbers = 1;
+      //   args.onlyNumbers = 1;       //todo, only numbers
       if (previous === ",")
         args.push(undefined);
       if (start === "[")
-        return args;                   //todo, mark arrays that only contain primitive numbers
-      return {type: "()", body: args}; //todo bug here if the body is an empty array
+        return args;
+      if (args.length === 0)           //todo add test for empty block
+        return undefined;
+      // if (args.length > 1)             //todo separate for add test for this bug
+      //   throw new SyntaxError("(blocks, with, comma, are, not, allowed,,,)");
+      return {type: "()", body: args};
     }
     if (tokens[0][0] === ",") {
       if (previous === "," || previous === start)
@@ -94,18 +96,18 @@ function parseOperator(tokens) {
 const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
 
 function sortOperators(nodeOpNode) {
-  while(nodeOpNode.length >1){
+  while (nodeOpNode.length > 1) {
     let min = Number.MAX_VALUE, I = 1;
-    for (let i = 1; i < nodeOpNode.length; i+=2) {
+    for (let i = 1; i < nodeOpNode.length; i += 2) {
       let op = nodeOpNode[i];
       let pri = priTable[op] || Number.MAX_VALUE;
-      if (min > pri){
+      if (min > pri) {
         min = pri;
         I = i;
       }
     }
-    let node = {type: nodeOpNode[I], left: nodeOpNode[I-1], right: nodeOpNode[I+1]};
-    nodeOpNode.splice(I-1, 3, node);
+    let node = {type: nodeOpNode[I], left: nodeOpNode[I - 1], right: nodeOpNode[I + 1]};
+    nodeOpNode.splice(I - 1, 3, node);
   }
   return nodeOpNode[0];
 }
@@ -128,16 +130,16 @@ function parseFunction(tokens) {
   if (!(tokens[0][4] || tokens[0][5] || tokens[0][6]))
     return;
   const type = nextToken(tokens)[0];
-  const body = parseGroupArray(tokens, "(", ")");
-  return body ? {type, body} : {type};
+  let body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];
+  return {type, body};
 }
 
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
   if (lookAhead[12])  //singleQuote
-    return /*{type: '"', value: */nextToken(tokens)[13]/*}*/;
+    return nextToken(tokens)[13];
   if (lookAhead[14])  //doubleQuote
-    return /*{type: "'", value: */nextToken(tokens)[15]/*}*/;
+    return nextToken(tokens)[15];
   if (lookAhead[1]) {   //tone
     let t = nextToken(tokens);
     return {
