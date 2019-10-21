@@ -44,6 +44,8 @@ describe(': outside, [ inside', function () {
     const tst = await staticInterpret('[1,2]:3');
     const result = [[1, 2], 3];
     expect(tst).to.deep.equal(result);
+    expect(tst.onlyNumbers).to.be.equal(1);
+    expect(tst[0].onlyNumbers).to.be.equal(1);
   });
   it("1:2:[3,4]", async function () {
     const tst = await staticInterpret('1:2:[3,4]');

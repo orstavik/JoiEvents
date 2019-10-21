@@ -5,47 +5,37 @@ import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
 
-// async function interpretExpressionArgs(node, table, ctx) {
-//   const left = await interpretNode(node.left, table, ctx);
-//   const right = await interpretNode(node.right, table, ctx);
-//   return left === node.left && right === node.right ?
-//     node :
-//     {type: node.type, left, right};
-// }
-
-async function interpretBody(node, table, ctx) {
-  let body = await interpretArray(node.body, table, ctx);
-  return body === node.body ? node : {type: node.type, body};
-}
-
 async function interpretArray(node, table, ctx) {
-  // if (node.onlyNumbers)
-  //   return node;
+  if (node.onlyNumbers)
+    return node;
   const res = [];
-  // let onlyNumbers = true;
+  let onlyNumbers = true;
   let mutated = false;
   for (let item of node) {
     let interpretedItem = await interpretNode(item, table, ctx);
     if (interpretedItem !== item)
       mutated = true;
     res.push(interpretedItem);
-    // if (typeof interpretedItem !== "number" && !(interpretedItem instanceof Array && interpretedItem.onlyNumbers))
-    //   onlyNumbers = false;
+    if (typeof interpretedItem !== "number" && !(interpretedItem instanceof Array && interpretedItem.onlyNumbers))
+      onlyNumbers = false;
   }
-  // if (onlyNumbers)
-  //   res["onlyNumbers"] = 1;
+  if (onlyNumbers)
+    res.onlyNumbers = 1;
   return mutated ? res : node;
 }
 
 export async function interpretNode(node, table, ctx) {
   if (!node)
     return node;
-  if (node instanceof Array)
-    return await interpretArray(node, table, ctx);
-  // if (node.left || node.right)
-  //   node = await interpretExpressionArgs(node, table, ctx);
-  if (node.body)
-    node = await interpretBody(node, table, ctx);
+  if (node instanceof Array && !node.onlyNumbers)
+    return await interpretArray(node, table, ctx); //todo, here we will always return a new object.
+                                                   //todo and add parent to the array object
+  if (!node.type)
+    return node;
+  if (node.body){
+    let body = await interpretArray(node.body, table, ctx);     //todo, here we will always return a new object.
+    node = body === node.body ? node : {type: node.type, body}; //todo and add parent to the array object
+  }
   let fun = table[node.type];
   return fun ? (await fun(node, ctx)) : node;
 }

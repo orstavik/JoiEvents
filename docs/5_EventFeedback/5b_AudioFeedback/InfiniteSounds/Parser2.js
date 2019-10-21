@@ -56,21 +56,17 @@ function parseGroupArray(tokens, start, end) {
   nextToken(tokens); //eat ( [
   const args = [];
   let previous = start;
-  // let onlyNumbers = true;            //todo only numbers
+  let onlyNumbers = true;
   while (true) {
-    // if (typeof previous !== "number" && !(previous instanceof Array && previous.onlyNumbers))
-    //   onlyNumbers = false;
     if (!tokens[0])
       throw new SyntaxError(`Forgot to close ${start}-block.`);
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
-      // if (onlyNumbers)
-      //   args.onlyNumbers = 1;       //todo, only numbers
+      if (onlyNumbers)
+        args.onlyNumbers = 1;
       if (previous === ",")
         args.push(undefined);
-      // if (start === "[")
-        return args;
-      // return {type: "()", body: args};
+      return args;
     }
     if (tokens[0][0] === ",") {
       if (previous === "," || previous === start)
@@ -82,6 +78,8 @@ function parseGroupArray(tokens, start, end) {
     if (previous !== "," && previous !== start)
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
     args.push(previous = parseExpressions(tokens));
+    if (!isPrimitive(previous))
+      onlyNumbers = false;
   }
 }
 
@@ -162,6 +160,15 @@ function parsePrimitive(tokens) {
     let unit = t[9];
     return unit === "" ? num : {num, unit};
   }
+}
+
+export function isPrimitive(node) {
+  if (node === undefined)
+    return true;
+  let type = typeof node;
+  if (type === "number" || type === "string")
+    return true;
+  return node.onlyNumbers;
 }
 
 export function parse(str) {

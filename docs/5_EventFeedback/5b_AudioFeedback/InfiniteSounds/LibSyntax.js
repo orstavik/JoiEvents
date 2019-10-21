@@ -1,22 +1,32 @@
+import {isPrimitive} from "./Parser2.js";
+
 export const ListOps = Object.create(null);
 
-ListOps[":"] = function ({body:[left, right]}) {
+ListOps[":"] = function ({body: [left, right]}) {
   if (left[":"]) {
     left.push(right);
+    if (left.onlyNumbers && typeof right !== "number")
+      delete left.onlyNumbers;
     return left;
   }
   const res = [left, right];
-  res[":"] = true;
+  res[":"] = 1;
+  if (isPrimitive(left) && isPrimitive(right))
+    res.onlyNumbers = 1;
   return res;
 };
 
-ListOps["|"] = function ({body:[left, right]}) {
+ListOps["|"] = function ({body: [left, right]}) {
   if (left["|"]) {
     left.push(right);
+    if (left.onlyNumbers && typeof right !== "number")
+      delete left.onlyNumbers;
     return left;
   }
   const res = [left, right];
-  res["|"] = true;
+  res["|"] = 1;
+  if (isPrimitive(left) && isPrimitive(right))
+    res.onlyNumbers = 1;
   return res;
 };
 
@@ -108,7 +118,7 @@ AudioPiping["bpm"] = function (node, ctx) {
   let [bpm, heavy, bars] = node.body;
   if (!(bars instanceof Array))
     throw new SyntaxError("cannot run bpm without any bars.. for now.");
-    // node.body[2] = [bars];
+  // node.body[2] = [bars];
   // const beatS = 60 / bpm;
   // const delayMS = beatS * 1000;
   // const bars = bars;
