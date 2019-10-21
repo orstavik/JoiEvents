@@ -12,6 +12,8 @@ function plotEnvelope(target, points) {
   }
 }
 
+//todo Make audioparam accept array of audio nodes??
+
 //todo "gain()" or "gain", does that equal "mute" or "gain(1)"?
 function setAudioParameter(target, param) {
   if (param === undefined) {
@@ -177,17 +179,24 @@ function makeDelay(node, ctx) {
   return {graph: node, output: delayNode, input: delayNode};
 }
 
+function merge(ctx, a, b) {
+  const merger = ctx.createChannelMerger(2);
+  a.connect(merger);
+  b.connect(merger);
+  return merger;
+}
+
+function makeConstant(ctx, value) {
+  const constant = ctx.createConstantSource();
+  constant.offset.value = value;
+  constant.start();
+  return constant;
+}
+
 //todo lfo function (min, max, type, hz).
 //creates an oscillator that goes from min to max at specified hz.
 //The calculation varies from square (0-1),and sine (-1-1). verify.
-//Make audioparam accept array of audio nodes.
-async function makeLfo(node, ctx) {
-  let [min, max, frequency, type] = node.body;
-  min = min || 0;
-  max = max || 1;
-  frequency = frequency || 1;
-  type = type.value || "sine";
-
+async function makeLfo(ctx, min, max, frequency, type) {
   const osc1 = ctx.createOscillator();
   osc1.frequency.value = frequency;
   osc1.type = type;
@@ -196,16 +205,7 @@ async function makeLfo(node, ctx) {
   let diff = max - min;
   gainNode.gain.value = type === "sine" ? diff / 2 : diff;
   osc1.connect(gainNode);
-
-  const fixed = ctx.createConstantSource();
-  const fixedGain = ctx.createGain();
-  fixedGain.gain.value = min;
-  fixed.connect(fixedGain);
-
-  const merger = ctx.createGain();
-  fixedGain.connect(merger);
-  gainNode.connect(merger);
-  return {graph: node, output: merger};
+  return merge(ctx, makeConstant(ctx, min), gainNode);
 }
 
 export const InterpreterFunctions = {};
@@ -286,4 +286,17 @@ InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
 
 InterpreterFunctions.noise = AudioFileRegister.noise;
 
-InterpreterFunctions.lfo = makeLfo;
+InterpreterFunctions.lfo = async function(node, ctx) {
+  let [min, max, freq, type] = node.body;
+  if (min === undefined) min = 0;
+  if (max === undefined) max = 1;
+  if (freq === undefined) freq = 1;
+  type = type.value || "sine";
+  return {graph: node, output: await makeLfo(ctx, min, max, freq, type)};
+};
+
+InterpreterFunctions.constant = async function(node, ctx) {
+  let value = node.body[0] || 1;
+  let output = makeConstant(ctx, value);
+  return {graph: node, output: output};
+};
