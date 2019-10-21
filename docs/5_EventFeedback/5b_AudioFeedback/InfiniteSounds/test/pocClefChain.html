@@ -15,23 +15,25 @@
 <script>
 
   const ctx = new AudioContext();
+  ctx.suspend();
   const osc = ctx.createOscillator();
   osc.type = "sine";
 
 //  https://media-codings.com/articles/polyfilling-the-constant-source-node
   const andAone = ctx.createConstantSource();
   const lfo1 = ctx.createGain();
-  lfo1.gain.value = 440;
+  lfo1.gain.value = 110;
   const lfo2 = ctx.createGain();
   lfo2.gain.value = 1;
   andAone.connect(lfo1);
   lfo1.connect(lfo2);
   lfo2.connect(osc.frequency);
   osc.connect(ctx.destination);
+  andAone.start();
+  osc.start();
 
   function playOne() {
-    andAone.start();
-    osc.start();
+    ctx.resume();
   }
 
   function scaleUp() {
