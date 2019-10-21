@@ -45,16 +45,18 @@ export async function interpretNode(node, table, ctx) {
   return fun ? (await fun(node, ctx)) : node;
 }
 
+const staticTable = Object.assign({}, ListOps, MathOps, Music);
+const dynamicTable = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
+
 export async function staticInterpret(str) {
   let node = parse(str);
-  node = await interpretNode(node, Object.assign({}, ListOps, MathOps, Music));
+  node = await interpretNode(node, staticTable);
   //variables: declare and replace
   //cache temporarily
   return node;
 }
-
 export async function interpret(str, ctx) {
   let node = await staticInterpret(str);
-  node = await interpretNode(node, Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping), ctx);
+  node = await interpretNode(node, dynamicTable, ctx);
   return node;
 }
