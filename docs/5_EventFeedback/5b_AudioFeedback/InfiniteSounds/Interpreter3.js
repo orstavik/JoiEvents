@@ -55,9 +55,6 @@ export async function staticInterpret(str) {
 
 export async function interpret(str, ctx) {
   let node = await staticInterpret(str);
-  node = await interpretNode(node, Random);
-  node = await interpretNode(node, MathOps);
-  node = await interpretNode(node, InterpreterFunctions, ctx);
-  node = await interpretNode(node, AudioPiping);
+  node = await interpretNode(node, Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping), ctx);
   return node;
 }
