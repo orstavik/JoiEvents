@@ -107,6 +107,21 @@ class AudioFileRegister {
     return {graph: node, output: aNoise};
   }
 
+  static async lfo(node, ctx) {
+    const osc1 = ctx.createOscillator();
+    osc1.frequency.value = node.body[0];
+    osc1.type = node.body[3].value;
+    const osc2 = ctx.createOscillator();
+    osc2.frequency.value = node.body[2].num;
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = node.body[1];
+    osc1.connect(ctx.destination);
+    osc2.connect(ctx.destination);
+    osc1.start();
+    osc2.start();
+    return {graph: node, output: gainNode}
+  }
+  
   //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
   //to max: this makes me think that the method .createBuffer could have been static
   //to max: but it means that the AudioBuffer objects are context free. Also for OfflineAudioContexts.
@@ -250,7 +265,6 @@ InterpreterFunctions.allpass = function (node, ctx) {
   return makeFilter(ctx, "allpass", node, {freq, q, detune});
 };
 
-
 /**
  * url(https://some.com/sound.file) plays the sound file once
  * url(https://some.com/sound.file, 1) plays the sound file in a loop
@@ -259,6 +273,7 @@ InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
 
 InterpreterFunctions.noise = AudioFileRegister.noise;
 
+InterpreterFunctions.lfo = AudioFileRegister.lfo;
 //todo lfo function (type, hz, min, max).
 //This converts into a set of two oscillators, one square thst fills the min,
 //and then another of the type and hz that oscillates up to max.
