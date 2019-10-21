@@ -14,9 +14,7 @@ async function interpretExpressionArgs(node, table, ctx) {
 }
 
 async function interpretBody(node, table, ctx) {
-  let body = await interpretNode(node.body, table, ctx);
-  if (body.type === "()")
-    body = body.body;
+  let body = await interpretArray(node.body, table, ctx);
   return body === node.body ? node : {type: node.type, body};
 }
 

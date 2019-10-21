@@ -111,16 +111,13 @@ describe('basic wrapped', function () {
   it("(x > y > z)", function () {
     const tst = parse('(x > y > z)');
     const result = {
-      type: "()",
-      body: [{
+      type: ">",
+      left: {
         type: ">",
-        left: {
-          type: ">",
-          left: {type: "x", body: []},
-          right: {type: "y", body: []}
-        },
-        right: {type: "z", body: []}
-      }]
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
+      },
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -128,16 +125,13 @@ describe('basic wrapped', function () {
   it("(x | y | z)", function () {
     const tst = parse('(x | y | z)');
     const result = {
-      type: "()",
-      body: [{
+      type: "|",
+      left: {
         type: "|",
-        left: {
-          type: "|",
-          left: {type: "x", body: []},
-          right: {type: "y", body: []}
-        },
-        right: {type: "z", body: []}
-      }]
+        left: {type: "x", body: []},
+        right: {type: "y", body: []}
+      },
+      right: {type: "z", body: []}
     };
     expect(tst).to.deep.equal(result);
   });
@@ -146,14 +140,11 @@ describe('basic wrapped', function () {
     const tst = parse('fn(x,y,z)');
     const result = {
       type: "fn",
-      body: {
-        type: "()",
-        body: [
-          {type: "x", body: []},
-          {type: "y", body: []},
-          {type: "z", body: []}
-        ]
-      }
+      body: [
+        {type: "x", body: []},
+        {type: "y", body: []},
+        {type: "z", body: []}
+      ]
     };
     expect(tst).to.deep.equal(result);
   });
@@ -335,14 +326,11 @@ describe('missing arguments', function () {
     const tst = parse('fn(x,,z)');
     const result = {
       type: "fn",
-      body: {
-        type: "()",
-        body: [
-          {type: "x", body: []},
-          undefined,
-          {type: "z", body: []}
-        ]
-      }
+      body: [
+        {type: "x", body: []},
+        undefined,
+        {type: "z", body: []}
+      ]
     };
     expect(tst).to.deep.equal(result);
   });
@@ -351,14 +339,11 @@ describe('missing arguments', function () {
     const tst = parse('fn(,y,z)');
     const result = {
       type: "fn",
-      body: {
-        type: "()",
-        body: [
-          undefined,
-          {type: "y", body: []},
-          {type: "z", body: []}
-        ]
-      }
+      body: [
+        undefined,
+        {type: "y", body: []},
+        {type: "z", body: []}
+      ]
     };
     expect(tst).to.deep.equal(result);
   });
@@ -367,14 +352,11 @@ describe('missing arguments', function () {
     const tst = parse('fn(x,y,)');
     const result = {
       type: "fn",
-      body: {
-        type: "()",
-        body: [
-          {type: "x", body: []},
-          {type: "y", body: []},
-          undefined,
-        ]
-      }
+      body: [
+        {type: "x", body: []},
+        {type: "y", body: []},
+        undefined,
+      ]
     };
     expect(tst).to.deep.equal(result);
   });

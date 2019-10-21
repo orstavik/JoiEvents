@@ -31,10 +31,21 @@ function nextToken(tokens) {
   return tokens.shift();
 }
 
+function parseBlock(tokens) {
+  let args = parseGroupArray(tokens, "(", ")");
+  if (!args)
+    return;
+  if (args.length > 1)             //todo separate for add test for this bug
+    throw new SyntaxError("(block, with, comma, is, not, allowed)");
+  // if (args.length === 0)           //todo add test for empty block
+  //   return undefined;
+  return args[0];
+}
+
 function parseNode(tokens) {
   if (!tokens[0])
     return;
-  return parseGroupArray(tokens, "(", ")") ||
+  return parseBlock(tokens) ||
     parseGroupArray(tokens, "[", "]") ||
     parseUnit(tokens);
 }
@@ -57,13 +68,9 @@ function parseGroupArray(tokens, start, end) {
       //   args.onlyNumbers = 1;       //todo, only numbers
       if (previous === ",")
         args.push(undefined);
-      if (start === "[")
+      // if (start === "[")
         return args;
-      if (args.length === 0)           //todo add test for empty block
-        return undefined;
-      // if (args.length > 1)             //todo separate for add test for this bug
-      //   throw new SyntaxError("(blocks, with, comma, are, not, allowed,,,)");
-      return {type: "()", body: args};
+      // return {type: "()", body: args};
     }
     if (tokens[0][0] === ",") {
       if (previous === "," || previous === start)
@@ -93,6 +100,7 @@ function parseOperator(tokens) {
     return nextToken(tokens)[0];
 }
 
+//todo make a full operator priority table
 const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
 
 function sortOperators(nodeOpNode) {
