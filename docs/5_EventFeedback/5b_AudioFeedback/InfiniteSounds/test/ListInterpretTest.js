@@ -100,63 +100,47 @@ describe('| and > combined', function () {
 
   it("1 | 2 > 3", async function () {
     const tst = await staticInterpret('1 | 2 > 3');
-    const result = {
-      type: "|",
-      left: 1,
-      right: {
-        type: ">",
-        left: 2,
-        right: 3
-      }
-    };
+    const result = [1, {
+      type: ">",
+      left: 2,
+      right: 3
+    }];
     expect(tst).to.deep.equal(result);
   });
 
   it("1 | (2 > 3)", async function () {
     const tst2 = await staticInterpret('1 | (2 > 3)');
-    const res = {
-      type: "|",
-      left: 1,
-      right: {
-        type: "()",
-        body: [{
-          type: ">",
-          left: 2,
-          right: 3
-        }]
-      }
-    };
+    const res = [1, {
+      type: "()",
+      body: [{
+        type: ">",
+        left: 2,
+        right: 3
+      }]
+    }];
     expect(tst2).to.deep.equal(res);
   });
 
   it("1 > 2 | 3", async function () {
     const tst = await staticInterpret('1 > 2 | 3');
-    const result = {
-      type: "|",
-      left: {
-        type: ">",
-        left: 1,
-        right: 2
-      },
-      right: 3
-    };
+    const result = [{
+      type: ">",
+      left: 1,
+      right: 2
+    }, 3];
     expect(tst).to.deep.equal(result);
   });
 
   it("(1 > 2) | 3", async function () {
     const tst2 = await staticInterpret('(1 > 2) | 3');
-    const res = {
-      type: "|",
-      left: {
-        type: "()",
-        body: [{
-          type: ">",
-          left: 1,
-          right: 2
-        }]
-      },
-      right: 3
-    };
+    const res = [{
+      type: "()",
+      body: [{
+        type: ">",
+        left: 1,
+        right: 2
+      }]
+    }, 3];
     expect(tst2).to.deep.equal(res);
   });
 
@@ -166,51 +150,35 @@ describe('ALL combined', function () {
 
   it("[1:2,] | 3 > 4", async function () {
     const tst = await staticInterpret('[1:2,] | 3 > 4');
-    const result = {
-      type: "|",
-      left: [[1, 2], undefined],
-      right: {
-        type: ">",
-        left: 3,
-        right: 4
-      }
-    };
+    const result = [[[1, 2], undefined], {
+      type: ">",
+      left: 3,
+      right: 4
+    }];
     expect(tst).to.deep.equal(result);
   });
 
   it("1 | 2 > [3, 4:5]", async function () {
     const tst = await staticInterpret('1 | 2 > [3, 4:5]');
-    const result = {
-      type: "|",
-      left: 1,
-      right: {
-        type: ">",
-        left: 2,
-        right: [3, [4, 5]]
-      }
-    };
+    const result = [1, {
+      type: ">",
+      left: 2,
+      right: [3, [4, 5]]
+    }];
     expect(tst).to.deep.equal(result);
   });
 
   it("1 | 2 > [3, 4:5, ] > 6 | 7", async function () {
     const tst = await staticInterpret('1 | 2 > [3, 4:5, ] > 6 | 7');
-    const result = {
-      type: "|",
+    const result = [1, {
+      type: ">",
       left: {
-        type: "|",
-        left: 1,
-        right: {
-          type: ">",
-          left: {
-            type: ">",
-            left: 2,
-            right: [3, [4, 5], undefined]
-          },
-          right: 6
-        }
+        type: ">",
+        left: 2,
+        right: [3, [4, 5], undefined]
       },
-      right: 7
-    };
+      right: 6
+    }, 7];
     expect(tst).to.deep.equal(result);
   });
 });

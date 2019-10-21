@@ -10,6 +10,16 @@ ListOps[":"] = function ({left, right}) {
   return res;
 };
 
+ListOps["|"] = function ({left, right}) {
+  if (left["|"]) {
+    left.push(right);
+    return left;
+  }
+  const res = [left, right];
+  res["|"] = true;
+  return res;
+};
+
 function connectMtoN(a, b) {
   if (a instanceof Array) {
     for (let x of a)
@@ -46,7 +56,7 @@ AudioPiping[">"] = function (node, ctx) {
   const left = (node.left instanceof Array) ? extractAudioArray(node.left, "output") : node.left.output;
   const right = (node.right instanceof Array) ? extractAudioArray(node.right, "input") : node.right.input;
   connectMtoN(left, right);
-  const ogInput = node.left.ogInput  || left;
+  const ogInput = node.left.ogInput || left;
   return {graph: node, input: left, output: right, ogInput};
 };
 
@@ -68,6 +78,9 @@ AudioPiping["()"] = function (node, ctx) {
   return {graph: node, input: node.body[0].input, output: node.body[0].output};
 };
 
+//todo parse body here..
+//todo fix handle ()-blocks
+
 //todo untested
 // function addDelay(ctx, count, beat, left) {
 //   if (count === 0)
@@ -88,3 +101,16 @@ AudioPiping["()"] = function (node, ctx) {
 //todo here I need to return a more complex object
 // return bars;
 // };
+//
+
+AudioPiping["bpm"] = function (node, ctx) {
+  let [bpm, heavy, bars] = node.body;
+  if (!(bars instanceof Array))
+    bars = [bars];
+  const beatS = 60 / bpm;
+  const delayMS = beatS * 1000;
+  // const bars = bars;
+  for (let count = 0, root = barTree; root && root.type === "|"; count++, root = root.right)
+    bars.push(addDelay(ctx, count, beat, barTree.left));
+  return bars;
+};
