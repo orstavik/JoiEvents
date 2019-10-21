@@ -41,33 +41,28 @@ describe('notes', function () {
 describe('quotes', function () {
   it("'hello world!'", function () {
     const tst = parse("'hello world!'");
-    const result = {type: "'", value: "hello world!"};
-    expect(tst).to.deep.equal(result);
+    expect(tst).to.deep.equal("hello world!");
   });
 
   it('"hello world!"', function () {
     const tst = parse('"hello world!"');
-    const result = {type: '"', value: "hello world!"};
-    expect(tst).to.deep.equal(result);
+    expect(tst).to.deep.equal("hello world!");
   });
 
   it('"hello \\\"world!"', function () {
     const tst = parse('"hello \\\"world!"');
-    const result = {type: '"', value: "hello \\\"world!"};
-    expect(tst).to.deep.equal(result);
+    expect(tst).to.be.equal("hello \\\"world!");
   });
   it('"hello \\\\\\\"world!"', function () {
     const tst = parse('"hello \\\\\\\"world!"');
-    const result = {type: '"', value: "hello \\\\\\\"world!"};
-    expect(tst).to.deep.equal(result);
+    expect(tst).to.deep.equal("hello \\\\\\\"world!");
   });
 });
 
 describe('numbers', function () {
   it("OK: 12", function () {
     const tst = parse('12');
-    const result = 12;
-    expect(tst).to.be.equal(result);
+    expect(tst).to.be.equal(12);
   });
 
   it("OK: 12hz", function () {

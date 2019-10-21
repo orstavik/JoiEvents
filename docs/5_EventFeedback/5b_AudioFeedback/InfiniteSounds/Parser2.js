@@ -47,15 +47,20 @@ function parseGroupArray(tokens, start, end) {
   nextToken(tokens); //eat ( [
   const args = [];
   let previous = start;
+  // let onlyNumbers = true;            //todo only numbers
   while (true) {
+    // if (typeof previous !== "number" && !(previous instanceof Array && previous.onlyNumbers))
+    //   onlyNumbers = false;
     if (!tokens[0])
       throw new SyntaxError(`Forgot to close ${start}-block.`);
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
+      // if (onlyNumbers)
+      //   args.onlyNumbers = 1;
       if (previous === ",")
         args.push(undefined);
       if (start === "[")
-        return args;
+        return args;                   //todo, mark arrays that only contain primitive numbers
       return {type: "()", body: args}; //todo bug here if the body is an empty array
     }
     if (tokens[0][0] === ",") {
@@ -130,9 +135,9 @@ function parseFunction(tokens) {
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
   if (lookAhead[12])  //singleQuote
-    return {type: '"', value: nextToken(tokens)[13]};
+    return /*{type: '"', value: */nextToken(tokens)[13]/*}*/;
   if (lookAhead[14])  //doubleQuote
-    return {type: "'", value: nextToken(tokens)[15]};
+    return /*{type: "'", value: */nextToken(tokens)[15]/*}*/;
   if (lookAhead[1]) {   //tone
     let t = nextToken(tokens);
     return {

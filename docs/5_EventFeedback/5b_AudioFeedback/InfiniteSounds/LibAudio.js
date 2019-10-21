@@ -89,7 +89,7 @@ class AudioFileRegister {
 
   static async makeFileBufferSource(node, ctx) {
     const {body: [url, loop]} = node;
-    const data = await AudioFileRegister.getFileBuffer(url.value);
+    const data = await AudioFileRegister.getFileBuffer(url);
     const bufferSource = ctx.createBufferSource();
     bufferSource.buffer = await ctx.decodeAudioData(data);
     bufferSource.loop = !!loop;
@@ -279,8 +279,8 @@ InterpreterFunctions.allpass = function (node, ctx) {
 
 
 /**
- * url(https://some.com/sound.file) plays the sound file once
- * url(https://some.com/sound.file, 1) plays the sound file in a loop
+ * url('https://some.com/sound.file') plays the sound file once
+ * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
 InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
 
