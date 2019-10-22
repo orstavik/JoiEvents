@@ -56,14 +56,14 @@ function parseGroupArray(tokens, start, end) {
   nextToken(tokens); //eat ( [
   const res = [];
   let previous = start;
-  let primitive = true;
+  // let primitive = true;
   while (true) {
     if (!tokens[0])
       throw new SyntaxError(`Forgot to close ${start}-block.`);
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
-      if (primitive)
-        res.isPrimitive = 1;
+      // if (primitive)
+      //   res.isPrimitive = 1;
       if (previous === ",")
         res.push(undefined);
       return res;
@@ -79,7 +79,7 @@ function parseGroupArray(tokens, start, end) {
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
     res.push(previous = parseExpressions(tokens));
     if (!isPrimitive(previous))
-      primitive = false;
+      res.isDirty = 1;
   }
 }
 
@@ -113,7 +113,8 @@ function sortOperators(nodeOpNode) {
       }
     }
     let node = {type: nodeOpNode[I], body: [nodeOpNode[I - 1], nodeOpNode[I + 1]]};
-    //todo return two arrays, one with the elements, and one with the yet-not-interpreted?
+    if (!isPrimitive(node.body[0]) || !isPrimitive(node.body[1]))
+      node.body.isDirty = 1;
     nodeOpNode.splice(I - 1, 3, node);
   }
   return nodeOpNode[0];
@@ -168,7 +169,7 @@ export function isPrimitive(node) {
   return node === undefined ||
     typeof node === "number" ||
     typeof node === "string" ||
-    node.isPrimitive;
+    (node instanceof Array && !node.isDirty);
 }
 
 export function parse(str) {

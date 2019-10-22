@@ -7,14 +7,17 @@ import {Music} from "./LibMusic.js";
 
 async function interpretArray(node, table, ctx) {
   const clone = node.slice(0);
-  clone.isPrimitive = 1;
   for (let i = 0; i < clone.length; i++) {
     clone[i] = await interpretNode(clone[i], table, ctx);
     if (!isPrimitive(clone[i]))
-      clone.isPrimitive = 0;
+      clone.isDirty = 1;
   }
   return clone;
 }
+
+//todo
+//1. what about the isPrimitive property on arrays.. first, invert the setting to check if it is primitive or not, and then try to make it into an object instead?
+//2. then pass in the parents as the root context, as an array of context nodes?
 
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
