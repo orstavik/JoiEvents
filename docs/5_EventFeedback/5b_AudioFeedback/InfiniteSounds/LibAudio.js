@@ -22,8 +22,6 @@ function setAudioParameter(target, param) {
     param.output.connect(target);
   } else if (typeof param === "number") {
     target.value = param;
-  } else if (param.hasOwnProperty("num")) {
-    target.value = param.num;
   } else if (param instanceof Array) {
     plotEnvelope(target, param);
   } else
