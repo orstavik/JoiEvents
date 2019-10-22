@@ -86,19 +86,19 @@ describe('primitive arrays', function () {
   it("[1,2,, 'hello']", function () {
     const tst = parse('[1,2,, \'hello\']');
     expect(tst).to.deep.equal([1,2,undefined, "hello"]);
-    expect(tst.onlyNumbers).to.be.equal(1);
+    expect(tst.isPrimitive).to.be.equal(1);
   });
   it("[1,[2,], 'hello']", function () {
     const tst = parse('[1,[2,], \'hello\']');
     expect(tst).to.deep.equal([1,[2,undefined], "hello"]);
-    expect(tst.onlyNumbers).to.be.equal(1);
-    expect(tst[1].onlyNumbers).to.be.equal(1);
+    expect(tst.isPrimitive).to.be.equal(1);
+    expect(tst[1].isPrimitive).to.be.equal(1);
   });
   it("[1,[2+3,], 'hello']", async function () {
     const tst = await staticInterpret('[1,[2+3,], \'hello\']');
     expect(tst).to.deep.equal([1,[5,undefined], "hello"]);
-    expect(tst.onlyNumbers).to.be.equal(1);
-    expect(tst[1].onlyNumbers).to.be.equal(1);
+    expect(tst.isPrimitive).to.be.equal(1);
+    expect(tst[1].isPrimitive).to.be.equal(1);
   });
 });
 

@@ -5,28 +5,28 @@ export const ListOps = Object.create(null);
 ListOps[":"] = function ({body: [left, right]}) {
   if (left[":"]) {
     left.push(right);
-    if (left.onlyNumbers && typeof right !== "number")
-      delete left.onlyNumbers;
+    if (left.isPrimitive && typeof right !== "number")
+      delete left.isPrimitive;
     return left;
   }
   const res = [left, right];
   res[":"] = 1;
   if (isPrimitive(left) && isPrimitive(right))
-    res.onlyNumbers = 1;
+    res.isPrimitive = 1;
   return res;
 };
 
 ListOps["|"] = function ({body: [left, right]}) {
   if (left["|"]) {
     left.push(right);
-    if (left.onlyNumbers && typeof right !== "number")
-      delete left.onlyNumbers;
+    if (left.isPrimitive && typeof right !== "number")
+      delete left.isPrimitive;
     return left;
   }
   const res = [left, right];
   res["|"] = 1;
   if (isPrimitive(left) && isPrimitive(right))
-    res.onlyNumbers = 1;
+    res.isPrimitive = 1;
   return res;
 };
 

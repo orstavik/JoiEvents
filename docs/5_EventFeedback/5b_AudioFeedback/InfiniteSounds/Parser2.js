@@ -63,7 +63,7 @@ function parseGroupArray(tokens, start, end) {
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
       if (onlyNumbers)
-        args.onlyNumbers = 1;
+        args.isPrimitive = 1;
       if (previous === ",")
         args.push(undefined);
       return args;
@@ -168,7 +168,7 @@ export function isPrimitive(node) {
   let type = typeof node;
   if (type === "number" || type === "string")
     return true;
-  return node.onlyNumbers;
+  return node.isPrimitive;
 }
 
 export function parse(str) {

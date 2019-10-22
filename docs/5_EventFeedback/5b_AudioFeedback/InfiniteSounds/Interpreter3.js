@@ -6,7 +6,7 @@ import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
 
 async function interpretArray(node, table, ctx) {
-  if (node.onlyNumbers)
+  if (node.isPrimitive)
     return node;
   const res = [];
   let onlyNumbers = true;
@@ -20,22 +20,23 @@ async function interpretArray(node, table, ctx) {
       onlyNumbers = false;
   }
   if (onlyNumbers)
-    res.onlyNumbers = 1;
+    res.isPrimitive = 1;
   return mutated ? res : node;
 }
 
-export async function interpretNode(node, table, ctx) {
-  if (!node)
+//todo add parent!
+export async function interpretNode(node, table, ctx/*, parent*/) {
+  if (isPrimitive(node))
     return node;
-  if (node instanceof Array && !node.onlyNumbers)
-    return await interpretArray(node, table, ctx); //todo, here we will always return a new object.
-                                                   //todo and add parent to the array object
-  if (!node.type)
-    return node;
-  if (node.body){
-    let body = await interpretArray(node.body, table, ctx);     //todo, here we will always return a new object.
-    node = body === node.body ? node : {type: node.type, body}; //todo and add parent to the array object
+  if (node instanceof Array){
+    let newAr = await interpretArray(node, table, ctx/*, parent*/);
+    //newAr.parent = node;
+    return newAr; //todo, here we will always return a new object.
   }
+  if (!node.type)      //number with unit, tone, etc.
+    return node;       //todo clone and add parent
+  let body = await interpretArray(node.body, table, ctx/*, parent*/);     //todo, here we will always return a new object.
+  node = {type: node.type, body/*, parent*/}; //todo and add parent to the array object
   let fun = table[node.type];
   return fun ? (await fun(node, ctx)) : node;
 }

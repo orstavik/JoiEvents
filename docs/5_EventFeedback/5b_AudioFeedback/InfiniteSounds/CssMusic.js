@@ -16,12 +16,14 @@ export class CssMusic extends AudioContext {
     const ctx = new CssMusic();
     const result = await interpret(sound, ctx);
 
-    if (result.output instanceof Array) {
-      for (let audioNode of result.output ) {
-        audioNode.connect(ctx.specialGain);
-      }
-    } else
-      result.output.connect(ctx.specialGain);
+    if (result.type === "bpm") {
+      let [bpm, heavy, bars] = result.body;
+      ctx.msPerBeat = 60 / bpm * 1000;
+      ctx.heavy = heavy;
+      ctx.bars = bars;
+    } else {
+      ctx.bars = [result];
+    }
     return ctx;
   }
 
@@ -31,6 +33,30 @@ export class CssMusic extends AudioContext {
     this.specialGain.gain.value = 1;
     this.specialGain.connect(this.destination);
     this.suspend();
+    this.bars = [];
+    this.msPerBeat = 60 / 84 * 1000;
+    this.heavy = 4;
+    this.i = 0;
+  }
+
+  start(startTime){
+    this.playBar();
+    this.resume();
+    if (this.i >= this.bars.length)
+      return;
+    const realTimeDelay = this.msPerBeat - (performance.now() - startTime);
+    setTimeout(() => this.start(startTime + this.msPerBeat), realTimeDelay);
+
+  }
+
+  playBar(){
+    if (this.i % this.heavy === 0) console.log("Heavy beat");
+    let result = this.bars[this.i++];
+    if (result.output instanceof Array) {
+      for (let audioNode of result.output)
+        audioNode.connect(this.specialGain);
+    } else
+      result.output.connect(this.specialGain);
   }
 
   stop() {
