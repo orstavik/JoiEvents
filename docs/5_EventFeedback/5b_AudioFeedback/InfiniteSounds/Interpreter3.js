@@ -8,37 +8,35 @@ import {Music} from "./LibMusic.js";
 async function interpretArray(node, table, ctx) {
   if (node.isPrimitive)
     return node;
-  const res = [];
-  let onlyNumbers = true;
-  let mutated = false;
+  const clone = [];
+  clone.isPrimitive = 1;
   for (let item of node) {
-    let interpretedItem = await interpretNode(item, table, ctx);
-    if (interpretedItem !== item)
-      mutated = true;
-    res.push(interpretedItem);
-    if (!isPrimitive(interpretedItem))
-      onlyNumbers = false;
+    let newNode = await interpretNode(item, table, ctx, clone);
+    clone.push(newNode);
+    if (!isPrimitive(newNode))
+      clone.isPrimitive = 0;
   }
-  if (onlyNumbers)
-    res.isPrimitive = 1;
-  return mutated ? res : node;
+  return clone;
 }
 
-//todo add parent!
-export async function interpretNode(node, table, ctx/*, parent*/) {
+async function interpretFunction(node, table, ctx) {
+  const clone = Object.assign({}, node);
+  clone.body = await interpretArray(clone.body, table, ctx, clone);
+  let fun = table[node.type];
+  return fun ? (await fun(clone, ctx)) : clone;
+}
+
+function interpretOther(node, table, ctx) {
+  return Object.assign({}, node);
+}
+
+export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
-  if (node instanceof Array){
-    let newAr = await interpretArray(node, table, ctx/*, parent*/);
-    //newAr.parent = node;
-    return newAr; //todo, here we will always return a new object.
-  }
-  if (!node.type)      //number with unit, tone, etc.
-    return node;       //todo clone and add parent
-  let body = await interpretArray(node.body, table, ctx/*, parent*/);     //todo, here we will always return a new object.
-  node = {type: node.type, body/*, parent*/}; //todo and add parent to the array object
-  let fun = table[node.type];
-  return fun ? (await fun(node, ctx)) : node;
+  return await (
+    node instanceof Array ? interpretArray(node, table, ctx) :
+      node.type ? interpretFunction(node, table, ctx) :
+        interpretOther(node, table, ctx));
 }
 
 //todo units "MHz", "dB", "ms" can be processed statically.
@@ -50,7 +48,7 @@ const dynamicTable = Object.assign({}, Random, MathOps, InterpreterFunctions, Au
 
 export async function staticInterpret(str) {
   let node = parse(str);
-  node = await interpretNode(node, staticTable);
+  node = await interpretNode(node, staticTable, undefined);
   //variables: declare and replace
   //cache temporarily
   return node;
