@@ -6,8 +6,6 @@ import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
 
 async function interpretArray(node, table, ctx) {
-  if (node.isPrimitive)
-    return node;
   const clone = [];
   clone.isPrimitive = 1;
   for (let item of node) {
@@ -21,7 +19,8 @@ async function interpretArray(node, table, ctx) {
 
 async function interpretFunction(node, table, ctx) {
   const clone = Object.assign({}, node);
-  clone.body = await interpretArray(clone.body, table, ctx, clone);
+  if (!clone.body.isPrimitive)
+    clone.body = await interpretArray(clone.body, table, ctx, clone);
   let fun = table[node.type];
   return fun ? (await fun(clone, ctx)) : clone;
 }
@@ -33,10 +32,12 @@ function interpretOther(node, table, ctx) {
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
-  return await (
-    node instanceof Array ? interpretArray(node, table, ctx) :
-      node.type ? interpretFunction(node, table, ctx) :
-        interpretOther(node, table, ctx));
+  if (node instanceof Array)
+    return await interpretArray(node, table, ctx);
+  else if (node.type)
+    return await interpretFunction(node, table, ctx);
+  else
+    return interpretOther(node, table, ctx);
 }
 
 //todo units "MHz", "dB", "ms" can be processed statically.
