@@ -16,7 +16,7 @@ async function interpretArray(clone, table, ctx) {
 }
 
 async function interpretFunction(clone, table, ctx) {
-  if (!clone.body.isPrimitive)
+  if (!isPrimitive(clone.body))
     clone.body = await interpretArray(clone.body, table, ctx);
   let fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;

@@ -158,7 +158,7 @@ function parsePrimitive(tokens) {
     let t = nextToken(tokens);
     const num = parseFloat(t[8]);
     let unit = t[9];
-    return unit === "" ? num : {num, unit};
+    return unit === "" ? num : {type: unit, body: num};
   }
 }
 

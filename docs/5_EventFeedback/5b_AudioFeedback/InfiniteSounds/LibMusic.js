@@ -1,5 +1,21 @@
 export const Music = Object.create(null);
 
+Music["hz"] = function (node, ctx) {
+  return node.body;
+};
+Music["Hz"] = Music["hz"];
+Music["HZ"] = Music["hz"];
+Music["mhz"] = function (node, ctx) {
+  return node.body * 1000;
+};
+Music["mhZ"] = Music["mhz"];
+Music["mHz"] = Music["mhz"];
+Music["mHZ"] = Music["mhz"];
+Music["Mhz"] = Music["mhz"];
+Music["MhZ"] = Music["mhz"];
+Music["MHz"] = Music["mhz"];
+Music["MHZ"] = Music["mhz"];
+
 //todo speedup is possible by mutating the note object. Here, the structure remains immutable
 function morphNote(note, newKey) {
   if (note.key) {

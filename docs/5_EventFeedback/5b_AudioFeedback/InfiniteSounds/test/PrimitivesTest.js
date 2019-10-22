@@ -68,7 +68,7 @@ describe('numbers', function () {
 
   it("OK: 12hz", function () {
     const tst = parse('12hz');
-    const result = {num: 12, unit: "hz"};
+    const result = {body: 12, type: "hz"};
     expect(tst).to.deep.equal(result);
   });
 
