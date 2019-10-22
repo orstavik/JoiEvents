@@ -1,5 +1,43 @@
 import {parse} from "../Parser2.js";
 
+describe('notes', function () {
+  it("C#4", function () {
+    const tst = parse("C#4");
+    const result = {type: "note", tone: "C#", octave: 4};
+    expect(tst).to.deep.equal(result);
+  });
+  it("A5", function () {
+    const tst = parse("A5");
+    const result = {type: "note", tone: "A", octave: 5};
+    expect(tst).to.deep.equal(result);
+  });
+  it("Bb5", function () {
+    const tst = parse("Bb5");
+    const result = {type: "note", tone: "Bb", octave: 5};
+    expect(tst).to.deep.equal(result);
+  });
+  it("D#-2", function () {
+    const tst = parse("D#-2");
+    const result = {type: "note", tone: "D#", octave: -2};
+    expect(tst).to.deep.equal(result);
+  });
+  it("E", function () {
+    const tst = parse("E");
+    const result = {type: "note", tone: "E", octave: undefined};
+    expect(tst).to.deep.equal(result);
+  });
+  it("f#", function () {
+    const tst = parse("f#");
+    const result = {type: "note", tone: "F#", octave: undefined};
+    expect(tst).to.deep.equal(result);
+  });
+  it("g0", function () {
+    const tst = parse("g0");
+    const result = {type: "note", tone: "G", octave: 0};
+    expect(tst).to.deep.equal(result);
+  });
+});
+
 describe('keys', function () {
   it("G~C#4", function () {
     const tst = parse("G~C#4");
