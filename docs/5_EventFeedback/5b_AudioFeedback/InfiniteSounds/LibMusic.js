@@ -1,12 +1,12 @@
 export const Music = Object.create(null);
 
 Music["hz"] = function (node, ctx) {
-  return node.body;
+  return node.body[0];
 };
 Music["Hz"] = Music["hz"];
 Music["HZ"] = Music["hz"];
 Music["mhz"] = function (node, ctx) {
-  return node.body * 1000;
+  return node.body[0] * 1000;
 };
 Music["mhZ"] = Music["mhz"];
 Music["mHz"] = Music["mhz"];

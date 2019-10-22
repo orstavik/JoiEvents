@@ -158,9 +158,9 @@ function parsePrimitive(tokens) {
   }
   if (lookAhead[7]) {  //number
     let t = nextToken(tokens);
-    const body = parseFloat(t[8]);
+    const num = parseFloat(t[8]);
     let type = t[9];
-    return type === "" ? body : {type, body};
+    return type === "" ? num : {type, body: [num]};
   }
 }
 
