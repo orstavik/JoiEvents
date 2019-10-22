@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test of clef chain working</title>
+</head>
+<body>
+
+<a href="javascript:playOne();">one</a> <br>
+<a href="javascript:scaleUp();">scaleUp</a> <br>
+<a href="javascript:scaleDown();">scaleDown</a> <br>
+<a href="javascript:turn5up();">turn5up()</a> <br>
+<a href="javascript:turn5down();">turn5down()</a> <br>
+
+<script>
+
+  /*
+  The problem with the delay node, is that it actually makes the signal, and then delays it.
+  This means that any dynamic changes done to the structure will also be delayed.
+
+  This 
+   */
+
+  const ctx = new AudioContext();
+  ctx.suspend();
+  const osc = ctx.createOscillator();
+  osc.type = "sine";
+
+//  https://media-codings.com/articles/polyfilling-the-constant-source-node
+  const andAone = ctx.createConstantSource();
+  const lfo1 = ctx.createGain();
+  lfo1.gain.value = 440;
+  const lfo2 = ctx.createGain();
+  lfo2.gain.value = 1;
+  const delay = ctx.createDelay(5.0);
+  delay.delayTime.setValueAtTime(5, 0);
+
+  andAone.connect(lfo1);
+  lfo1.connect(lfo2);
+  lfo2.connect(osc.frequency);
+  delay.connect(osc);
+  osc.connect(ctx.destination);
+
+  andAone.start();
+  osc.start();
+
+  function playOne() {
+    ctx.resume();
+  }
+
+  //the alternatives are. From bars, create a player that uses setTimeout. That gives me far more control. But is MUCH more complex.
+  //how the hell do we make changes in the clef immediate if the signal is delayed in time?
+
+  function scaleUp() {
+    lfo2.gain.value *= 2;
+  }
+  function scaleDown() {
+    lfo2.gain.value /= 2;
+  }
+  function turn5up() {
+    lfo2.gain.value *= Math.pow(2, 1.5);
+  }
+  function turn5down() {
+    lfo2.gain.value *= Math.pow(2, -1.5);
+  }
+
+</script>
+
+</body>
+</html>
