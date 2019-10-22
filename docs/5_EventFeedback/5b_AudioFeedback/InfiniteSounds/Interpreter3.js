@@ -1,4 +1,4 @@
-import {parse} from "./Parser2.js";
+import {parse, isPrimitive} from "./Parser2.js";
 import {Random} from "./LibRandom.js";
 import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
@@ -16,7 +16,7 @@ async function interpretArray(node, table, ctx) {
     if (interpretedItem !== item)
       mutated = true;
     res.push(interpretedItem);
-    if (typeof interpretedItem !== "number" && !(interpretedItem instanceof Array && interpretedItem.onlyNumbers))
+    if (!isPrimitive(interpretedItem))
       onlyNumbers = false;
   }
   if (onlyNumbers)
