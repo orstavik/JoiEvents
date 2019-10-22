@@ -6,12 +6,11 @@ import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
 
 async function interpretArray(node, table, ctx) {
-  const clone = [];
+  const clone = node.slice(0);
   clone.isPrimitive = 1;
-  for (let item of node) {
-    let newNode = await interpretNode(item, table, ctx, clone);
-    clone.push(newNode);
-    if (!isPrimitive(newNode))
+  for (let i = 0; i < clone.length; i++) {
+    clone[i] = await interpretNode(clone[i], table, ctx, clone);
+    if (!isPrimitive(clone[i]))
       clone.isPrimitive = 0;
   }
   return clone;
