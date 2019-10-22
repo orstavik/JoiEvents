@@ -54,7 +54,7 @@ function parseGroupArray(tokens, start, end) {
   if (tokens[0][0] !== start)
     return;
   nextToken(tokens); //eat ( [
-  const args = [];
+  const res = [];
   let previous = start;
   let primitive = true;
   while (true) {
@@ -63,21 +63,21 @@ function parseGroupArray(tokens, start, end) {
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
       if (primitive)
-        args.isPrimitive = 1;
+        res.isPrimitive = 1;
       if (previous === ",")
-        args.push(undefined);
-      return args;
+        res.push(undefined);
+      return res;
     }
     if (tokens[0][0] === ",") {
       if (previous === "," || previous === start)
-        args.push(undefined);
+        res.push(undefined);
       previous = ",";
       nextToken(tokens);    //eat ,
       continue;
     }
     if (previous !== "," && previous !== start)
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
-    args.push(previous = parseExpressions(tokens));
+    res.push(previous = parseExpressions(tokens));
     if (!isPrimitive(previous))
       primitive = false;
   }
@@ -158,9 +158,9 @@ function parsePrimitive(tokens) {
   }
   if (lookAhead[7]) {  //number
     let t = nextToken(tokens);
-    const num = parseFloat(t[8]);
-    let unit = t[9];
-    return unit === "" ? num : {type: unit, body: num};
+    const body = parseFloat(t[8]);
+    let type = t[9];
+    return type === "" ? body : {type, body};
   }
 }
 
