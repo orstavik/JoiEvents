@@ -5,38 +5,33 @@ import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
 
-async function interpretArray(node, table, ctx) {
-  const clone = node.slice(0);
+async function interpretArray(clone, table, ctx) {
   clone.isPrimitive = 1;
   for (let i = 0; i < clone.length; i++) {
-    clone[i] = await interpretNode(clone[i], table, ctx, clone);
+    clone[i] = await interpretNode(clone[i], table, ctx);
     if (!isPrimitive(clone[i]))
       clone.isPrimitive = 0;
   }
   return clone;
 }
 
-async function interpretFunction(node, table, ctx) {
-  const clone = Object.assign({}, node);
+async function interpretFunction(clone, table, ctx) {
   if (!clone.body.isPrimitive)
-    clone.body = await interpretArray(clone.body, table, ctx, clone);
-  let fun = table[node.type];
+    clone.body = await interpretArray(clone.body, table, ctx);
+  let fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;
-}
-
-function interpretOther(node, table, ctx) {
-  return Object.assign({}, node);
 }
 
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
+  const clone = node instanceof Array ? node.slice(0) : Object.assign({}, node);
   if (node instanceof Array)
-    return await interpretArray(node, table, ctx);
+    return await interpretArray(clone, table, ctx);
   else if (node.type)
-    return await interpretFunction(node, table, ctx);
+    return await interpretFunction(clone, table, ctx);
   else
-    return interpretOther(node, table, ctx);
+    return clone;     //units and tones
 }
 
 //todo units "MHz", "dB", "ms" can be processed statically.
