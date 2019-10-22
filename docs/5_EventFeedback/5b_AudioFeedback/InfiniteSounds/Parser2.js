@@ -165,12 +165,10 @@ function parsePrimitive(tokens) {
 }
 
 export function isPrimitive(node) {
-  if (node === undefined)
-    return true;
-  let type = typeof node;
-  if (type === "number" || type === "string")
-    return true;
-  return node.isPrimitive;
+  return node === undefined ||
+    typeof node === "number" ||
+    typeof node === "string" ||
+    node.isPrimitive;
 }
 
 export function parse(str) {

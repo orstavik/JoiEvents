@@ -24,7 +24,7 @@ export async function interpretNode(node, table, ctx) {
   const clone = Object.assign({}, node);
   if (!isPrimitive(clone.body))
     clone.body = await interpretArray(clone.body, table, ctx);
-  let fun = table[clone.type];
+  const fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;
 }
 
