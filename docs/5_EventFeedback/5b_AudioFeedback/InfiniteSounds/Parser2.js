@@ -12,7 +12,7 @@ const tokens = [
   /.+/                                       //error:
 ];
 
-//simplify dev, inline in production
+//speedup: inline in production
 const tokenizer = new RegExp(tokens.map(rx => "(" + rx.source + ")").join("|"), "g");
 
 function tokenize(str) {
@@ -56,13 +56,13 @@ function parseGroupArray(tokens, start, end) {
   nextToken(tokens); //eat ( [
   const args = [];
   let previous = start;
-  let onlyNumbers = true;
+  let primitive = true;
   while (true) {
     if (!tokens[0])
       throw new SyntaxError(`Forgot to close ${start}-block.`);
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
-      if (onlyNumbers)
+      if (primitive)
         args.isPrimitive = 1;
       if (previous === ",")
         args.push(undefined);
@@ -79,7 +79,7 @@ function parseGroupArray(tokens, start, end) {
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
     args.push(previous = parseExpressions(tokens));
     if (!isPrimitive(previous))
-      onlyNumbers = false;
+      primitive = false;
   }
 }
 
@@ -113,6 +113,7 @@ function sortOperators(nodeOpNode) {
       }
     }
     let node = {type: nodeOpNode[I], body: [nodeOpNode[I - 1], nodeOpNode[I + 1]]};
+    //todo return two arrays, one with the elements, and one with the yet-not-interpreted?
     nodeOpNode.splice(I - 1, 3, node);
   }
   return nodeOpNode[0];
@@ -137,6 +138,7 @@ function parseFunction(tokens) {
     return;
   const type = nextToken(tokens)[0];
   let body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];
+  //todo return two arrays, one with the elements, and one with the yet-not-interpreted?
   return {type, body};
 }
 
