@@ -150,8 +150,8 @@ function parsePrimitive(tokens) {
     let t = nextToken(tokens);
     return {
       type: "note",
-      tone: t[2][0].toUpperCase() + t[2].slice(1),
-      octave: t[3] === undefined ? undefined : parseInt(t[3])
+      body: t[2][0].toUpperCase() + t[2].slice(1),
+      // octave: t[3] === undefined ? undefined : parseInt(t[3])     //todo
     };
   }
   if (lookAhead[7]) {  //number

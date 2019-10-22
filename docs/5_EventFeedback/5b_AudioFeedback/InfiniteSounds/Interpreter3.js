@@ -28,10 +28,7 @@ export async function interpretNode(node, table, ctx) {
   const clone = node instanceof Array ? node.slice(0) : Object.assign({}, node);
   if (node instanceof Array)
     return await interpretArray(clone, table, ctx);
-  else if (node.type)
-    return await interpretFunction(clone, table, ctx);
-  else
-    return clone;     //units and tones
+  return await interpretFunction(clone, table, ctx);
 }
 
 //todo units "MHz", "dB", "ms" can be processed statically.
