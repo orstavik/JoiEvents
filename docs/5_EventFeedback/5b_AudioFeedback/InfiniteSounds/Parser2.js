@@ -1,6 +1,7 @@
 const tokens = [
-  /([a-gA-G][#b]?)([+-]?\d+)?(?![_a-zA-Z\d#-])/, //note: Fb, C#4, a4, a-4, a, ab, G, (not notes are aB)
-  /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
+  /([a-gA-G][#b]?)([+-]?\d+)?(?![_a-zA-Z\d#-])/, //absolute notes: Fb, C#4, a4, a-4, a, ab, G, (not notes are aB)
+  /~[+-]?\d+[#b]?/,                          //relative notes: ~1, ~0b, ~6#,
+  /~|[_a-zA-Z][_a-zA-Z\d#-]*/,               //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
@@ -19,14 +20,14 @@ function tokenize(str) {
   const tokens = [];
   for (let array1; (array1 = tokenizer.exec(str)) !== null;)
     tokens.push(array1);
-  return tokens.filter(t => !t[16]);  //whitespace is definitively meaningless now
+  return tokens.filter(t => !t[17]);  //whitespace is definitively meaningless now
   // todo this causes a bug in the --css-var special case handling
 }
 
 function nextToken(tokens) {
   if (!tokens.length)
     return undefined;
-  if (tokens[0][17])
+  if (tokens[0][18])
     throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][0]);
   return tokens.shift();
 }
@@ -87,14 +88,14 @@ function parseOperator(tokens) {
   //isNegativeNumber: <number><negativeNumber> that should have been <number><minus-operator><positiveNumber>
   if (!tokens[0])
     return;
-  if (tokens[0][7] && tokens[0][7].startsWith("-")) {
+  if (tokens[0][8] && tokens[0][8].startsWith("-")) {
     tokens[0][0] = tokens[0][0].substr(1);
-    tokens[0][7] = tokens[0][7].substr(1);
     tokens[0][8] = tokens[0][8].substr(1);
+    tokens[0][9] = tokens[0][9].substr(1);
     return "-";
   }
   //!isOperator
-  if (tokens[0][11])
+  if (tokens[0][12])
     return nextToken(tokens)[0];
 }
 
@@ -135,7 +136,7 @@ function parseUnit(tokens) {
 }
 
 function parseFunction(tokens) {
-  if (!(tokens[0][4] || tokens[0][5] || tokens[0][6]))
+  if (!(tokens[0][5] || tokens[0][6] || tokens[0][7]))
     return;
   const type = nextToken(tokens)[0];
   let body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];
@@ -145,21 +146,23 @@ function parseFunction(tokens) {
 
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
-  if (lookAhead[12])  //singleQuote
-    return nextToken(tokens)[13];
-  if (lookAhead[14])  //doubleQuote
-    return nextToken(tokens)[15];
-  if (lookAhead[1]) {   //tone
+  if (lookAhead[13])  //singleQuote
+    return nextToken(tokens)[14];
+  if (lookAhead[15])  //doubleQuote
+    return nextToken(tokens)[16];
+  if (lookAhead[1]) {   //absolute tone
     let t = nextToken(tokens);
     return {
       type: "note",
       body: [t[2].toLowerCase(), t[3] ? parseInt(t[3]) : t[3]]
     };
   }
-  if (lookAhead[7]) {  //number
+  if (lookAhead[4])    //relative tone
+    return {type: "note", body: ["~", nextToken(tokens)[0].substr(1)]};
+  if (lookAhead[8]) {  //number
     let t = nextToken(tokens);
-    const num = parseFloat(t[8]);
-    let type = t[9];
+    const num = parseFloat(t[9]);
+    let type = t[10];
     return type === "" ? num : {type, body: [num]};
   }
 }

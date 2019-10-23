@@ -4,12 +4,12 @@ import {staticInterpret} from "../Interpreter3.js";
 describe('quotes', function () {
   it("'hello world!'", function () {
     const tst = parse("'hello world!'");
-    expect(tst).to.deep.equal("hello world!");
+    expect(tst).to.be.equal("hello world!");
   });
 
   it('"hello world!"', function () {
     const tst = parse('"hello world!"');
-    expect(tst).to.deep.equal("hello world!");
+    expect(tst).to.be.equal("hello world!");
   });
 
   it('"hello \\\"world!"', function () {
@@ -18,7 +18,22 @@ describe('quotes', function () {
   });
   it('"hello \\\\\\\"world!"', function () {
     const tst = parse('"hello \\\\\\\"world!"');
-    expect(tst).to.deep.equal("hello \\\\\\\"world!");
+    expect(tst).to.be.equal("hello \\\\\\\"world!");
+  });
+});
+
+describe('names', function () {
+  it("sine", function () {
+    const tst = parse("sine");
+    expect(tst).to.deep.equal({type: "sine", body:[]});
+  });
+  it("~", function () {
+    const tst = parse("~");
+    expect(tst).to.deep.equal({type: "~", body:[]});
+  });
+  it("clef", function () {
+    const tst = parse("clef");
+    expect(tst).to.deep.equal({type: "clef", body:[]});
   });
 });
 

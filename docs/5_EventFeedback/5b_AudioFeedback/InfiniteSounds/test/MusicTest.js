@@ -1,6 +1,6 @@
 import {parse} from "../Parser2.js";
 
-describe('notes', function () {
+describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
     const result = {type: "note", body: ["c#", 4]};
@@ -35,6 +35,28 @@ describe('notes', function () {
     const tst = parse("g0");
     const result = {type: "note", body: ["g", 0]};
     expect(tst).to.deep.equal(result);
+  });
+});
+
+describe('relative notes', function () {
+  it("~0", function () {
+    const tst = parse("~0");
+    expect(tst).to.deep.equal({type: "note", body: ["~", "0"]});
+  });
+
+  it("~-11", function () {
+    const tst = parse("~-11");
+    expect(tst).to.deep.equal({type: "note", body: ["~", "-11"]});
+  });
+
+  it("~+11", function () {
+    const tst = parse("~+11b");
+    expect(tst).to.deep.equal({type: "note", body: ["~", "+11b"]});
+  });
+
+  it("~10#", function () {
+    const tst = parse("~10#");
+    expect(tst).to.deep.equal({type: "note", body: ["~", "10#"]});
   });
 });
 
