@@ -1,5 +1,5 @@
 const tokens = [
-  /([a-gA-G][#b]?)(-\d+|\+\d+|\d+)?(?![_a-zA-Z\d#-])/, //note: Fb, C#4, a4, a-4, a, ab, G, (not notes are aB)
+  /([a-gA-G][#b]?)([+-]?\d+)?(?![_a-zA-Z\d#-])/, //note: Fb, C#4, a4, a-4, a, ab, G, (not notes are aB)
   /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
@@ -153,8 +153,7 @@ function parsePrimitive(tokens) {
     let t = nextToken(tokens);
     return {
       type: "note",
-      body: t[2][0].toUpperCase() + t[2].slice(1),
-      // octave: t[3] === undefined ? undefined : parseInt(t[3])     //todo
+      body: [t[2].toLowerCase(), t[3] ? parseInt(t[3]) : t[3]]
     };
   }
   if (lookAhead[7]) {  //number
