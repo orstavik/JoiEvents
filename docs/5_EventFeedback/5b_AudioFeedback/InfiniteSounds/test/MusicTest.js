@@ -1,4 +1,5 @@
 import {parse} from "../Parser2.js";
+import {staticInterpret} from "../Interpreter3.js";
 
 describe('absolute notes', function () {
   it("C#4", function () {
@@ -57,6 +58,59 @@ describe('relative notes', function () {
   it("~10#", function () {
     const tst = parse("~10#");
     expect(tst).to.deep.equal({type: "note", body: ["~", "10#"]});
+  });
+});
+
+describe('static interpretation of clef', function () {
+  it("~(G4, sine(~2))", async function () {
+    const tst = await staticInterpret("~(G4, sine(~2))");
+    console.log(tst);
+    const res = {
+      "type": "~",
+      "body": [
+        {
+          "type": "note",
+          "body": [
+            "g",
+            4
+          ]
+        },
+        {
+          "type": "sine",
+          "body": [
+            {
+              "type": "note",
+              "body": [
+                "~",
+                "2"
+              ]
+            }
+          ]
+        }
+      ],
+      "clefKey": {
+        "type": "note",
+        "body": [
+          "g",
+          4
+        ]
+      },
+      "clef": {
+        "0": [],
+        "1": [],
+        "2": [],
+        "3": [],
+        "4": [],
+        "5": [],
+        "6": [],
+        "7": [],
+        "8": [],
+        "9": [],
+        "10": [],
+        "11": []
+      }
+    };
+    expect(tst).to.deep.equal(res);
   });
 });
 

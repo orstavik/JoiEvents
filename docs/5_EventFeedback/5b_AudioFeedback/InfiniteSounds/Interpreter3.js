@@ -3,7 +3,7 @@ import {Random} from "./LibRandom.js";
 import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
-import {Music} from "./LibMusic.js";
+import {MusicStatic} from "./LibMusic.js";
 import {Units} from "./LibUnits.js";
 
 async function interpretArray(node, table, ctx) {
@@ -31,17 +31,17 @@ export async function interpretNode(node, table, ctx) {
 //todo should all the function names in the language be small caps??
 //todo This is what I am doing here.
 //todo If this remains, then it would be much more efficient to lowerCase every function name in the parser.
-var getInLowerCaseEveryWhere = {
+var lowerCase = {
   get: function (obj, prop) {
     return obj[prop.toLowerCase()];
   }
 };
 
-//todo process unit functions such as "MHz", "dB", "ms". "b" (beats), and tones must be processed dynamically.
-const table1 = Object.assign({}, ListOps, Units, MathOps, Music);
-const staticTable = new Proxy(table1, getInLowerCaseEveryWhere);
-const table2 = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
-const dynamicTable = new Proxy(table2, getInLowerCaseEveryWhere);
+//todo process units such as "b" (beats) dynamically, and tones needs the context to create their gain node. what to do with dB?
+const fun1 = Object.assign({}, ListOps, Units, MathOps, MusicStatic);
+const staticTable = new Proxy(fun1, lowerCase);
+const fun2 = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
+const dynamicTable = new Proxy(fun2, lowerCase);
 
 export async function staticInterpret(str) {
   let node = parse(str);
