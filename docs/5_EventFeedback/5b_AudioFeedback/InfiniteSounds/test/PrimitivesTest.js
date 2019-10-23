@@ -28,12 +28,6 @@ describe('numbers', function () {
     expect(tst).to.be.equal(12);
   });
 
-  it("OK: 12hz", function () {
-    const tst = parse('12hz');
-    const result = {body: [12], type: "hz"};
-    expect(tst).to.deep.equal(result);
-  });
-
   it("OK: 1+2", function () {
     const tst = parse('1+2');
     const result = {

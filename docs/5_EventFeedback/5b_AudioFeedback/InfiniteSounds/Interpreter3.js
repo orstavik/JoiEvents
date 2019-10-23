@@ -4,6 +4,7 @@ import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
 import {Music} from "./LibMusic.js";
+import {Units} from "./LibUnits.js";
 
 async function interpretArray(node, table, ctx) {
   const clone = node.slice(0);
@@ -27,27 +28,20 @@ export async function interpretNode(node, table, ctx) {
   return fun ? (await fun(clone, ctx[0])) : clone;
 }
 
+//todo should all the function names in the language be small caps??
+//todo This is what I am doing here.
+//todo If this remains, then it would be much more efficient to lowerCase every function name in the parser.
+var getInLowerCaseEveryWhere = {
+  get: function (obj, prop) {
+    return obj[prop.toLowerCase()];
+  }
+};
+
 //todo process unit functions such as "MHz", "dB", "ms". "b" (beats), and tones must be processed dynamically.
-const staticTable = Object.assign({}, ListOps, MathOps, Music);
-//todo I do a static pass bottom up for the music operators.
-//todo here I only register the properties that the children will look for later.
-//todo during the dynamic pass/hookup, I need to get nodes that are not yet added.
-
-//a) static pass up: each clef node is given a ".clef = []" table.
-//b) dynamic pass up:
-// A) clef nodes look at their .clef table. If this clef table only contains one other element,
-// the clef node adds its mathematics to the child clef/note and return its child (ie. removes itself).
-// and returns
-// the clef table has twelve rows. one for each tone in the scale. It will only create as many gainNodes as it needs.
-
-// B1) notes AND clefs with more than two dependencies create their own GainNode.
-//   They set the value of this gain node to be the mathematical alteration of the notes.
-//   they add their GainNode as the ".toneNode".
-// B2) they then go to their .clef table and connect their ".toneNode" to all their tone children's ".toneNode"s.
-// B3) they then search up the tree to find their parent clef. If a clef is found, they register themselves.
-//    If not found, they create their own constant node and then fill it with their ConstantSourceNode with the given key as source, or C4 if
-//    no key is given.
-const dynamicTable = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
+const table1 = Object.assign({}, ListOps, Units, MathOps, Music);
+const staticTable = new Proxy(table1, getInLowerCaseEveryWhere);
+const table2 = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
+const dynamicTable = new Proxy(table2, getInLowerCaseEveryWhere);
 
 export async function staticInterpret(str) {
   let node = parse(str);
