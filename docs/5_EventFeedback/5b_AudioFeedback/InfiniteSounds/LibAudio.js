@@ -208,10 +208,10 @@ async function makeLfo(ctx, min, max, frequency, type) {
 
 export const InterpreterFunctions = {};
 
-InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx, "sine");
-InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx, "square");
-InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx, "triangle");
-InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx, "sawtooth");
+InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx[0], "sine");
+InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx[0], "square");
+InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx[0], "triangle");
+InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx[0], "sawtooth");
 
 InterpreterFunctions.gain = makeGain;
 
@@ -237,42 +237,42 @@ InterpreterFunctions.delay = (node, ctx) => makeDelay(node, ctx);
 
 InterpreterFunctions.lowpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx, "lowpass", node, {freq, q, detune});
+  return makeFilter(ctx[0], "lowpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.highpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx, "highpass", node, {freq, q, detune});
+  return makeFilter(ctx[0], "highpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.bandpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx, "bandpass", node, {freq, q, detune});
+  return makeFilter(ctx[0], "bandpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.lowshelf = function (node, ctx) {
   const {body: [freq, gain, detune]} = node;
-  return makeFilter(ctx, "lowshelf", node, {freq, gain, detune});
+  return makeFilter(ctx[0], "lowshelf", node, {freq, gain, detune});
 };
 
 InterpreterFunctions.highshelf = function (node, ctx) {
   const {body: [freq, gain, detune]} = node;
-  return makeFilter(ctx, "highshelf", node, {freq, gain, detune});
+  return makeFilter(ctx[0], "highshelf", node, {freq, gain, detune});
 };
 
 InterpreterFunctions.peaking = function (node, ctx) {
   const {body: [freq, q, gain, detune]} = node;
-  return makeFilter(ctx, "peaking", node, {freq, q, gain, detune});
+  return makeFilter(ctx[0], "peaking", node, {freq, q, gain, detune});
 };
 
 InterpreterFunctions.notch = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx, "notch", node, {freq, q, detune});
+  return makeFilter(ctx[0], "notch", node, {freq, q, detune});
 };
 
 InterpreterFunctions.allpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx, "allpass", node, {freq, q, detune});
+  return makeFilter(ctx[0], "allpass", node, {freq, q, detune});
 };
 
 
@@ -280,9 +280,9 @@ InterpreterFunctions.allpass = function (node, ctx) {
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = AudioFileRegister.makeFileBufferSource;
+InterpreterFunctions.url = (node, ctx) => AudioFileRegister.makeFileBufferSource(node, ctx[0]);
 
-InterpreterFunctions.noise = AudioFileRegister.noise;
+InterpreterFunctions.noise = (node, ctx) => AudioFileRegister.noise(node, ctx[0]);
 
 InterpreterFunctions.lfo = async function(node, ctx) {
   let [min, max, freq, type] = node.body;
@@ -290,11 +290,11 @@ InterpreterFunctions.lfo = async function(node, ctx) {
   if (max === undefined) max = 1;
   if (freq === undefined) freq = 1;
   type = type.value || "sine";
-  return {graph: node, output: await makeLfo(ctx, min, max, freq, type)};
+  return {graph: node, output: await makeLfo(ctx[0], min, max, freq, type)};
 };
 
 InterpreterFunctions.constant = async function(node, ctx) {
   let value = node.body[0] || 1;
-  let output = makeConstant(ctx, value);
+  let output = makeConstant(ctx[0], value);
   return {graph: node, output: output};
 };
