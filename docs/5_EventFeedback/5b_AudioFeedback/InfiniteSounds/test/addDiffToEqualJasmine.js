@@ -27,12 +27,10 @@
     const env = expect(a);
     const hacked = env.expector.processResult.bind(env.expector);
     env.expector.processResult = function (a, b) {
-      if (a.passed === false) {
-        a.message += diffToHTML(this.actual, this.expected[0]);
-        hacked(a, b);
-      } else
+      if (a.pass)
         return hacked(a, b);
-
+      a.message += diffToHTML(this.actual, this.expected[0]);
+      hacked(a, b);
     };
     env.toEqual(b);
   };
