@@ -138,7 +138,7 @@ function parseUnit(tokens) {
 function parseFunction(tokens) {
   if (!(tokens[0][5] || tokens[0][6] || tokens[0][7]))
     return;
-  const type = nextToken(tokens)[0];
+  const type = nextToken(tokens)[0].toLowerCase();   //turn UpperCase characters in function names toLowerCase().
   let body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];
   //todo return two arrays, one with the elements, and one with the yet-not-interpreted?
   return {type, body};
@@ -154,15 +154,18 @@ function parsePrimitive(tokens) {
     let t = nextToken(tokens);
     return {
       type: "note",
-      body: [t[2].toLowerCase(), t[3] ? parseInt(t[3]) : t[3]]
+      body: [
+        t[2].toLowerCase(),                          //turn UpperCase characters in absolute notes toLowerCase().
+        t[3] ? parseInt(t[3]) : t[3], undefined
+      ]
     };
   }
   if (lookAhead[4])    //relative tone
-    return {type: "note", body: ["~", nextToken(tokens)[0].substr(1)]};
+    return {type: "note", body: [undefined, undefined, nextToken(tokens)[0].substr(1)]};
   if (lookAhead[8]) {  //number
     let t = nextToken(tokens);
     const num = parseFloat(t[9]);
-    let type = t[10];
+    let type = t[10].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
     return type === "" ? num : {type, body: [num]};
   }
 }
