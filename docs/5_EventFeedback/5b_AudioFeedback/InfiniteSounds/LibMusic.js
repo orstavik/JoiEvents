@@ -24,16 +24,37 @@ MusicStatic["~"] = function (node, ctx) {
 MusicStatic["clef"] = MusicStatic["~"];
 
 export const MusicDynamic = Object.create(null);
-export const Music = Object.create(null);
 
-//todo I do a static pass bottom up for the music operators.
-//todo here I only register the properties that the children will look for later.
-//todo during the dynamic pass/hookup, I need to get nodes that are not yet added.
+function getClef(ctx){
+  for (var i = ctx.length - 1; i >= 0; i--) {
+    if (ctx[i].clef)
+      return ctx[i];
+  }
+}
 
-//b) dynamic pass up:
-// A) clef nodes look at their .clef table. If this clef table only contains one other element,
-// the clef node adds its mathematics to the child clef/note and return its child (ie. removes itself).
-// and returns
+function populateNote(note, clef){
+  const res = {type: "note2??"};
+
+  debugger;
+}
+
+//todo start mathematically
+//todo then, move introduce modes
+MusicDynamic["note"] = function(node, ctx){
+  // const parentClef = getClef(ctx);
+  // const clone = populateNote(parentClef.keyNote, node);
+  // if (isAbsolute(clone)){
+  //   clone.relativeValue = distanceBetweenNotes(parentClef.keyNote, clone.body[0]);
+  // }
+
+  //1. calculate the relative value based on the absolute value
+  // A) clef nodes look at their .clef table. If this clef table only contains one other element,
+  // the clef node adds its mathematics to the child clef/note and return its child (ie. removes itself).
+  // and returns
+
+  return node;
+  //check the body to see if it has a relative value
+  //if not,
 // the clef table has twelve rows. one for each tone in the scale. It will only create as many gainNodes as it needs.
 
 // B1) notes AND clefs with more than two dependencies create their own GainNode.
@@ -43,6 +64,15 @@ export const Music = Object.create(null);
 // B3) they then search up the tree to find their parent clef. If a clef is found, they register themselves.
 //    If not found, they create their own constant node and then fill it with their ConstantSourceNode with the given key as source, or C4 if
 //    no key is given.
+};
+
+export const Music = Object.create(null);
+
+//todo I do a static pass bottom up for the music operators.
+//todo here I only register the properties that the children will look for later.
+//todo during the dynamic pass/hookup, I need to get nodes that are not yet added.
+
+//b) dynamic pass up:
 
 //todo first, the correct operators, the "~" with a very low priority, ? scale is *
 //todo the the "^^" must have lower priority than "^" ^^6^2, is not the same as ^^36, no they should have the same because they are interpreted left to right..
