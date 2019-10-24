@@ -42,22 +42,22 @@ describe('absolute notes', function () {
 describe('relative notes', function () {
   it("~0", function () {
     const tst = parse("~0");
-    expect(deepDiff(tst, {type: "note", body: ["~", "0"]})).to.be.true;
+    expect(deepDiff(tst, {type: "note", body: [undefined, undefined, "0"]})).to.be.true;
   });
 
   it("~-11", function () {
     const tst = parse("~-11");
-    expect(deepDiff(tst, {type: "note", body: ["~", "-11"]})).to.be.true;
+    expect(deepDiff(tst, {type: "note", body: [undefined, undefined, "-11"]})).to.be.true;
   });
 
   it("~+11", function () {
     const tst = parse("~+11b");
-    expect(deepDiff(tst, {type: "note", body: ["~", "+11b"]})).to.be.true;
+    expect(deepDiff(tst, {type: "note", body: [undefined, undefined, "+11b"]})).to.be.true;
   });
 
   it("~10#", function () {
     const tst = parse("~10#");
-    expect(deepDiff(tst, {type: "note", body: ["~", "10#"]})).to.be.true;
+    expect(deepDiff(tst, {type: "note", body: [undefined, undefined, "10#"]})).to.be.true;
   });
 });
 

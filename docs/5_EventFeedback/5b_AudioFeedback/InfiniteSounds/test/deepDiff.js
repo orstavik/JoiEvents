@@ -1,12 +1,13 @@
 function deepDiff(objectA, objectB) {
 
+  let isNotSpecialObject = function (a) {
+    const c = a.constructor;
+    return c !== Number && c !== String && c !== Date && c !== RegExp && c !== Function && c !== Boolean;
+  };
   var isObject = function (a) {
     if (a === undefined)
       return false;
-    return a.constructor == Object || (a.constructor != Number &&
-      a.constructor != String && a.constructor != Date &&
-      a.constructor != RegExp && a.constructor != Function &&
-      a.constructor != Boolean);
+    return a.constructor == Object || isNotSpecialObject(a);
   };
 
   var isArray = function (a) {
@@ -24,6 +25,8 @@ function deepDiff(objectA, objectB) {
       return [];
     if (a === Function && b === Function)     //filter out functions
       return [];
+    if (!a || !b || !a.constructor || !b.constructor)
+      return [diffEntry(path, a, b)];
     if (isArray(a) && !isArray(b))
       return [diffEntry(path, a, b)];
     if (!isArray(a) && isArray(b))
