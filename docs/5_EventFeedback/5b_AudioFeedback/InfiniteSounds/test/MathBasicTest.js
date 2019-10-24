@@ -4,7 +4,7 @@ describe('basic math', function () {
 
   it("1-1 - syntax interpreted", async function () {
     const tst2 = await staticInterpret('1-1');
-    expect(tst2).toBe(0);
+    expectToEqualWithDiff(tst2, 0);
   });
 
   it("[1+1,2+2,3+3] - syntax interpreted", async function () {
