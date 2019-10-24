@@ -4,43 +4,43 @@ import {staticInterpret} from "../Interpreter3.js";
 describe('quotes', function () {
   it("'hello world!'", function () {
     const tst = parse("'hello world!'");
-    expect(tst).to.be.equal("hello world!");
+    expectToEqualWithDiff(tst, "hello world!");
   });
 
   it('"hello world!"', function () {
     const tst = parse('"hello world!"');
-    expect(tst).to.be.equal("hello world!");
+    expectToEqualWithDiff(tst, "hello world!");
   });
 
   it('"hello \\\"world!"', function () {
     const tst = parse('"hello \\\"world!"');
-    expect(tst).to.be.equal("hello \\\"world!");
+    expectToEqualWithDiff(tst, "hello \\\"world!");
   });
   it('"hello \\\\\\\"world!"', function () {
     const tst = parse('"hello \\\\\\\"world!"');
-    expect(tst).to.be.equal("hello \\\\\\\"world!");
+    expectToEqualWithDiff(tst, "hello \\\\\\\"world!");
   });
 });
 
 describe('names', function () {
   it("sine", function () {
     const tst = parse("sine");
-    expect(tst).to.deep.equal({type: "sine", body:[]});
+    expectToEqualWithDiff(tst, {type: "sine", body: []});
   });
   it("~", function () {
     const tst = parse("~");
-    expect(tst).to.deep.equal({type: "~", body:[]});
+    expectToEqualWithDiff(tst, {type: "~", body: []});
   });
   it("clef", function () {
     const tst = parse("clef");
-    expect(tst).to.deep.equal({type: "clef", body:[]});
+    expectToEqualWithDiff(tst, {type: "clef", body: []});
   });
 });
 
 describe('numbers', function () {
   it("OK: 12", function () {
     const tst = parse('12');
-    expect(tst).to.be.equal(12);
+    expectToEqualWithDiff(tst, 12);
   });
 
   it("OK: 1+2", function () {
@@ -49,64 +49,64 @@ describe('numbers', function () {
       type: "+",
       body: [1, 2]
     };
-    expect(tst).to.deep.equal(result);
+    expectToEqualWithDiff(tst, result);
   });
 });
 
 describe('primitive arrays', function () {
   it("[1,2,, 'hello']", function () {
     const tst = parse('[1,2,, \'hello\']');
-    expect(tst).to.deep.equal([1,2,undefined, "hello"]);
-    expect(tst.isDirty).to.be.equal(undefined);
+    expectToEqualWithDiff(tst, [1, 2, undefined, "hello"]);
+    expectToEqualWithDiff(tst.isDirty, undefined);
   });
   it("[1,[2,], 'hello']", function () {
     const tst = parse('[1,[2,], \'hello\']');
-    expect(tst).to.deep.equal([1,[2,undefined], "hello"]);
-    expect(tst.isDirty).to.be.equal(undefined);
-    expect(tst[1].isDirty).to.be.equal(undefined);
+    expectToEqualWithDiff(tst, [1, [2, undefined], "hello"]);
+    expectToEqualWithDiff(tst.isDirty, undefined);
+    expectToEqualWithDiff(tst[1].isDirty, undefined);
   });
   it("[1,[2+3,], 'hello']", async function () {
     const tst = await staticInterpret('[1,[2+3,], \'hello\']');
-    expect(tst).to.deep.equal([1,[5,undefined], "hello"]);
-    expect(tst.isDirty).to.be.equal(undefined);
-    expect(tst[1].isDirty).to.be.equal(undefined);
+    expectToEqualWithDiff(tst, [1, [5, undefined], "hello"]);
+    expectToEqualWithDiff(tst.isDirty, undefined);
+    expectToEqualWithDiff(tst[1].isDirty, undefined);
   });
 });
 
 describe("Matches Java and JavaScript numbers (except Infinity and NaN)", function () {
   it("integers and float", function () {
-    expect(parse("0")).to.be.equal(0);
-    expect(parse("1")).to.be.equal(1);
-    expect(parse("0.2")).to.be.equal(0.2);
-    expect(parse("-55")).to.be.equal(-55);
-    expect(parse("-0.6")).to.be.equal(-0.6);
+    expectToEqualWithDiff(parse("0"), 0);
+    expectToEqualWithDiff(parse("1"), 1);
+    expectToEqualWithDiff(parse("0.2"), 0.2);
+    expectToEqualWithDiff(parse("-55"), -55);
+    expectToEqualWithDiff(parse("-0.6"), -0.6);
   });
   it("numbers with e", function () {
-    expect(parse("88E8")).to.be.equal(88E8);
-    expect(parse("1e+24")).to.be.equal(1e+24);  // JavaScript-style
-    expect(parse("0.4E4")).to.be.equal(0.4E4);  // Java-style
-    expect(parse("-0.77E77")).to.be.equal(-0.77E77);
+    expectToEqualWithDiff(parse("88E8"), 88E8);
+    expectToEqualWithDiff(parse("1e+24"), 1e+24);  // JavaScript-style
+    expectToEqualWithDiff(parse("0.4E4"), 0.4E4);  // Java-style
+    expectToEqualWithDiff(parse("-0.77E77"), -0.77E77);
   });
   it("Matches fractions with a leading decimal point", function () {
-    expect(parse(".3")).to.be.equal(.3);
-    expect(parse("-.3")).to.be.equal(-.3);
-    expect(parse(".3e-4")).to.be.equal(.3e-4);
+    expectToEqualWithDiff(parse(".3"), .3);
+    expectToEqualWithDiff(parse("-.3"), -.3);
+    expectToEqualWithDiff(parse(".3e-4"), .3e-4);
   });
   it("postfix minus/pluss", function () {
-    expect(parse("1-")).to.deep.equal({type: "-", body: [1, undefined]});
-    expect(parse("1+")).to.deep.equal({type: "+", body: [1, undefined]});
+    expectToEqualWithDiff(parse("1-"), {type: "-", body: [1, undefined]});
+    expectToEqualWithDiff(parse("1+"), {type: "+", body: [1, undefined]});
   });
   // it("possible errors", function () {
-  //   expect(parse(".")).to.be.equal(false);
-  //   expect(parse("9.")).to.be.equal(false);
-  //   expect(parse("1e+24.5")).to.be.equal(false);
+  //   expectToEqualWithDiff(parse(".")).(false);
+  //   expectToEqualWithDiff(parse("9.")).(false);
+  //   expectToEqualWithDiff(parse("1e+24.5")).(false);
   // });
 
   it("Error: 12d12", function (done) {
     try {
       const tst = parse('12d12');
     } catch (e) {
-      expect(e.message).to.deep.equal("the main css audio pipe is broken");
+      expectToEqualWithDiff(e.message, "the main css audio pipe is broken");
       done();
     }
   });
@@ -119,7 +119,7 @@ describe("expression test: 0+1", function () {
       type: "+",
       body: [0, 1]
     };
-    expect(tst).to.deep.equal(result);
+    expectToEqualWithDiff(tst, result);
   });
 });
 
@@ -137,7 +137,8 @@ describe("Comma and operators", function () {
       type: "+",
       body: [3, 3]
     }];
-    expect(tst2).to.deep.equal(result2);
+    result2['isDirty'] = 1;
+    expectToEqualWithDiff(tst2, result2);
   });
 });
 
