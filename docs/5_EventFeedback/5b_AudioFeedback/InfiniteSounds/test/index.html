@@ -3,38 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title>Test Of InfiniteSounds</title>
-  <script src="deepDiff.js"></script>
-  <script src="https://unpkg.com/chai@4.1.2/chai.js"></script>
-  <script src="https://unpkg.com/mocha@4.0.1/mocha.js"></script>
-  <link href="https://unpkg.com/mocha@4.0.1/mocha.css" rel="stylesheet" />
 </head>
+
 <body>
+<script src="https://unpkg.com/diff@3.5.0/dist/diff.min.js"></script>
+<script src="deepDiff.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine-html.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/boot.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine.css" rel="stylesheet"/>
 
 
-<div id="mocha">Mocha</div>
-
-<script>
-  mocha.setup('bdd');
-  var assert = chai.assert;
-  var expect = chai.expect;
-  var should = chai.should();
-</script>
+<script type="module" src="MusicTest.js"></script>
+<!--<script type="module" src="UnitsTest.js"></script>-->
+<!--<script type="module" src="PrimitivesTest.js"></script>-->
+<!--<script type="module" src="ListBasicTest.js"></script>-->
+<!--<script type="module" src="ListInterpretTest.js"></script>-->
+<!--<script type="module" src="MathBasicTest.js"></script>-->
+<!--<script type="module" src="RandomTest.js"></script>-->
+<!--<script type="module" src="AudioTest.js"></script>-->
 
 <!--<script type="module" src="syntaxTest.js"></script>-->
 <!--<script type="module" src="syntaxTest2.js"></script>-->
-<script type="module" src="MusicTest.js"></script>
-<script type="module" src="UnitsTest.js"></script>
-<script type="module" src="PrimitivesTest.js"></script>
-<script type="module" src="ListBasicTest.js"></script>
-<script type="module" src="ListInterpretTest.js"></script>
-<script type="module" src="MathBasicTest.js"></script>
-<script type="module" src="RandomTest.js"></script>
-<script type="module" src="AudioTest.js"></script>
-
-<script type="module">
-  //  mocha.checkLeaks();
-  mocha.run();
-</script>
-
 </body>
 </html>
