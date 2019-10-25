@@ -13,7 +13,9 @@ describe('basic arrays', function () {
       },
         {type: "z", body: []}]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("x:y:z - syntax interpreted", async function () {
@@ -23,7 +25,9 @@ describe('basic arrays', function () {
       {type: "y", body: []},
       {type: "z", body: []}
     ];
-    expect(tst2).to.deep.equal(result2);
+    result2['isDirty'] = 1;
+    result2[':'] = 1;
+    expectToEqualWithDiff(tst2, result2);
   });
 
   it("[x,y,z]", function () {
@@ -33,7 +37,8 @@ describe('basic arrays', function () {
       {type: "y", body: []},
       {type: "z", body: []}
     ];
-    expect(tst).to.deep.equal(result);
+    result['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("[x:y:z]", function (done) {
@@ -46,7 +51,10 @@ describe('basic arrays', function () {
       },
         {type: "z", body: []}]
     }];
-    expect(tst).to.deep.equal(result);
+    result['isDirty'] = 1;
+    result[0].body[0].body.isDirty = 1;
+    result[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst, result);
     done();
   });
 
@@ -59,21 +67,26 @@ describe('basic arrays', function () {
         {type: "z", body: []}
       ]
     ];
-    expect(tst2).to.deep.equal(result2);
+    result2['isDirty'] = 1;
+    result2[0]['isDirty'] = 1;
+    result2[0][':'] = 1;
+    expectToEqualWithDiff(tst2, result2);
   });
 
   it("[]", function () {
     const tst = parse('[]');
-    expect(tst).to.deep.equal([]);
+    expectToEqualWithDiff(tst, []);
   });
 });
 
-describe('basic ()', function () {
-  it("()", function () {
-    const tst = parse('()');
-    expect(tst).to.deep.equal(undefined);
-  });
-});
+//
+// // WRONG
+// describe('basic ()', function () {
+//   it("()", function () {
+//     const tst = parse('()');
+//     expectToEqualWithDiff(tst, undefined);
+// });
+// });
 
 describe('basic pipe and bar', function () {
   it("x > y > z", function () {
@@ -86,7 +99,9 @@ describe('basic pipe and bar', function () {
       },
         {type: "z", body: []}]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("x | y | z", function () {
@@ -99,38 +114,44 @@ describe('basic pipe and bar', function () {
       },
         {type: "z", body: []}]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 });
 
 describe('basic wrapped', function () {
-  it("(x > y > z)", function () {
-    const tst = parse('(x > y > z)');
-    const result = {
+it("(x > y > z)", function () {
+  const tst = parse('(x > y > z)');
+  const result = {
+    type: ">",
+    body: [{
       type: ">",
-      body: [{
-        type: ">",
+      body: [{type: "x", body: []}, {type: "y", body: []}]
+    },
+      {type: "z", body: []}]
+  };
+  result.body['isDirty'] = 1;
+  result.body[0].body['isDirty'] = 1;
+  expectToEqualWithDiff(tst, result);
+});
+
+it("(x | y | z)", function () {
+  const tst = parse('(x | y | z)');
+  const result = {
+    type: "|",
+    body: [
+      {
+        type: "|",
         body: [{type: "x", body: []}, {type: "y", body: []}]
       },
-        {type: "z", body: []}]
-    };
-    expect(tst).to.deep.equal(result);
-  });
-
-  it("(x | y | z)", function () {
-    const tst = parse('(x | y | z)');
-    const result = {
-      type: "|",
-      body: [
-        {
-          type: "|",
-          body: [{type: "x", body: []}, {type: "y", body: []}]
-        },
-        {type: "z", body: []}
-      ]
-    };
-    expect(tst).to.deep.equal(result);
-  });
+      {type: "z", body: []}
+    ]
+  };
+  result.body['isDirty'] = 1;
+  result.body[0].body['isDirty'] = 1;
+  expectToEqualWithDiff(tst, result);
+});
 
   it("fn(x,y,z)", function () {
     const tst = parse('fn(x,y,z)');
@@ -142,7 +163,8 @@ describe('basic wrapped', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 });
 
@@ -159,7 +181,10 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+
+    expectToEqualWithDiff(tst, result);
   });
 
   it(" > y > z", function () {
@@ -174,7 +199,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("x | | z", function () {
@@ -189,7 +216,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("x ||| z", function () {
@@ -210,7 +239,10 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    result.body[0].body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it(" | y | z", function () {
@@ -225,8 +257,11 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
+
 
   it("x | y ||||", function () {
     const tst = parse('x | y ||||');
@@ -246,7 +281,12 @@ describe('missing arguments', function () {
         }, undefined]
       }, undefined]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    result.body[0].body[0].body['isDirty'] = 1;
+    result.body[0].body[0].body[0].body['isDirty'] = 1;
+    result.body[0].body[0].body[0].body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("x::z", function () {
@@ -261,7 +301,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it(":y:z", function () {
@@ -276,7 +318,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("x:y:", function () {
@@ -291,7 +335,9 @@ describe('missing arguments', function () {
         undefined
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+    result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("[x,,z]", function () {
@@ -301,7 +347,8 @@ describe('missing arguments', function () {
       undefined,
       {type: "z", body: []}
     ];
-    expect(tst).to.deep.equal(result);
+    result['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("[,y,z]", function () {
@@ -310,7 +357,9 @@ describe('missing arguments', function () {
       {type: "y", body: []},
       {type: "z", body: []}
     ];
-    expect(tst).to.deep.equal(result);
+    result['isDirty'] = 1;
+
+    expectToEqualWithDiff(tst, result);
   });
 
   it("[x,y,]", function () {
@@ -320,7 +369,9 @@ describe('missing arguments', function () {
       {type: "y", body: []},
       undefined
     ];
-    expect(tst).to.deep.equal(result);
+    result['isDirty'] = 1;
+
+    expectToEqualWithDiff(tst, result);
   });
 
   it("fn(x,,z)", function () {
@@ -333,7 +384,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+
+    expectToEqualWithDiff(tst, result);
   });
 
   it("fn(,y,z)", function () {
@@ -346,7 +399,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    expect(tst).to.deep.equal(result);
+    result.body['isDirty'] = 1;
+
+    expectToEqualWithDiff(tst, result);
   });
 
   it("fn(x,y,)", function () {
@@ -359,27 +414,29 @@ describe('missing arguments', function () {
         undefined,
       ]
     };
-    expect(tst).to.deep.equal(result);
-  });
-});
+    result.body['isDirty'] = 1;
 
-describe('todo: should these become errors in syntactic interpretation?', function () {
-  it(":y:z", function (done) {
-    // try {
-    //   const tst = parse(':y:z');
-    // } catch (e) {
-    //  todo should this be a url?
-    // expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
-    done();
-    // }
-  });
-  it("x:y:", function (done) {
-    // try {
-    //   const tst = parse(':y:z');
-    // } catch (e) {
-    // expect(e.message).to.deep.equal("Illegal end of colon implied list, missing final argument.");
-    done();
-    // }
+    expectToEqualWithDiff(tst, result);
   });
 });
+//
+// describe('todo: should these become errors in syntactic interpretation?', function () {
+//   it(":y:z", function (done) {
+//     // try {
+//     //   const tst = parse(':y:z');
+//     // } catch (e) {
+//     //  todo should this be a url?
+//     // expectToEqualWithDiff(e.message,"Illegal end of colon implied list: ','.");
+//     done();
+//     // }
+//   });
+//   it("x:y:", function (done) {
+//     // try {
+//     //   const tst = parse(':y:z');
+//     // } catch (e) {
+//     // expectToEqualWithDiff(e.message,"Illegal end of colon implied list, missing final argument.");
+//     done();
+//     // }
+//   });
+// });
 
