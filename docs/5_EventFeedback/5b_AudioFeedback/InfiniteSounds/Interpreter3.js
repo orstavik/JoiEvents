@@ -7,9 +7,9 @@ import {MusicStatic, MusicDynamic} from "./LibMusic.js";
 import {Units} from "./LibUnits.js";
 
 async function interpretArray(node, table, ctx) {
-  const clone = node.slice(0);
-  for (let i = 0; i < clone.length; i++) {
-    clone[i] = await interpretNode(clone[i], table, ctx);
+  const clone = new Array(node.length);
+  for (let i = 0; i < node.length; i++) {
+    clone[i] = await interpretNode(node[i], table, ctx);
     if (!isPrimitive(clone[i]))
       clone.isDirty = 1;
   }
