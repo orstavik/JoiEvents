@@ -110,7 +110,6 @@ describe('| and > combined', function () {
       body: [2, 3]
     }];
     result.isDirty = 1;
-    result["|"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -121,7 +120,6 @@ describe('| and > combined', function () {
       body: [2, 3]
     }];
     result.isDirty = 1;
-    result["|"] = 1;
     expectToEqualWithDiff(tst2, result);
   });
 
@@ -132,7 +130,6 @@ describe('| and > combined', function () {
       body: [1, 2]
     }, 3];
     result.isDirty = 1;
-    result["|"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -143,7 +140,6 @@ describe('| and > combined', function () {
       body: [1, 2]
     }, 3];
     res.isDirty = 1;
-    res["|"] = 1;
     expectToEqualWithDiff(tst2, res);
   });
 
@@ -158,7 +154,6 @@ describe('ALL combined', function () {
       body: [3, 4]
     }];
     result.isDirty = 1;
-    result["|"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -176,9 +171,7 @@ describe('ALL combined', function () {
           ]
         ]
       }];
-    result["|"] = 1;
     result.isDirty = 1;
-    // result[1].body[1][1][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -196,7 +189,6 @@ describe('ALL combined', function () {
     }, 7];
     result.isDirty = 1;
     result[1].body.isDirty = 1;
-    result["|"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 });

@@ -24,17 +24,7 @@ ListOps[":"] = function ({body: [left, right]}, ctx) {
 };
 
 ListOps["|"] = function ({body: [left, right]}, ctx) {
-  if (left["|"]) {
-    left.push(right);
-    if (!isPrimitive(right))
-      left.isDirty = 1;
-    return left;
-  }
-  const res = [left, right];
-  res["|"] = 1;
-  if (!isPrimitive(left) || !isPrimitive(right))
-    res.isDirty = 1;
-  return res;
+  return reduceList(left, right, !ctx.length || ctx[ctx.length - 1].type !== "|");
 };
 
 function connectMtoN(a, b) {
