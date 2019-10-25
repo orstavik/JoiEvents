@@ -5,33 +5,27 @@ describe('[ outside, : inside', function () {
   it("[1:2,3]", async function () {
     const tst = await staticInterpret('[1:2,3]');
     const result = [[1, 2], 3];
-    result[0][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("[1:2:3,4]", async function () {
     const tst = await staticInterpret('[1:2:3,4]');
     const result = [[1, 2, 3], 4];
-    result[0][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("[1,2:3,4]", async function () {
     const tst = await staticInterpret('[1,2:3,4]');
     const result = [1, [2, 3], 4];
-    result[1][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("[1:2,3:4]", async function () {
     const tst = await staticInterpret('[1:2,3:4]');
     const result = [[1, 2], [3, 4]];
-    result[0][":"] = 1;
-    result[1][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("[1:2:,4]", async function () {
     // try {
     const tst = await staticInterpret('[1:2:,4]');
     const result = [[1, 2, undefined], 4];
-    result[0][":"] = 1;
     expectToEqualWithDiff(tst, result);
     // } catch (e) {
     //   expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
@@ -44,31 +38,26 @@ describe(': outside, [ inside', function () {
   it("1:[2,3]", async function () {
     const tst = await staticInterpret('1:[2,3]');
     const result = [1, [2, 3]];
-    result[":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("[1,2]:3", async function () {
     const tst = await staticInterpret('[1,2]:3');
     const result = [[1, 2], 3];
-    result[":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("1:2:[3,4]", async function () {
     const tst = await staticInterpret('1:2:[3,4]');
     const result = [1, 2, [3, 4]];
-    result[":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("[1,2]:3:4", async function () {
     const tst = await staticInterpret('[1,2]:3:4');
     const result = [[1, 2], 3, 4];
-    result[":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
   it("1:[2,3]:4", async function () {
     const tst = await staticInterpret('1:[2,3]:4');
     const result = [1, [2, 3], 4];
-    result[":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 });
@@ -168,7 +157,6 @@ describe('ALL combined', function () {
       type: ">",
       body: [3, 4]
     }];
-    result[0][0][":"] = 1;
     result.isDirty = 1;
     result["|"] = 1;
     expectToEqualWithDiff(tst, result);
@@ -190,7 +178,7 @@ describe('ALL combined', function () {
       }];
     result["|"] = 1;
     result.isDirty = 1;
-    result[1].body[1][1][":"] = 1;
+    // result[1].body[1][1][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -209,7 +197,6 @@ describe('ALL combined', function () {
     result.isDirty = 1;
     result[1].body.isDirty = 1;
     result["|"] = 1;
-    result[1].body[0].body[1][1][":"] = 1;
     expectToEqualWithDiff(tst, result);
   });
 });

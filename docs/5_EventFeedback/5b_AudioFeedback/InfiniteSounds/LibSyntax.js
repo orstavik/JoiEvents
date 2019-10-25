@@ -2,21 +2,28 @@ import {isPrimitive} from "./Parser2.js";
 
 export const ListOps = Object.create(null);
 
-ListOps[":"] = function ({body: [left, right]}) {
-  if (left[":"]) {
+function reduceList(left, right, isLast) {
+  if (left.todo) {
     left.push(right);
     if (!isPrimitive(right))
       left.isDirty = 1;
+    if (isLast)
+      delete left.todo;
     return left;
   }
   const res = [left, right];
-  res[":"] = 1;
+  if (!isLast)
+    res.todo = 1;
   if (!isPrimitive(left) || !isPrimitive(right))
     res.isDirty = 1;
   return res;
+}
+
+ListOps[":"] = function ({body: [left, right]}, ctx) {
+  return reduceList(left, right, !ctx.length || ctx[ctx.length - 1].type !== ":");
 };
 
-ListOps["|"] = function ({body: [left, right]}) {
+ListOps["|"] = function ({body: [left, right]}, ctx) {
   if (left["|"]) {
     left.push(right);
     if (!isPrimitive(right))

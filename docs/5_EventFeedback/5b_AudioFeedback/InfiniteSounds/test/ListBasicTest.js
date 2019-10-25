@@ -26,7 +26,6 @@ describe('basic arrays', function () {
       {type: "z", body: []}
     ];
     result2['isDirty'] = 1;
-    result2[':'] = 1;
     expectToEqualWithDiff(tst2, result2);
   });
 
@@ -69,7 +68,6 @@ describe('basic arrays', function () {
     ];
     result2['isDirty'] = 1;
     result2[0]['isDirty'] = 1;
-    result2[0][':'] = 1;
     expectToEqualWithDiff(tst2, result2);
   });
 
