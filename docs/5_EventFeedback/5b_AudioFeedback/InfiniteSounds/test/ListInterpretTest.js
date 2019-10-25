@@ -5,28 +5,34 @@ describe('[ outside, : inside', function () {
   it("[1:2,3]", async function () {
     const tst = await staticInterpret('[1:2,3]');
     const result = [[1, 2], 3];
-    expect(tst).to.deep.equal(result);
+    result[0][":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("[1:2:3,4]", async function () {
     const tst = await staticInterpret('[1:2:3,4]');
     const result = [[1, 2, 3], 4];
-    expect(tst).to.deep.equal(result);
+    result[0][":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("[1,2:3,4]", async function () {
     const tst = await staticInterpret('[1,2:3,4]');
     const result = [1, [2, 3], 4];
-    expect(tst).to.deep.equal(result);
+    result[1][":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("[1:2,3:4]", async function () {
     const tst = await staticInterpret('[1:2,3:4]');
     const result = [[1, 2], [3, 4]];
-    expect(tst).to.deep.equal(result);
+    result[0][":"] = 1;
+    result[1][":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("[1:2:,4]", async function () {
     // try {
     const tst = await staticInterpret('[1:2:,4]');
     const result = [[1, 2, undefined], 4];
-    expect(tst).to.deep.equal(result);
+    result[0][":"] = 1;
+    expectToEqualWithDiff(tst, result);
     // } catch (e) {
     //   expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
     // }
@@ -38,29 +44,32 @@ describe(': outside, [ inside', function () {
   it("1:[2,3]", async function () {
     const tst = await staticInterpret('1:[2,3]');
     const result = [1, [2, 3]];
-    expect(tst).to.deep.equal(result);
+    result[":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("[1,2]:3", async function () {
     const tst = await staticInterpret('[1,2]:3');
     const result = [[1, 2], 3];
-    expect(tst).to.deep.equal(result);
-    expect(tst.isDirty).to.be.equal(undefined);
-    expect(tst[0].isDirty).to.be.equal(undefined);
+    result[":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("1:2:[3,4]", async function () {
     const tst = await staticInterpret('1:2:[3,4]');
     const result = [1, 2, [3, 4]];
-    expect(tst).to.deep.equal(result);
+    result[":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("[1,2]:3:4", async function () {
     const tst = await staticInterpret('[1,2]:3:4');
     const result = [[1, 2], 3, 4];
-    expect(tst).to.deep.equal(result);
+    result[":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("1:[2,3]:4", async function () {
     const tst = await staticInterpret('1:[2,3]:4');
     const result = [1, [2, 3], 4];
-    expect(tst).to.deep.equal(result);
+    result[":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 });
 
@@ -80,7 +89,11 @@ describe('> combined with array [...] and group (...)', function () {
         ]
       ]
     };
-    expect(tst).to.deep.equal(result);
+    // debugger;
+    result.body.isDirty = 1;
+    result.body[0].body.isDirty = 1;
+    result.body[1].isDirty = 1;
+    expectToEqualWithDiff(tst, result);
   });
   it("x > (y > z)", async function () {
     const tst = await staticInterpret('x > (y > z)');
@@ -94,7 +107,9 @@ describe('> combined with array [...] and group (...)', function () {
         }
       ]
     };
-    expect(tst).to.deep.equal(res);
+    res.body.isDirty = 1;
+    res.body[1].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
   });
 });
 describe('| and > combined', function () {
@@ -105,16 +120,20 @@ describe('| and > combined', function () {
       type: ">",
       body: [2, 3]
     }];
-    expect(tst).to.deep.equal(result);
+    result.isDirty = 1;
+    result["|"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("1 | (2 > 3)", async function () {
     const tst2 = await staticInterpret('1 | (2 > 3)');
-    const res = [1, {
+    const result = [1, {
       type: ">",
       body: [2, 3]
     }];
-    expect(tst2).to.deep.equal(res);
+    result.isDirty = 1;
+    result["|"] = 1;
+    expectToEqualWithDiff(tst2, result);
   });
 
   it("1 > 2 | 3", async function () {
@@ -123,7 +142,9 @@ describe('| and > combined', function () {
       type: ">",
       body: [1, 2]
     }, 3];
-    expect(tst).to.deep.equal(result);
+    result.isDirty = 1;
+    result["|"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("(1 > 2) | 3", async function () {
@@ -132,7 +153,9 @@ describe('| and > combined', function () {
       type: ">",
       body: [1, 2]
     }, 3];
-    expect(tst2).to.deep.equal(res);
+    res.isDirty = 1;
+    res["|"] = 1;
+    expectToEqualWithDiff(tst2, res);
   });
 
 });
@@ -145,16 +168,30 @@ describe('ALL combined', function () {
       type: ">",
       body: [3, 4]
     }];
-    expect(tst).to.deep.equal(result);
+    result[0][0][":"] = 1;
+    result.isDirty = 1;
+    result["|"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("1 | 2 > [3, 4:5]", async function () {
     const tst = await staticInterpret('1 | 2 > [3, 4:5]');
-    const result = [1, {
-      type: ">",
-      body: [2, [3, [4, 5]]]
-    }];
-    expect(tst).to.deep.equal(result);
+    const result = [
+      1,
+      {
+        type: ">",
+        body: [
+          2,
+          [
+            3,
+            [4, 5]
+          ]
+        ]
+      }];
+    result["|"] = 1;
+    result.isDirty = 1;
+    result[1].body[1][1][":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 
   it("1 | 2 > [3, 4:5, ] > 6 | 7", async function () {
@@ -169,7 +206,11 @@ describe('ALL combined', function () {
         6
       ]
     }, 7];
-    expect(tst).to.deep.equal(result);
+    result.isDirty = 1;
+    result[1].body.isDirty = 1;
+    result["|"] = 1;
+    result[1].body[0].body[1][1][":"] = 1;
+    expectToEqualWithDiff(tst, result);
   });
 });
 
@@ -179,20 +220,20 @@ describe('errors', function () {
     try {
       tst = await staticInterpret('[[1,2,3,]');
     } catch (e) {
-      expect(e.message).to.deep.equal("Forgot to close [-block.");
-      // done();
+      expectToEqualWithDiff(e.message, "Forgot to close [-block.");
+      return;
     }
-    assert(tst === undefined);
+    expect(true).toBe(false);
   });
   it("missing ) end", async function () {
     let tst;
     try {
       tst = await staticInterpret('((1)');
     } catch (e) {
-      expect(e.message).to.deep.equal("Forgot to close (-block.");
-      // done();
+      expectToEqualWithDiff(e.message, "Forgot to close (-block.");
+      return;
     }
-    assert(tst === undefined);
+    expect(true).toBe(false);
   });
 });
 
