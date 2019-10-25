@@ -154,14 +154,18 @@ function parsePrimitive(tokens) {
     let t = nextToken(tokens);
     return {
       type: "note",
-      body: [
-        t[2].toLowerCase(),                          //turn UpperCase characters in absolute notes toLowerCase().
-        t[3] ? parseInt(t[3]) : t[3], undefined
-      ]
+      absoluteTone: t[2].toLowerCase(),   //turn UpperCase characters in absolute notes toLowerCase().
+      octave: t[3] ? parseInt(t[3]) : t[3],
+      body: []
     };
   }
-  if (lookAhead[4])    //relative tone
-    return {type: "note", body: [undefined, undefined, nextToken(tokens)[0].substr(1)]};
+  if (lookAhead[4]){    //relative tone
+    const txt = nextToken(tokens)[0].substr(1);
+    const note = {type: "note", relativeTone: parseInt(txt), body: []};
+    const augmented = txt.endsWith("#") ? 1 : txt.endsWith("b") ? -1 : undefined;
+    augmented && (note.augmented = augmented);
+    return note;
+  }
   if (lookAhead[8]) {  //number
     let t = nextToken(tokens);
     const num = parseFloat(t[9]);
