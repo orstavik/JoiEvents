@@ -91,6 +91,28 @@ describe('relative alpha notes', function () {
   // });
 });
 
+describe('relative 7 notes', function () {
+  it("~0", function () {
+    const tst = parse("~0");
+    expectToEqualWithDiff(tst, {type: "~", body: [], num: 0, augment: 0});
+  });
+
+  it("~-11", function () {
+    const tst = parse("~-11");
+    expectToEqualWithDiff(tst, {type: "~", body: [], num: -11, augment: 0});
+  });
+
+  it("~+11b", function () {
+    const tst = parse("~+11b");
+    expectToEqualWithDiff(tst, {type: "~", body: [], num: 11, augment: -1});
+  });
+
+  it("~10#", function () {
+    const tst = parse("~10#");
+    expectToEqualWithDiff(tst, {type: "~", body: [], num: 10, augment: 1});
+  });
+});
+
 describe('static interpretation of clef', function () {
   it("~(G4, sine(~2))", async function () {
     const tst = await staticInterpret("~(G4, sine(~2))");

@@ -1,7 +1,9 @@
 const tokens = [
   /([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,  //absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, a+3)
-  /~~([+-]?\d+)([#b]?)|~([a-gA-G])([#b]?)([+-]?\d+)?/,//relative 12 notes: ~~1, ~~0b, ~~6#, ~~-2, ~~10b, ~~-11b, ~C, ~C1, ~C0, ~C-2, ~C+2
-// /~[+-]?\d+[#b]?/,                         //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
+  /[~]{1,2}([+-]?\d+)([#b]?)|~([a-gA-G])([#b]?)([+-]?\d+)?/,
+                                             //relative aplha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
+                                             //relative 12 notes: ~~1, ~~0b, ~~6#, ~~-2, ~~10b, ~~-11b, ~C, ~C1, ~C0, ~C-2, ~C+2
+                                             //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /~|[_a-zA-Z][_a-zA-Z\d#-]*/,               //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
@@ -160,18 +162,19 @@ function parsePrimitive(tokens) {
     const octave = t[3] ? parseInt(t[3]) : 4;                     //default octave for absolute tones is 4
     return {type: "absNote", tone, augment, octave, body: []};
   }
-  if (lookAhead[5]) {    //relative 12 tone
-    let t = nextToken(tokens);
-    const num = t[5] ? parseInt(t[5]) : undefined;
-    const augment = t[6] === "#" ? 1 : t[6] === "b" ? -1 : 0;
-    return {type: "~~", num, augment, body: []};
-  }
   if (lookAhead[7]) {    //relative alpha tone
     let t = nextToken(tokens);
     const tone = t[7].toLowerCase();
     const augment = t[8] === "#" ? 1 : t[8] === "b" ? -1 : 0;
     const octave = t[9] ? parseInt(t[9]) : 0;
     return {type: "relNote", tone, augment, octave, body: []};
+  }
+  if (lookAhead[5]) {    //relative 7 and 12 tones
+    let t = nextToken(tokens);
+    const num = t[5] ? parseInt(t[5]) : undefined;
+    const augment = t[6] === "#" ? 1 : t[6] === "b" ? -1 : 0;
+    const type = lookAhead[4][1] === "~" ? "~~" : "~";
+    return {type, num, augment, body: []};
   }
   if (lookAhead[13]) {  //number
     let t = nextToken(tokens);
