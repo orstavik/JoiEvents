@@ -1,6 +1,7 @@
 export const MusicStatic = Object.create(null);
 
 //a) static pass up: each clef node is given a ".clef = {0-11: []}" table.
+/*
 MusicStatic["~"] = function (node, ctx) {
   const clone = Object.assign({}, node);
   const {body: [key]} = node;
@@ -22,27 +23,56 @@ MusicStatic["~"] = function (node, ctx) {
   return clone;
 };
 MusicStatic["clef"] = MusicStatic["~"];
+*/
 
 export const MusicDynamic = Object.create(null);
 
-function getClef(ctx){
-  for (var i = ctx.length - 1; i >= 0; i--) {
-    if (ctx[i].clef)
-      return ctx[i];
+function getClef(ctx, prop) {
+  for (var i = ctx.length - 1; i >= 1; i--) {
+    if (ctx[i].type === "~" && (prop === undefined || ctx[i].body[0].type === "absNote"))
+      return [ctx[i], ctx[i].body[0]];
   }
+  return [undefined, undefined];
 }
 
-function populateNote(note, clef){
-  const res = {type: "note2??"};
+// const twelve = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-  debugger;
+function noteDistance(note, clefNote) {
+  return note.num12 - clefNote.num12 + (note.octave - clefNote.octave) * 12;
 }
 
-//todo start mathematically
+//todo start keys
 //todo then, move introduce modes
-MusicDynamic["note"] = function(node, ctx){
-  // const parentClef = getClef(ctx);
+MusicStatic["absNote"] = function (node, ctx) {
+  const parent = ctx[ctx.length - 1];
+  if (parent.type === "~" && node === parent.body[0]) {  //clef note
+
+  } else {      //endNote
+
+  }
+  const [absClef, clefNote] = getClef(ctx, "absNote");
+  return {type: "relNote", body: [], num: noteDistance(node, clefNote)};
+};
+MusicStatic["relNote"] = function (node, ctx) {
+  // debugger;
+  //todo convert to ~~
+  return node;
+};
+MusicStatic["~~"] = function (node, ctx) {
+  // debugger;
+  //todo convert to ~
+  return node;
+};
+MusicStatic["note"] = function (node, ctx) {
+  const clone = Object.assign({}, node);
+  // const absoluteOctave= getClef(ctx, "absTone");
+  // debugger;
+  if (absoluteClef)
+    clone.relToneTwelve = noteDistance(clone, absoluteClef.body[0]);
+  // const modeParentClef = getClef(ctx, "mode");
+  // const octaveParentClef = getClef(ctx, "absOctave");
   // const clone = populateNote(parentClef.keyNote, node);
+
   // if (isAbsolute(clone)){
   //   clone.relativeValue = distanceBetweenNotes(parentClef.keyNote, clone.body[0]);
   // }
@@ -52,7 +82,7 @@ MusicDynamic["note"] = function(node, ctx){
   // the clef node adds its mathematics to the child clef/note and return its child (ie. removes itself).
   // and returns
 
-  return node;
+  return clone;
   //check the body to see if it has a relative value
   //if not,
 // the clef table has twelve rows. one for each tone in the scale. It will only create as many gainNodes as it needs.

@@ -28,7 +28,7 @@ describe('audio - interpreted', function () {
       type: "gain",
       body: [0.2]
     };
-    const tst2 = await interpret(tstString, new AudioContext());
+    const tst2 = await interpret(tstString, [new AudioContext()]);
     expect(tst2.graph.body[0].graph).to.deep.equal(graph1);
     expect(tst2.graph.body[1].graph).to.deep.equal(graph2);
     expect(tst2.input).to.be.an.instanceof(AudioNode);
@@ -50,7 +50,7 @@ describe('audio - interpreted', function () {
       type: "gain",
       body: [0.1]
     };
-    const tst2 = await interpret(tstString, new AudioContext());
+    const tst2 = await interpret(tstString, [new AudioContext()]);
     expect(tst2.graph.body[0].graph.body[0].graph).to.deep.equal(graph1);
     expect(tst2.graph.body[1].graph).to.deep.equal(graph2);
     // expect(tst2.input).to.be.an.instanceof(AudioNode);

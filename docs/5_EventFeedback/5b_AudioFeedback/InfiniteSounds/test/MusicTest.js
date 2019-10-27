@@ -4,42 +4,42 @@ import {staticInterpret, interpret} from "../Interpreter3.js";
 describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
-    const result = {type: "absNote", body: [], tone: "c", augment: 1, octave: 4};
+    const result = {type: "absNote", body: [], tone: "c#", /*augment: 1, */octave: 4, /*num7: 0, */num12: 1};
     expectToEqualWithDiff(tst, result);
   });
   it("A5", function () {
     const tst = parse("A5");
-    const result = {type: "absNote", body: [], tone: "a", augment: 0, octave: 5};
+    const result = {type: "absNote", body: [], tone: "a", /*augment: 0, */octave: 5, /*num7: 5, */num12: 9};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5", function () {
     const tst = parse("Bb5");
-    const result = {type: "absNote", body: [], tone: "b", augment: -1, octave: 5};
+    const result = {type: "absNote", body: [], tone: "bb", /*augment: -1, */octave: 5, /*num7: 6, */num12: 10};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10", function () {
     const tst = parse("D#10");
-    const result = {type: "absNote", body: [], tone: "d", augment: 1, octave: 10};
+    const result = {type: "absNote", body: [], tone: "d#", /*augment: 1, */octave: 10, /*num7: 1, */num12: 3};
     expectToEqualWithDiff(tst, result);
   });
   it("E", function () {
     const tst = parse("E");
-    const result = {type: "absNote", body: [], tone: "e", augment: 0, octave: 4};
+    const result = {type: "absNote", body: [], tone: "e", /*augment: 0, */octave: 4, /*num7: 2, */num12: 4};
     expectToEqualWithDiff(tst, result);
   });
   it("f#", function () {
     const tst = parse("f#");
-    const result = {type: "absNote", body: [], tone: "f", augment: 1, octave: 4};
+    const result = {type: "absNote", body: [], tone: "f#", /*augment: 1, */octave: 4, /*num7: 3, */num12: 6};
     expectToEqualWithDiff(tst, result);
   });
   it("g0", function () {
     const tst = parse("g0");
-    const result = {type: "absNote", body: [], tone: "g", augment: 0, octave: 0};
+    const result = {type: "absNote", body: [], tone: "g", /*augment: 0, */octave: 0, /*num7: 4, */num12: 7};
     expectToEqualWithDiff(tst, result);
   });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
-  //   const result = {type: "absNote", body: [], tone: "d", augment: 1, octave: -2};
+  //   const result = {type: "absNote", body: [], tone: "d", /*augment: 1, */octave: -2};
   //   expectToEqualWithDiff(tst, result);
   // });
 });
@@ -66,30 +66,30 @@ describe('relative 12 notes', function () {
   });
 });
 
-describe('relative alpha notes', function () {
-  it("~C", function () {
-    const tst = parse("~C");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", augment: 0, octave: 0});
-  });
-
-  it("~b1", function () {
-    const tst = parse("~b1");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", augment: 0, octave: 1});
-  });
-
-  it("~f-1", function () {
-    const tst = parse("~f-1");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f", augment: 0, octave: -1});
-  });
-
-  it("~Bb-10", function () {
-    const tst = parse("~Bb-10");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", augment: -1, octave: -10});
-  });
-  // it("~Bb#-10", function () {
-  //   expect error
-  // });
-});
+// describe('relative alpha notes', function () {
+//   it("~C", function () {
+//     const tst = parse("~C");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", /*augment: 0, */octave: 0});
+//   });
+//
+//   it("~b1", function () {
+//     const tst = parse("~b1");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", /*augment: 0, */octave: 1});
+//   });
+//
+//   it("~f-1", function () {
+//     const tst = parse("~f-1");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f", /*augment: 0, */octave: -1});
+//   });
+//
+//   it("~Bb-10", function () {
+//     const tst = parse("~Bb-10");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", /*augment: -1, */octave: -10});
+//   });
+//   // it("~Bb#-10", function () {
+//   //   expect error
+//   // });
+// });
 
 describe('relative 7 notes', function () {
   it("~0", function () {
@@ -113,41 +113,180 @@ describe('relative 7 notes', function () {
   });
 });
 
-describe('static interpretation of clef', function () {
-  it("~(G4, sine(~2))", async function () {
-    const tst = await staticInterpret("~(G4, sine(~2))");
+describe('absolute clef, absolute notes', function () {
+  it("~(G4, [C4, Db, Eb3, F, G4, A#, B4])", async function () {
+    const str = "~(G4, [C4, Db, Eb3, F, G4, A#, B4])";
+    const tst = parse(str);
     const res = {
       type: "~",
       body: [
         {
-          type: "note",
-          absTone: "g",
-          absToneSeven: 4,
-          augment: 0,
-          absOctave: 4,
-          relToneTwelve: "wtf",
+          type: "absNote",
+          tone: "g",
+          num12: 7,
+          octave: 4,
           body: [],
         },
-        {
-          type: "sine",
-          body: [
-            {
-              type: "note",
-              relTone: 2,
-              relAugmented: 0,
-              relToneTwelve: "wtf",
-              body: [],
-            }
-          ]
-        }
-      ],
+        [
+          {
+            type: "absNote",
+            tone: "c",
+            num12: 0,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "absNote",
+            tone: "db",
+            num12: 1,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "absNote",
+            tone: "eb",
+            num12: 3,
+            octave: 3,
+            body: []
+          },
+          {
+            type: "absNote",
+            tone: "f",
+            num12: 5,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "absNote",
+            tone: "g",
+            num12: 7,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "absNote",
+            tone: "a#",
+            num12: 10,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "absNote",
+            tone: "b",
+            num12: 11,
+            octave: 4,
+            body: []
+          }
+        ]
+      ]
     };
-    res.body[1].body["isDirty"] = 1;
-    res.body["isDirty"] = 1;
+    res.body.isDirty = 1;
+    res.body[1].isDirty = 1;
     expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "~",
+      body: [
+        {
+          type: "absNote",
+          tone: "g",
+          num12: 7,
+          octave: 4,
+          body: [],
+        },
+        [
+          {
+            type: "relNote",
+            tone: "c",
+            num12: 0,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "relNote",
+            tone: "db",
+            num12: 1,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "relNote",
+            tone: "eb",
+            num12: 3,
+            octave: 3,
+            body: []
+          },
+          {
+            type: "relNote",
+            tone: "f",
+            num12: 5,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "relNote",
+            tone: "g",
+            num12: 7,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "relNote",
+            tone: "a#",
+            num12: 10,
+            octave: 4,
+            body: []
+          },
+          {
+            type: "relNote",
+            tone: "b",
+            num12: 11,
+            octave: 4,
+            body: []
+          }
+        ]
+      ]
+    };
+    expectToEqualWithDiff(tst2, res2);
   });
-});
+})
+;
 
+// describe('static interpretation of clef', function () {
+//   it("~(G4, sine(~2))", async function () {
+//     const tst = await staticInterpret("~(G4, sine(~2))");
+//     const res = {
+//       type: "~",
+//       body: [
+//         {
+//           type: "note",
+//           tone: "g",
+//           num7: 4,
+//           augment: 0,
+//           octave: 4,
+//           relToneTwelve: "wtf",
+//           body: [],
+//         },
+//         {
+//           type: "sine",
+//           body: [
+//             {
+//               type: "note",
+//               relTone: 2,
+//               relAugmented: 0,
+//               relToneTwelve: "wtf",
+//               body: [],
+//             }
+//           ]
+//         }
+//       ],
+//     };
+//     res.body[1].body["isDirty"] = 1;
+//     res.body["isDirty"] = 1;
+//     expectToEqualWithDiff(tst, res);
+//   });
+// });
+//
 // describe('dynamic interpretation of clef', function () {
 //   it("~(G4, sine(A4))", async function () {
 //     const tst = await interpret("~(G4, sine(A4))", new AudioContext());

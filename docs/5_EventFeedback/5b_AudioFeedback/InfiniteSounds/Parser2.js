@@ -1,9 +1,9 @@
 const tokens = [
   /([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,  //absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, a+3)
   /[~]{1,2}([+-]?\d+)([#b]?)|~([a-gA-G])([#b]?)([+-]?\d+)?/,
-                                             //relative aplha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
-                                             //relative 12 notes: ~~1, ~~0b, ~~6#, ~~-2, ~~10b, ~~-11b, ~C, ~C1, ~C0, ~C-2, ~C+2
-                                             //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
+  //relative aplha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
+  //relative 12 notes: ~~1, ~~0b, ~~6#, ~~-2, ~~10b, ~~-11b, ~C, ~C1, ~C0, ~C-2, ~C+2
+  //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /~|[_a-zA-Z][_a-zA-Z\d#-]*/,               //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
@@ -147,21 +147,48 @@ function parseFunction(tokens) {
   return {type, body};
 }
 
+// const absScale7 = {"c": 0, "d": 1, "e": 2, "f": 3, "g": 4, "a": 5, "b": 6};
+const absScale12 = {
+  "c": 0,
+  "c#": 1,
+  "db": 1,
+  "d": 2,
+  "d#": 3,
+  "eb": 3,
+  "e": 4,
+  "f": 5,
+  "f#": 6,
+  "gb": 6,
+  "g": 7,
+  "g#": 8,
+  "ab": 8,
+  "a": 9,
+  "a#": 10,
+  "bb": 10,
+  "b": 11
+};
+
+function parseAbsoluteNote(t) {
+  let tone = t[2].toLowerCase();
+  const num12 = absScale12[tone];
+  const octave = t[3] ? parseInt(t[3]) : 4;                     //default octave for absolute tones is 4
+  //todo do not change the text of the tone, You have the num7 and num12 values, you don't need the augment nor shortened tone anymore
+  // const augment = tone.endsWith("#") ? 1 : tone.endsWith("b") ? -1 : 0;
+  // if (augment !== 0)
+  //   tone = tone.substr(0, tone.length - 1);
+  //todo do not change the text of the tone, You have the num7 and num12 values, you don't need the augment nor shortened tone anymore
+  // const num7 = absScale7[tone];
+  return {type: "absNote", tone, num12/*, num7, augment*/, octave, body: []};
+}
+
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
   if (lookAhead[18])  //singleQuote
     return nextToken(tokens)[19];
   if (lookAhead[20])  //doubleQuote
     return nextToken(tokens)[21];
-  if (lookAhead[1]) {   //absolute tone
-    let t = nextToken(tokens);
-    let tone = t[2].toLowerCase();
-    const augment = tone.endsWith("#") ? 1 : tone.endsWith("b") ? -1 : 0;
-    if (augment !== 0)
-      tone = tone.substr(0, tone.length - 1);
-    const octave = t[3] ? parseInt(t[3]) : 4;                     //default octave for absolute tones is 4
-    return {type: "absNote", tone, augment, octave, body: []};
-  }
+  if (lookAhead[1])    //absolute note
+    return parseAbsoluteNote(nextToken(tokens));
   if (lookAhead[7]) {    //relative alpha tone
     let t = nextToken(tokens);
     const tone = t[7].toLowerCase();
