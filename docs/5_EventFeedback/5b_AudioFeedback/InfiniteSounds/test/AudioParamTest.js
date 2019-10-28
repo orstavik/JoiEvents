@@ -1,4 +1,4 @@
-import {interpret} from "../Interpreter3.js";
+import {interpret} from "../Interpreter.js";
 
 describe('AudioParam - interpreted', function () {
 

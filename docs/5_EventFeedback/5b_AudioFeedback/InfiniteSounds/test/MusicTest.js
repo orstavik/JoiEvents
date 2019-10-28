@@ -1,5 +1,5 @@
-import {parse} from "../Parser2.js";
-import {staticInterpret, interpret} from "../Interpreter3.js";
+import {parse} from "../Parser.js";
+import {staticInterpret, interpret} from "../Interpreter.js";
 
 describe('absolute notes', function () {
   it("C#4", function () {

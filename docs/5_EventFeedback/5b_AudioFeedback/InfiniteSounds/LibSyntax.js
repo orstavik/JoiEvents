@@ -1,4 +1,4 @@
-import {isPrimitive} from "./Parser2.js";
+import {isPrimitive} from "./Parser.js";
 
 export const ListOps = Object.create(null);
 

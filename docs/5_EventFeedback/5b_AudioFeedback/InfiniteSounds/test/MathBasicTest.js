@@ -1,4 +1,4 @@
-import {staticInterpret} from "../Interpreter3.js";
+import {staticInterpret} from "../Interpreter.js";
 
 describe('basic math', function () {
 

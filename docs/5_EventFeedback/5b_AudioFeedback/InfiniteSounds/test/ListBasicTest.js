@@ -1,5 +1,5 @@
-import {parse} from "../Parser2.js";
-import {staticInterpret} from "../Interpreter3.js";
+import {parse} from "../Parser.js";
+import {staticInterpret} from "../Interpreter.js";
 
 describe('basic arrays', function () {
 

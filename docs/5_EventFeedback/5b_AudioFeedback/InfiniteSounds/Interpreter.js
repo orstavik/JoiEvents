@@ -1,4 +1,4 @@
-import {parse, isPrimitive} from "./Parser2.js";
+import {parse, isPrimitive} from "./Parser.js";
 import {Random} from "./LibRandom.js";
 import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
