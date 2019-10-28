@@ -1,18 +1,9 @@
-// % modulo operator would be interpreted as a step in the mode shifts.
-// If it comes within a tone description, then it would set the mode.
-// If a mode is set, then all notes below can be interpreted in the scale of 7 to this modeKey.
-// If no mode is set, then we cannot, we let the tones remain in the scale of 12? or do we substitute in the major scale?
-//if a mode is set above another mode, that means that the tones below should be trasnposed into that upper mode.
-// that means that the mode is 0-nulled out. made into a relative mode with 0 steps.
-// if a mode is to remain, that is, it is intended to overwrite the upper/main mode of the musical sequence, then
-// it should have a %! prefix. How this should be implemented technically, I don't see right now.
-
 const tokens = [
   /!?([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,//absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /~([a-gA-G][#b]?)([+-]?\d+)?/,             //relative alpha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
-  // /%(lyd|ion|dor|phryg|mixolyd|locr)(?:ian)/,//mode and modulo syntax
+  /%(?:(-?\d+)|(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)/,//mode and modulo syntax
   /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
@@ -32,14 +23,14 @@ function tokenize(str) {
   const tokens = [];
   for (let array1; (array1 = tokenizer.exec(str)) !== null;)
     tokens.push(array1);
-  return tokens.filter(t => !t[24]);  //whitespace is definitively meaningless now
+  return tokens.filter(t => !t[27]);  //whitespace is definitively meaningless now
   // todo this causes a bug in the --css-var special case handling
 }
 
 function nextToken(tokens) {
   if (!tokens.length)
     return undefined;
-  if (tokens[0][25])
+  if (tokens[0][28])
     throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][0]);
   return tokens.shift();
 }
@@ -69,14 +60,11 @@ function parseGroupArray(tokens, start, end) {
   nextToken(tokens); //eat ( [
   const res = [];
   let previous = start;
-  // let primitive = true;
   while (true) {
     if (!tokens[0])
       throw new SyntaxError(`Forgot to close ${start}-block.`);
     if (tokens[0][0] === end) {
       nextToken(tokens);    //eat ] )
-      // if (primitive)
-      //   res.isPrimitive = 1;
       if (previous === ",")
         res.push(undefined);
       return res;
@@ -100,14 +88,14 @@ function parseOperator(tokens) {
   //isNegativeNumber: <number><negativeNumber> that should have been <number><minus-operator><positiveNumber>
   if (!tokens[0])
     return;
-  if (tokens[0][15] && tokens[0][15].startsWith("-")) {
+  if (tokens[0][18] && tokens[0][18].startsWith("-")) {
     tokens[0][0] = tokens[0][0].substr(1);
-    tokens[0][15] = tokens[0][15].substr(1);
-    tokens[0][16] = tokens[0][16].substr(1);
+    tokens[0][18] = tokens[0][18].substr(1);
+    tokens[0][19] = tokens[0][19].substr(1);
     return "-";
   }
   //!isOperator
-  if (tokens[0][19])
+  if (tokens[0][22])
     return nextToken(tokens)[0];
 }
 
@@ -171,22 +159,43 @@ const absScale12 = {
  * all function names are toLowerCase().
  * default octave for absolute tones is 4.
  */
-function parseFunctionName(t) {
+function parseFunctionName(tokens) {
+  let t = tokens[0];
+  if (!(t[1] || t[4] || t[6] || t[9] || t[12] || t[15] || t[16] || t[17]))
+    return;
+
+  t = nextToken(tokens);
   const type = t[0].toLowerCase();
+
+  // % modulo operator would be interpreted as a step in the mode shifts.
+// If it comes within a tone description, then it would set the mode.
+// If a mode is set, then all notes below can be interpreted in the scale of 7 to this modeKey.
+// If no mode is set, then we cannot, we let the tones remain in the scale of 12? or do we substitute in the major scale?
+//if a mode is set above another mode, that means that the tones below should be trasnposed into that upper mode.
+// that means that the mode is 0-nulled out. made into a relative mode with 0 steps.
+// if a mode is to remain, that is, it is intended to overwrite the upper/main mode of the musical sequence, then
+// it should have a %! prefix. How this should be implemented technically, I don't see right now.
+
+  //todo [12] and [13] should become the mode tone name
   if (t[1]) {
     const tone = t[2].toLowerCase();
     const num = absScale12[tone];
     const octave = t[3] ? parseInt(t[3]) : 4;
     const frozen = type[0] === "!" ? 1 : 0;
-    return {type: "absNote", tone: type, num, octave, frozen};
+    const res = {type: "absNote", tone: type, num, octave, frozen};
+    const mode = parseMode(tokens);
+    if (mode !== undefined) res.mode = mode;
+    return res;
   } else if (t[4]) {                                        //relative 12 tones
-    return {type: "~~", num: parseInt(t[5])}
+    const res = {type: "~~", num: parseInt(t[5])};
+    const mode = parseMode(tokens);
+    if (mode !== undefined) res.mode = mode;
+    return res;
   } else if (t[6]) {                                        //relative 7 tones
     return {
       type: "~",
       num: parseInt(t[7]),
       augment: t[8] === "#" ? 1 : t[8] === "b" ? -1 : 0,
-      body: []
     };
   }
   //todo modes in addition to the key, so that we can have ~7 notes
@@ -197,31 +206,40 @@ function parseFunctionName(t) {
       tone,
       num: absScale12[tone],
       octave: parseInt(t[11]) || 0,
-      body: []
     };
   }
   return {type};
 }
 
-function parseFunction(tokens) {
-  const t = tokens[0];
-  if (!(t[1] || t[4] || t[6] || t[9] || t[12] || t[13] || t[14]))
+function parseMode(tokens) {
+  if (!tokens[0] || !tokens[0][12])
     return;
-  const fun = parseFunctionName(nextToken(tokens));
+  const t = nextToken(tokens);
+  if (t[13] !== undefined)
+    return parseInt(t[13]);
+  let mode = t[14];
+  mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;
+  return mode;
+}
+
+function parseFunction(tokens) {
+  const fun = parseFunctionName(tokens);
+  if (!fun)
+    return;
   fun.body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
   return fun;
 }
 
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
-  if (lookAhead[22])  //singleQuote
-    return nextToken(tokens)[23];
-  if (lookAhead[20])  //doubleQuote
-    return nextToken(tokens)[21];
-  if (lookAhead[15]) {  //number
+  if (lookAhead[25])  //singleQuote
+    return nextToken(tokens)[26];
+  if (lookAhead[23])  //doubleQuote
+    return nextToken(tokens)[24];
+  if (lookAhead[18]) {  //number
     let t = nextToken(tokens);
-    const num = parseFloat(t[16]);
-    let type = t[17].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
+    const num = parseFloat(t[19]);
+    let type = t[20].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
     return type === "" ? num : {type, body: [num]};
   }
 }

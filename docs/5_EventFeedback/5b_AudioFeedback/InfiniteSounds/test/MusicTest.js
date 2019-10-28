@@ -44,6 +44,74 @@ describe('absolute notes', function () {
   // });
 });
 
+describe('absolute notes with modes', function () {
+  it("C#4%lyd", function () {
+    const tst = parse("C#4%lyd");
+    const result = {type: "absNote", body: [], tone: "c#4", octave: 4, num: 1, frozen: 0, mode: "lyd"};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("A5%locrian", function () {
+    const tst = parse("A5%locrian");
+    const result = {type: "absNote", body: [], tone: "a5", octave: 5, num: 9, frozen: 0, mode: "locr"};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("Bb5%dorian", function () {
+    const tst = parse("Bb5%dorian");
+    const result = {type: "absNote", body: [], tone: "bb5", octave: 5, num: 10, frozen: 0, mode: "dor"};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("D#10%mixolyd", function () {
+    const tst = parse("D#10%mixolyd");
+    const result = {type: "absNote", body: [], tone: "d#10", octave: 10, num: 3, frozen: 0, mode: "mixolyd"};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!E%ion", function () {
+    const tst = parse("!E%ion");
+    const result = {type: "absNote", body: [], tone: "!e", octave: 4, num: 4, frozen: 1, mode: "ion"};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!f#%phryg", function () {
+    const tst = parse("!f#%phryg");
+    const result = {type: "absNote", body: [], tone: "!f#", octave: 4, num: 6, frozen: 1, mode: "phryg"};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0%aeol", function () {
+    const tst = parse("!g0%aeol");
+    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "aeol"};
+    expectToEqualWithDiff(tst, result);
+  });
+  // it("!g0%major", function () {
+  //   const tst = parse("!g0%maj");
+  //   const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "ion"};
+  //   expectToEqualWithDiff(tst, result);
+  // });
+  // it("!g0%min", function () {
+  //   const tst = parse("!g0%min");
+  //   const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "aeol"};
+  //   expectToEqualWithDiff(tst, result);
+  // });
+  it("!g0%2", function () {
+    const tst = parse("!g0%2");
+    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 2};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0%-1", function () {
+    const tst = parse("!g0%-1");
+    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: -1};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0%0", function () {
+    const tst = parse("!g0%0");
+    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 0};
+    expectToEqualWithDiff(tst, result);
+  });
+  // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
+  //   const tst = parse("D#-2");
+  //   const result = {type: "absNote", body: [], tone: "d", /*augment: 1, */octave: -2, frozen: 0};
+  //   expectToEqualWithDiff(tst, result);
+  // });
+});
+
 describe('relative 12 notes', function () {
   it("~~0", function () {
     const tst = parse("~~0");
