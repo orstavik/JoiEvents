@@ -1,9 +1,19 @@
+// % modulo operator would be interpreted as a step in the mode shifts.
+// If it comes within a tone description, then it would set the mode.
+// If a mode is set, then all notes below can be interpreted in the scale of 7 to this modeKey.
+// If no mode is set, then we cannot, we let the tones remain in the scale of 12? or do we substitute in the major scale?
+//if a mode is set above another mode, that means that the tones below should be trasnposed into that upper mode.
+// that means that the mode is 0-nulled out. made into a relative mode with 0 steps.
+// if a mode is to remain, that is, it is intended to overwrite the upper/main mode of the musical sequence, then
+// it should have a %! prefix. How this should be implemented technically, I don't see right now.
+
 const tokens = [
   /!?([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,//absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /~([a-gA-G][#b]?)([+-]?\d+)?/,             //relative alpha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
-  /~|[_a-zA-Z][_a-zA-Z\d#-]*/,               //word:
+  // /%(lyd|ion|dor|phryg|mixolyd|locr)(?:ian)/,//mode and modulo syntax
+  /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters

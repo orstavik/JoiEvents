@@ -27,14 +27,6 @@ describe('names', function () {
     const tst = parse("sine");
     expectToEqualWithDiff(tst, {type: "sine", body: []});
   });
-  it("~", function () {
-    const tst = parse("~");
-    expectToEqualWithDiff(tst, {type: "~", body: []});
-  });
-  it("clef", function () {
-    const tst = parse("clef");
-    expectToEqualWithDiff(tst, {type: "clef", body: []});
-  });
 });
 
 describe('numbers', function () {
