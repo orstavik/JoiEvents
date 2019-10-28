@@ -113,6 +113,46 @@ export const Music = Object.create(null);
 // musical operators.
 //~1*A^^B     //that means that ^^ has the same priority as * and /. no this is worng too..
 //if you want to morph a note to become the 2 instead of 1, this is not a mathematical operation. How to do that?? You can't do that right now.
+/*
+
+~A * 2 would be
+~A ^^1 a single steps in the 12 scale
+~A ^^7 seven single steps in the 12 scale = circle5 right click .
+~A ^^-5 five negative steps in the 12 scale = circle5 left click.
+~A ^^7^3 three clicks in the circle5, but, you also move up the octaves.
+if we wanted, we could add "~A¤3" to yield 3 right clicks in the circle of five, that are lowered to the nearest note.
+
+the operators above, they could be mathematically workable
+
+~A + 1 one 7step up
+~A - 1 one 7step down
+~A+# augment the 7 note
+~A+## double augment the 7 note, this is the same as +1, not?
+~A-b diminish the 7 note
+~A-bb double diminish the 7 note, this is the same as -1, not?
+
+what to do if you try to diminish or augment a 7note that would be diminished or augmented into the next 7note?
+should we only diminish at max one? if it is already diminished, should we then convert that into a full step down?
+
+A5%lydian( B4%.... )
+
+A5( %lydian( .... ))
+%lydian( A5( .... ))
+
+A5%lydian, B%locrian..
+
+%lydian(A5),
+
+
+%lydian( 1, ,4,5,6,32,1,2
+   %!locrian(B, d, f)
+)
+this is not mathematically equivalent, but it would work not dissimilar as string concatenation
+
+operations on the mode, this is not a frequency operation. Or, this is a frequency operation that works kinda like %, like remainder.
+% as a prefix!
+so, we have percent as a postfix. we cannot use % between two "5%20="?
+*/
 
 
 //if we find a ~ that is a prefix, then we convert that into a note.
