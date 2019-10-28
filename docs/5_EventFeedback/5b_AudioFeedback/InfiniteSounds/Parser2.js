@@ -1,9 +1,8 @@
 const tokens = [
   /([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,  //absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, a+3)
-  /[~]{1,2}([+-]?\d+)([#b]?)|~([a-gA-G])([#b]?)([+-]?\d+)?/,
-  //relative aplha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
-  //relative 12 notes: ~~1, ~~0b, ~~6#, ~~-2, ~~10b, ~~-11b, ~C, ~C1, ~C0, ~C-2, ~C+2
-  //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
+  /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
+  /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
+  /~([a-gA-G])([#b]?)([+-]?\d+)?/,           //relative alpha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
   /~|[_a-zA-Z][_a-zA-Z\d#-]*/,               //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:
@@ -23,14 +22,14 @@ function tokenize(str) {
   const tokens = [];
   for (let array1; (array1 = tokenizer.exec(str)) !== null;)
     tokens.push(array1);
-  return tokens.filter(t => !t[22]);  //whitespace is definitively meaningless now
+  return tokens.filter(t => !t[25]);  //whitespace is definitively meaningless now
   // todo this causes a bug in the --css-var special case handling
 }
 
 function nextToken(tokens) {
   if (!tokens.length)
     return undefined;
-  if (tokens[0][23])
+  if (tokens[0][26])
     throw new SyntaxError("InfiniteSound: Illegal token: " + tokens[0][0]);
   return tokens.shift();
 }
@@ -91,14 +90,14 @@ function parseOperator(tokens) {
   //isNegativeNumber: <number><negativeNumber> that should have been <number><minus-operator><positiveNumber>
   if (!tokens[0])
     return;
-  if (tokens[0][13] && tokens[0][13].startsWith("-")) {
+  if (tokens[0][16] && tokens[0][16].startsWith("-")) {
     tokens[0][0] = tokens[0][0].substr(1);
-    tokens[0][13] = tokens[0][13].substr(1);
-    tokens[0][14] = tokens[0][14].substr(1);
+    tokens[0][16] = tokens[0][16].substr(1);
+    tokens[0][17] = tokens[0][17].substr(1);
     return "-";
   }
   //!isOperator
-  if (tokens[0][17])
+  if (tokens[0][20])
     return nextToken(tokens)[0];
 }
 
@@ -165,18 +164,22 @@ function parseFunctionName(t) {
     const num12 = absScale12[tone];
     const octave = t[3] ? parseInt(t[3]) : 4;//default octave for absolute tones is 4
     return {type: tone, absNote: type, num12, octave};
-  } else if (t[5]) {                         //relative 7 and 12 tones
-    const type = t[4][1] === "~" ? "~~" : "~";
-    const num = parseInt(t[5]);
-    const augment = t[6] === "#" ? 1 : t[6] === "b" ? -1 : 0;
-    return {type, num, augment, body: []};
+  } else if (t[4]) {                         //relative 7 and 12 tones
+    return {type: "~~", num: parseInt(t[5])}
+  } else if (t[6]) {
+    return {
+      type: "~",
+      num: parseInt(t[7]),
+      augment: t[8] === "#" ? 1 : t[8] === "b" ? -1 : 0,
+      body: []
+    };
   }
   return {type};
 }
 
 function parseFunction(tokens) {
   const t = tokens[0];
-  if (!(t[1] || t[5] || t[10] || t[11] || t[12]))
+  if (!(t[1] || t[4]|| t[6] || t[12] || t[13] || t[14]))
     return;
   const fun = parseFunctionName(nextToken(tokens));
   fun.body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
@@ -185,21 +188,21 @@ function parseFunction(tokens) {
 
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
-  if (lookAhead[18])  //singleQuote
-    return nextToken(tokens)[19];
-  if (lookAhead[20])  //doubleQuote
-    return nextToken(tokens)[21];
-  if (lookAhead[7]) {    //relative alpha tone
+  if (lookAhead[23])  //singleQuote
+    return nextToken(tokens)[24];
+  if (lookAhead[21])  //doubleQuote
+    return nextToken(tokens)[22];
+  // if (lookAhead[9]) {    //relative alpha tone
+  //   let t = nextToken(tokens);
+  //   const tone = t[9].toLowerCase();
+  //   const augment = t[10] === "#" ? 1 : t[10] === "b" ? -1 : 0;
+  //   const octave = t[11] ? parseInt(t[11]) : 0;
+  //   return {type: "relNote", tone, augment, octave, body: []};
+  // }
+  if (lookAhead[16]) {  //number
     let t = nextToken(tokens);
-    const tone = t[7].toLowerCase();
-    const augment = t[8] === "#" ? 1 : t[8] === "b" ? -1 : 0;
-    const octave = t[9] ? parseInt(t[9]) : 0;
-    return {type: "relNote", tone, augment, octave, body: []};
-  }
-  if (lookAhead[13]) {  //number
-    let t = nextToken(tokens);
-    const num = parseFloat(t[14]);
-    let type = t[15].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
+    const num = parseFloat(t[17]);
+    let type = t[18].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
     return type === "" ? num : {type, body: [num]};
   }
 }
