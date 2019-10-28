@@ -139,15 +139,19 @@ function parseUnit(tokens) {
 }
 
 function parseFunction(tokens) {
-  if (!(tokens[0][10] || tokens[0][11] || tokens[0][12]))
+  const t = tokens[0];
+  if (!(t[1] || t[10] || t[11] || t[12]))
     return;
   const type = nextToken(tokens)[0].toLowerCase();   //turn UpperCase characters in function names toLowerCase().
   let body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];
   //todo return two arrays, one with the elements, and one with the yet-not-interpreted?
+  if (t[1]) {
+    const {tone, num12, octave} = parseAbsoluteNote(t);
+    return {type: tone, body, num12, octave, absNote: t[0]};
+  }
   return {type, body};
 }
 
-// const absScale7 = {"c": 0, "d": 1, "e": 2, "f": 3, "g": 4, "a": 5, "b": 6};
 const absScale12 = {
   "c": 0,
   "c#": 1,
@@ -169,16 +173,10 @@ const absScale12 = {
 };
 
 function parseAbsoluteNote(t) {
-  let tone = t[2].toLowerCase();
+  const tone = t[2].toLowerCase();
   const num12 = absScale12[tone];
   const octave = t[3] ? parseInt(t[3]) : 4;                     //default octave for absolute tones is 4
-  //todo do not change the text of the tone, You have the num7 and num12 values, you don't need the augment nor shortened tone anymore
-  // const augment = tone.endsWith("#") ? 1 : tone.endsWith("b") ? -1 : 0;
-  // if (augment !== 0)
-  //   tone = tone.substr(0, tone.length - 1);
-  //todo do not change the text of the tone, You have the num7 and num12 values, you don't need the augment nor shortened tone anymore
-  // const num7 = absScale7[tone];
-  return {type: "absNote", tone, num12/*, num7, augment*/, octave, body: []};
+  return {tone, num12, octave};
 }
 
 function parsePrimitive(tokens) {
@@ -187,8 +185,6 @@ function parsePrimitive(tokens) {
     return nextToken(tokens)[19];
   if (lookAhead[20])  //doubleQuote
     return nextToken(tokens)[21];
-  if (lookAhead[1])    //absolute note
-    return parseAbsoluteNote(nextToken(tokens));
   if (lookAhead[7]) {    //relative alpha tone
     let t = nextToken(tokens);
     const tone = t[7].toLowerCase();

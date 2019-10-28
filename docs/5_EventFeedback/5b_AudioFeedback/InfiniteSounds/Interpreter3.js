@@ -3,7 +3,8 @@ import {Random} from "./LibRandom.js";
 import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
-import {MusicStatic, MusicDynamic} from "./LibMusic.js";
+// import {MusicStatic, MusicDynamic} from "./LibMusic.js";
+import {MusicStatic} from "./LibMusic2.js";
 import {Units} from "./LibUnits.js";
 
 async function interpretArray(node, table, ctx) {
@@ -30,7 +31,8 @@ export async function interpretNode(node, table, ctx) {
 
 //todo process units such as "b" (beats) dynamically, and tones needs the context to create their gain node. what to do with dB?
 const staticTable = Object.assign({}, ListOps, Units, MathOps, MusicStatic);
-const dynamicTable = Object.assign({}, Random, MathOps, MusicDynamic, InterpreterFunctions, AudioPiping);
+const dynamicTable = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
+// const dynamicTable = Object.assign({}, Random, MathOps, MusicDynamic, InterpreterFunctions, AudioPiping);
 
 export async function staticInterpret(str) {
   let node = parse(str);
