@@ -179,19 +179,23 @@ function parseFunctionName(t) {
       body: []
     };
   }
-  // if (lookAhead[9]) {    //relative alpha tone
-  //   let t = nextToken(tokens);
-  //   const tone = t[9].toLowerCase();
-  //   const augment = t[10] === "#" ? 1 : t[10] === "b" ? -1 : 0;
-  //   const octave = t[11] ? parseInt(t[11]) : 0;
-  //   return {type: "relNote", tone, augment, octave, body: []};
-  // }
+  //todo modes in addition to the key, so that we can have ~7 notes
+  if (t[9]) {                                               //relative alpha tone
+    const tone = (t[10] + t[11]).toLowerCase();
+    return {
+      type: "relNote",
+      tone,
+      num: absScale12[tone],
+      octave: parseInt(t[12]) || 0,
+      body: []
+    };
+  }
   return {type};
 }
 
 function parseFunction(tokens) {
   const t = tokens[0];
-  if (!(t[1] || t[4] || t[6] || t[12] || t[13] || t[14]))
+  if (!(t[1] || t[4] || t[6] || t[9] || t[12] || t[13] || t[14]))
     return;
   const fun = parseFunctionName(nextToken(tokens));
   fun.body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here

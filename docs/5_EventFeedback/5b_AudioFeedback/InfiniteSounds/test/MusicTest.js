@@ -66,30 +66,30 @@ describe('relative 12 notes', function () {
   });
 });
 
-// describe('relative alpha notes', function () {
-//   it("~C", function () {
-//     const tst = parse("~C");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", /*augment: 0, */octave: 0});
-//   });
-//
-//   it("~b1", function () {
-//     const tst = parse("~b1");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", /*augment: 0, */octave: 1});
-//   });
-//
-//   it("~f-1", function () {
-//     const tst = parse("~f-1");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f", /*augment: 0, */octave: -1});
-//   });
-//
-//   it("~Bb-10", function () {
-//     const tst = parse("~Bb-10");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", /*augment: -1, */octave: -10});
-//   });
-//   // it("~Bb#-10", function () {
-//   //   expect error
-//   // });
-// });
+describe('relative alpha notes', function () {
+  it("~C", function () {
+    const tst = parse("~C");
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", num: 0, octave: 0});
+  });
+
+  it("~b1", function () {
+    const tst = parse("~b1");
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", num: 11, octave: 1});
+  });
+
+  it("~f#-1", function () {
+    const tst = parse("~f#-1");
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f#", num: 6, octave: -1});
+  });
+
+  it("~Bb-10", function () {
+    const tst = parse("~Bb-10");
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "bb", num: 10, octave: -10});
+  });
+  // it("~Bb#-10", function () {
+  //   expect error
+  // });
+});
 
 describe('relative 7 notes', function () {
   it("~0", function () {

@@ -5,10 +5,6 @@ function getClef(ctx, prop) {
   }
 }
 
-function noteDistance(note, clefNote) {
-  return note.num - clefNote.num + (note.octave - clefNote.octave) * 12;
-}
-
 export const MusicStatic = Object.create(null);
 
 MusicStatic["absNote"] = function (node, ctx) {
@@ -23,7 +19,15 @@ MusicStatic["absNote"] = function (node, ctx) {
     }
   } else {                   //end note
     const absClef = getClef(ctx, "absNote");
-    const num = noteDistance(node, absClef);
+    const num = node.num - absClef.num + (node.octave - absClef.octave) * 12;
     return {type: "~~", num, body: node.body};
   }
+};
+
+MusicStatic["relNote"] = function (node, ctx) {
+  const absClef = getClef(ctx, "absNote");
+  if (!absClef)
+    throw new SyntaxError("A relative alpha note must have an absolute clef note set.");
+  const num = ((node.num - absClef.num + 12) % 12) + node.octave * 12;
+  return {type: "~~", num, body: node.body};
 };
