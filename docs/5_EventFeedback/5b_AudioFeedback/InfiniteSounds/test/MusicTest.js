@@ -4,27 +4,27 @@ import {staticInterpret, interpret} from "../Interpreter3.js";
 describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
-    const result = {type: "c#", body: [], absNote: "C#4", octave: 4, num12: 1};
+    const result = {type: "c#", body: [], absNote: "c#4", octave: 4, num12: 1};
     expectToEqualWithDiff(tst, result);
   });
   it("A5", function () {
     const tst = parse("A5");
-    const result = {type: "a", body: [], absNote: "A5", octave: 5, num12: 9};
+    const result = {type: "a", body: [], absNote: "a5", octave: 5, num12: 9};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5", function () {
     const tst = parse("Bb5");
-    const result = {type: "bb", body: [], absNote: "Bb5", octave: 5, num12: 10};
+    const result = {type: "bb", body: [], absNote: "bb5", octave: 5, num12: 10};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10", function () {
     const tst = parse("D#10");
-    const result = {type: "d#", body: [], absNote: "D#10", octave: 10, num12: 3};
+    const result = {type: "d#", body: [], absNote: "d#10", octave: 10, num12: 3};
     expectToEqualWithDiff(tst, result);
   });
   it("E", function () {
     const tst = parse("E");
-    const result = {type: "e", body: [], absNote: "E", octave: 4, num12: 4};
+    const result = {type: "e", body: [], absNote: "e", octave: 4, num12: 4};
     expectToEqualWithDiff(tst, result);
   });
   it("f#", function () {
@@ -114,44 +114,131 @@ describe('relative 7 notes', function () {
 });
 
 describe('absolute clef, absolute notes', function () {
-  it("G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
+  it("Setting the clef, nice an simple: G4(C4)", async function () {
+    const tst = parse("G4(C4)");
+    const res = {
+      type: "g", absNote: "g4", num12: 7, octave: 4,
+      body: [
+        {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
+      ]
+    };
+    res.body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret("G4(C4)");
+    const res2 = {
+      type: "g", absNote: "g4", num12: 7, octave: 4,
+      body: [
+        {type: "~~", num: -7, body: []},
+      ]
+    };
+    res2.body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
+  it("Overriding the clef from above: D3(G4(C4))", async function () {
+    const tst = parse("D3(G4(C4))");
+    const res = {
+      type: "d", absNote: "d3", num12: 2, octave: 3,
+      body: [
+        {
+          type: "g", absNote: "g4", num12: 7, octave: 4,
+          body: [
+            {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
+          ]
+        }
+      ]
+    };
+    res.body.isDirty = 1;
+    res.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
+    const tst2 = await staticInterpret("D3(G4(C4))");
+    const res2 = {
+      type: "d", absNote: "d3", num12: 2, octave: 3,
+      body: [
+        {
+          type: "~~", num: 0,
+          body: [
+            {type: "~~", num: -7, body: []},
+          ]
+        }
+      ]
+    };
+    res2.body.isDirty = 1;
+    res2.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
+  // it("Overriding the clef from below: D3(!G4(C4))", async function () {
+  //   const tst = parse("D3(G4(C4))");
+  //   const res = {
+  //     type: "d", absNote: "d3", num12: 2, octave: 3,
+  //     body: [
+  //       {
+  //         type: "g", absNote: "g4", num12: 7, octave: 4,
+  //         body: [
+  //           {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
+  //         ]
+  //       }
+  //     ]
+  //   };
+  //   res.body.isDirty = 1;
+  //   expectToEqualWithDiff(tst, res);
+  //   //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
+  //   const tst2 = await staticInterpret("D3(G4(C4))");
+  //   const res2 = {
+  //     type: "d", absNote: "d3", num12: 2, octave: 3,
+  //     body: [
+  //       {
+  //         type: "~~", num12: -16,
+  //         body: [
+  //           {type: "~~", num12: -7, body: []},
+  //         ]
+  //       }
+  //     ]
+  //   };
+  //   res2.body.isDirty = 1;
+  //   expectToEqualWithDiff(tst2, res2);
+  // });
+  it("parse: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
     const tst = parse(str);
     const res = {
       type: "g",
-      absNote: "G4",
+      absNote: "g4",
       num12: 7,
       octave: 4,
       body: [
         [
-          {type: "c", absNote: "C4", num12: 0, octave: 4, body: []},
-          {type: "db", absNote: "Db", num12: 1, octave: 4, body: []},
-          {type: "eb", absNote: "Eb3", num12: 3, octave: 3, body: []},
-          {type: "f", absNote: "F", num12: 5, octave: 4, body: []},
-          {type: "g", absNote: "G4", num12: 7, octave: 4, body: []},
-          {type: "a#", absNote: "A#", num12: 10, octave: 4, body: []},
-          {type: "b", absNote: "B4", num12: 11, octave: 4, body: []}
+          {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
+          {type: "db", absNote: "db", num12: 1, octave: 4, body: []},
+          {type: "eb", absNote: "eb3", num12: 3, octave: 3, body: []},
+          {type: "f", absNote: "f", num12: 5, octave: 4, body: []},
+          {type: "g", absNote: "g4", num12: 7, octave: 4, body: []},
+          {type: "a#", absNote: "a#", num12: 10, octave: 4, body: []},
+          {type: "b", absNote: "b4", num12: 11, octave: 4, body: []}
         ]
       ]
     };
     res.body.isDirty = 1;
     res.body[0].isDirty = 1;
     expectToEqualWithDiff(tst, res);
+  });
+  it("interpret: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
+    const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
     const tst2 = await staticInterpret(str);
     const res2 = {
       type: "g",
-      absNote: "G4",
+      absNote: "g4",
       num12: 7,
       octave: 4,
       body: [
         [
-          {type: "~~", body: [-7]},
-          {type: "~~", body: [-6]},
-          {type: "~~", body: [-4 - 12]},
-          {type: "~~", body: [-2]},
-          {type: "~~", body: [0]},
-          {type: "~~", body: [3]},
-          {type: "~~", body: [4]}
+          {type: "~~", num: -7, body: []},
+          {type: "~~", num: -6, body: []},
+          {type: "~~", num: -4 - 12, body: []},
+          {type: "~~", num: -2, body: []},
+          {type: "~~", num: 0, body: []},
+          {type: "~~", num: 3, body: []},
+          {type: "~~", num: 4, body: []},
         ]
       ]
     };

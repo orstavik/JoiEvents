@@ -138,20 +138,6 @@ function parseUnit(tokens) {
   return parseFunction(tokens) || parsePrimitive(tokens);
 }
 
-function parseFunction(tokens) {
-  const t = tokens[0];
-  if (!(t[1] || t[10] || t[11] || t[12]))
-    return;
-  const type = nextToken(tokens)[0].toLowerCase();   //turn UpperCase characters in function names toLowerCase().
-  let body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];
-  //todo return two arrays, one with the elements, and one with the yet-not-interpreted?
-  if (t[1]) {
-    const {tone, num12, octave} = parseAbsoluteNote(t);
-    return {type: tone, body, num12, octave, absNote: t[0]};
-  }
-  return {type, body};
-}
-
 const absScale12 = {
   "c": 0,
   "c#": 1,
@@ -172,11 +158,29 @@ const absScale12 = {
   "b": 11
 };
 
-function parseAbsoluteNote(t) {
-  const tone = t[2].toLowerCase();
-  const num12 = absScale12[tone];
-  const octave = t[3] ? parseInt(t[3]) : 4;                     //default octave for absolute tones is 4
-  return {tone, num12, octave};
+function parseFunctionName(t) {
+  const type = t[0].toLowerCase();         //all text in function names toLowerCase().
+  if (t[1]) {
+    const tone = t[2].toLowerCase();         //all text in function names toLowerCase().
+    const num12 = absScale12[tone];
+    const octave = t[3] ? parseInt(t[3]) : 4;//default octave for absolute tones is 4
+    return {type: tone, absNote: type, num12, octave};
+  } else if (t[5]) {                         //relative 7 and 12 tones
+    const type = t[4][1] === "~" ? "~~" : "~";
+    const num = parseInt(t[5]);
+    const augment = t[6] === "#" ? 1 : t[6] === "b" ? -1 : 0;
+    return {type, num, augment, body: []};
+  }
+  return {type};
+}
+
+function parseFunction(tokens) {
+  const t = tokens[0];
+  if (!(t[1] || t[5] || t[10] || t[11] || t[12]))
+    return;
+  const fun = parseFunctionName(nextToken(tokens));
+  fun.body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
+  return fun;
 }
 
 function parsePrimitive(tokens) {
@@ -191,13 +195,6 @@ function parsePrimitive(tokens) {
     const augment = t[8] === "#" ? 1 : t[8] === "b" ? -1 : 0;
     const octave = t[9] ? parseInt(t[9]) : 0;
     return {type: "relNote", tone, augment, octave, body: []};
-  }
-  if (lookAhead[5]) {    //relative 7 and 12 tones
-    let t = nextToken(tokens);
-    const num = t[5] ? parseInt(t[5]) : undefined;
-    const augment = t[6] === "#" ? 1 : t[6] === "b" ? -1 : 0;
-    const type = lookAhead[4][1] === "~" ? "~~" : "~";
-    return {type, num, augment, body: []};
   }
   if (lookAhead[13]) {  //number
     let t = nextToken(tokens);

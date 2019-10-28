@@ -14,14 +14,14 @@ function absNoteFunction(node, ctx) {
   if (node.body.length > 0) { //clef note
     const absClef = getClef(ctx, "absNote");
     if (absClef) {
-      return {type: "~~", body: [0]};
+      return {type: "~~", num: 0, body: node.body};
     } else {
       return node;
     }
   } else {                   //end note
     const absClef = getClef(ctx, "absNote");
-    const distance = noteDistance(node, absClef);
-    return {type: "~~", body: [distance]};
+    const num = noteDistance(node, absClef);
+    return {type: "~~", num, body: node.body};
   }
 }
 
