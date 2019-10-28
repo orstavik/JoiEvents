@@ -157,16 +157,20 @@ const absScale12 = {
   "b": 11
 };
 
+/**
+ * all function names are toLowerCase().
+ * default octave for absolute tones is 4.
+ */
 function parseFunctionName(t) {
-  const type = t[0].toLowerCase();         //all text in function names toLowerCase().
+  const type = t[0].toLowerCase();
   if (t[1]) {
-    const tone = t[2].toLowerCase();         //all text in function names toLowerCase().
+    const tone = t[2].toLowerCase();
     const num12 = absScale12[tone];
-    const octave = t[3] ? parseInt(t[3]) : 4;//default octave for absolute tones is 4
+    const octave = t[3] ? parseInt(t[3]) : 4;
     return {type: tone, absNote: type, num12, octave};
-  } else if (t[4]) {                         //relative 7 and 12 tones
+  } else if (t[4]) {                                        //relative 12 tones
     return {type: "~~", num: parseInt(t[5])}
-  } else if (t[6]) {
+  } else if (t[6]) {                                        //relative 7 tones
     return {
       type: "~",
       num: parseInt(t[7]),
@@ -174,6 +178,13 @@ function parseFunctionName(t) {
       body: []
     };
   }
+  // if (lookAhead[9]) {    //relative alpha tone
+  //   let t = nextToken(tokens);
+  //   const tone = t[9].toLowerCase();
+  //   const augment = t[10] === "#" ? 1 : t[10] === "b" ? -1 : 0;
+  //   const octave = t[11] ? parseInt(t[11]) : 0;
+  //   return {type: "relNote", tone, augment, octave, body: []};
+  // }
   return {type};
 }
 
@@ -192,13 +203,6 @@ function parsePrimitive(tokens) {
     return nextToken(tokens)[24];
   if (lookAhead[21])  //doubleQuote
     return nextToken(tokens)[22];
-  // if (lookAhead[9]) {    //relative alpha tone
-  //   let t = nextToken(tokens);
-  //   const tone = t[9].toLowerCase();
-  //   const augment = t[10] === "#" ? 1 : t[10] === "b" ? -1 : 0;
-  //   const octave = t[11] ? parseInt(t[11]) : 0;
-  //   return {type: "relNote", tone, augment, octave, body: []};
-  // }
   if (lookAhead[16]) {  //number
     let t = nextToken(tokens);
     const num = parseFloat(t[17]);
