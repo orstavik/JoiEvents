@@ -165,10 +165,10 @@ function parseFunctionName(t) {
   const type = t[0].toLowerCase();
   if (t[1]) {
     const tone = t[2].toLowerCase();
-    const num12 = absScale12[tone];
+    const num = absScale12[tone];
     const octave = t[3] ? parseInt(t[3]) : 4;
     const frozen = type[0] === "!" ? 1 : 0;
-    return {type: tone, absNote: type, num12, octave, frozen};
+    return {type: "absNote", tone: type, num, octave, frozen};
   } else if (t[4]) {                                        //relative 12 tones
     return {type: "~~", num: parseInt(t[5])}
   } else if (t[6]) {                                        //relative 7 tones

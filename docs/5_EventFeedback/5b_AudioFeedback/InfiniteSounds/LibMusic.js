@@ -38,7 +38,7 @@ function getClef(ctx, prop) {
 // const twelve = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 function noteDistance(note, clefNote) {
-  return note.num12 - clefNote.num12 + (note.octave - clefNote.octave) * 12;
+  return note.num - clefNote.num + (note.octave - clefNote.octave) * 12;
 }
 
 //todo start keys

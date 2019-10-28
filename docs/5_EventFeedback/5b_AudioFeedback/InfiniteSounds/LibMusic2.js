@@ -1,15 +1,17 @@
 function getClef(ctx, prop) {
   for (let i = ctx.length - 1; i >= 0; i--) {
-    if (prop in ctx[i])
+    if (ctx[i].type === prop)
       return ctx[i];
   }
 }
 
 function noteDistance(note, clefNote) {
-  return note.num12 - clefNote.num12 + (note.octave - clefNote.octave) * 12;
+  return note.num - clefNote.num + (note.octave - clefNote.octave) * 12;
 }
 
-function absNoteFunction(node, ctx) {
+export const MusicStatic = Object.create(null);
+
+MusicStatic["absNote"] = function (node, ctx) {
   if (node.frozen)
     return node;
   if (node.body.length > 0) { //clef note
@@ -24,23 +26,4 @@ function absNoteFunction(node, ctx) {
     const num = noteDistance(node, absClef);
     return {type: "~~", num, body: node.body};
   }
-}
-
-export const MusicStatic = Object.create(null);
-MusicStatic["c"] = absNoteFunction;
-MusicStatic["c#"] = absNoteFunction;
-MusicStatic["db"] = absNoteFunction;
-MusicStatic["d"] = absNoteFunction;
-MusicStatic["d#"] = absNoteFunction;
-MusicStatic["eb"] = absNoteFunction;
-MusicStatic["e"] = absNoteFunction;
-MusicStatic["f"] = absNoteFunction;
-MusicStatic["f#"] = absNoteFunction;
-MusicStatic["gb"] = absNoteFunction;
-MusicStatic["g"] = absNoteFunction;
-MusicStatic["g#"] = absNoteFunction;
-MusicStatic["ab"] = absNoteFunction;
-MusicStatic["a"] = absNoteFunction;
-MusicStatic["a#"] = absNoteFunction;
-MusicStatic["bb"] = absNoteFunction;
-MusicStatic["b"] = absNoteFunction;
+};
