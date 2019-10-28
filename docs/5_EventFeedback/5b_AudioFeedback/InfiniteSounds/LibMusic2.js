@@ -1,4 +1,3 @@
-
 function getClef(ctx, prop) {
   for (let i = ctx.length - 1; i >= 0; i--) {
     if (prop in ctx[i])
@@ -11,6 +10,8 @@ function noteDistance(note, clefNote) {
 }
 
 function absNoteFunction(node, ctx) {
+  if (node.frozen)
+    return node;
   if (node.body.length > 0) { //clef note
     const absClef = getClef(ctx, "absNote");
     if (absClef) {

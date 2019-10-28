@@ -4,42 +4,42 @@ import {staticInterpret, interpret} from "../Interpreter3.js";
 describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
-    const result = {type: "c#", body: [], absNote: "c#4", octave: 4, num12: 1};
+    const result = {type: "c#", body: [], absNote: "c#4", octave: 4, num12: 1, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("A5", function () {
     const tst = parse("A5");
-    const result = {type: "a", body: [], absNote: "a5", octave: 5, num12: 9};
+    const result = {type: "a", body: [], absNote: "a5", octave: 5, num12: 9, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5", function () {
     const tst = parse("Bb5");
-    const result = {type: "bb", body: [], absNote: "bb5", octave: 5, num12: 10};
+    const result = {type: "bb", body: [], absNote: "bb5", octave: 5, num12: 10, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10", function () {
     const tst = parse("D#10");
-    const result = {type: "d#", body: [], absNote: "d#10", octave: 10, num12: 3};
+    const result = {type: "d#", body: [], absNote: "d#10", octave: 10, num12: 3, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
-  it("E", function () {
-    const tst = parse("E");
-    const result = {type: "e", body: [], absNote: "e", octave: 4, num12: 4};
+  it("!E", function () {
+    const tst = parse("!E");
+    const result = {type: "e", body: [], absNote: "!e", octave: 4, num12: 4, frozen: 1};
     expectToEqualWithDiff(tst, result);
   });
-  it("f#", function () {
-    const tst = parse("f#");
-    const result = {type: "f#", body: [], absNote: "f#", octave: 4, num12: 6};
+  it("!f#", function () {
+    const tst = parse("!f#");
+    const result = {type: "f#", body: [], absNote: "!f#", octave: 4, num12: 6, frozen: 1};
     expectToEqualWithDiff(tst, result);
   });
-  it("g0", function () {
-    const tst = parse("g0");
-    const result = {type: "g", body: [], absNote: "g0", octave: 0, num12: 7};
+  it("!g0", function () {
+    const tst = parse("!g0");
+    const result = {type: "g", body: [], absNote: "!g0", octave: 0, num12: 7, frozen: 1};
     expectToEqualWithDiff(tst, result);
   });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
-  //   const result = {type: "absNote", body: [], tone: "d", /*augment: 1, */octave: -2};
+  //   const result = {type: "absNote", body: [], tone: "d", /*augment: 1, */octave: -2, frozen: 0};
   //   expectToEqualWithDiff(tst, result);
   // });
 });
@@ -117,18 +117,38 @@ describe('absolute clef, absolute notes', function () {
   it("Setting the clef, nice an simple: G4(C4)", async function () {
     const tst = parse("G4(C4)");
     const res = {
-      type: "g", absNote: "g4", num12: 7, octave: 4,
+      type: "g", absNote: "g4", num12: 7, frozen: 0, octave: 4,
       body: [
-        {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
+        {type: "c", absNote: "c4", num12: 0, frozen: 0, octave: 4, body: []},
       ]
     };
     res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("G4(C4)");
     const res2 = {
-      type: "g", absNote: "g4", num12: 7, octave: 4,
+      type: "g", absNote: "g4", num12: 7, frozen: 0, octave: 4,
       body: [
         {type: "~~", num: -7, body: []},
+      ]
+    };
+    res2.body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
+  it("Freezing a note: G4(!C4)", async function () {
+    const tst = parse("G4(!C4)");
+    const res = {
+      type: "g", absNote: "g4", num12: 7, frozen: 0, octave: 4,
+      body: [
+        {type: "c", absNote: "!c4", num12: 0, frozen: 1, octave: 4, body: []},
+      ]
+    };
+    res.body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret("G4(!C4)");
+    const res2 = {
+      type: "g", absNote: "g4", num12: 7, frozen: 0, octave: 4,
+      body: [
+        {type: "c", absNote: "!c4", num12: 0, frozen: 1, octave: 4, body: []},
       ]
     };
     res2.body.isDirty = 1;
@@ -137,12 +157,12 @@ describe('absolute clef, absolute notes', function () {
   it("Overriding the clef from above: D3(G4(C4))", async function () {
     const tst = parse("D3(G4(C4))");
     const res = {
-      type: "d", absNote: "d3", num12: 2, octave: 3,
+      type: "d", absNote: "d3", num12: 2, frozen: 0, octave: 3,
       body: [
         {
-          type: "g", absNote: "g4", num12: 7, octave: 4,
+          type: "g", absNote: "g4", num12: 7, frozen: 0, octave: 4,
           body: [
-            {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
+            {type: "c", absNote: "c4", num12: 0, frozen: 0, octave: 4, body: []},
           ]
         }
       ]
@@ -153,7 +173,7 @@ describe('absolute clef, absolute notes', function () {
     //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
     const tst2 = await staticInterpret("D3(G4(C4))");
     const res2 = {
-      type: "d", absNote: "d3", num12: 2, octave: 3,
+      type: "d", absNote: "d3", num12: 2, frozen: 0, octave: 3,
       body: [
         {
           type: "~~", num: 0,
@@ -167,37 +187,39 @@ describe('absolute clef, absolute notes', function () {
     res2.body[0].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
-  // it("Overriding the clef from below: D3(!G4(C4))", async function () {
-  //   const tst = parse("D3(G4(C4))");
-  //   const res = {
-  //     type: "d", absNote: "d3", num12: 2, octave: 3,
-  //     body: [
-  //       {
-  //         type: "g", absNote: "g4", num12: 7, octave: 4,
-  //         body: [
-  //           {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
-  //         ]
-  //       }
-  //     ]
-  //   };
-  //   res.body.isDirty = 1;
-  //   expectToEqualWithDiff(tst, res);
-  //   //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
-  //   const tst2 = await staticInterpret("D3(G4(C4))");
-  //   const res2 = {
-  //     type: "d", absNote: "d3", num12: 2, octave: 3,
-  //     body: [
-  //       {
-  //         type: "~~", num12: -16,
-  //         body: [
-  //           {type: "~~", num12: -7, body: []},
-  //         ]
-  //       }
-  //     ]
-  //   };
-  //   res2.body.isDirty = 1;
-  //   expectToEqualWithDiff(tst2, res2);
-  // });
+  it("Freezing the clef, overriding the clef from below: D3(!G4(C4))", async function () {
+    const tst = parse("D3(!G4(C4))");
+    const res = {
+      type: "d", absNote: "d3", num12: 2, frozen: 0, octave: 3,
+      body: [
+        {
+          type: "g", absNote: "!g4", num12: 7, frozen: 1, octave: 4,
+          body: [
+            {type: "c", absNote: "c4", num12: 0, frozen: 0, octave: 4, body: []},
+          ]
+        }
+      ]
+    };
+    res.body.isDirty = 1;
+    res.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    //the clef G4 is frozen, it is not converted into a relative clef.
+    const tst2 = await staticInterpret("D3(!G4(C4))");
+    const res2 = {
+      type: "d", absNote: "d3", num12: 2, frozen: 0, octave: 3,
+      body: [
+        {
+          type: "g", absNote: "!g4", num12: 7, frozen: 1, octave: 4,
+          body: [
+            {type: "~~", num: -7, body: []},
+          ]
+        }
+      ]
+    };
+    res2.body.isDirty = 1;
+    res2.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
   it("parse: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
     const tst = parse(str);
@@ -206,15 +228,16 @@ describe('absolute clef, absolute notes', function () {
       absNote: "g4",
       num12: 7,
       octave: 4,
+      frozen: 0,
       body: [
         [
-          {type: "c", absNote: "c4", num12: 0, octave: 4, body: []},
-          {type: "db", absNote: "db", num12: 1, octave: 4, body: []},
-          {type: "eb", absNote: "eb3", num12: 3, octave: 3, body: []},
-          {type: "f", absNote: "f", num12: 5, octave: 4, body: []},
-          {type: "g", absNote: "g4", num12: 7, octave: 4, body: []},
-          {type: "a#", absNote: "a#", num12: 10, octave: 4, body: []},
-          {type: "b", absNote: "b4", num12: 11, octave: 4, body: []}
+          {type: "c", absNote: "c4", num12: 0, frozen: 0, octave: 4, body: []},
+          {type: "db", absNote: "db", num12: 1, frozen: 0, octave: 4, body: []},
+          {type: "eb", absNote: "eb3", num12: 3, frozen: 0, octave: 3, body: []},
+          {type: "f", absNote: "f", num12: 5, frozen: 0, octave: 4, body: []},
+          {type: "g", absNote: "g4", num12: 7, frozen: 0, octave: 4, body: []},
+          {type: "a#", absNote: "a#", num12: 10, frozen: 0, octave: 4, body: []},
+          {type: "b", absNote: "b4", num12: 11, frozen: 0, octave: 4, body: []}
         ]
       ]
     };
@@ -230,6 +253,7 @@ describe('absolute clef, absolute notes', function () {
       absNote: "g4",
       num12: 7,
       octave: 4,
+      frozen: 0,
       body: [
         [
           {type: "~~", num: -7, body: []},

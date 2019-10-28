@@ -1,5 +1,5 @@
 const tokens = [
-  /([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,  //absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, a+3)
+  /!?([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,//absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /~([a-gA-G])([#b]?)([+-]?\d+)?/,           //relative alpha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
@@ -167,7 +167,8 @@ function parseFunctionName(t) {
     const tone = t[2].toLowerCase();
     const num12 = absScale12[tone];
     const octave = t[3] ? parseInt(t[3]) : 4;
-    return {type: tone, absNote: type, num12, octave};
+    const frozen = type[0] === "!" ? 1 : 0;
+    return {type: tone, absNote: type, num12, octave, frozen};
   } else if (t[4]) {                                        //relative 12 tones
     return {type: "~~", num: parseInt(t[5])}
   } else if (t[6]) {                                        //relative 7 tones
@@ -190,7 +191,7 @@ function parseFunctionName(t) {
 
 function parseFunction(tokens) {
   const t = tokens[0];
-  if (!(t[1] || t[4]|| t[6] || t[12] || t[13] || t[14]))
+  if (!(t[1] || t[4] || t[6] || t[12] || t[13] || t[14]))
     return;
   const fun = parseFunctionName(nextToken(tokens));
   fun.body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
