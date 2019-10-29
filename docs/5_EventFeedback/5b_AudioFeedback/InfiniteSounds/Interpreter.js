@@ -21,10 +21,11 @@ export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
   if (node instanceof Array)
-    return await interpretArray(node, table, ctx.concat([node]));
+    return await interpretArray(node, table, [node].concat(ctx));
   //todo here I can do a topDown pass
   const clone = Object.assign({}, node);
-  clone.body = await interpretArray(clone.body, table, ctx.concat([node]));
+  if (clone.body)
+    clone.body = await interpretArray(clone.body, table, [node].concat(ctx));
   const fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;
 }

@@ -20,11 +20,11 @@ function reduceList(left, right, isLast) {
 }
 
 ListOps[":"] = function ({body: [left, right]}, ctx) {
-  return reduceList(left, right, !ctx.length || ctx[ctx.length - 1].type !== ":");
+  return reduceList(left, right, !ctx.length || ctx[0].type !== ":");
 };
 
 ListOps["|"] = function ({body: [left, right]}, ctx) {
-  return reduceList(left, right, !ctx.length || ctx[ctx.length - 1].type !== "|");
+  return reduceList(left, right, !ctx.length || ctx[0].type !== "|");
 };
 
 function connectMtoN(a, b) {
