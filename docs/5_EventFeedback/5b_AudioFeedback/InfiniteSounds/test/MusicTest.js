@@ -336,7 +336,6 @@ describe('absolute clef, absolute notes', function () {
     };
     res2.body.isDirty = 1;
     res2.body[0].isDirty = 1;
-    console.log(JSON.stringify(tst2, null, 2));
     expectToEqualWithDiff(tst2, res2);
   });
 })
