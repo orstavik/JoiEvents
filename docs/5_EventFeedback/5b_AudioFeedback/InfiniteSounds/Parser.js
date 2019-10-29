@@ -181,7 +181,7 @@ const absScale12 = {
  */
 function parseFunctionName(tokens) {
   let t = tokens[0];
-  if (!(t[1] || t[5] || t[7] || t[10] || t[12] || t[15] || t[16] || t[17]))
+  if (!(t[1] /*|| t[5] || t[7] || t[10] */|| t[12] || t[15] || t[16] || t[17]))
     return;
 
   t = nextToken(tokens);
@@ -212,27 +212,8 @@ function parseFunctionName(tokens) {
     const mode = parseMode(tokens);
     if (mode !== undefined) res.mode = mode;
     return res;
-  } else if (t[5]) {                                        //relative 12 tones
-    const res = {type: "~~", num: parseInt(t[6])};
-    const mode = parseMode(tokens);
-    if (mode !== undefined) res.mode = mode;
-    return res;
-  } else if (t[7]) {                                        //relative 7 tones
-    return {
-      type: "~",
-      num: parseInt(t[8]),
-      augment: t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0,
-    };
-  }
+  } else
   //todo modes in addition to the key, so that we can have ~7 notes
-  if (t[10]) {                                               //relative alpha tone
-    const tone = t[11].toLowerCase();
-    return {
-      type: "relNote",
-      tone,
-      num: absScale12[tone]
-    };
-  }
   return {type};
 }
 
@@ -266,6 +247,30 @@ function parsePrimitive(tokens) {
     const num = parseFloat(t[19]);
     let type = t[20].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
     return type === "" ? num : {type, body: [num]};
+  }
+  if (lookAhead[10]) {                                               //relative alpha tone
+    let t = nextToken(tokens);
+    const tone = t[11].toLowerCase();
+    return {
+      type: "relNote",
+      tone,
+      num: absScale12[tone]
+    };
+  }
+  if (lookAhead[7]) {                                        //relative 7 tones
+    let t = nextToken(tokens);
+    return {
+      type: "~",
+      num: parseInt(t[8]),
+      augment: t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0,
+    };
+  }
+  if (lookAhead[5]) {                                        //relative 12 tones
+    let t = nextToken(tokens);
+    const res = {type: "~~", num: parseInt(t[6])};
+    const mode = parseMode(tokens);
+    if (mode !== undefined) res.mode = mode;
+    return res;
   }
 }
 

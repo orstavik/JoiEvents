@@ -115,44 +115,44 @@ describe('absolute notes with modes', function () {
 describe('relative 12 notes', function () {
   it("~~0", function () {
     const tst = parse("~~0");
-    expectToEqualWithDiff(tst, {type: "~~", body: [], num: 0});
+    expectToEqualWithDiff(tst, {type: "~~", num: 0});
   });
 
   it("~~-11", function () {
     const tst = parse("~~-11");
-    expectToEqualWithDiff(tst, {type: "~~", body: [], num: -11});
+    expectToEqualWithDiff(tst, {type: "~~", num: -11});
   });
 
   it("~~+11", function () {
     const tst = parse("~~+11");
-    expectToEqualWithDiff(tst, {type: "~~", body: [], num: 11});
+    expectToEqualWithDiff(tst, {type: "~~", num: 11});
   });
 
   it("~~10", function () {
     const tst = parse("~~10");
-    expectToEqualWithDiff(tst, {type: "~~", body: [], num: 10});
+    expectToEqualWithDiff(tst, {type: "~~", num: 10});
   });
 });
 
 describe('relative alpha notes', function () {
   it("~C", function () {
     const tst = parse("~C");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", num: 0});
+    expectToEqualWithDiff(tst, {type: "relNote", tone: "c", num: 0});
   });
 
   it("~b", function () {
     const tst = parse("~b");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", num: 11});
+    expectToEqualWithDiff(tst, {type: "relNote", tone: "b", num: 11});
   });
 
   it("~f#", function () {
     const tst = parse("~f#");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f#", num: 6});
+    expectToEqualWithDiff(tst, {type: "relNote", tone: "f#", num: 6});
   });
 
   it("~Bb", function () {
     const tst = parse("~Bb");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "bb", num: 10});
+    expectToEqualWithDiff(tst, {type: "relNote", tone: "bb", num: 10});
   });
   // it("~Bb#-10", function () {
   //   expect error
@@ -162,22 +162,22 @@ describe('relative alpha notes', function () {
 describe('relative 7 notes', function () {
   it("~0", function () {
     const tst = parse("~0");
-    expectToEqualWithDiff(tst, {type: "~", body: [], num: 0, augment: 0});
+    expectToEqualWithDiff(tst, {type: "~", num: 0, augment: 0});
   });
 
   it("~-11", function () {
     const tst = parse("~-11");
-    expectToEqualWithDiff(tst, {type: "~", body: [], num: -11, augment: 0});
+    expectToEqualWithDiff(tst, {type: "~", num: -11, augment: 0});
   });
 
   it("~+11b", function () {
     const tst = parse("~+11b");
-    expectToEqualWithDiff(tst, {type: "~", body: [], num: 11, augment: -1});
+    expectToEqualWithDiff(tst, {type: "~", num: 11, augment: -1});
   });
 
   it("~10#", function () {
     const tst = parse("~10#");
-    expectToEqualWithDiff(tst, {type: "~", body: [], num: 10, augment: 1});
+    expectToEqualWithDiff(tst, {type: "~", num: 10, augment: 1});
   });
 });
 
