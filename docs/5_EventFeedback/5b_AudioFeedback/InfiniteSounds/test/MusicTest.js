@@ -115,44 +115,44 @@ describe('absolute notes with modes', function () {
 describe('relative 12 notes', function () {
   it("~~0", function () {
     const tst = parse("~~0");
-    expectToEqualWithDiff(tst, {type: "~~", num: 0});
+    expectToEqualWithDiff(tst, {type: "~~", body: [0]});
   });
 
   it("~~-11", function () {
     const tst = parse("~~-11");
-    expectToEqualWithDiff(tst, {type: "~~", num: -11});
+    expectToEqualWithDiff(tst, {type: "~~", body: [-11]});
   });
 
   it("~~+11", function () {
     const tst = parse("~~+11");
-    expectToEqualWithDiff(tst, {type: "~~", num: 11});
+    expectToEqualWithDiff(tst, {type: "~~", body: [11]});
   });
 
   it("~~10", function () {
     const tst = parse("~~10");
-    expectToEqualWithDiff(tst, {type: "~~", num: 10});
+    expectToEqualWithDiff(tst, {type: "~~", body: [10]});
   });
 });
 
 describe('relative alpha notes', function () {
   it("~C", function () {
     const tst = parse("~C");
-    expectToEqualWithDiff(tst, {type: "relNote", tone: "c", num: 0});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [0, "c"]});
   });
 
   it("~b", function () {
     const tst = parse("~b");
-    expectToEqualWithDiff(tst, {type: "relNote", tone: "b", num: 11});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [11, "b"]});
   });
 
   it("~f#", function () {
     const tst = parse("~f#");
-    expectToEqualWithDiff(tst, {type: "relNote", tone: "f#", num: 6});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [6, "f#"]});
   });
 
   it("~Bb", function () {
     const tst = parse("~Bb");
-    expectToEqualWithDiff(tst, {type: "relNote", tone: "bb", num: 10});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [10, "bb"]});
   });
   // it("~Bb#-10", function () {
   //   expect error
@@ -162,22 +162,22 @@ describe('relative alpha notes', function () {
 describe('relative 7 notes', function () {
   it("~0", function () {
     const tst = parse("~0");
-    expectToEqualWithDiff(tst, {type: "~", num: 0, augment: 0});
+    expectToEqualWithDiff(tst, {type: "~", body: [0, 0]});
   });
 
   it("~-11", function () {
     const tst = parse("~-11");
-    expectToEqualWithDiff(tst, {type: "~", num: -11, augment: 0});
+    expectToEqualWithDiff(tst, {type: "~", body: [-11, 0]});
   });
 
   it("~+11b", function () {
     const tst = parse("~+11b");
-    expectToEqualWithDiff(tst, {type: "~", num: 11, augment: -1});
+    expectToEqualWithDiff(tst, {type: "~", body: [11, -1]});
   });
 
   it("~10#", function () {
     const tst = parse("~10#");
-    expectToEqualWithDiff(tst, {type: "~", num: 10, augment: 1});
+    expectToEqualWithDiff(tst, {type: "~", body: [10, 1]});
   });
 });
 
@@ -197,7 +197,7 @@ describe('absolute clef, absolute notes', function () {
     const res2 = {
       type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4,
       body: [
-        {type: "~~", num: -7}
+        {type: "~~", body: [-7]}
       ]
     };
     res2.body.isDirty = 1;
@@ -251,7 +251,7 @@ describe('absolute clef, absolute notes', function () {
           type: "~~",
           num: 0,
           body: [
-            {type: "~~", num: -7}
+            {type: "~~", body: [-7]}
           ]
         }
       ]
@@ -286,7 +286,7 @@ describe('absolute clef, absolute notes', function () {
         {
           type: "absNote", tone: "!G4", mode: "ion", num: 7, frozen: 1, octave: 4,
           body: [
-            {type: "~~", num: -7}
+            {type: "~~", body: [-7]}
           ]
         }
       ]
@@ -324,13 +324,13 @@ describe('absolute clef, absolute notes', function () {
       type: "absNote", tone: "G4", num: 7, octave: 4, mode: "ion", frozen: 0,
       body: [
         [
-          {type: "~~", num: -7},
-          {type: "~~", num: -6},
-          {type: "~~", num: -16},
-          {type: "~~", num: -2},
-          {type: "~~", num: 0},
-          {type: "~~", num: 3},
-          {type: "~~", num: 4}
+          {type: "~~", body: [-7]},
+          {type: "~~", body: [-6]},
+          {type: "~~", body: [-16]},
+          {type: "~~", body: [-2]},
+          {type: "~~", body: [0]},
+          {type: "~~", body: [3]},
+          {type: "~~", body: [4]}
         ]
       ]
     };

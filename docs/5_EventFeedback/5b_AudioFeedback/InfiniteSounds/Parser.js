@@ -125,12 +125,12 @@ function sortOperators(nodeOpNode) {
   return nodeOpNode[0];
 }
 
-function parseExpressionFunction(tokens){
+function parseExpressionFunction(tokens) {
   const expressions = parseExpressions(tokens);
   if (!tokens.length)
     return expressions;
   const block = parseGroupArray(tokens, "(", ")");
-  if (block){
+  if (block) {
     const body = [expressions, ...block];
     if (block.isDirty || expressions.body)
       body.isDirty = 1;
@@ -218,28 +218,21 @@ function parsePrimitive(tokens) {
   if (lookAhead[10]) {                                               //relative alpha tone
     let t = nextToken(tokens);
     const tone = t[11].toLowerCase();
-    return {
-      type: "relNote",
-      tone,
-      num: absScale12[tone]
-    };
+    return {type: "relNote", body: [absScale12[tone], tone]};
   }
   if (lookAhead[7]) {                                        //relative 7 tones
     let t = nextToken(tokens);
-    return {
-      type: "~",
-      num: parseInt(t[8]),
-      augment: t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0,
-    };
+    return {type: "~", body: [parseInt(t[8]), t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0]};
   }
   if (lookAhead[5])                                         //relative 12 tones
-    return {type: "~~", num: parseInt(nextToken(tokens)[6])};
+    return {type: "~~", body: [parseInt(nextToken(tokens)[6])]};
   if (lookAhead[1]) {
     let t = nextToken(tokens);
     const type = t[0];
     const tone = t[2].toLowerCase();
     const num = absScale12[tone];
-    const octave = t[3] ? parseInt(t[3]) : 4;            /*** default octave for absolute tones is 4.*/
+    const octave = t[3] ? parseInt(t[3]) : 4;
+    /*** default octave for absolute tones is 4.*/
     const frozen = type[0] === "!" ? 1 : 0;
     const mode = t[4] !== undefined ? t[4] : "ion";
     //todo const mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;

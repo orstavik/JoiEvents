@@ -34,7 +34,7 @@ MusicStatic["absNote"] = function (node, ctx) {
   if (!absClef)
     return node;
   const num = node.num - absClef.num + (node.octave - absClef.octave) * 12;
-  return {type: "~~", num};
+  return {type: "~~", body: [num]};
 };
 
 MusicStatic["expFun"] = function (node, ctx) {

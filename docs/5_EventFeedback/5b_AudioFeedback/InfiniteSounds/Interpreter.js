@@ -20,12 +20,12 @@ async function interpretArray(node, table, ctx) {
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
-  if (node instanceof Array)
+  if (node instanceof Array)                                                //todo this would be a primitive
     return await interpretArray(node, table, [node].concat(ctx));
   //todo here I can do a topDown pass
   const clone = Object.assign({}, node);
   if (clone.body)
-    clone.body = await interpretArray(clone.body, table, [node].concat(ctx));
+    clone.body = await interpretArray(clone.body, table, [node].concat(ctx)); //todo the body would need to be marked as a list of primitives
   const fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;
 }
