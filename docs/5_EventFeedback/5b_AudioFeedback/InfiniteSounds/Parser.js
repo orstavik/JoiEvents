@@ -1,10 +1,11 @@
 // const absNote = /!?([a-gA-G][#b]?)(\d+)?(?:%(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?))?(?![_a-zA-Z\d#-])/;
 //
 const tokens = [
-  /!?([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,//absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
+  //absolute notes: C#4lydian, Fb, a4, a4, a0dor, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
+  /!?([a-gA-G][#b]?)(\d+)?(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)?(?![_a-zA-Z\d#-])/,
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
-  /~([a-gA-G][#b]?)(wtf)?/,                  //relative alpha notes: ~C, ~d#, ~Eb, ~bb
+  /~([a-gA-G][#b]?)/,                        //relative alpha notes: ~C, ~d#, ~Eb, ~bb
   /%(?:(-?\d+)|(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)/,//mode and modulo syntax
   /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
@@ -180,7 +181,7 @@ const absScale12 = {
  */
 function parseFunctionName(tokens) {
   let t = tokens[0];
-  if (!(t[1] || t[4] || t[6] || t[9] || t[12] || t[15] || t[16] || t[17]))
+  if (!(t[1] || t[5] || t[7] || t[10] || t[12] || t[15] || t[16] || t[17]))
     return;
 
   t = nextToken(tokens);
@@ -211,21 +212,21 @@ function parseFunctionName(tokens) {
     const mode = parseMode(tokens);
     if (mode !== undefined) res.mode = mode;
     return res;
-  } else if (t[4]) {                                        //relative 12 tones
-    const res = {type: "~~", num: parseInt(t[5])};
+  } else if (t[5]) {                                        //relative 12 tones
+    const res = {type: "~~", num: parseInt(t[6])};
     const mode = parseMode(tokens);
     if (mode !== undefined) res.mode = mode;
     return res;
-  } else if (t[6]) {                                        //relative 7 tones
+  } else if (t[7]) {                                        //relative 7 tones
     return {
       type: "~",
-      num: parseInt(t[7]),
-      augment: t[8] === "#" ? 1 : t[8] === "b" ? -1 : 0,
+      num: parseInt(t[8]),
+      augment: t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0,
     };
   }
   //todo modes in addition to the key, so that we can have ~7 notes
-  if (t[9]) {                                               //relative alpha tone
-    const tone = t[10].toLowerCase();
+  if (t[10]) {                                               //relative alpha tone
+    const tone = t[11].toLowerCase();
     return {
       type: "relNote",
       tone,
