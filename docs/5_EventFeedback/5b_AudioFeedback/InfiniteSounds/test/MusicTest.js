@@ -4,110 +4,110 @@ import {staticInterpret, interpret} from "../Interpreter.js";
 describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
-    const result = {type: "absNote", body: [], tone: "c#4", octave: 4, num: 1, frozen: 0};
+    const result = {type: "absNote", mode: "ion", tone: "C#4", octave: 4, num: 1, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("A5", function () {
     const tst = parse("A5");
-    const result = {type: "absNote", body: [], tone: "a5", octave: 5, num: 9, frozen: 0};
+    const result = {type: "absNote", mode: "ion", tone: "A5", octave: 5, num: 9, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5", function () {
     const tst = parse("Bb5");
-    const result = {type: "absNote", body: [], tone: "bb5", octave: 5, num: 10, frozen: 0};
+    const result = {type: "absNote", mode: "ion", tone: "Bb5", octave: 5, num: 10, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10", function () {
     const tst = parse("D#10");
-    const result = {type: "absNote", body: [], tone: "d#10", octave: 10, num: 3, frozen: 0};
+    const result = {type: "absNote", mode: "ion", tone: "D#10", octave: 10, num: 3, frozen: 0};
     expectToEqualWithDiff(tst, result);
   });
   it("!E", function () {
     const tst = parse("!E");
-    const result = {type: "absNote", body: [], tone: "!e", octave: 4, num: 4, frozen: 1};
+    const result = {type: "absNote", mode: "ion", tone: "!E", octave: 4, num: 4, frozen: 1};
     expectToEqualWithDiff(tst, result);
   });
   it("!f#", function () {
     const tst = parse("!f#");
-    const result = {type: "absNote", body: [], tone: "!f#", octave: 4, num: 6, frozen: 1};
+    const result = {type: "absNote", mode: "ion", tone: "!f#", octave: 4, num: 6, frozen: 1};
     expectToEqualWithDiff(tst, result);
   });
   it("!g0", function () {
     const tst = parse("!g0");
-    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1};
+    const result = {type: "absNote", mode: "ion", tone: "!g0", octave: 0, num: 7, frozen: 1};
     expectToEqualWithDiff(tst, result);
   });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
-  //   const result = {type: "absNote", body: [], tone: "d", /*augment: 1, */octave: -2, frozen: 0};
+  //   const result = {type: "absNote", mode: "ion", tone: "d", /*augment: 1, */octave: -2, frozen: 0};
   //   expectToEqualWithDiff(tst, result);
   // });
 });
 
 describe('absolute notes with modes', function () {
-  it("C#4%lyd", function () {
-    const tst = parse("C#4%lyd");
-    const result = {type: "absNote", body: [], tone: "c#4", octave: 4, num: 1, frozen: 0, mode: "lyd"};
+  it("C#4lyd", function () {
+    const tst = parse("C#4lyd");
+    const result = {type: "absNote", mode: "ion", tone: "C#4lyd", octave: 4, num: 1, frozen: 0, mode: "lyd"};
     expectToEqualWithDiff(tst, result);
   });
-  it("A5%locrian", function () {
-    const tst = parse("A5%locrian");
-    const result = {type: "absNote", body: [], tone: "a5", octave: 5, num: 9, frozen: 0, mode: "locr"};
+  it("A5locrian", function () {
+    const tst = parse("A5locrian");
+    const result = {type: "absNote", tone: "A5locrian", octave: 5, num: 9, frozen: 0, mode: "locr"};
     expectToEqualWithDiff(tst, result);
   });
-  it("Bb5%dorian", function () {
-    const tst = parse("Bb5%dorian");
-    const result = {type: "absNote", body: [], tone: "bb5", octave: 5, num: 10, frozen: 0, mode: "dor"};
+  it("Bb5dorian", function () {
+    const tst = parse("Bb5dorian");
+    const result = {type: "absNote", tone: "Bb5dorian", octave: 5, num: 10, frozen: 0, mode: "dor"};
     expectToEqualWithDiff(tst, result);
   });
-  it("D#10%mixolyd", function () {
-    const tst = parse("D#10%mixolyd");
-    const result = {type: "absNote", body: [], tone: "d#10", octave: 10, num: 3, frozen: 0, mode: "mixolyd"};
+  it("D#10mixolyd", function () {
+    const tst = parse("D#10mixolyd");
+    const result = {type: "absNote", tone: "D#10mixolyd", octave: 10, num: 3, frozen: 0, mode: "mixolyd"};
     expectToEqualWithDiff(tst, result);
   });
-  it("!E%ion", function () {
-    const tst = parse("!E%ion");
-    const result = {type: "absNote", body: [], tone: "!e", octave: 4, num: 4, frozen: 1, mode: "ion"};
+  it("!Eion", function () {
+    const tst = parse("!Eion");
+    const result = {type: "absNote", tone: "!Eion", octave: 4, num: 4, frozen: 1, mode: "ion"};
     expectToEqualWithDiff(tst, result);
   });
-  it("!f#%phryg", function () {
-    const tst = parse("!f#%phryg");
-    const result = {type: "absNote", body: [], tone: "!f#", octave: 4, num: 6, frozen: 1, mode: "phryg"};
+  it("!f#phryg", function () {
+    const tst = parse("!f#phryg");
+    const result = {type: "absNote", tone: "!f#phryg", octave: 4, num: 6, frozen: 1, mode: "phryg"};
     expectToEqualWithDiff(tst, result);
   });
-  it("!g0%aeol", function () {
-    const tst = parse("!g0%aeol");
-    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "aeol"};
+  it("!g0aeol", function () {
+    const tst = parse("!g0aeol");
+    const result = {type: "absNote", tone: "!g0aeol", octave: 0, num: 7, frozen: 1, mode: "aeol"};
     expectToEqualWithDiff(tst, result);
   });
-  // it("!g0%major", function () {
-  //   const tst = parse("!g0%maj");
-  //   const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "ion"};
+  // it("!g0major", function () {
+  //   const tst = parse("!g0maj");
+  //   const result = {type: "absNote", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "ion"};
   //   expectToEqualWithDiff(tst, result);
   // });
-  // it("!g0%min", function () {
-  //   const tst = parse("!g0%min");
-  //   const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "aeol"};
+  // it("!g0min", function () {
+  //   const tst = parse("!g0min");
+  //   const result = {type: "absNote", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: "aeol"};
   //   expectToEqualWithDiff(tst, result);
   // });
-  it("!g0%2", function () {
-    const tst = parse("!g0%2");
-    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 2};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!g0%-1", function () {
-    const tst = parse("!g0%-1");
-    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: -1};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!g0%0", function () {
-    const tst = parse("!g0%0");
-    const result = {type: "absNote", body: [], tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 0};
-    expectToEqualWithDiff(tst, result);
-  });
+  // it("!g0%2", function () {
+  //   const tst = parse("!g0%2");
+  //   const result = {type: "absNote", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 2};
+  //   expectToEqualWithDiff(tst, result);
+  // });
+  // it("!g0%-1", function () {
+  //   const tst = parse("!g0%-1");
+  //   const result = {type: "absNote", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: -1};
+  //   expectToEqualWithDiff(tst, result);
+  // });
+  // it("!g0%0", function () {
+  //   const tst = parse("!g0%0");
+  //   const result = {type: "absNote", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 0};
+  //   expectToEqualWithDiff(tst, result);
+  // });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
-  //   const result = {type: "absNote", body: [], tone: "d", /*augment: 1, */octave: -2, frozen: 0};
+  //   const result = {type: "absNote", tone: "d", /*augment: 1, */octave: -2, frozen: 0};
   //   expectToEqualWithDiff(tst, result);
   // });
 });

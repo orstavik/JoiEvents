@@ -181,7 +181,7 @@ const absScale12 = {
  */
 function parseFunctionName(tokens) {
   let t = tokens[0];
-  if (!(t[1] /*|| t[5] || t[7] || t[10] */|| t[12] || t[15] || t[16] || t[17]))
+  if (!(/*t[1] || t[5] || t[7] || t[10] || */t[12] || t[15] || t[16] || t[17]))
     return;
 
   t = nextToken(tokens);
@@ -203,16 +203,6 @@ function parseFunctionName(tokens) {
   //we can simply remove the inner clef. It is no longer needed. but, that would make the aom very different from the template.
   //no. its better to leave it in there as an empty clef.
 
-  if (t[1]) {
-    const tone = t[2].toLowerCase();
-    const num = absScale12[tone];
-    const octave = t[3] ? parseInt(t[3]) : 4;
-    const frozen = type[0] === "!" ? 1 : 0;
-    const res = {type: "absNote", tone: type, num, octave, frozen};
-    const mode = parseMode(tokens);
-    if (mode !== undefined) res.mode = mode;
-    return res;
-  } else
   //todo modes in addition to the key, so that we can have ~7 notes
   return {type};
 }
@@ -271,6 +261,16 @@ function parsePrimitive(tokens) {
     const mode = parseMode(tokens);
     if (mode !== undefined) res.mode = mode;
     return res;
+  }
+  if (lookAhead[1]) {
+    let t = nextToken(tokens);
+    const type = t[0];
+    const tone = t[2].toLowerCase();
+    const num = absScale12[tone];
+    const octave = t[3] ? parseInt(t[3]) : 4;
+    const frozen = type[0] === "!" ? 1 : 0;
+    const mode = t[4] !== undefined ? t[4] : "ion";
+    return {type: "absNote", tone: type, num, octave, mode, frozen};
   }
 }
 
