@@ -1,3 +1,18 @@
+// Relative clefs only works down, absolute only works up.
+// Modes and keys are bound in one.
+// The topmost absolute clefs, or frozen (closed) clefs, set the initial sound.
+
+// Alpha relative notes without an absolute clef note, and a value other than ~~0 or ~0 makes no sense.
+// It doesn't crash, but throws a warning and sets the value of the clef to ~0.
+
+// Leaf notes with a mode makes no sense. It doesn't crash, but throws a warning.
+
+// relative vs. absolute notes.
+// they don't mix, it is either a relative note, or an absolute note.
+// but the mode might be described as alphabetical (~2%lyd).
+// And if so, I have to find the parent mode of lyd in order
+// to convert lyd into mathematical clicks.
+
 function getAbsoluteClef(ctx) {
   for (let i = ctx.length - 1; i >= 0; i--) {
     if (ctx[i].type === "absNote")

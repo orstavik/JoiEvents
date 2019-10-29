@@ -100,6 +100,9 @@ function parseOperator(tokens) {
 }
 
 //todo make a full operator priority table
+
+//todo % modulo operator would be interpreted as a step in the mode shifts. % has high priority!
+
 const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
 
 function sortOperators(nodeOpNode) {
@@ -167,16 +170,22 @@ function parseFunctionName(tokens) {
   t = nextToken(tokens);
   const type = t[0].toLowerCase();
 
-  // % modulo operator would be interpreted as a step in the mode shifts.
 // If it comes within a tone description, then it would set the mode.
 // If a mode is set, then all notes below can be interpreted in the scale of 7 to this modeKey.
-// If no mode is set, then we cannot, we let the tones remain in the scale of 12? or do we substitute in the major scale?
-//if a mode is set above another mode, that means that the tones below should be trasnposed into that upper mode.
+// If no mode is set, then we cannot, we let the tones remain in the scale of 12? or do we substitute in the major scale
+// I think we set to major?
+// if a mode is set above another mode, that means that the tones below should be trasnposed into that upper mode.
 // that means that the mode is 0-nulled out. made into a relative mode with 0 steps.
 // if a mode is to remain, that is, it is intended to overwrite the upper/main mode of the musical sequence, then
 // it should have a %! prefix. How this should be implemented technically, I don't see right now.
 
-  //todo [12] and [13] should become the mode tone name
+  //to transpose a clef a%dor ( c%lyd( c,e,f ) )
+  //the leaf tones are simple, they are just converted to relatives to nearest absolute clef.
+  //the lower clef key is also simple, it is just overwritten and converted to ~0 by the upper clef key.
+  //the same with the inner clef mode, it is also overwritten. It is converted to %0.
+  //we can simply remove the inner clef. It is no longer needed. but, that would make the aom very different from the template.
+  //no. its better to leave it in there as an empty clef.
+
   if (t[1]) {
     const tone = t[2].toLowerCase();
     const num = absScale12[tone];
