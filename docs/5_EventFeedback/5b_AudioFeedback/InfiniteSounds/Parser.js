@@ -1,7 +1,5 @@
-// const absNote = /!?([a-gA-G][#b]?)(\d+)?(?:%(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?))?(?![_a-zA-Z\d#-])/;
-//
 const tokens = [
-  //absolute notes: C#4lydian, Fb, a4, a4, a0dor, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
+  //absolute notes: C#4lydian, a0dor, baeolian, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /!?([a-gA-G][#b]?)(\d+)?(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)?(?![_a-zA-Z\d#-])/,
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
@@ -175,18 +173,6 @@ const absScale12 = {
   "b": 11
 };
 
-/**
- * all function names are toLowerCase().
- * default octave for absolute tones is 4.
- */
-function parseFunctionName(tokens) {
-  let t = tokens[0];
-  if (!(/*t[1] || t[5] || t[7] || t[10] || */t[12] || t[15] || t[16] || t[17]))
-    return;
-
-  t = nextToken(tokens);
-  const type = t[0].toLowerCase();
-
 // If it comes within a tone description, then it would set the mode.
 // If a mode is set, then all notes below can be interpreted in the scale of 7 to this modeKey.
 // If no mode is set, then we cannot, we let the tones remain in the scale of 12? or do we substitute in the major scale
@@ -196,34 +182,25 @@ function parseFunctionName(tokens) {
 // if a mode is to remain, that is, it is intended to overwrite the upper/main mode of the musical sequence, then
 // it should have a %! prefix. How this should be implemented technically, I don't see right now.
 
-  //to transpose a clef a%dor ( c%lyd( c,e,f ) )
-  //the leaf tones are simple, they are just converted to relatives to nearest absolute clef.
-  //the lower clef key is also simple, it is just overwritten and converted to ~0 by the upper clef key.
-  //the same with the inner clef mode, it is also overwritten. It is converted to %0.
-  //we can simply remove the inner clef. It is no longer needed. but, that would make the aom very different from the template.
-  //no. its better to leave it in there as an empty clef.
+//to transpose a clef a%dor ( c%lyd( c,e,f ) )
+//the leaf tones are simple, they are just converted to relatives to nearest absolute clef.
+//the lower clef key is also simple, it is just overwritten and converted to ~0 by the upper clef key.
+//the same with the inner clef mode, it is also overwritten. It is converted to %0.
+//we can simply remove the inner clef. It is no longer needed. but, that would make the aom very different from the template.
+//no. its better to leave it in there as an empty clef.
 
-  //todo modes in addition to the key, so that we can have ~7 notes
-  return {type};
-}
+//todo modes in addition to the key, so that we can have ~7 notes
 
-function parseMode(tokens) {
-  if (!tokens[0] || !tokens[0][12])
-    return;
-  const t = nextToken(tokens);
-  if (t[13] !== undefined)
-    return parseInt(t[13]);
-  let mode = t[14];
-  mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;
-  return mode;
-}
-
+/**
+ * all function names are toLowerCase().
+ */
 function parseFunction(tokens) {
-  const fun = parseFunctionName(tokens);
-  if (!fun)
+  let t = tokens[0];
+  if (!(t[12] || t[15] || t[16] || t[17]))
     return;
-  fun.body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
-  return fun;
+  const type = nextToken(tokens)[0].toLowerCase();
+  const body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
+  return {type, body};
 }
 
 function parsePrimitive(tokens) {
@@ -255,21 +232,17 @@ function parsePrimitive(tokens) {
       augment: t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0,
     };
   }
-  if (lookAhead[5]) {                                        //relative 12 tones
-    let t = nextToken(tokens);
-    const res = {type: "~~", num: parseInt(t[6])};
-    const mode = parseMode(tokens);
-    if (mode !== undefined) res.mode = mode;
-    return res;
-  }
+  if (lookAhead[5])                                         //relative 12 tones
+    return {type: "~~", num: parseInt(nextToken(tokens)[6])};
   if (lookAhead[1]) {
     let t = nextToken(tokens);
     const type = t[0];
     const tone = t[2].toLowerCase();
     const num = absScale12[tone];
-    const octave = t[3] ? parseInt(t[3]) : 4;
+    const octave = t[3] ? parseInt(t[3]) : 4;            /*** default octave for absolute tones is 4.*/
     const frozen = type[0] === "!" ? 1 : 0;
     const mode = t[4] !== undefined ? t[4] : "ion";
+    //todo const mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;
     return {type: "absNote", tone: type, num, octave, mode, frozen};
   }
 }
