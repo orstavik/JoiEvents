@@ -17,7 +17,7 @@ import {isPrimitive} from "./Parser.js";
 
 function getAbsoluteClef(ctx) {
   for (let scope of ctx) {
-    if (scope.type === "expFun" && scope.body[0].type=== "absNote")
+    if (scope.type === "expFun" && scope.body[0].type === "absNote")
       return scope.body[0];
   }
 }
@@ -25,7 +25,7 @@ function getAbsoluteClef(ctx) {
 export const MusicStatic = Object.create(null);
 
 MusicStatic["absNote"] = function (node, ctx) {
-  if (node.frozen)
+  if (node.body[3])
     return node;
   if (ctx[0] === 0 && ctx[1].type === "expFun")   //this is a clef note, it is handled under expFun.
     return node;
@@ -33,7 +33,7 @@ MusicStatic["absNote"] = function (node, ctx) {
   const absClef = getAbsoluteClef(ctx);
   if (!absClef)
     return node;
-  const num = node.num - absClef.num + (node.octave - absClef.octave) * 12;
+  const num = node.body[0] - absClef.body[0] + (node.body[1] - absClef.body[1]) * 12;
   return {type: "~~", body: [num]};
 };
 
@@ -41,22 +41,21 @@ MusicStatic["expFun"] = function (node, ctx) {
   if (node.body[0].type !== "absNote")
     return node;
   const absClef = getAbsoluteClef(ctx);
-  if (!absClef || node.body[0].frozen){
-    const clone = Object.assign({}, node.body[0]);
+  if (!absClef || node.body[0].body[3]) {
+    const [num, octave, mode, frozen, text] = node.body[0].body;
     const body = node.body.slice(1);
     for (let node of body) {
       if (!isPrimitive(node))
         body.isDirty = 1;
     }
-    clone.body = body;
-    return clone;
+    return {type: "absClef", num, octave, mode, frozen, text, body};
   }
   const body = node.body.slice(1);
   for (let node of body) {
     if (!isPrimitive(node))
       body.isDirty = 1;
   }
-  return {type: "~~", num: 0, body};
+  return {type: "relClef12", num: 0, body};
 };
 
 

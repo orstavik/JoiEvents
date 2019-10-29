@@ -231,12 +231,11 @@ function parsePrimitive(tokens) {
     const type = t[0];
     const tone = t[2].toLowerCase();
     const num = absScale12[tone];
-    const octave = t[3] ? parseInt(t[3]) : 4;
-    /*** default octave for absolute tones is 4.*/
+    const octave = t[3] ? parseInt(t[3]) : 4;   // default octave for absolute tones is 4.
     const frozen = type[0] === "!" ? 1 : 0;
     const mode = t[4] !== undefined ? t[4] : "ion";
     //todo const mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;
-    return {type: "absNote", tone: type, num, octave, mode, frozen};
+    return {type: "absNote", body: [num, octave, mode, frozen, type]};
   }
 }
 
