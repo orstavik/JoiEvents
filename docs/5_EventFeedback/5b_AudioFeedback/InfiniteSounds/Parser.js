@@ -1,3 +1,6 @@
+// const absNote = /!?([a-gA-G][#b]?)(\d+)?(?:%(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?))?(?![_a-zA-Z\d#-])/;
+// const relNote = /(~|~~)([a-gA-G][#b]?|([+-]?\d+)([#b]?))(\d+)?(?:%(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?))?(?![_a-zA-Z\d#-])/;
+//
 const tokens = [
   /!?([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,//absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
@@ -78,7 +81,7 @@ function parseGroupArray(tokens, start, end) {
     }
     if (previous !== "," && previous !== start)
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
-    res.push(previous = parseExpressions(tokens));
+    res.push(previous = parseExpressionFunction(tokens));
     if (!isPrimitive(previous))
       res.isDirty = 1;
   }
@@ -122,6 +125,20 @@ function sortOperators(nodeOpNode) {
     nodeOpNode.splice(I - 1, 3, node);
   }
   return nodeOpNode[0];
+}
+
+function parseExpressionFunction(tokens){
+  const expressions = parseExpressions(tokens);
+  if (!tokens.length)
+    return expressions;
+  const block = parseGroupArray(tokens, "(", ")");
+  if (block){
+    const body = [expressions, ...block];
+    if (block.isDirty || expressions.body)
+      body.isDirty = 1;
+    return {type: "expFun", body: body};
+  }
+  return expressions;
 }
 
 function parseExpressions(tokens) {
@@ -262,7 +279,7 @@ export function isPrimitive(node) {
 
 export function parse(str) {
   const tokens = tokenize(str);
-  let args = parseExpressions(tokens);
+  let args = parseExpressionFunction(tokens);
   if (tokens.length)
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
