@@ -29,7 +29,7 @@
     env.expector.processResult = function (a, b) {
       if (a.pass)
         return hacked(a, b);
-      a.message += diffToHTML(this.actual, this.expected[0]);
+      a.message += diffToHTML(this.expected[0], this.actual);
       hacked(a, b);
     };
     env.toEqual(b);

@@ -40,11 +40,17 @@ MusicStatic["absNote"] = function (node, ctx) {
 MusicStatic["expFun"] = function (node, ctx) {
   if (node.body[0].type !== "absNote")
     return node;
-  if (node.body[0].frozen)
-    return node;
   const absClef = getAbsoluteClef(ctx);
-  if (!absClef)
-    return node;
+  if (!absClef || node.body[0].frozen){
+    const clone = Object.assign({}, node.body[0]);
+    const body = node.body.slice(1);
+    for (let node of body) {
+      if (!isPrimitive(node))
+        body.isDirty = 1;
+    }
+    clone.body = body;
+    return clone;
+  }
   const body = node.body.slice(1);
   for (let node of body) {
     if (!isPrimitive(node))

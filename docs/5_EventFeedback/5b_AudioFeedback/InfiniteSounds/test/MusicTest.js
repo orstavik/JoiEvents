@@ -195,10 +195,9 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("G4(C4)");
     const res2 = {
-      type: "expFun",
+      type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4,
       body: [
-        {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
-        {type: "~~", num: -7},
+        {type: "~~", num: -7}
       ]
     };
     res2.body.isDirty = 1;
@@ -217,10 +216,9 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("G4(!C4)");
     const res2 = {
-      type: "expFun",
+      type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4,
       body: [
-        {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
-        {type: "absNote", tone: "!C4", mode: "ion", num: 0, frozen: 1, octave: 4},
+        {type: "absNote", tone: "!C4", mode: "ion", num: 0, frozen: 1, octave: 4}
       ]
     };
     res2.body.isDirty = 1;
@@ -247,9 +245,8 @@ describe('absolute clef, absolute notes', function () {
     //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
     const tst2 = await staticInterpret("D3(G4(C4))");
     const res2 = {
-      type: "expFun",
+      type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3,
       body: [
-        {type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3},
         {
           type: "~~",
           num: 0,
@@ -260,7 +257,7 @@ describe('absolute clef, absolute notes', function () {
       ]
     };
     res2.body.isDirty = 1;
-    res2.body[1].body.isDirty = 1;
+    res2.body[0].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
   it("Freezing the clef, overriding the clef from below: D3(!G4(C4))", async function () {
@@ -284,20 +281,18 @@ describe('absolute clef, absolute notes', function () {
     //the clef G4 is frozen, it is not converted into a relative clef.
     const tst2 = await staticInterpret("D3(!G4(C4))");
     const res2 = {
-      type: "expFun",
+      type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3,
       body: [
-        {type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3},
         {
-          type: "expFun",
+          type: "absNote", tone: "!G4", mode: "ion", num: 7, frozen: 1, octave: 4,
           body: [
-            {type: "absNote", tone: "!G4", mode: "ion", num: 7, frozen: 1, octave: 4},
             {type: "~~", num: -7}
           ]
         }
       ]
     };
     res2.body.isDirty = 1;
-    res2.body[1].body.isDirty = 1;
+    res2.body[0].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
   it("parse: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
@@ -326,9 +321,8 @@ describe('absolute clef, absolute notes', function () {
     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
     const tst2 = await staticInterpret(str);
     const res2 = {
-      type: "expFun",
+      type: "absNote", tone: "G4", num: 7, octave: 4, mode: "ion", frozen: 0,
       body: [
-        {type: "absNote", tone: "G4", num: 7, octave: 4, mode: "ion", frozen: 0},
         [
           {type: "~~", num: -7},
           {type: "~~", num: -6},
@@ -341,7 +335,7 @@ describe('absolute clef, absolute notes', function () {
       ]
     };
     res2.body.isDirty = 1;
-    res2.body[1].isDirty = 1;
+    res2.body[0].isDirty = 1;
     console.log(JSON.stringify(tst2, null, 2));
     expectToEqualWithDiff(tst2, res2);
   });
