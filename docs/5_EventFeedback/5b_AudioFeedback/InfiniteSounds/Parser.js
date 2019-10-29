@@ -1,11 +1,10 @@
 // const absNote = /!?([a-gA-G][#b]?)(\d+)?(?:%(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?))?(?![_a-zA-Z\d#-])/;
-// const relNote = /(~|~~)([a-gA-G][#b]?|([+-]?\d+)([#b]?))(\d+)?(?:%(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?))?(?![_a-zA-Z\d#-])/;
 //
 const tokens = [
   /!?([a-gA-G][#b]?)(\d+)?(?![_a-zA-Z\d#-])/,//absolute notes: Fb, C#4, a4, a4, a0, ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
-  /~([a-gA-G][#b]?)([+-]?\d+)?/,             //relative alpha notes: ~C, ~C1, ~C0, ~C-2, ~C+2
+  /~([a-gA-G][#b]?)(wtf)?/,                  //relative alpha notes: ~C, ~d#, ~Eb, ~bb
   /%(?:(-?\d+)|(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)/,//mode and modulo syntax
   /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
