@@ -185,18 +185,20 @@ describe('absolute clef, absolute notes', function () {
   it("Setting the clef, nice an simple: G4(C4)", async function () {
     const tst = parse("G4(C4)");
     const res = {
-      type: "absNote", tone: "g4", num: 7, frozen: 0, octave: 4,
+      type: "expFun",
       body: [
-        {type: "absNote", tone: "c4", num: 0, frozen: 0, octave: 4, body: []},
+        {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
+        {type: "absNote", tone: "C4", mode: "ion", num: 0, frozen: 0, octave: 4},
       ]
     };
     res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("G4(C4)");
     const res2 = {
-      type: "absNote", tone: "g4", num: 7, frozen: 0, octave: 4,
+      type: "expFun",
       body: [
-        {type: "~~", num: -7, body: []},
+        {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
+        {type: "~~", num: -7},
       ]
     };
     res2.body.isDirty = 1;
@@ -205,18 +207,20 @@ describe('absolute clef, absolute notes', function () {
   it("Freezing a note: G4(!C4)", async function () {
     const tst = parse("G4(!C4)");
     const res = {
-      type: "absNote", tone: "g4", num: 7, frozen: 0, octave: 4,
+      type: "expFun",
       body: [
-        {type: "absNote", tone: "!c4", num: 0, frozen: 1, octave: 4, body: []},
+        {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
+        {type: "absNote", tone: "!C4", mode: "ion", num: 0, frozen: 1, octave: 4},
       ]
     };
     res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("G4(!C4)");
     const res2 = {
-      type: "absNote", tone: "g4", num: 7, frozen: 0, octave: 4,
+      type: "expFun",
       body: [
-        {type: "absNote", tone: "!c4", num: 0, frozen: 1, octave: 4, body: []},
+        {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
+        {type: "absNote", tone: "!C4", mode: "ion", num: 0, frozen: 1, octave: 4},
       ]
     };
     res2.body.isDirty = 1;
@@ -225,117 +229,120 @@ describe('absolute clef, absolute notes', function () {
   it("Overriding the clef from above: D3(G4(C4))", async function () {
     const tst = parse("D3(G4(C4))");
     const res = {
-      type: "absNote", tone: "d3", num: 2, frozen: 0, octave: 3,
+      type: "expFun",
       body: [
+        {type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3},
         {
-          type: "absNote", tone: "g4", num: 7, frozen: 0, octave: 4,
+          type: "expFun",
           body: [
-            {type: "absNote", tone: "c4", num: 0, frozen: 0, octave: 4, body: []},
+            {type: "absNote", tone: "G4", mode: "ion", num: 7, frozen: 0, octave: 4},
+            {type: "absNote", tone: "C4", mode: "ion", num: 0, frozen: 0, octave: 4},
           ]
         }
       ]
     };
     res.body.isDirty = 1;
-    res.body[0].body.isDirty = 1;
+    res.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
     const tst2 = await staticInterpret("D3(G4(C4))");
     const res2 = {
-      type: "absNote", tone: "d3", num: 2, frozen: 0, octave: 3,
+      type: "expFun",
       body: [
+        {type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3},
         {
-          type: "~~", num: 0,
+          type: "~~",
+          num: 0,
           body: [
-            {type: "~~", num: -7, body: []},
+            {type: "~~", num: -7}
           ]
         }
       ]
     };
     res2.body.isDirty = 1;
-    res2.body[0].body.isDirty = 1;
+    res2.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
   it("Freezing the clef, overriding the clef from below: D3(!G4(C4))", async function () {
     const tst = parse("D3(!G4(C4))");
     const res = {
-      type: "absNote", tone: "d3", num: 2, frozen: 0, octave: 3,
+      type: "expFun",
       body: [
+        {type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3},
         {
-          type: "absNote", tone: "!g4", num: 7, frozen: 1, octave: 4,
+          type: "expFun",
           body: [
-            {type: "absNote", tone: "c4", num: 0, frozen: 0, octave: 4, body: []},
+            {type: "absNote", tone: "!G4", mode: "ion", num: 7, frozen: 1, octave: 4},
+            {type: "absNote", tone: "C4", mode: "ion", num: 0, frozen: 0, octave: 4},
           ]
         }
       ]
     };
     res.body.isDirty = 1;
-    res.body[0].body.isDirty = 1;
+    res.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     //the clef G4 is frozen, it is not converted into a relative clef.
     const tst2 = await staticInterpret("D3(!G4(C4))");
     const res2 = {
-      type: "absNote", tone: "d3", num: 2, frozen: 0, octave: 3,
+      type: "expFun",
       body: [
+        {type: "absNote", tone: "D3", mode: "ion", num: 2, frozen: 0, octave: 3},
         {
-          type: "absNote", tone: "!g4", num: 7, frozen: 1, octave: 4,
+          type: "expFun",
           body: [
-            {type: "~~", num: -7, body: []},
+            {type: "absNote", tone: "!G4", mode: "ion", num: 7, frozen: 1, octave: 4},
+            {type: "~~", num: -7}
           ]
         }
       ]
     };
     res2.body.isDirty = 1;
-    res2.body[0].body.isDirty = 1;
+    res2.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
   it("parse: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
     const tst = parse(str);
     const res = {
-      type: "absNote",
-      tone: "g4",
-      num: 7,
-      octave: 4,
-      frozen: 0,
+      type: "expFun",
       body: [
+        {type: "absNote", tone: "G4", num: 7, octave: 4, mode: "ion", frozen: 0},
         [
-          {type: "absNote", tone: "c4", num: 0, frozen: 0, octave: 4, body: []},
-          {type: "absNote", tone: "db", num: 1, frozen: 0, octave: 4, body: []},
-          {type: "absNote", tone: "eb3", num: 3, frozen: 0, octave: 3, body: []},
-          {type: "absNote", tone: "f", num: 5, frozen: 0, octave: 4, body: []},
-          {type: "absNote", tone: "g4", num: 7, frozen: 0, octave: 4, body: []},
-          {type: "absNote", tone: "a#", num: 10, frozen: 0, octave: 4, body: []},
-          {type: "absNote", tone: "b4", num: 11, frozen: 0, octave: 4, body: []}
+          {type: "absNote", tone: "C4", num: 0, octave: 4, mode: "ion", frozen: 0},
+          {type: "absNote", tone: "Db", num: 1, octave: 4, mode: "ion", frozen: 0},
+          {type: "absNote", tone: "Eb3", num: 3, octave: 3, mode: "ion", frozen: 0},
+          {type: "absNote", tone: "F", num: 5, octave: 4, mode: "ion", frozen: 0},
+          {type: "absNote", tone: "G4", num: 7, octave: 4, mode: "ion", frozen: 0},
+          {type: "absNote", tone: "A#", num: 10, octave: 4, mode: "ion", frozen: 0},
+          {type: "absNote", tone: "B4", num: 11, octave: 4, mode: "ion", frozen: 0}
         ]
       ]
     };
     res.body.isDirty = 1;
-    res.body[0].isDirty = 1;
+    res.body[1].isDirty = 1;
     expectToEqualWithDiff(tst, res);
   });
   it("interpret: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
     const tst2 = await staticInterpret(str);
     const res2 = {
-      type: "absNote",
-      tone: "g4",
-      num: 7,
-      octave: 4,
-      frozen: 0,
+      type: "expFun",
       body: [
+        {type: "absNote", tone: "G4", num: 7, octave: 4, mode: "ion", frozen: 0},
         [
-          {type: "~~", num: -7, body: []},
-          {type: "~~", num: -6, body: []},
-          {type: "~~", num: -4 - 12, body: []},
-          {type: "~~", num: -2, body: []},
-          {type: "~~", num: 0, body: []},
-          {type: "~~", num: 3, body: []},
-          {type: "~~", num: 4, body: []},
+          {type: "~~", num: -7},
+          {type: "~~", num: -6},
+          {type: "~~", num: -16},
+          {type: "~~", num: -2},
+          {type: "~~", num: 0},
+          {type: "~~", num: 3},
+          {type: "~~", num: 4}
         ]
       ]
     };
     res2.body.isDirty = 1;
-    res2.body[0].isDirty = 1;
+    res2.body[1].isDirty = 1;
+    console.log(JSON.stringify(tst2, null, 2));
     expectToEqualWithDiff(tst2, res2);
   });
 })

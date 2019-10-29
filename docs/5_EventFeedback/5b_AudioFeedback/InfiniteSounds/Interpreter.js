@@ -10,7 +10,7 @@ import {Units} from "./LibUnits.js";
 async function interpretArray(node, table, ctx) {
   const clone = new Array(node.length);
   for (let i = 0; i < node.length; i++) {
-    clone[i] = await interpretNode(node[i], table, ctx);
+    clone[i] = await interpretNode(node[i], table, [i].concat(ctx));
     if (!isPrimitive(clone[i]))
       clone.isDirty = 1;
   }

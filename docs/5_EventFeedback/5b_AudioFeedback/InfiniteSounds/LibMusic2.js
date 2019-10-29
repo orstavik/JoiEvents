@@ -13,17 +13,12 @@
 // And if so, I have to find the parent mode of lyd in order
 // to convert lyd into mathematical clicks.
 
-function getAbsoluteClef(ctx) {
-  for (let i = ctx.length - 1; i >= 0; i--) {
-    if (ctx[i].type === "absNote")
-      return ctx[i];
-  }
-}
+import {isPrimitive} from "./Parser.js";
 
-function getModeClef(ctx) {
-  for (let i = ctx.length - 1; i >= 0; i--) {
-    if (ctx[i].mode !== undefined)
-      return ctx[i];
+function getAbsoluteClef(ctx) {
+  for (let scope of ctx) {
+    if (scope.type === "expFun" && scope.body[0].type=== "absNote")
+      return scope.body[0];
   }
 }
 
@@ -32,19 +27,32 @@ export const MusicStatic = Object.create(null);
 MusicStatic["absNote"] = function (node, ctx) {
   if (node.frozen)
     return node;
-  if (node.body.length > 0) { //clef note
-    const absClef = getAbsoluteClef(ctx);
-    if (absClef) {
-      return {type: "~~", num: 0, body: node.body};
-    } else {
-      return node;
-    }
-  } else {                   //end note
-    const absClef = getAbsoluteClef(ctx);
-    const num = node.num - absClef.num + (node.octave - absClef.octave) * 12;
-    return {type: "~~", num, body: node.body};
-  }
+  if (ctx[0] === 0 && ctx[1].type === "expFun")   //this is a clef note, it is handled under expFun.
+    return node;
+  //leaf note
+  const absClef = getAbsoluteClef(ctx);
+  if (!absClef)
+    return node;
+  const num = node.num - absClef.num + (node.octave - absClef.octave) * 12;
+  return {type: "~~", num};
 };
+
+MusicStatic["expFun"] = function (node, ctx) {
+  if (node.body[0].type !== "absNote")
+    return node;
+  if (node.body[0].frozen)
+    return node;
+  const absClef = getAbsoluteClef(ctx);
+  if (!absClef)
+    return node;
+  const body = node.body.slice(1);
+  for (let node of body) {
+    if (!isPrimitive(node))
+      body.isDirty = 1;
+  }
+  return {type: "~~", num: 0, body};
+};
+
 
 MusicStatic["relNote"] = function (node, ctx) {
   const absClef = getAbsoluteClef(ctx);
