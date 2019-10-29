@@ -137,22 +137,22 @@ describe('relative 12 notes', function () {
 describe('relative alpha notes', function () {
   it("~C", function () {
     const tst = parse("~C");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", num: 0, octave: 0});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "c", num: 0});
   });
 
   it("~b", function () {
     const tst = parse("~b");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", num: 11, octave: 0});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "b", num: 11});
   });
 
   it("~f#", function () {
     const tst = parse("~f#");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f#", num: 6, octave: 0});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "f#", num: 6});
   });
 
   it("~Bb", function () {
     const tst = parse("~Bb");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "bb", num: 10, octave: 0});
+    expectToEqualWithDiff(tst, {type: "relNote", body: [], tone: "bb", num: 10});
   });
   // it("~Bb#-10", function () {
   //   expect error

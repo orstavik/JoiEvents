@@ -229,8 +229,7 @@ function parseFunctionName(tokens) {
     return {
       type: "relNote",
       tone,
-      num: absScale12[tone],
-      octave: parseInt(t[11]) || 0,
+      num: absScale12[tone]
     };
   }
   return {type};
