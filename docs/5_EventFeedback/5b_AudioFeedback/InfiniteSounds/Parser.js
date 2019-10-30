@@ -36,24 +36,6 @@ function nextToken(tokens) {
   return tokens.shift();
 }
 
-function parseNode(tokens) {
-  if (!tokens[0])
-    return;
-  const array = parseGroupArray(tokens, "[", "]");
-  if (array)
-    return array;
-  const primitive = parsePrimitive(tokens);
-  if (primitive !== undefined)
-    return primitive;
-  const block = parseGroupArray(tokens, "(", ")");
-  if (block)
-//   if (block.length > 1)             //todo separate for add test for this bug
-//     throw new SyntaxError("(block, with, comma, is, not, allowed)");
-//   // if (args.length === 0)           //todo add test for empty block
-//   //   return undefined;
-    return block[0];
-}
-
 function parseGroupArray(tokens, start, end) {
   if (!tokens[0])
     return;
@@ -80,7 +62,7 @@ function parseGroupArray(tokens, start, end) {
     }
     if (previous !== "," && previous !== start)
       throw new SyntaxError("Forgot ',' or '" + end + "' after: " + previous);
-    res.push(previous = parseExpressionFunction(tokens));
+    res.push(previous = parseExpression(tokens));
     if (!isPrimitive(previous))
       res.isDirty = 1;
   }
@@ -126,8 +108,14 @@ function sortOperators(nodeOpNode) {
   return nodeOpNode[0];
 }
 
-function parseExpressionFunction(tokens) {
-  const expressions = parseExpressions(tokens);
+function parseExpression(tokens) {
+  const nodeOps = [parseNode(tokens)];
+  let op;
+  while (op = parseOperator(tokens)) {
+    nodeOps.push(op);
+    nodeOps.push(parseNode(tokens));
+  }
+  const expressions = sortOperators(nodeOps);
   const block = parseGroupArray(tokens, "(", ")");
   if (!block)
     return expressions;
@@ -135,17 +123,6 @@ function parseExpressionFunction(tokens) {
   if (block.isDirty || expressions.body)
     body.isDirty = 1;
   return {type: "expFun", body: body};
-}
-
-function parseExpressions(tokens) {
-  const nodeOps = [parseNode(tokens)];
-  let op;
-  while (op = parseOperator(tokens)) {
-    nodeOps.push(op);
-    nodeOps.push(parseNode(tokens));
-  }
-  const node = sortOperators(nodeOps);
-  return node;
 }
 
 const absScale12 = {
@@ -186,7 +163,19 @@ const absScale12 = {
 
 //todo modes in addition to the key, so that we can have ~7 notes
 
-function parsePrimitive(tokens) {
+function parseNode(tokens) {
+  if (!tokens[0])
+    return;
+  const block = parseGroupArray(tokens, "(", ")");
+  if (block)
+//   if (block.length > 1)             //todo separate for add test for this bug
+//     throw new SyntaxError("(block, with, comma, is, not, allowed)");
+//   // if (args.length === 0)           //todo add test for empty block
+//   //   return undefined;
+    return block[0];
+  const array = parseGroupArray(tokens, "[", "]");
+  if (array)
+    return array;
   const lookAhead = tokens[0];
   if (lookAhead[12] || lookAhead[15] || lookAhead[16] || lookAhead[17]){
     const type = nextToken(tokens)[0].toLowerCase();    //all function names are toLowerCase().
@@ -236,7 +225,7 @@ export function isPrimitive(node) {
 
 export function parse(str) {
   const tokens = tokenize(str);
-  let args = parseExpressionFunction(tokens);
+  let args = parseExpression(tokens);
   if (tokens.length)
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
