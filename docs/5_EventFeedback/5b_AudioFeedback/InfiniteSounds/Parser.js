@@ -43,11 +43,11 @@ function parseNode(tokens) {
   if (array)
     return array;
   const primitive = parsePrimitive(tokens);
-  if (primitive !== undefined && !primitive.gg)
+  if (primitive !== undefined && !(primitive.type && !primitive.body))
     return primitive;
   const block = parseGroupArray(tokens, "(", ")");
-  if (primitive && primitive.gg)
-    return {type: primitive.gg, body: block || []};
+  if (primitive && primitive.type && !primitive.body)
+    return {type: primitive.type, body: block || []};
   if (block)
 //   if (block.length > 1)             //todo separate for add test for this bug
 //     throw new SyntaxError("(block, with, comma, is, not, allowed)");
@@ -130,8 +130,6 @@ function sortOperators(nodeOpNode) {
 
 function parseExpressionFunction(tokens) {
   const expressions = parseExpressions(tokens);
-  if (!tokens.length)
-    return expressions;
   const block = parseGroupArray(tokens, "(", ")");
   if (!block)
     return expressions;
@@ -192,7 +190,7 @@ const absScale12 = {
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
   if (lookAhead[12] || lookAhead[15] || lookAhead[16] || lookAhead[17])
-    return {gg: nextToken(tokens)[0].toLowerCase()};                             //all function names are toLowerCase().
+    return {type: nextToken(tokens)[0].toLowerCase()};                             //all function names are toLowerCase().
   if (lookAhead[25])  //singleQuote
     return nextToken(tokens)[26];
   if (lookAhead[23])  //doubleQuote
