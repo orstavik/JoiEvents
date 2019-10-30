@@ -36,27 +36,29 @@ function nextToken(tokens) {
   return tokens.shift();
 }
 
-function parseBlock(tokens) {
-  let args = parseGroupArray(tokens, "(", ")");
-  if (!args)
-    return;
-  if (args.length > 1)             //todo separate for add test for this bug
-    throw new SyntaxError("(block, with, comma, is, not, allowed)");
-  // if (args.length === 0)           //todo add test for empty block
-  //   return undefined;
-  return args[0];
-}
-
 function parseNode(tokens) {
   if (!tokens[0])
     return;
-  return parseBlock(tokens) ||
-    parseGroupArray(tokens, "[", "]") ||
-    parseFunction(tokens) ||
-    parsePrimitive(tokens);
+  const array = parseGroupArray(tokens, "[", "]");
+  if (array)
+    return array;
+  const primitive = parsePrimitive(tokens);
+  if (primitive !== undefined && !primitive.gg)
+    return primitive;
+  const block = parseGroupArray(tokens, "(", ")");
+  if (primitive && primitive.gg)
+    return {type: primitive.gg, body: block || []};
+  if (block)
+//   if (block.length > 1)             //todo separate for add test for this bug
+//     throw new SyntaxError("(block, with, comma, is, not, allowed)");
+//   // if (args.length === 0)           //todo add test for empty block
+//   //   return undefined;
+    return block[0];
 }
 
 function parseGroupArray(tokens, start, end) {
+  if (!tokens[0])
+    return;
   if (tokens[0][0] !== start)
     return;
   nextToken(tokens); //eat ( [
@@ -187,20 +189,10 @@ const absScale12 = {
 
 //todo modes in addition to the key, so that we can have ~7 notes
 
-/**
- * all function names are toLowerCase().
- */
-function parseFunction(tokens) {
-  let t = tokens[0];
-  if (!(t[12] || t[15] || t[16] || t[17]))
-    return;
-  const type = nextToken(tokens)[0].toLowerCase();
-  const body = !tokens[0] ? [] : parseGroupArray(tokens, "(", ")") || [];       //todo isDirty is here
-  return {type, body};
-}
-
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
+  if (lookAhead[12] || lookAhead[15] || lookAhead[16] || lookAhead[17])
+    return {gg: nextToken(tokens)[0].toLowerCase()};                             //all function names are toLowerCase().
   if (lookAhead[25])  //singleQuote
     return nextToken(tokens)[26];
   if (lookAhead[23])  //doubleQuote
