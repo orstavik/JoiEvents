@@ -52,7 +52,8 @@ function parseNode(tokens) {
     return;
   return parseBlock(tokens) ||
     parseGroupArray(tokens, "[", "]") ||
-    parseUnit(tokens);
+    parseFunction(tokens) ||
+    parsePrimitive(tokens);
 }
 
 function parseGroupArray(tokens, start, end) {
@@ -130,13 +131,12 @@ function parseExpressionFunction(tokens) {
   if (!tokens.length)
     return expressions;
   const block = parseGroupArray(tokens, "(", ")");
-  if (block) {
-    const body = [expressions, ...block];
-    if (block.isDirty || expressions.body)
-      body.isDirty = 1;
-    return {type: "expFun", body: body};
-  }
-  return expressions;
+  if (!block)
+    return expressions;
+  const body = [expressions, ...block];
+  if (block.isDirty || expressions.body)
+    body.isDirty = 1;
+  return {type: "expFun", body: body};
 }
 
 function parseExpressions(tokens) {
@@ -147,10 +147,6 @@ function parseExpressions(tokens) {
     nodeOps.push(parseNode(tokens));
   }
   return sortOperators(nodeOps);
-}
-
-function parseUnit(tokens) {
-  return parseFunction(tokens) || parsePrimitive(tokens);
 }
 
 const absScale12 = {
