@@ -26,6 +26,24 @@ describe('expressionFunctions basic', function () {
     res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
   });
+  it("expressionFunction: 1+2-3(4)", async function () {
+    const tst = parse("1+2-3(4)");
+    const res = {
+      type: "expFun",
+      body: [
+        {
+          type: "-", body: [
+            {type: "+", body: [1, 2]},
+            3
+          ]
+        },
+        4
+      ]
+    };
+    res.body.isDirty = 1;
+    res.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+  });
 });
 
 describe('expressionFunction: static interpret', function () {
