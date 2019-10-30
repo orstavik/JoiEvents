@@ -108,19 +108,23 @@ function sortOperators(nodeOpNode) {
   return nodeOpNode[0];
 }
 
-function parseExpression(tokens) {
+function parseExpressionList(tokens) {
   const nodeOps = [parseNode(tokens)];
   let op;
   while (op = parseOperator(tokens)) {
     nodeOps.push(op);
     nodeOps.push(parseNode(tokens));
   }
-  const expressions = sortOperators(nodeOps);
+  return sortOperators(nodeOps);
+}
+
+function parseExpression(tokens) {
+  const exp = parseExpressionList(tokens);
   const block = parseGroupArray(tokens, "(", ")");
   if (!block)
-    return expressions;
-  const body = [expressions, ...block];
-  if (block.isDirty || expressions.body)
+    return exp;
+  const body = [exp, ...block];
+  if (block.isDirty || exp.body)        //todo this is too simple, exp might be a note, and then exp.body will be too simple
     body.isDirty = 1;
   return {type: "expFun", body: body};
 }
@@ -164,8 +168,16 @@ const absScale12 = {
 //todo modes in addition to the key, so that we can have ~7 notes
 
 function parseNode(tokens) {
-  if (!tokens[0])
-    return;
+  if (tokens[0])
+    return parseBlock(tokens) ||
+      parseGroupArray(tokens, "[", "]") ||
+      parseNotes(tokens) ||
+      parseFunction(tokens) ||
+      parseQuotes(tokens) ||
+      parseNumber(tokens);
+}
+
+function parseBlock(tokens) {
   const block = parseGroupArray(tokens, "(", ")");
   if (block)
 //   if (block.length > 1)             //todo separate for add test for this bug
@@ -173,37 +185,21 @@ function parseNode(tokens) {
 //   // if (args.length === 0)           //todo add test for empty block
 //   //   return undefined;
     return block[0];
-  const array = parseGroupArray(tokens, "[", "]");
-  if (array)
-    return array;
-  const lookAhead = tokens[0];
-  if (lookAhead[12] || lookAhead[15] || lookAhead[16] || lookAhead[17]){
-    const type = nextToken(tokens)[0].toLowerCase();    //all function names are toLowerCase().
-    const body = parseGroupArray(tokens, "(", ")") || [];
-    return {type, body};
-  }
-  if (lookAhead[25])  //singleQuote
-    return nextToken(tokens)[26];
-  if (lookAhead[23])  //doubleQuote
-    return nextToken(tokens)[24];
-  if (lookAhead[18]) {  //number
-    let t = nextToken(tokens);
-    const num = parseFloat(t[19]);
-    let type = t[20].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
-    return type === "" ? num : {type, body: [num]};
-  }
-  if (lookAhead[10]) {                                               //relative alpha tone
+}
+
+function parseNotes(tokens) {
+  if (tokens[0][10]) {                                               //relative alpha tone
     let t = nextToken(tokens);
     const tone = t[11].toLowerCase();
     return {type: "relNote", body: [absScale12[tone], tone]};
   }
-  if (lookAhead[7]) {                                        //relative 7 tones
+  if (tokens[0][7]) {                                        //relative 7 tones
     let t = nextToken(tokens);
     return {type: "~", body: [parseInt(t[8]), t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0]};
   }
-  if (lookAhead[5])                                         //relative 12 tones
+  if (tokens[0][5])                                         //relative 12 tones
     return {type: "~~", body: [parseInt(nextToken(tokens)[6])]};
-  if (lookAhead[1]) {
+  if (tokens[0][1]) {
     let t = nextToken(tokens);
     const type = t[0];
     const tone = t[2].toLowerCase();
@@ -214,6 +210,30 @@ function parseNode(tokens) {
     //todo const mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;
     return {type: "absNote", body: [num, octave, mode, frozen, type]};
   }
+}
+
+function parseFunction(tokens) {
+  if (tokens[0][12] || tokens[0][15] || tokens[0][16] || tokens[0][17]) {
+    const type = nextToken(tokens)[0].toLowerCase();    //all function names are toLowerCase().
+    const body = parseGroupArray(tokens, "(", ")") || [];
+    return {type, body};
+  }
+}
+
+function parseNumber(tokens) {
+  if (tokens[0][18]) {  //number
+    let t = nextToken(tokens);
+    const num = parseFloat(t[19]);
+    let type = t[20].toLowerCase();                  //turn UpperCase characters in unit names toLowerCase().
+    return type === "" ? num : {type, body: [num]};
+  }
+}
+
+function parseQuotes(tokens) {
+  if (tokens[0][25])  //singleQuote
+    return nextToken(tokens)[26];
+  if (tokens[0][23])  //doubleQuote
+    return nextToken(tokens)[24];
 }
 
 export function isPrimitive(node) {
