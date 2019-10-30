@@ -43,11 +43,9 @@ function parseNode(tokens) {
   if (array)
     return array;
   const primitive = parsePrimitive(tokens);
-  if (primitive !== undefined && !(primitive.type && !primitive.body))
+  if (primitive !== undefined)
     return primitive;
   const block = parseGroupArray(tokens, "(", ")");
-  if (primitive && primitive.type && !primitive.body)
-    return {type: primitive.type, body: block || []};
   if (block)
 //   if (block.length > 1)             //todo separate for add test for this bug
 //     throw new SyntaxError("(block, with, comma, is, not, allowed)");
@@ -146,7 +144,8 @@ function parseExpressions(tokens) {
     nodeOps.push(op);
     nodeOps.push(parseNode(tokens));
   }
-  return sortOperators(nodeOps);
+  const node = sortOperators(nodeOps);
+  return node;
 }
 
 const absScale12 = {
@@ -189,8 +188,11 @@ const absScale12 = {
 
 function parsePrimitive(tokens) {
   const lookAhead = tokens[0];
-  if (lookAhead[12] || lookAhead[15] || lookAhead[16] || lookAhead[17])
-    return {type: nextToken(tokens)[0].toLowerCase()};                             //all function names are toLowerCase().
+  if (lookAhead[12] || lookAhead[15] || lookAhead[16] || lookAhead[17]){
+    const type = nextToken(tokens)[0].toLowerCase();    //all function names are toLowerCase().
+    const body = parseGroupArray(tokens, "(", ")") || [];
+    return {type, body};
+  }
   if (lookAhead[25])  //singleQuote
     return nextToken(tokens)[26];
   if (lookAhead[23])  //doubleQuote
