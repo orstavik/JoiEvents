@@ -15,6 +15,39 @@
 
 import {isPrimitive} from "./Parser.js";
 
+function getNoteNumber(node) {
+  if (node.body.length !== 2)
+    return {};
+  const {body: [l, r]} = node;
+  let note, num;
+  if (l.type === "absNote") {
+    note = l;
+    num = r;
+  } else if (r.type === "absNote") {
+    note = r;
+    num = l;
+  }
+  if (typeof num !== "number" || !Number.isInteger(num))
+    return {};
+  if (num < 0)
+    return {note, num: Math.abs(num), negate: -1};
+  return {note, num, negate: 1};
+}
+
+function switchOctave(node, up, op) {
+  let {note, num, negate} = getNoteNumber(node);
+  if (!note)
+    return node;
+  if (num === 0)
+    return note;
+  const newNote = Object.assign({}, note);
+  const addOctave = Math.log2(num);
+  if (addOctave !== Math.floor(addOctave))
+    throw new SyntaxError(`Note scale operation '${op}' error: Scale operations require a positive integer 0,2,4,8,16,...`);
+  newNote.body[1] += addOctave * negate * up;
+  return newNote;
+}
+
 function getAbsoluteClef(ctx) {
   for (let scope of ctx) {
     if (scope.type === "expFun" && scope.body[0].type === "absNote")
@@ -35,6 +68,14 @@ MusicStatic["absNote"] = function (node, ctx) {
     return node;
   const num = node.body[0] - absClef.body[0] + (node.body[1] - absClef.body[1]) * 12;
   return {type: "~~", body: [num]};
+};
+
+MusicStatic["*"] = function (node, ctx) {
+  return switchOctave(node, 1, "*");
+};
+
+MusicStatic["/"] = function (node, ctx) {
+  return switchOctave(node, -1, "/");
 };
 
 MusicStatic["expFun"] = function (node, ctx) {
