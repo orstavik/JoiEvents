@@ -25,7 +25,7 @@ function isNote(node) {
 function getNoteAndNumber(node) {
   if (node.body.length !== 2)
     return {};
-  const {body: [l, r]} = node;
+  const [l, r] = node.body;
   if (isNote(l) && Number.isInteger(r))
     return {note: l, num: Math.abs(r), negate: r < 0 ? -1 : 1};
   if (Number.isInteger(l) && isNote(r))

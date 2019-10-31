@@ -3,8 +3,8 @@ import {Random} from "./LibRandom.js";
 import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
-// import {MusicStatic, MusicDynamic} from "./LibMusic.js";
-import {MusicStatic} from "./LibMusic2.js";
+import {MusicDynamic} from "./LibMusicDynamic.js";
+import {MusicStatic} from "./LibMusicStatic.js";
 import {Units} from "./LibUnits.js";
 
 function mergeTables(...tables) {
@@ -28,7 +28,7 @@ function mergeTables(...tables) {
 
 //todo process units such as "b" (beats) dynamically, and tones needs the context to create their gain node. what to do with dB?
 const staticTable = mergeTables(ListOps, Units, MathOps, MusicStatic);
-const dynamicTable = mergeTables(Random, MathOps, InterpreterFunctions, AudioPiping);
+const dynamicTable = mergeTables(Random, MathOps, MusicDynamic, InterpreterFunctions, AudioPiping);
 
 // const dynamicTable = Object.assign({}, Random, MathOps, MusicDynamic, InterpreterFunctions, AudioPiping);
 
