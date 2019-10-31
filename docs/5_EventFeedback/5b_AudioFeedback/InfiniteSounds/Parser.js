@@ -1,3 +1,27 @@
+const absScale12 = {
+  "c": 0,
+  "c#": 1,
+  "db": 1,
+  "d": 2,
+  "d#": 3,
+  "eb": 3,
+  "e": 4,
+  "f": 5,
+  "f#": 6,
+  "gb": 6,
+  "g": 7,
+  "g#": 8,
+  "ab": 8,
+  "a": 9,
+  "a#": 10,
+  "bb": 10,
+  "b": 11
+};
+
+//todo make a full operator priority table
+//todo % modulo operator would be interpreted as a step in the mode shifts. % for tone must have higher priority than *, ^, ^^, +
+const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
+
 const tokens = [
   //absolute notes: C#4lydian, a0dor, baeolian, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /!?([a-gA-G][#b]?)(\d+)?(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)?(?![_a-zA-Z\d#-])/,
@@ -83,12 +107,6 @@ function parseOperator(tokens) {
     return nextToken(tokens)[0];
 }
 
-//todo make a full operator priority table
-
-//todo % modulo operator would be interpreted as a step in the mode shifts. % has high priority!
-
-const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
-
 function sortOperators(nodeOpNode) {
   while (nodeOpNode.length > 1) {
     let min = Number.MAX_VALUE, I = 1;
@@ -124,30 +142,10 @@ function parseExpression(tokens) {
   if (!block)
     return exp;
   const body = [exp, ...block];
-  if (block.isDirty || exp.body)        //todo this is too simple, exp might be a note, and then exp.body will be too simple
+  if (block.isDirty || !isPrimitive(exp))
     body.isDirty = 1;
   return {type: "expFun", body: body};
 }
-
-const absScale12 = {
-  "c": 0,
-  "c#": 1,
-  "db": 1,
-  "d": 2,
-  "d#": 3,
-  "eb": 3,
-  "e": 4,
-  "f": 5,
-  "f#": 6,
-  "gb": 6,
-  "g": 7,
-  "g#": 8,
-  "ab": 8,
-  "a": 9,
-  "a#": 10,
-  "bb": 10,
-  "b": 11
-};
 
 // If it comes within a tone description, then it would set the mode.
 // If a mode is set, then all notes below can be interpreted in the scale of 7 to this modeKey.
@@ -234,6 +232,13 @@ function parseQuotes(tokens) {
     return nextToken(tokens)[26];
   if (tokens[0][23])  //doubleQuote
     return nextToken(tokens)[24];
+}
+
+function isNote(node) {
+  return node.type === "absNote" ||
+    node.type === "relNote" ||
+    node.type === "~" ||
+    node.type === "~~";
 }
 
 export function isPrimitive(node) {
