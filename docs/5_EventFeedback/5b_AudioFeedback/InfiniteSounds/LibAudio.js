@@ -208,16 +208,17 @@ async function makeLfo(ctx, min, max, frequency, type) {
 
 export const InterpreterFunctions = {};
 
-InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx[0], "sine");
-InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx[0], "square");
-InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx[0], "triangle");
-InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx[0], "sawtooth");
+InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1], "sine");
+InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1], "square");
+InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1], "triangle");
+InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1], "sawtooth");
 
-InterpreterFunctions.gain = makeGain;
+InterpreterFunctions.gain = (node, ctx) => makeGain(node, ctx[ctx.length - 1]);
 
 //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
 InterpreterFunctions.convolver = async function (node, ctx) {
   const array = node.body;
+  ctx = ctx[ctx.length - 1];
   const convolver = ctx.createConvolver();
   const buffer = await (
     array.length === 0 ? AudioFileRegister.aConvolverBuffer() :
@@ -233,46 +234,46 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   return {graph: node, input: convolver, output: convolver};
 };
 
-InterpreterFunctions.delay = (node, ctx) => makeDelay(node, ctx);
+InterpreterFunctions.delay = (node, ctx) => makeDelay(node, ctx[ctx.length - 1]);
 
 InterpreterFunctions.lowpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx[0], "lowpass", node, {freq, q, detune});
+  return makeFilter(ctx[ctx.length - 1], "lowpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.highpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx[0], "highpass", node, {freq, q, detune});
+  return makeFilter(ctx[ctx.length - 1], "highpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.bandpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx[0], "bandpass", node, {freq, q, detune});
+  return makeFilter(ctx[ctx.length - 1], "bandpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.lowshelf = function (node, ctx) {
   const {body: [freq, gain, detune]} = node;
-  return makeFilter(ctx[0], "lowshelf", node, {freq, gain, detune});
+  return makeFilter(ctx[ctx.length - 1], "lowshelf", node, {freq, gain, detune});
 };
 
 InterpreterFunctions.highshelf = function (node, ctx) {
   const {body: [freq, gain, detune]} = node;
-  return makeFilter(ctx[0], "highshelf", node, {freq, gain, detune});
+  return makeFilter(ctx[ctx.length - 1], "highshelf", node, {freq, gain, detune});
 };
 
 InterpreterFunctions.peaking = function (node, ctx) {
   const {body: [freq, q, gain, detune]} = node;
-  return makeFilter(ctx[0], "peaking", node, {freq, q, gain, detune});
+  return makeFilter(ctx[ctx.length - 1], "peaking", node, {freq, q, gain, detune});
 };
 
 InterpreterFunctions.notch = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx[0], "notch", node, {freq, q, detune});
+  return makeFilter(ctx[ctx.length - 1], "notch", node, {freq, q, detune});
 };
 
 InterpreterFunctions.allpass = function (node, ctx) {
   const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx[0], "allpass", node, {freq, q, detune});
+  return makeFilter(ctx[ctx.length - 1], "allpass", node, {freq, q, detune});
 };
 
 
@@ -280,21 +281,21 @@ InterpreterFunctions.allpass = function (node, ctx) {
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = (node, ctx) => AudioFileRegister.makeFileBufferSource(node, ctx[0]);
+InterpreterFunctions.url = (node, ctx) => AudioFileRegister.makeFileBufferSource(node, ctx[ctx.length - 1]);
 
-InterpreterFunctions.noise = (node, ctx) => AudioFileRegister.noise(node, ctx[0]);
+InterpreterFunctions.noise = (node, ctx) => AudioFileRegister.noise(node, ctx[ctx.length - 1]);
 
-InterpreterFunctions.lfo = async function(node, ctx) {
+InterpreterFunctions.lfo = async function (node, ctx) {
   let [min, max, freq, type] = node.body;
   if (min === undefined) min = 0;
   if (max === undefined) max = 1;
   if (freq === undefined) freq = 1;
   type = type.value || "sine";
-  return {graph: node, output: await makeLfo(ctx[0], min, max, freq, type)};
+  return {graph: node, output: await makeLfo(ctx[ctx.length - 1], min, max, freq, type)};
 };
 
-InterpreterFunctions.constant = async function(node, ctx) {
+InterpreterFunctions.constant = async function (node, ctx) {
   let value = node.body[0] || 1;
-  let output = makeConstant(ctx[0], value);
+  let output = makeConstant(ctx[ctx.length - 1], value);
   return {graph: node, output: output};
 };
