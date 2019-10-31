@@ -15,27 +15,26 @@
 
 import {isPrimitive} from "./Parser.js";
 
-function getNoteNumber(node) {
+function isNote(node) {
+  return node.type === "absNote" ||
+    node.type === "relNote" ||
+    node.type === "~" ||
+    node.type === "~~";
+}
+
+function getNoteAndNumber(node) {
   if (node.body.length !== 2)
     return {};
   const {body: [l, r]} = node;
-  let note, num;
-  if (l.type === "absNote") {
-    note = l;
-    num = r;
-  } else if (r.type === "absNote") {
-    note = r;
-    num = l;
-  }
-  if (typeof num !== "number" || !Number.isInteger(num))
-    return {};
-  if (num < 0)
-    return {note, num: Math.abs(num), negate: -1};
-  return {note, num, negate: 1};
+  if (isNote(l) && Number.isInteger(r))
+    return {note: l, num: Math.abs(r), negate: r < 0 ? -1 : 1};
+  if (Number.isInteger(l) && isNote(r))
+    return {note: r, num: Math.abs(l), negate: l < 0 ? -1 : 1};
+  return {};
 }
 
 function switchOctave(node, up, op) {
-  let {note, num, negate} = getNoteNumber(node);
+  let {note, num, negate} = getNoteAndNumber(node);
   if (!note)
     return node;
   if (num === 0)
@@ -44,7 +43,10 @@ function switchOctave(node, up, op) {
   const addOctave = Math.log2(num);
   if (addOctave !== Math.floor(addOctave))
     throw new SyntaxError(`Note scale operation '${op}' error: Scale operations require a positive integer 0,2,4,8,16,...`);
-  newNote.body[1] += addOctave * negate * up;
+  if (note.type === "absNote")
+    newNote.body[1] += addOctave * negate * up;
+  else if(note.type === "~~")
+    newNote.body[0] += addOctave * 12 * negate * up;
   return newNote;
 }
 
@@ -108,11 +110,11 @@ MusicStatic["relNote"] = function (node, ctx) {
   return {type: "~~", num, body: node.body};
 };
 
-MusicStatic["~~"] = function (node, ctx) {
-  //todo 1. we get the first parent node which has an absolute mode
-  const absClef = getModeClef(ctx);
-  if (!absClef)
-    throw new SyntaxError("A relative alpha note must have an absolute clef note set.");
-  const num = ((node.num - absClef.num + 12) % 12) + node.octave * 12;
-  return {type: "~~", num, body: node.body};
-};
+// MusicStatic["~~"] = function (node, ctx) {
+//   //todo 1. we get the first parent node which has an absolute mode
+//   const absClef = getModeClef(ctx);
+//   if (!absClef)
+//     throw new SyntaxError("A relative alpha note must have an absolute clef note set.");
+//   const num = ((node.num - absClef.num + 12) % 12) + node.octave * 12;
+//   return {type: "~~", num, body: node.body};
+// };

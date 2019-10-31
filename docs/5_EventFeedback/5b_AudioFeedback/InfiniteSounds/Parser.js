@@ -234,13 +234,6 @@ function parseQuotes(tokens) {
     return nextToken(tokens)[24];
 }
 
-function isNote(node) {
-  return node.type === "absNote" ||
-    node.type === "relNote" ||
-    node.type === "~" ||
-    node.type === "~~";
-}
-
 export function isPrimitive(node) {
   return node === undefined ||
     typeof node === "number" ||
