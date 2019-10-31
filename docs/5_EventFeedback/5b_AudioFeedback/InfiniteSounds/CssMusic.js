@@ -14,6 +14,8 @@ export class CssMusic extends AudioContext {
      * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
      */
     const ctx = new CssMusic();
+    ctx.rootClef = ctx.createConstantSource();
+    ctx.rootClef.start();
     const result = await interpret(sound, ctx);
 
     if (result.type === "bpm") {
@@ -39,7 +41,7 @@ export class CssMusic extends AudioContext {
     this.i = 0;
   }
 
-  start(startTime){
+  start(startTime) {
     this.playBar();
     this.resume();
     if (this.i >= this.bars.length)
@@ -49,7 +51,7 @@ export class CssMusic extends AudioContext {
 
   }
 
-  playBar(){
+  playBar() {
     if (this.i % this.heavy === 0) console.log("Heavy beat");
     let result = this.bars[this.i++];
     if (result.output instanceof Array) {

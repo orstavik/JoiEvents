@@ -1,8 +1,30 @@
+function makeFrequencyGain(audioCtx, freq) {
+  const clefOrigin = audioCtx.rootClef;
+  const toneGain = audioCtx.createGain();
+  toneGain.gain.value = freq;
+  clefOrigin.connect(toneGain);
+  return toneGain;
+}
+
+//https://pages.mtu.edu/~suits/NoteFreqCalcs.html
+const a12th = Math.pow(2, 1/12);
+
 export const MusicDynamic = Object.create(null);
 
 MusicDynamic["absNote"] = function (node, ctx) {
   const [tone, octave] = node.body;
-  return Notes[tone + octave * 12];
+  const freq = Notes[tone + octave * 12];
+  const rootCtx = ctx[ctx.length - 1];
+  const toneGain = makeFrequencyGain(rootCtx, freq);
+  return {graph: node, input: toneGain, output: toneGain};
+};
+
+MusicDynamic["~~"] = function (node, ctx) {
+  const tone = node.body[0];
+  const freq = Math.pow(a12th, tone);
+  const rootCtx = ctx[ctx.length - 1];
+  const toneGain = makeFrequencyGain(rootCtx, freq);
+  return {graph: node, input: toneGain, output: toneGain};
 };
 
 export const Notes = [
