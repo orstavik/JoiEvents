@@ -7,6 +7,31 @@ import {InterpreterFunctions} from "./LibAudio.js";
 import {MusicStatic} from "./LibMusic2.js";
 import {Units} from "./LibUnits.js";
 
+function mergeTables(...tables) {
+  const res = {};
+  for (let tab of tables) {
+    for (let key in tab) {
+      if (!(key in res))
+        res[key] = tab[key];
+      else {
+        const funA = res[key];
+        const funB = tab[key];
+        res[key] = function (node, ctx) {
+          const a = funA(node, ctx);
+          return a === node ? funB(node, ctx) : a;
+        }
+      }
+    }
+  }
+  return res;
+}
+
+//todo process units such as "b" (beats) dynamically, and tones needs the context to create their gain node. what to do with dB?
+const staticTable = mergeTables(ListOps, Units, MathOps, MusicStatic);
+const dynamicTable = mergeTables(Random, MathOps, InterpreterFunctions, AudioPiping);
+
+// const dynamicTable = Object.assign({}, Random, MathOps, MusicDynamic, InterpreterFunctions, AudioPiping);
+
 async function interpretArray(node, table, ctx) {
   const clone = new Array(node.length);
   for (let i = 0; i < node.length; i++) {
@@ -20,20 +45,15 @@ async function interpretArray(node, table, ctx) {
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
-  if (node instanceof Array)                                                //todo this would be a primitive
+  if (node instanceof Array)
     return await interpretArray(node, table, [node].concat(ctx));
-  //todo here I can do a topDown pass
+  //topDown processing is possible here. Not supported due to complexity.
   const clone = Object.assign({}, node);
   if (clone.body)
-    clone.body = await interpretArray(clone.body, table, [node].concat(ctx)); //todo the body would need to be marked as a list of primitives
+    clone.body = await interpretArray(clone.body, table, [node].concat(ctx));
   const fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;
 }
-
-//todo process units such as "b" (beats) dynamically, and tones needs the context to create their gain node. what to do with dB?
-const staticTable = Object.assign({}, ListOps, Units, MathOps, MusicStatic);
-const dynamicTable = Object.assign({}, Random, MathOps, InterpreterFunctions, AudioPiping);
-// const dynamicTable = Object.assign({}, Random, MathOps, MusicDynamic, InterpreterFunctions, AudioPiping);
 
 export async function staticInterpret(str) {
   let node = parse(str);
