@@ -17,7 +17,7 @@ import {isPrimitive} from "./Parser.js";
 
 function getAbsoluteClef(ctx) {
   for (let scope of ctx) {
-    if (scope.type === "expFun" && scope.body[0].type === "absNote")
+    if (scope.type === "expFun" && scope.body[0].type === "absNoteNum")
       return scope.body[0];
   }
 }
@@ -25,20 +25,60 @@ function getAbsoluteClef(ctx) {
 export const MusicStatic = Object.create(null);
 
 MusicStatic["absNote"] = function (node, ctx) {
-  if (node.body[3])
-    return node;
-  if (ctx[0] === 0 && ctx[1].type === "expFun")   //this is a clef note, it is handled under expFun.
-    return node;
-  //leaf note
-  const absClef = getAbsoluteClef(ctx);
-  if (!absClef)
-    return node;
-  const num = node.body[0] - absClef.body[0] + (node.body[1] - absClef.body[1]) * 12;
-  return {type: "~~", body: [num]};
+  //todo convert mode names to mode numbers.
+  const mode = node.body[2];
+  return {type: "absNoteNum", body: [node.body[0] + node.body[1] * 12, mode, node.body[3]]};
 };
 
+// MusicStatic["absNoteNum"] = function (node, ctx) {
+//   // if (node.body[2])  //todo forgot what this was
+//   //   return node;
+//   if (ctx[0] === 0 && ctx[1].type === "expFun")   //this is a clef note, it is handled under expFun.
+//     return node;
+//   //leaf note
+//   const absClef = getAbsoluteClef(ctx);
+//   if (!absClef)
+//     return node;
+//   let diff = node.body[0] - absClef.body[0];
+//   const octave = Math.floor(diff / 12);
+//   if (octave)
+//     diff = diff % 12;
+//   const sevenScaleArray = getSevenScale(absClef.body[1]);
+//   const [num, sharp] = getSevenScalePosition(sevenScaleArray, diff);
+//   return {type: "relNote", body: [num, octave, sharp]};
+// };
+
+const parseRelativeNotePrefix = /([+-]?\d+)|~([a-gA-G])([#b]?)([+-]?\d*)/;
+//relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
+//todo implement this later relative alpha notes: ~C, ~d#, ~Eb, ~bb
+
+// MusicStatic["~"] = function (node, ctx) {
+//   const [l, r] = node.body;
+//   if (l === undefined) {         //prefix state
+//
+//     //todo calculate the value based on the parent, if needed (if it is an alpha note)
+//     return {type: "relNote", body:["number", "octave", "hash"]};
+//   } else {
+//     if (l.type === "absNoteNum"){
+//       const clone = Object.assign({}, l);
+//       clone.body = clone.body.slice(0);
+//       shiftAbsNoteNum(clone, r);
+//       return clone;
+//     } else if (l.type === "relNote"){
+//       const clone = Object.assign({}, l);
+//       clone.body = clone.body.slice(0);
+//       shiftRelNoteNum(clone, r);
+//       return clone;
+//     } else {
+//       throw new SyntaxError("The two sided seven-scale-operator (~) must have a note on its left side and a number, or number#b on its right");
+//     }
+//   }
+//   return node;
+// };
+
 MusicStatic["expFun"] = function (node, ctx) {
-  if (node.body[0].type !== "absNote")
+  const [note, ...clef] = node.body;
+  if (node.body[0].type !== "absNoteNum")
     return node;
   const absClef = getAbsoluteClef(ctx);
   if (!absClef || node.body[0].body[3]) {

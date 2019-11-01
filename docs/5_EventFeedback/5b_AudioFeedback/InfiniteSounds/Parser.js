@@ -20,12 +20,13 @@ const absScale12 = {
 
 //todo make a full operator priority table
 //todo % modulo operator would be interpreted as a step in the mode shifts. % for tone must have higher priority than *, ^, ^^, +
-const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1};
+//todo ~ is very low priority. I think it is below ":".
+const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1, "~": 0};
 
 const tokens = [
   //absolute notes: C#4lydian, a0dor, baeolian, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /!?([a-gA-G][#b]?)(\d+)?(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)?(?![_a-zA-Z\d#-])/,
-  /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11
+  /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11    //todo remove this
   /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /~([a-gA-G][#b]?)/,                        //relative alpha notes: ~C, ~d#, ~Eb, ~bb
   /%(?:(-?\d+)|(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)/,//mode and modulo syntax
@@ -195,8 +196,8 @@ function parseNotes(tokens) {
     let t = nextToken(tokens);
     return {type: "~", body: [parseInt(t[8]), t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0]};
   }
-  if (tokens[0][5])                                         //relative 12 tones
-    return {type: "~~", body: [parseInt(nextToken(tokens)[6])]};
+  if (tokens[0][5])                                         //relative 12 tones       //todo remove this
+    return {type: "~~", body: [parseInt(nextToken(tokens)[6])]};                      //todo remove this
   if (tokens[0][1]) {
     let t = nextToken(tokens);
     const type = t[0];

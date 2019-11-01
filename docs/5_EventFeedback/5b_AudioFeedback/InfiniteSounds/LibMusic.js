@@ -55,10 +55,10 @@ MusicStatic["absNote"] = function (node, ctx) {
 };
 MusicStatic["relNote"] = function (node, ctx) {
   // debugger;
-  //todo convert to ~~
+  //todo convert to ~
   return node;
 };
-MusicStatic["~~"] = function (node, ctx) {
+MusicStatic["absNoteNum"] = function (node, ctx) {
   // debugger;
   //todo convert to ~
   return node;
