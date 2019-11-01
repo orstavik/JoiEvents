@@ -97,9 +97,9 @@ function getNoteIntegerOrModeName(node) {
   if (node.body.length === 2) {
     const [l, r] = node.body;
     if (isNote(l) && Number.isInteger(r))
-      return {note: l, value: r, type: "num"};
-    if (isNote(l) && typeof r === "string" && modeNames.test(r))
-      return {note: l, value: r, type: "name"};
+      return {note: l, value: r};
+    if (isNote(l) && typeof r.type && modeNames.test(r.type))
+      return {note: l, value: r.type};
   }
   return {};
 }
@@ -146,18 +146,27 @@ function stepNote(node, neg) {
 }
 
 
-function modeShift(node, neg) {
-  let {note, value, type} = getNoteIntegerOrModeName(node);
+function modeShift(node, upDown) {
+  let {note, value} = getNoteIntegerOrModeName(node);
   if (!note)
     return node;
   const modePos = note.type === "absNoteNum" ? 1 : 3;
-  if (type === "name") {
-    const nextModePos = MusicModes.getNumber(value);
-    value = neg ? note.body[modePos] - nextModePos : nextModePos - note.body[modePos];
+  if (typeof value === "string") {
+    let nextPos = MusicModes.getNumber(value);
+    let nowPos = note.body[modePos];
+    if (upDown > 0){
+      while (nextPos < nowPos)
+        nextPos +=7;
+      value = nextPos - nowPos;
+    } else {
+      while (nextPos > nowPos)
+        nextPos -=7;
+      value = nowPos - nextPos;
+    }
   }
   const clone = Object.assign({}, note);
   clone.body = clone.body.slice(0);
-  clone.body[modePos] += value * neg;
+  clone.body[modePos] += value * upDown;
   return normalizeNote(clone);
 }
 
