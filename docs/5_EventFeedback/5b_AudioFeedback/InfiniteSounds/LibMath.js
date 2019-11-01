@@ -59,21 +59,16 @@ MathOps["^"] = function (n) {
 };
 
 MathOps["^^"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return left * Math.pow(2, right);
-  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
-  //   return left up right octaves;                                        //todo
+  const [l, r] = n.body;
+  if (typeof l === "number" && typeof r === "number")
+    return l * Math.pow(2, r);
   return n;
 };
-MathOps["^*"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return left * Math.pow(1.5, right);
-  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
-  //   return note left turned right on the circle of fifth;                //todo
+
+MathOps["^/"] = function (n) {
+  const [l, r] = n.body;
+  if (typeof l === "number" && typeof r === "number")
+    return l * Math.pow(Math.pow(Math.pow(2, 1 / 12), 7), r);
   return n;
 };
 
