@@ -50,19 +50,19 @@ describe('absolute notes with modes', function () {
     const result = {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]};
     expectToEqualWithDiff(tst, result);
   });
-  it("A5locrian", function () {
-    const tst = parse("A5locrian");
-    const result = {type: "absNote", body: [9, 5, "locr", 0, "A5locrian"]};
+  it("A5loc", function () {
+    const tst = parse("A5loc");
+    const result = {type: "absNote", body: [9, 5, "loc", 0, "A5loc"]};
     expectToEqualWithDiff(tst, result);
   });
-  it("Bb5dorian", function () {
-    const tst = parse("Bb5dorian");
-    const result = {type: "absNote", body: [10, 5, "dor", 0, "Bb5dorian"]};
+  it("Bb5dor", function () {
+    const tst = parse("Bb5dor");
+    const result = {type: "absNote", body: [10, 5, "dor", 0, "Bb5dor"]};
     expectToEqualWithDiff(tst, result);
   });
-  it("D#10mixolyd", function () {
-    const tst = parse("D#10mixolyd");
-    const result = {type: "absNote", body: [3, 10, "mixolyd", 0, "D#10mixolyd"]};
+  it("D#10mix", function () {
+    const tst = parse("D#10mix");
+    const result = {type: "absNote", body: [3, 10, "mix", 0, "D#10mix"]};
     expectToEqualWithDiff(tst, result);
   });
   it("!Eion", function () {
@@ -70,14 +70,24 @@ describe('absolute notes with modes', function () {
     const result = {type: "absNote", body: [4, 4, "ion", 1, "!Eion"]};
     expectToEqualWithDiff(tst, result);
   });
-  it("!f#phryg", function () {
-    const tst = parse("!f#phryg");
-    const result = {type: "absNote", body: [6, 4, "phryg", 1, "!f#phryg"]};
+  it("!f#phr", function () {
+    const tst = parse("!f#phr");
+    const result = {type: "absNote", body: [6, 4, "phr", 1, "!f#phr"]};
     expectToEqualWithDiff(tst, result);
   });
-  it("!g0aeol", function () {
-    const tst = parse("!g0aeol");
-    const result = {type: "absNote", body: [7, 0, "aeol", 1, "!g0aeol"]};
+  it("!g0aeo", function () {
+    const tst = parse("!g0aeo");
+    const result = {type: "absNote", body: [7, 0, "aeo", 1, "!g0aeo"]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0maj", function () {
+    const tst = parse("!g0maj");
+    const result = {type: "absNote", body: [7, 0, "maj", 1, "!g0maj"]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0min", function () {
+    const tst = parse("!g0min");
+    const result = {type: "absNote", body: [7, 0, "min", 1, "!g0min"]};
     expectToEqualWithDiff(tst, result);
   });
   // it("!g0major", function () {
@@ -87,7 +97,7 @@ describe('absolute notes with modes', function () {
   // });
   // it("!g0min", function () {
   //   const tst = parse("!g0min");
-  //   const result = {type: "absNote", body: [7, 0, "aeol", 1, "!g0"]};
+  //   const result = {type: "absNote", body: [7, 0, "aeo", 1, "!g0"]};
   //   expectToEqualWithDiff(tst, result);
   // });
   // it("!g0%2", function () {
