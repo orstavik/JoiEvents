@@ -1,3 +1,5 @@
+import {MusicModes} from "./MusicModes.js";
+
 function isNote(node) {
   return node.type === "absNoteNum" || node.type === "relNote";
 }
@@ -67,17 +69,17 @@ function normalizeRelNote(relNote, modeArray) {
 //absNoteNum needs normalization when mode switches goes beyond 7 or below 0
 //If actualModeTable[0] !== 0, then the actualModeTable is normalized using its initial value, and the difference is
 //either added or subtracted to the absNoteNum or the relNoteAugment.
-function normalizeAbsNoteNum(absNoteNum) {
-  let [num, mode] = relNote.body;
+function normalizeAbsNoteNum(note) {
+  let [num, mode, frozen] = note.body;
   while (mode > 7) {
     mode -= 7;
     num += 1;
   }
-  while (mode < 7) {
+  while (mode < 0) {
     mode += 7;
     num -= 1;
   }
-  return {type: "absNoteNum", body: [num, mode]};
+  return {type: "absNoteNum", body: [num, mode, frozen]};
 }
 
 function getNoteInteger(node) {
@@ -143,38 +145,6 @@ function stepNote(node, neg) {
   return clone;
 }
 
-const modeNameToVector = {
-  "loc": [0, 1, 3, 5, 6, 8, 10],
-  "phr": [0, 1, 3, 5, 7, 8, 10],
-  "aeo": [0, 2, 3, 5, 7, 8, 10],
-  "min": [0, 2, 3, 5, 7, 8, 10],
-  "dor": [0, 2, 3, 5, 7, 9, 10],
-  "mix": [0, 2, 4, 5, 7, 9, 10],
-  "ion": [0, 2, 4, 5, 7, 9, 11],
-  "maj": [0, 2, 4, 5, 7, 9, 11],
-  "lyd": [0, 2, 4, 6, 7, 9, 11],
-};
-const modeNumToVector = [
-  [0, 1, 3, 5, 6, 8, 10],
-  [0, 1, 3, 5, 7, 8, 10],
-  [0, 2, 3, 5, 7, 8, 10],
-  [0, 2, 3, 5, 7, 9, 10],
-  [0, 2, 4, 5, 7, 9, 10],
-  [0, 2, 4, 5, 7, 9, 11],
-  [0, 2, 4, 6, 7, 9, 11],
-];
-const modeNameToNumber = {
-  "loc": 0,
-  "phr": 1,
-  "aeo": 2,
-  "min": 2,
-  "dor": 3,
-  "mix": 4,
-  "ion": 5,
-  "maj": 5,
-  "lyd": 6,
-};
-const modeNumberToName = ["loc", "phr", "aeo", "dor", "mix", "ion", "lyd"];
 
 function modeShift(node, neg) {
   let {note, value, type} = getNoteIntegerOrModeName(node);
@@ -182,9 +152,11 @@ function modeShift(node, neg) {
     return node;
   const modePos = note.type === "absNoteNum" ? 1 : 3;
   if (type === "name") {
-    const nextModePos = modeNameToNumber[value];
+    const nextModePos = MusicModes.getNumber(value);
     value = neg ? note.body[modePos] - nextModePos : nextModePos - note.body[modePos];
   }
+  const clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
   clone.body[modePos] += value * neg;
   return normalizeNote(clone);
 }

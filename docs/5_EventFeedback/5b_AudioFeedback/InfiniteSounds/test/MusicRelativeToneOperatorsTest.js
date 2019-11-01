@@ -16,7 +16,7 @@ describe('relative notes */ num', function () {
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "absNoteNum", body: [61, "lyd", 0]};
+    const result2 = {type: "absNoteNum", body: [61, 6, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 });

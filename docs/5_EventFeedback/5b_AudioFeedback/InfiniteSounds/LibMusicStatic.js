@@ -21,12 +21,12 @@ function getAbsoluteClef(ctx) {
       return scope.body[0];
   }
 }
+import {MusicModes} from "./MusicModes.js";
 
 export const MusicStatic = Object.create(null);
 
 MusicStatic["absNote"] = function (node, ctx) {
-  //todo convert mode names to mode numbers.
-  const mode = node.body[2];
+  const mode = MusicModes.getNumber(node.body[2]);
   return {type: "absNoteNum", body: [node.body[0] + node.body[1] * 12, mode, node.body[3]]};
 };
 
