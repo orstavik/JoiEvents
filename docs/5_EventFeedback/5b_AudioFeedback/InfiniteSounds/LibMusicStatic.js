@@ -30,6 +30,30 @@ MusicStatic["absNote"] = function (node, ctx) {
   return {type: "absNoteNum", body: [node.body[0] + node.body[1] * 12, mode, node.body[3]]};
 };
 
+//x~y 7scale operator (note operator ONLY, depends on the existence of a MODE).
+//x~y mathematically, throws a SyntaxError.
+//x~y absNoteNum means: X is absNoteNum, Y is int. The calculation require the tone access its mode table,
+//and stepping right/left in this mode table equivalent to the distance of the x, and then adding the value to x.noteNum.
+//It is unlikely that such operations will be performed much, but it can be done.
+//x^/y relNote means: X is relNote, Y is int, x.relNoteNum+=y
+
+//~y 7scale operator prefix. The default value of X is 0, ie. "~y" means the same as "0~y" statically.
+//When the relNote is interpreted to produce a node, then it will look to the clef.
+
+//Future work. Allow the 7scale-operator (~) to have a "#" or "b". or a ~1.5 to signify the sharp?
+//make # into a ^+1 and b into a ^-1? yes, that is good.
+
+//to interpret the value of a relNote, you first calculate absNoteNum value:
+//the octave = note.getOctave() + parentClef.getOctave()
+//the relNote is converted into an absNoteNum = parentClef.getModeTable()[relNote.num]
+//the relNoteAugment is just a number (1, 0 or -1).
+//absNoteNum = octave*12 + absNoteNum + relNoteAugment.
+//use lookup table for verification to begin with.
+
+
+
+
+
 // MusicStatic["absNoteNum"] = function (node, ctx) {
 //   // if (node.body[2])  //todo forgot what this was
 //   //   return node;

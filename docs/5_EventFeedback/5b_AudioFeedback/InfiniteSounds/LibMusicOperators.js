@@ -1,84 +1,79 @@
-//x^^y octave operator.
-//x^^y mathematically means: X is num, Y is num, x*=2^y
-//x^^y absNoteNum means: X is absNoteNum, Y is int, x+=12*y
-//x^^y relNote means: X is relNote, Y is int, x.relNoteNum += (7*y)
-
-//x^/y circle5 operator.
-//x^/y mathematically means: X is num, Y is num, x*=(2^(1/12))^y  or  x*= Math.pow(Math.pow(2, 1/12), y))
-//x^/y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=7*y    Att!! This might not be workable.
-//x^/y relNote means: X is relNote, Y is int, x.relNoteNum += (4*y)
-
-//
-//
-//x^+y absolute tone step. (and ^-)
-//x^+y mathematically means: X is num, Y is num, x*=2^(y/12)  or  x*= Math.pow(2, y/12)
-//x^+y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=y
-//x^+y relNote means: X is relNote, Y is int, x.relNoteAUGMENT+=y
-// These operations will yield the same outcome.
-// Math: 440^+1=441                        (freq 466)
-// AbsNote: A4^+1=A#4                      (freq 466)
-// RelNote (in C4ionian/major): A4^+1=A#4  (freq 466)
-//
-//x~y 7scale operator (note operator ONLY, depends on the existence of a MODE).
-//x~y mathematically, throws a SyntaxError.
-//x~y absNoteNum means: X is absNoteNum, Y is int. The calculation require the tone access its mode table,
-//and stepping right/left in this mode table equivalent to the distance of the x, and then adding the value to x.noteNum.
-//It is unlikely that such operations will be performed much, but it can be done.
-//x^/y relNote means: X is relNote, Y is int, x.relNoteNum+=y
-
-//~y 7scale operator prefix. The default value of X is 0, ie. "~y" means the same as "0~y" statically.
-//When the relNote is interpreted to produce a node, then it will look to the clef.
-
-//ATT!! Any operation on relNoteNum and relNoteAugment will cause a calculation inside the relNote to sync/update the
-// .relNoteNum, .relNoteOctave, .relNoteAugment
-// absNoteNum objects are not as sensitive for this, as they only contain a single value.
-
-//Future work. Allow the 7scale-operator (~) to have a "#" or "b". or a ~1.5 to signify the sharp?
-//make # into a ^+1 and b into a ^-1? yes, that is good.
-
-//% mode operator.
-//x%y mathematically means modulus remainder. This operator is not semantically related to the %-mode operator for tones.
-//x%y absNoteNum means the same for absNoteNum and relNote:
-//   X is Note, Y is +-int or +-modeName ("lydian", "-major", "lyd", "-min", etc.)
-//   the prefix +/- tells the tone to step up or down as many steps or until it gets to the mode with the same name.
-//   for each step, an int is added or subtracted to different points in the actualModeTable.
-//   If actualModeTable[0] !== 0, then the actualModeTable is normalized using its initial value, and the difference is
-//   either added or subtracted to the absNoteNum or the relNoteAugment.
-
-// %mode operator is useful for clefs. It has no effect when performed on leaf nodes, as leaf nodes interpret the value
-// of their relative note num based on the parent clef's mode, not their own.
-
-//to interpret the value of a relNote, you first calculate absNoteNum value:
-//the octave = note.getOctave() + parentClef.getOctave()
-//the relNote is converted into an absNoteNum = parentClef.getModeTable()[relNote.num]
-//the relNoteAugment is just a number (1, 0 or -1).
-//absNoteNum = octave*12 + absNoteNum + relNoteAugment.
-//use lookup table for verification to begin with.
-
 function isNote(node) {
   return node.type === "absNoteNum" || node.type === "relNote";
 }
 
-function getNoteAndNumber(node) {
-  if (node.body.length !== 2)
-    return {};
-  const [l, r] = node.body;
-  if (isNote(l) && Number.isInteger(r))
-    return {note: l, num: r};
-  if (Number.isInteger(l) && isNote(r))
-    return {note: r, num: l};
+//Operations that alter the num and augment value of relNote require the relNote to be normalized.
+//Normalization of relnote pushes the value of the num between 0 and 6, and augment between -1,0,1.
+//octave changes does not require normalization.
+//Normalization has the effect that augmentation of notes remain fixed when mode is changed dynamically.
+//if a tone is augmented 1 up or down (out of scale) in one modality, then the augmentation will remain in place even
+//as you swap modality and that modality would "ctach up" to the augmentation.
+//absNoteNum do not need normalization, as they contain only a single value.
+
+function normalizeRelNote(relNote, modeArray) {
+  let [num, octave, augment] = relNote.body;
+  //1. augment to octave
+  while (augment > 12) {
+    augment -= 12;
+    octave += 1;
+  }
+  while (augment < 0) {
+    augment += 12;
+    octave -= 1;
+  }
+  //2. augment to num
+  while (augment > 0) {
+    let relNoteAbsValue = modeArray[num % 7] + Math.floor(num / 7) * 12;
+    let nextRelNoteAbsValue = modeArray[(num + 1) % 7] + Math.floor((num + 1) / 7) * 12;
+    let nextStepDistance = nextRelNoteAbsValue - relNoteAbsValue;
+    if (augment < nextStepDistance)
+      break;
+    num += 1;
+    augment -= nextStepDistance;
+  }
+  while (augment < 0) {
+    let relNoteAbsValue = modeArray[num % 7] + Math.floor(num / 7) * 12;
+    let nextRelNoteAbsValue = modeArray[(num + 6) % 7] + Math.floor((num - 1) / 7) * 12;
+    let nextStepDistance = nextRelNoteAbsValue - relNoteAbsValue;
+    if (augment > nextStepDistance)
+      break;
+    num -= 1;
+    augment += nextStepDistance;
+  }
+  //3. num to octave
+  while (num > 7) {
+    num -= 7;
+    octave += 1;
+  }
+  while (num < 0) {
+    num += 7;
+    octave -= 1;
+  }
+  return {type: "relNote", body: [num, octave, augment]};
+}
+
+function getNoteInteger(node) {
+  if (node.body.length === 2) {
+    const [l, r] = node.body;
+    if (isNote(l) && Number.isInteger(r))
+      return {note: l, num: r};
+  }
   return {};
 }
 
 function checkPositiveLog2Integer(num) {
-  const addOctave = Math.log2(num);
-  if (addOctave !== Math.floor(addOctave))
-    throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
-  return addOctave;
+  if (num === 0)
+    return num;
+  if (num > 0 && Number.isInteger(num)) {
+    const addOctave = Math.log2(num);
+    if (addOctave === Math.floor(addOctave))
+      return addOctave;
+  }
+  throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
 }
 
 function switchOctave(node, up) {
-  let {note, num} = getNoteAndNumber(node);
+  let {note, num} = getNoteInteger(node);
   if (!note)
     return node;
   if (num === 0)
@@ -88,29 +83,11 @@ function switchOctave(node, up) {
   if (note.type === "absNoteNum")
     newNote.body[0] += addOctave * 12 * up;
   else if (note.type === "relNote")
-    newNote.body[1] += addOctave * up;
+    newNote.body[1] += addOctave * up;  //relNote octave doesn't require normalization
   return newNote;
 }
 
-function switchTone(node, up) {
-  let {note, num, negate} = getNoteAndNumber(node);
-  if (!note)
-    return node;
-  if (num === 0)
-    return note;
-  num *= negate;
-  const newNote = Object.assign({}, note);
-  if (note.type === "absNote") {
-    newNote.body[0] += num * up;
-    if (newNote.body[0] > 11 || newNote.body[0] < 0) {
-      newNote.body[1] += Math.floor(newNote.body[0] / 12)
-      newNote.body[0] = newNote.body[0] % 12;
-    }
-  } else if (note.type === "~~")
-    newNote.body[0] += num * up;
-  return newNote;
-}
-
+//all note operators require the note to be on the left hand side. It will look too complex otherwise.
 export const MusicMath = Object.create(null);
 
 //x*y multiply operator
@@ -154,27 +131,94 @@ MusicMath["+"] = MusicMath["-"] = function (node, ctx) {
     throw new SyntaxError("Notes cannot be added or subtracted. Use the ^+ or ^- or ~ to do note step operations.");
 };
 
+//x^+y absolute tone step. (and ^-)
+//x^+y mathematically means: X is num, Y is num, x*=2^(y/12)  or  x*= Math.pow(2, y/12)
+//x^+y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=y
+//x^+y relNote means: X is relNote, Y is int, x.relNoteAUGMENT+=y
+// These operations will yield the same outcome.
+// Math: 440^+1=441                        (freq 466)
+// AbsNote: A4^+1=A#4                      (freq 466)
+// RelNote (in C4ionian/major): A4^+1=A#4  (freq 466)
+
+MusicMath["^+"] = function (node, ctx) {
+  const {note, num} = getNoteInteger(node);
+  if (!note || num === undefined)
+    return node;
+  let clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
+  if (note.type === "absNoteNum")
+    clone.body[0] += num;
+  if (note.type === "relNum") {
+    clone.body[2] += num;
+    clone = normalizeRelNote(clone);
+  }
+  return clone;
+};
+
+MusicMath["^-"] = function (node, ctx) {
+  const neg = -1;
+  const {note, num} = getNoteInteger(node);
+  if (!note || num === undefined)
+    return node;
+  let clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
+  if (note.type === "absNoteNum")
+    clone.body[0] += num * neg;
+  if (note.type === "relNum") {
+    clone.body[2] += num * neg;
+    clone = normalizeRelNote(clone);
+  }
+  return clone;
+};
+
 //x^^y octave operator.
-//x^^y mathematically means: X is num, Y is num, x*=2^y
+//x^^y mathematically means: X is num, Y is num, x*=2^y. This is done in LibMath
 //x^^y absNoteNum means: X is absNoteNum, Y is int, x+=12*y
 //x^^y relNote means: X is relNote, Y is int, x.relNoteNum += (7*y)
 
 MusicMath["^^"] = function (node, ctx) {
-  let [l, r] = node.body;
-  if (typeof r !== "number")
-    throw new SyntaxError("^^ the scale operator must have an integer operand.");
-  if (typeof l === "number")
-    return l *= Math.pow(2, r);
-  if (l.type !== "absNoteNum" && l.type === "relNote")
-    throw new SyntaxError("^^ the scale operator must be performed on either a number or a note.");
-  if (!Number.isInteger(r))
-    throw new SyntaxError("^^ the scale operator must have an integer operand when performed on a note.");
-  if (l.type === "absNoteNum") {
-    const res = Object.assign({}, l);
-    res.num += 12 * r;
-    return res;
-  }
-  const res = Object.assign({}, l);
-  res.num += 7 * r;
-  return res;
+  const {note, num} = getNoteInteger(node);
+  if (!note || num === undefined)
+    return node;
+  const clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
+  if (note.type === "absNoteNum")
+    clone.body[0] += num * 12;
+  if (note.type === "relNum")
+    clone.body[1] += num;
+  return clone;
 };
+
+//what is the circle 5 point? 7/12scale abs and 4/7scale
+
+//x^/y circle5 operator.
+//x^/y mathematically means: X is num, Y is num, x*=(2^(1/12))^y  or  x*= Math.pow(Math.pow(2, 1/12), y))
+//x^/y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=7*y    Att!! This does not fit with all 7scale modes.
+//x^/y relNote means: X is relNote, Y is int, x.relNoteNum += (4*y)
+
+MusicMath["^/"] = function (node, ctx) {
+  const {note, num} = getNoteInteger(node);
+  if (!note || num === undefined)
+    return node;
+  let clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
+  if (note.type === "absNoteNum")
+    clone.body[0] += num * 7;
+  if (note.type === "relNum") {
+    clone.body[0] += num * 4;
+    clone = normalizeRelNote(clone);
+  }
+  return clone;
+};
+
+//% mode operator.
+//x%y mathematically means modulus remainder. This operator is not semantically related to the %-mode operator for tones.
+//x%y absNoteNum means the same for absNoteNum and relNote:
+//   X is Note, Y is +-int or +-modeName ("lydian", "-major", "lyd", "-min", etc.)
+//   the prefix +/- tells the tone to step up or down as many steps or until it gets to the mode with the same name.
+//   for each step, an int is added or subtracted to different points in the actualModeTable.
+//   If actualModeTable[0] !== 0, then the actualModeTable is normalized using its initial value, and the difference is
+//   either added or subtracted to the absNoteNum or the relNoteAugment.
+
+// %mode operator is useful for clefs. It has no effect when performed on leaf nodes, as leaf nodes interpret the value
+// of their relative note num based on the parent clef's mode, not their own.

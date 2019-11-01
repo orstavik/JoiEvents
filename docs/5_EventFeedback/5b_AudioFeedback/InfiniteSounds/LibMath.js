@@ -1,88 +1,60 @@
+function numArgs(l, r) {
+  return typeof l === "number" && typeof r === "number";
+}
+const a12 = Math.pow(2, 1 / 12);
+
 export const MathOps = Object.create(null);
 
 MathOps["+"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return left + right;
-  if (typeof left === "string" && typeof right === "string")
-    return left + right;
-  //if there are two quotes, then merge it into a single quote.
-  //if there are two notes?
-  //if there are two names without body, merge into a single name
-  return n;
+  const [l, r] = n.body;
+  return numArgs(l, r) ? l + r : n;
 };
-
-//priorities, first the setting of musical keys
-//1. ~= setting the key
-//2. ^^ morphing the scale
-//2. ^~ morphing the key circle of fifth
-//2. ^~~ morphing the mode
-//3. up a tone in the scale of
 
 MathOps["-"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return left - right;
-  //todo research regex for strings -, do a replace //g with the right side argument?
-  //if there are two notes?
-  return n;
+  const [l, r] = n.body;
+  return numArgs(l, r) ? l - r : n;
 };
 
-
 MathOps["*"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return left * right;
-  //if there are two notes?
-  return n;
+  const [l, r] = n.body;
+  return numArgs(l, r) ? l * r : n;
 };
 
 MathOps["/"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return left / right;
-  //if there are two notes?
-  return n;
+  const [l, r] = n.body;
+  return numArgs(l, r) ? l / r : n;
 };
 
 MathOps["^"] = function (n) {
-  let left = n.body[0];
-  let right = n.body[1];
-  if (typeof left === "number" && typeof right === "number")
-    return Math.pow(left, right);
-  //if there are two notes?
-  return n;
+  const [l, r] = n.body;
+  return numArgs(l, r) ?  Math.pow(l, r) : n;
 };
 
 MathOps["^^"] = function (n) {
   const [l, r] = n.body;
-  if (typeof l === "number" && typeof r === "number")
-    return l * Math.pow(2, r);
-  return n;
+  return numArgs(l, r) ? l * Math.pow(2, r) : n;
 };
 
 MathOps["^/"] = function (n) {
   const [l, r] = n.body;
-  if (typeof l === "number" && typeof r === "number")
-    return l * Math.pow(Math.pow(Math.pow(2, 1 / 12), 7), r);
-  return n;
+  return numArgs(l, r) ? l * Math.pow(Math.pow(a12, 7), r) : n;
+};
+
+//x^+y mathematically means: X is num, Y is num, x*=2^(y/12)  or  x*= Math.pow(2, y/12)
+
+MathOps["^+"] = function (n) {
+  const [l, r] = n.body;
+  return numArgs(l, r) ? l * Math.pow(2, r / 12) : n;
+};
+
+MathOps["^-"] = function (n) {
+  const [l, r] = n.body;
+  return numArgs(l, r) ? l / Math.pow(2, r / 12) : n;
 };
 
 /*
 MathOps["^~"] = function (n) {
-  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
-  //   return note left turned right on the mode scale;                //todo
-  return n;
-};
-
-MathOps["^+"] = function (n) {
-  if (typeof n.left === "number" && typeof n.right === "number")
-    return n.left * Math.pow(1.5, n.right);
-  // if (typeof n.left.type === "note" && typeof n.right.type === "number") //todo
+  // if (typeof l.type === "note" && typeof r.type === "number") //todo
   //   return note left turned right on the mode scale;                //todo
   return n;
 };

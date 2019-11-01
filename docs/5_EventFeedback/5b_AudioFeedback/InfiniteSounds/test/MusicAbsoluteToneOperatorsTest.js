@@ -127,3 +127,105 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
     expect(res2.message).toBe("Notes cannot be added or subtracted. Use the ^+ or ^- or ~ to do note step operations.");
   });
 });
+
+describe('absNoteNum: ^^', function () {
+
+  it("C#4lyd^^0", async function () {
+    const str = "C#4lyd^^0";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^^2", async function () {
+    const str = "C#4lyd^^2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49+24, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^^-2", async function () {
+    const str = "C#4lyd^^-2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-24, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^^-3", async function () {
+    const str = "C#4lyd^^-3";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-36, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^^-1", async function () {
+    const str = "C#4lyd^^-1";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-12, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+});
+
+describe('absNoteNum: ^/', function () {
+
+  it("C#4lyd^/0", async function () {
+    const str = "C#4lyd^/0";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^/2", async function () {
+    const str = "C#4lyd^/2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49+7*2, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^/-2", async function () {
+    const str = "C#4lyd^/-2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-7*2, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^/-3", async function () {
+    const str = "C#4lyd^/-3";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-7*3, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^/-1", async function () {
+    const str = "C#4lyd^/-1";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-7, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+});
+
+describe('absNoteNum: ^+', function () {
+
+  it("C#4lyd^+0", async function () {
+    const str = "C#4lyd^+0";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^+2", async function () {
+    const str = "C#4lyd^+2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49+2, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^-2", async function () {
+    const str = "C#4lyd^-2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-2, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^-3", async function () {
+    const str = "C#4lyd^-3";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-3, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd^-1", async function () {
+    const str = "C#4lyd^-1";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49-1, "lyd", 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+});
