@@ -8,10 +8,22 @@ function isNote(node) {
 //Normalization has the effect that augmentation of notes remain fixed when mode is changed dynamically.
 //if a tone is augmented 1 up or down (out of scale) in one modality, then the augmentation will remain in place even
 //as you swap modality and that modality would "ctach up" to the augmentation.
-//absNoteNum do not need normalization, as they contain only a single value.
+
+function normalizeNote(note) {
+  return note.type === "absNoteNum" ? normalizeAbsNoteNum(note) : normalizeRelNote(note);
+}
 
 function normalizeRelNote(relNote, modeArray) {
-  let [num, octave, augment] = relNote.body;
+  let [num, octave, augment, mode] = relNote.body;
+  //0. mode to augment
+  while (mode > 7) {
+    mode -= 7;
+    augment += 1;
+  }
+  while (mode < 7) {
+    mode += 7;
+    augment -= 1;
+  }
   //1. augment to octave
   while (augment > 12) {
     augment -= 12;
@@ -52,11 +64,40 @@ function normalizeRelNote(relNote, modeArray) {
   return {type: "relNote", body: [num, octave, augment]};
 }
 
+//absNoteNum needs normalization when mode switches goes beyond 7 or below 0
+//If actualModeTable[0] !== 0, then the actualModeTable is normalized using its initial value, and the difference is
+//either added or subtracted to the absNoteNum or the relNoteAugment.
+function normalizeAbsNoteNum(absNoteNum) {
+  let [num, mode] = relNote.body;
+  while (mode > 7) {
+    mode -= 7;
+    num += 1;
+  }
+  while (mode < 7) {
+    mode += 7;
+    num -= 1;
+  }
+  return {type: "absNoteNum", body: [num, mode]};
+}
+
 function getNoteInteger(node) {
   if (node.body.length === 2) {
     const [l, r] = node.body;
     if (isNote(l) && Number.isInteger(r))
       return {note: l, num: r};
+  }
+  return {};
+}
+
+const modeNames = /maj|min|ion|lyd|loc|dor|phr|aeo|mix/;
+
+function getNoteIntegerOrModeName(node) {
+  if (node.body.length === 2) {
+    const [l, r] = node.body;
+    if (isNote(l) && Number.isInteger(r))
+      return {note: l, value: r, type: "num"};
+    if (isNote(l) && typeof r === "string" && modeNames.test(r))
+      return {note: l, value: r, type: "name"};
   }
   return {};
 }
@@ -100,6 +141,52 @@ function stepNote(node, neg) {
     clone = normalizeRelNote(clone);
   }
   return clone;
+}
+
+const modeNameToVector = {
+  "loc": [0, 1, 3, 5, 6, 8, 10],
+  "phr": [0, 1, 3, 5, 7, 8, 10],
+  "aeo": [0, 2, 3, 5, 7, 8, 10],
+  "min": [0, 2, 3, 5, 7, 8, 10],
+  "dor": [0, 2, 3, 5, 7, 9, 10],
+  "mix": [0, 2, 4, 5, 7, 9, 10],
+  "ion": [0, 2, 4, 5, 7, 9, 11],
+  "maj": [0, 2, 4, 5, 7, 9, 11],
+  "lyd": [0, 2, 4, 6, 7, 9, 11],
+};
+const modeNumToVector = [
+  [0, 1, 3, 5, 6, 8, 10],
+  [0, 1, 3, 5, 7, 8, 10],
+  [0, 2, 3, 5, 7, 8, 10],
+  [0, 2, 3, 5, 7, 9, 10],
+  [0, 2, 4, 5, 7, 9, 10],
+  [0, 2, 4, 5, 7, 9, 11],
+  [0, 2, 4, 6, 7, 9, 11],
+];
+const modeNameToNumber = {
+  "loc": 0,
+  "phr": 1,
+  "aeo": 2,
+  "min": 2,
+  "dor": 3,
+  "mix": 4,
+  "ion": 5,
+  "maj": 5,
+  "lyd": 6,
+};
+const modeNumberToName = ["loc", "phr", "aeo", "dor", "mix", "ion", "lyd"];
+
+function modeShift(node, neg) {
+  let {note, value, type} = getNoteIntegerOrModeName(node);
+  if (!note)
+    return node;
+  const modePos = note.type === "absNoteNum" ? 1 : 3;
+  if (type === "name") {
+    const nextModePos = modeNameToNumber[value];
+    value = neg ? note.body[modePos] - nextModePos : nextModePos - note.body[modePos];
+  }
+  clone.body[modePos] += value * neg;
+  return normalizeNote(clone);
 }
 
 //all note operators require the note to be on the left hand side. It will look too complex otherwise.
@@ -203,14 +290,20 @@ MusicMath["^/"] = function (node, ctx) {
   return clone;
 };
 
-//% mode operator.
+//% mode operator.  and %- for stepping down.
 //x%y mathematically means modulus remainder. This operator is not semantically related to the %-mode operator for tones.
 //x%y absNoteNum means the same for absNoteNum and relNote:
 //   X is Note, Y is +-int or +-modeName ("lydian", "-major", "lyd", "-min", etc.)
 //   the prefix +/- tells the tone to step up or down as many steps or until it gets to the mode with the same name.
 //   for each step, an int is added or subtracted to different points in the actualModeTable.
-//   If actualModeTable[0] !== 0, then the actualModeTable is normalized using its initial value, and the difference is
-//   either added or subtracted to the absNoteNum or the relNoteAugment.
 
 // %mode operator is useful for clefs. It has no effect when performed on leaf nodes, as leaf nodes interpret the value
 // of their relative note num based on the parent clef's mode, not their own.
+
+MusicMath["%"] = function (node, ctx) {
+  return modeShift(node, 1);
+};
+
+MusicMath["%-"] = function (node, ctx) {
+  return modeShift(node, -1);
+};
