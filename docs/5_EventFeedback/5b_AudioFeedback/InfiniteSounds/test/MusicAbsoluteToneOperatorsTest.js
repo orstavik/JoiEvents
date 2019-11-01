@@ -292,5 +292,23 @@ describe('absNoteNum: %', function () {
     const result2 = {type: "absNoteNum", body: [48, 6, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
+  it("C#4dor%-maj", async function () {
+    const str = "C#4dor%-maj";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [48, 5, 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4lyd%min", async function () {
+    const str = "C#4lyd%min";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [50, 2, 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("C#4min%-aeo", async function () {
+    const str = "C#4min%-aeo";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "absNoteNum", body: [49, 2, 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
 });
 
