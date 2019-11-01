@@ -1,5 +1,5 @@
 import {parse} from "../Parser.js";
-import {staticInterpret, interpret} from "../Interpreter.js";
+import {staticInterpret} from "../Interpreter.js";
 
 describe('absolute notes */ num', function () {
 
@@ -31,9 +31,14 @@ describe('absolute notes */ num', function () {
     };
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "absNoteNum", body: [37, "lyd", 0]};
-    expectToEqualWithDiff(tst2, result2);
+    let res2;
+    try {
+      const tst2 = await staticInterpret(str);
+    } catch (e) {
+      res2 = e;
+    }
+    expect(res2).toBeInstanceOf(SyntaxError);
+    expect(res2.message).toBe("Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...");
   });
   it("C#4lyd/4", async function () {
     const str = "C#4lyd/4";
@@ -63,9 +68,14 @@ describe('absolute notes */ num', function () {
     };
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "absNoteNum", body: [73, "lyd", 0]};
-    expectToEqualWithDiff(tst2, result2);
+    let res2;
+    try {
+      const tst2 = await staticInterpret(str);
+    } catch (e) {
+      res2 = e;
+    }
+    expect(res2).toBeInstanceOf(SyntaxError);
+    expect(res2.message).toBe("Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...");
   });
 });
 

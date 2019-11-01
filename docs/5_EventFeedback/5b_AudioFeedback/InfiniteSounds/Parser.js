@@ -26,10 +26,10 @@ const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 1
 const tokens = [
   //absolute notes: C#4lydian, a0dor, baeolian, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
   /!?([a-gA-G][#b]?)(\d+)?(?:(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)?(?![_a-zA-Z\d#-])/,
-  /~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11    //todo remove this
-  /~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
-  /~([a-gA-G][#b]?)/,                        //relative alpha notes: ~C, ~d#, ~Eb, ~bb
-  /%(?:(-?\d+)|(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)/,//mode and modulo syntax
+  /CANCELLLLL~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11    //todo remove this
+  /CANCELLLLL~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
+  /CANCELLLLL~([a-gA-G][#b]?)/,                        //relative alpha notes: ~C, ~d#, ~Eb, ~bb
+  /CANCELLLLL%(?:(-?\d+)|(lyd|ion|dor|phryg|mixolyd|locr|aeol)(?:ian)?)/,//mode and modulo syntax
   /[_a-zA-Z][_a-zA-Z\d#-]*/,                 //word:
   /--[_a-zA-Z][_a-zA-Z-]*/,                  //cssVariable:
   /\$[\d]+/,                                 //dollarVariable:

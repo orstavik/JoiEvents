@@ -134,51 +134,51 @@ describe('absolute notes with modes', function () {
 //   });
 // });
 
-describe('relative alpha notes', function () {
-  it("~C", function () {
-    const tst = parse("~C");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [0, "c"]});
-  });
-
-  it("~b", function () {
-    const tst = parse("~b");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [11, "b"]});
-  });
-
-  it("~f#", function () {
-    const tst = parse("~f#");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [6, "f#"]});
-  });
-
-  it("~Bb", function () {
-    const tst = parse("~Bb");
-    expectToEqualWithDiff(tst, {type: "relNote", body: [10, "bb"]});
-  });
-  // it("~Bb#-10", function () {
-  //   expect error
-  // });
-});
-
-describe('relative 7 notes', function () {
+// describe('relative alpha notes', function () {
+//   it("~C", function () {
+//     const tst = parse("~C");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [0, "c"]});
+//   });
+//
+//   it("~b", function () {
+//     const tst = parse("~b");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [11, "b"]});
+//   });
+//
+//   it("~f#", function () {
+//     const tst = parse("~f#");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [6, "f#"]});
+//   });
+//
+//   it("~Bb", function () {
+//     const tst = parse("~Bb");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [10, "bb"]});
+//   });
+//   // it("~Bb#-10", function () {
+//   //   expect error
+//   // });
+// });
+//
+describe('7scale prefix operator: relative 7 notes', function () {
   it("~0", function () {
     const tst = parse("~0");
-    expectToEqualWithDiff(tst, {type: "~", body: [0, 0]});
+    expectToEqualWithDiff(tst, {type: "~", body: [undefined, 0]});
   });
 
   it("~-11", function () {
     const tst = parse("~-11");
-    expectToEqualWithDiff(tst, {type: "~", body: [-11, 0]});
+    expectToEqualWithDiff(tst, {type: "~", body: [undefined, -11]});
   });
 
-  it("~+11b", function () {
-    const tst = parse("~+11b");
-    expectToEqualWithDiff(tst, {type: "~", body: [11, -1]});
-  });
-
-  it("~10#", function () {
-    const tst = parse("~10#");
-    expectToEqualWithDiff(tst, {type: "~", body: [10, 1]});
-  });
+  // it("~+11b", function () {
+  //   const tst = parse("~+11b");
+  //   expectToEqualWithDiff(tst, {type: "~", body: [11, -1]});
+  // });
+  //
+  // it("~10#", function () {
+  //   const tst = parse("~10#");
+  //   expectToEqualWithDiff(tst, {type: "~", body: [10, 1]});
+  // });
 });
 
 // describe('absolute clef, absolute notes', function () {

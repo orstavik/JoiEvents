@@ -23,19 +23,6 @@
 //Therefore, +/- doesn't work on notes. It will cause a syntax error.
 //Instead, there are is another operator that works the same for all three: ^+ (and ^-).
 //
-//x*y multiply operator
-//x*y mathematically is obvious
-//and, it can be used on notes too. But, it only works on positive integers in log2 scale 1,2,4,8,16,32, etc = positiveLog2Int.
-//x*y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y))
-//x*y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y))
-//
-//x/y divide operator
-//x/y mathematically is obvious
-//and, it can be used on notes too. But, it only works on positive integers in log2 scale 1,2,4,8,16,32, etc = positiveLog2Int.
-//x/y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y)) *-1
-//x/y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y)) *-1
-//
-//Att!! the multiply and divide operators on notes are very similar, they just go up or down.
 //
 //x^+y absolute tone step. (and ^-)
 //x^+y mathematically means: X is num, Y is num, x*=2^(y/12)  or  x*= Math.pow(2, y/12)
@@ -83,8 +70,7 @@
 //use lookup table for verification to begin with.
 
 function isNote(node) {
-  return node.type === "absNoteNum" ||
-    node.type === "relNote";
+  return node.type === "absNoteNum" || node.type === "relNote";
 }
 
 function getNoteAndNumber(node) {
@@ -92,26 +78,31 @@ function getNoteAndNumber(node) {
     return {};
   const [l, r] = node.body;
   if (isNote(l) && Number.isInteger(r))
-    return {note: l, num: Math.abs(r), negate: r < 0 ? -1 : 1};
+    return {note: l, num: r};
   if (Number.isInteger(l) && isNote(r))
-    return {note: r, num: Math.abs(l), negate: l < 0 ? -1 : 1};
+    return {note: r, num: l};
   return {};
 }
 
-function switchOctave(node, up, op) {
-  let {note, num, negate} = getNoteAndNumber(node);
+function checkPositiveLog2Integer(num) {
+  const addOctave = Math.log2(num);
+  if (addOctave !== Math.floor(addOctave))
+    throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
+  return addOctave;
+}
+
+function switchOctave(node, up) {
+  let {note, num} = getNoteAndNumber(node);
   if (!note)
     return node;
   if (num === 0)
     return note;
+  const addOctave = checkPositiveLog2Integer(num);
   const newNote = Object.assign({}, note);
-  const addOctave = Math.log2(num);
-  if (addOctave !== Math.floor(addOctave))
-    throw new SyntaxError(`Note scale operation '${op}' error: Scale operations require a positive integer 0,2,4,8,16,...`);
   if (note.type === "absNoteNum")
-  // newNote.body[1] += addOctave * negate * up;
-  // else if (note.type === "~~")
-    newNote.body[0] += addOctave * 12 * negate * up;
+    newNote.body[0] += addOctave * 12 * up;
+  else if (note.type === "relNote")
+    newNote.body[1] += addOctave * up;
   return newNote;
 }
 
@@ -136,13 +127,24 @@ function switchTone(node, up) {
 
 export const MusicMath = Object.create(null);
 
-//these two operators are not strictly mathematical, as 440hz/-2 = -220hz and A4/-2 = A5 (ie. +880hz). same goes for '*'.
-
+//x*y multiply operator
+//x*y mathematically is obvious
+//and, it can be used on notes too. But, it only works on positive integers in log2 scale 1,2,4,8,16,32, etc = positiveLog2Int.
+//x*y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y))
+//x*y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y))
+//
+//x/y divide operator
+//x/y mathematically is obvious
+//and, it can be used on notes too. But, it only works on positive integers in log2 scale 1,2,4,8,16,32, etc = positiveLog2Int.
+//x/y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y)) *-1
+//x/y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y)) *-1
+//
+//Att!! the multiply and divide operators on notes are very similar, they just go up or down.
 MusicMath["*"] = function (node, ctx) {
-  return switchOctave(node, 1, "*");
+  return switchOctave(node, 1);
 };
 MusicMath["/"] = function (node, ctx) {
-  return switchOctave(node, -1, "/");
+  return switchOctave(node, -1);
 };
 
 //+/- for notes is one step (in the 12 scale? or in the 7 scale?)
