@@ -8,20 +8,6 @@
 //x^/y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=7*y    Att!! This might not be workable.
 //x^/y relNote means: X is relNote, Y is int, x.relNoteNum += (4*y)
 
-//x+y pluss operator   (and "-"-minus)
-//x+y mathematically is obvious
-//one might think that it *could* mean:
-//x+y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=y    Att!! This might not be workable.
-//x+y relNote means: X is relNote, Y is int, x.relNoteNum+=y
-
-//But. This would yield a dramatically different result if you passed in a note as a frequency number.
-//Example:
-// Math: 440+1=441                        (freq 441)
-// AbsNote: A4+1=A#4                      (freq 466)
-// RelNote (in C4ionian/major): A4+1=B4   (freq 493)
-//
-//Therefore, +/- doesn't work on notes. It will cause a syntax error.
-//Instead, there are is another operator that works the same for all three: ^+ (and ^-).
 //
 //
 //x^+y absolute tone step. (and ^-)
@@ -147,11 +133,48 @@ MusicMath["/"] = function (node, ctx) {
   return switchOctave(node, -1);
 };
 
-//+/- for notes is one step (in the 12 scale? or in the 7 scale?)
+//x+y pluss operator   (and "-"-minus)
+//x+y mathematically is obvious
+//one might think that it *could* mean:
+//x+y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=y    Att!! This might not be workable.
+//x+y relNote means: X is relNote, Y is int, x.relNoteNum+=y
 
-MusicMath["+"] = function (node, ctx) {
-  return switchTone(node, 1, "+");
+//But. This would yield a dramatically different result if you passed in a note as a frequency number.
+//Example:
+// Math: 440+1=441                        (freq 441)
+// AbsNote: A4+1=A#4                      (freq 466)
+// RelNote (in C4ionian/major): A4+1=B4   (freq 493)
+//
+//Therefore, +/- doesn't work on notes. It will cause a syntax error.
+//Instead, there are is another operator that works the same for all three: ^+ (and ^-).
+
+MusicMath["+"] = MusicMath["-"] = function (node, ctx) {
+  let [l, r] = node.body;
+  if (isNote(l) || isNote(r))
+    throw new SyntaxError("Notes cannot be added or subtracted. Use the ^+ or ^- or ~ to do note step operations.");
 };
-MusicMath["-"] = function (node, ctx) {
-  return switchTone(node, -1, "-");
+
+//x^^y octave operator.
+//x^^y mathematically means: X is num, Y is num, x*=2^y
+//x^^y absNoteNum means: X is absNoteNum, Y is int, x+=12*y
+//x^^y relNote means: X is relNote, Y is int, x.relNoteNum += (7*y)
+
+MusicMath["^^"] = function (node, ctx) {
+  let [l, r] = node.body;
+  if (typeof r !== "number")
+    throw new SyntaxError("^^ the scale operator must have an integer operand.");
+  if (typeof l === "number")
+    return l *= Math.pow(2, r);
+  if (l.type !== "absNoteNum" && l.type === "relNote")
+    throw new SyntaxError("^^ the scale operator must be performed on either a number or a note.");
+  if (!Number.isInteger(r))
+    throw new SyntaxError("^^ the scale operator must have an integer operand when performed on a note.");
+  if (l.type === "absNoteNum") {
+    const res = Object.assign({}, l);
+    res.num += 12 * r;
+    return res;
+  }
+  const res = Object.assign({}, l);
+  res.num += 7 * r;
+  return res;
 };
