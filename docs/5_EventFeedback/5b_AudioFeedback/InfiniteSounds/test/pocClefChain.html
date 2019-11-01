@@ -5,12 +5,13 @@
   <title>Test of clef chain working</title>
 </head>
 <body>
-
+<h1>Reload (F5) to stop the sound</h1>
 <a href="javascript:playOne();">one</a> <br>
 <a href="javascript:scaleUp();">scaleUp</a> <br>
 <a href="javascript:scaleDown();">scaleDown</a> <br>
 <a href="javascript:turn5up();">turn5up()</a> <br>
 <a href="javascript:turn5down();">turn5down()</a> <br>
+<a href="javascript:swap();">swap()</a> <br>
 
 <script>
 
@@ -47,6 +48,18 @@
   }
   function turn5down() {
     lfo2.gain.value *= Math.pow(2, -1.5);
+  }
+
+  //The below function tests the disturbance from disconnecting and connecting new nodes.
+  //For keys, with constant source, this is fairly unproblematic.
+  //but, this would not be pretty if we replaced a sine with a square. We might have a drop in connection.
+  const lfo2b = ctx.createGain();
+  lfo2b.gain.value = 3;
+  lfo1.connect(lfo2b);
+
+  function swap() {
+    lfo2.disconnect();
+    lfo2b.connect(osc.frequency);
   }
 
 </script>
