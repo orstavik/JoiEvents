@@ -8,7 +8,7 @@
 //x^/y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=7*y    Att!! This might not be workable.
 //x^/y relNote means: X is relNote, Y is int, x.relNoteNum += (4*y)
 
-//x+y pluss operator   (and minus)
+//x+y pluss operator   (and "-"-minus)
 //x+y mathematically is obvious
 //one might think that it *could* mean:
 //x+y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=y    Att!! This might not be workable.
@@ -22,6 +22,20 @@
 //
 //Therefore, +/- doesn't work on notes. It will cause a syntax error.
 //Instead, there are is another operator that works the same for all three: ^+ (and ^-).
+//
+//x*y multiply operator
+//x*y mathematically is obvious
+//and, it can be used on notes too. But, it only works on positive integers in log2 scale 1,2,4,8,16,32, etc = positiveLog2Int.
+//x*y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y))
+//x*y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y))
+//
+//x/y divide operator
+//x/y mathematically is obvious
+//and, it can be used on notes too. But, it only works on positive integers in log2 scale 1,2,4,8,16,32, etc = positiveLog2Int.
+//x/y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y)) *-1
+//x/y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y)) *-1
+//
+//Att!! the multiply and divide operators on notes are very similar, they just go up or down.
 //
 //x^+y absolute tone step. (and ^-)
 //x^+y mathematically means: X is num, Y is num, x*=2^(y/12)  or  x*= Math.pow(2, y/12)
