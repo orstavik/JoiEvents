@@ -87,6 +87,21 @@ function switchOctave(node, up) {
   return newNote;
 }
 
+function stepNote(node, neg) {
+  const {note, num} = getNoteInteger(node);
+  if (!note || num === undefined)
+    return node;
+  let clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
+  if (note.type === "absNoteNum")
+    clone.body[0] += num * neg;
+  if (note.type === "relNum") {
+    clone.body[2] += num * neg;
+    clone = normalizeRelNote(clone);
+  }
+  return clone;
+}
+
 //all note operators require the note to be on the left hand side. It will look too complex otherwise.
 export const MusicMath = Object.create(null);
 
@@ -141,34 +156,11 @@ MusicMath["+"] = MusicMath["-"] = function (node, ctx) {
 // RelNote (in C4ionian/major): A4^+1=A#4  (freq 466)
 
 MusicMath["^+"] = function (node, ctx) {
-  const {note, num} = getNoteInteger(node);
-  if (!note || num === undefined)
-    return node;
-  let clone = Object.assign({}, note);
-  clone.body = clone.body.slice(0);
-  if (note.type === "absNoteNum")
-    clone.body[0] += num;
-  if (note.type === "relNum") {
-    clone.body[2] += num;
-    clone = normalizeRelNote(clone);
-  }
-  return clone;
+  return stepNote(node, 1);
 };
 
 MusicMath["^-"] = function (node, ctx) {
-  const neg = -1;
-  const {note, num} = getNoteInteger(node);
-  if (!note || num === undefined)
-    return node;
-  let clone = Object.assign({}, note);
-  clone.body = clone.body.slice(0);
-  if (note.type === "absNoteNum")
-    clone.body[0] += num * neg;
-  if (note.type === "relNum") {
-    clone.body[2] += num * neg;
-    clone = normalizeRelNote(clone);
-  }
-  return clone;
+  return stepNote(node, -1);
 };
 
 //x^^y octave operator.
