@@ -138,10 +138,8 @@ function stepNote(node, neg) {
   clone.body = clone.body.slice(0);
   if (note.type === "absNoteNum")
     clone.body[0] += num * neg;
-  if (note.type === "relNum") {
+  if (note.type === "relNote")
     clone.body[2] += num * neg;
-    clone = normalizeRelNote(clone);
-  }
   return clone;
 }
 
@@ -154,20 +152,23 @@ function modeShift(node, upDown) {
   if (typeof value === "string") {
     let nextPos = MusicModes.getNumber(value);
     let nowPos = note.body[modePos];
-    if (upDown > 0){
+    if (upDown > 0) {
       while (nextPos < nowPos)
-        nextPos +=7;
+        nextPos += 7;
       value = nextPos - nowPos;
     } else {
       while (nextPos > nowPos)
-        nextPos -=7;
+        nextPos -= 7;
       value = nowPos - nextPos;
     }
   }
   const clone = Object.assign({}, note);
   clone.body = clone.body.slice(0);
   clone.body[modePos] += value * upDown;
-  return normalizeNote(clone);
+  if (clone.type === "absNoteNum")
+    return normalizeAbsNoteNum(clone);
+  return clone;
+  // return normalizeNote(clone);
 }
 
 //all note operators require the note to be on the left hand side. It will look too complex otherwise.
@@ -244,8 +245,8 @@ MusicMath["^^"] = function (node, ctx) {
   clone.body = clone.body.slice(0);
   if (note.type === "absNoteNum")
     clone.body[0] += num * 12;
-  if (note.type === "relNum")
-    clone.body[1] += num;
+  if (note.type === "relNote")
+    clone.body[0] += num * 7;
   return clone;
 };
 
@@ -264,10 +265,8 @@ MusicMath["^/"] = function (node, ctx) {
   clone.body = clone.body.slice(0);
   if (note.type === "absNoteNum")
     clone.body[0] += num * 7;
-  if (note.type === "relNum") {
+  if (note.type === "relNote")
     clone.body[0] += num * 4;
-    clone = normalizeRelNote(clone);
-  }
   return clone;
 };
 
