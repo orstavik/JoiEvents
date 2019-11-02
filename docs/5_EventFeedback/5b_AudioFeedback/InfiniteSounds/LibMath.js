@@ -7,6 +7,8 @@ export const MathOps = Object.create(null);
 
 MathOps["+"] = function (n) {
   const [l, r] = n.body;
+  if (l === undefined)
+    return typeof r === "number" ? r : parseFloat(r);
   return numArgs(l, r) ? l + r : n;
 };
 

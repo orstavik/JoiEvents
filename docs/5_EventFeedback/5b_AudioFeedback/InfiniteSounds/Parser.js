@@ -113,7 +113,7 @@ function sortOperators(nodeOpNode) {
     let min = Number.MAX_VALUE, I = 1;
     for (let i = 1; i < nodeOpNode.length; i += 2) {
       let op = nodeOpNode[i];
-      let pri = priTable[op] || Number.MAX_VALUE;
+      let pri = priTable[op] !== undefined ? priTable[op] : Number.MAX_VALUE;
       if (min > pri) {
         min = pri;
         I = i;

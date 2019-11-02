@@ -84,5 +84,13 @@ describe('math priority', function () {
     const tst2 = await staticInterpret('1+3/2-9-13');
     expectToEqualWithDiff(tst2, 1 + 3 / 2 - 9 - 13);
   });
+  it("+2-3*3 - syntax interpreted", async function () {
+    const tst2 = await staticInterpret('+2-3*3');
+    expectToEqualWithDiff(tst2, +2 - 3 * 3);
+  });
+  it("+-3*3 - syntax interpreted", async function () {
+    const tst2 = await staticInterpret('+-3*3');
+    expectToEqualWithDiff(tst2, +-3 * 3);
+  });
 });
 
