@@ -21,6 +21,7 @@ function getAbsoluteClef(ctx) {
       return scope.body[0];
   }
 }
+
 import {MusicModes} from "./MusicModes.js";
 
 export const MusicStatic = Object.create(null);
@@ -28,6 +29,22 @@ export const MusicStatic = Object.create(null);
 MusicStatic["absNote"] = function (node, ctx) {
   const mode = MusicModes.getNumber(node.body[2]);
   return {type: "absNoteNum", body: [node.body[0] + node.body[1] * 12, mode, node.body[3]]};
+};
+
+MusicStatic["~"] = function (node, ctx) {
+  const [l, r] = node.body;
+  if (!Number.isInteger(r))
+    throw new SyntaxError("The 7scale operator '~' must have an integer on its right side.");
+  //todo handle # and b augment and diminish values for '~'
+  if (l === undefined) //prefix
+    return {type: "relNote", body: [r, 0, 0]};
+  if (!l.type || l.type !== "relNote")
+    throw new SyntaxError("The 7scale operator '~' must be performed on a relative note.");
+  //todo and this is why we want to convert the absNoteNum to relNote in the static pass.
+  const clone = Object.assign({}, l);
+  clone.body = clone.body.slice(0);
+  clone.body[0] += r;
+  return clone;
 };
 
 //x~y 7scale operator (note operator ONLY, depends on the existence of a MODE).
@@ -49,9 +66,6 @@ MusicStatic["absNote"] = function (node, ctx) {
 //the relNoteAugment is just a number (1, 0 or -1).
 //absNoteNum = octave*12 + absNoteNum + relNoteAugment.
 //use lookup table for verification to begin with.
-
-
-
 
 
 // MusicStatic["absNoteNum"] = function (node, ctx) {

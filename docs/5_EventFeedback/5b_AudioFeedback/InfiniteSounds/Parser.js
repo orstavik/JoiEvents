@@ -187,17 +187,17 @@ function parseBlock(tokens) {
 }
 
 function parseNotes(tokens) {
-  if (tokens[0][10]) {                                               //relative alpha tone
-    let t = nextToken(tokens);
-    const tone = t[11].toLowerCase();
-    return {type: "relNote", body: [absScale12[tone], tone]};
-  }
-  if (tokens[0][7]) {                                        //relative 7 tones
-    let t = nextToken(tokens);
-    return {type: "~", body: [parseInt(t[8]), t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0]};
-  }
-  if (tokens[0][5])                                         //relative 12 tones       //todo remove this
-    return {type: "~~", body: [parseInt(nextToken(tokens)[6])]};                      //todo remove this
+  // if (tokens[0][10]) {                                               //relative alpha tone     //todo remove this
+  //   let t = nextToken(tokens);
+  //   const tone = t[11].toLowerCase();
+  //   return {type: "relNote", body: [absScale12[tone], tone]};
+  // }
+  // if (tokens[0][7]) {                                        //relative 7 tones
+  //   let t = nextToken(tokens);
+  //   return {type: "~", body: [parseInt(t[8]), t[9] === "#" ? 1 : t[9] === "b" ? -1 : 0]};
+  // }
+  // if (tokens[0][5])                                         //relative 12 tones       //todo remove this
+  //   return {type: "~~", body: [parseInt(nextToken(tokens)[6])]};                      //todo remove this
   if (tokens[0][1]) {
     let t = nextToken(tokens);
     const type = t[0];

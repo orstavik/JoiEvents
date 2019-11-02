@@ -170,14 +170,25 @@ describe('absolute notes with modes', function () {
 // });
 //
 describe('7scale prefix operator: relative 7 notes', function () {
-  it("~0", function () {
+  it("~0", async function () {
     const tst = parse("~0");
     expectToEqualWithDiff(tst, {type: "~", body: [undefined, 0]});
+    const tst2 = await staticInterpret("~0");
+    expectToEqualWithDiff(tst2, {type: "relNote", body: [0, 0, 0]});
   });
 
-  it("~-11", function () {
+  it("~-11", async function () {
     const tst = parse("~-11");
     expectToEqualWithDiff(tst, {type: "~", body: [undefined, -11]});
+    const tst2 = await staticInterpret("~-11");
+    expectToEqualWithDiff(tst2, {type: "relNote", body: [-11, 0, 0]});
+  });
+
+  it("~11", async function () {
+    const tst = parse("~11");
+    expectToEqualWithDiff(tst, {type: "~", body: [undefined, 11]});
+    const tst2 = await staticInterpret("~11");
+    expectToEqualWithDiff(tst2, {type: "relNote", body: [11, 0, 0]});
   });
 
   // it("~+11b", function () {
