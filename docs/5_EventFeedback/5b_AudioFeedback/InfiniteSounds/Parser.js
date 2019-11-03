@@ -21,7 +21,7 @@ const absScale12 = {
 //todo make a full operator priority table
 //todo % modulo operator would be interpreted as a step in the mode shifts. % for tone must have higher priority than *, ^, ^^, +
 //todo ~ is very low priority. I think it is below ":".
-const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "!":50, "*": 10, "/": 10, ":": 1, "~": 0};
+const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "!": 50, "*": 10, "/": 10, ":": 1, "~": 0};
 
 const tokens = [
   //absolute notes: C#4lyd, a0dor, baeo, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
@@ -166,7 +166,7 @@ function parseNode(tokens) {
   if (tokens[0])
     return parseBlock(tokens) ||
       parseGroupArray(tokens, "[", "]") ||
-      parseNotes(tokens) ||
+      parseAbsoluteNotes(tokens) ||
       parseFunction(tokens) ||
       parseQuotes(tokens) ||
       parseNumber(tokens);
@@ -182,16 +182,16 @@ function parseBlock(tokens) {
     return block[0];
 }
 
-function parseNotes(tokens) {
-  if (tokens[0][1]) {
-    let t = nextToken(tokens);
-    const type = t[0];
-    const tone = t[2].toLowerCase();
-    const num = absScale12[tone];
-    const octave = t[3] ? parseInt(t[3]) : 4;   // default octave for absolute tones is 4.
-    const mode = t[4] !== undefined ? t[4] : "ion";
-    return {type: "absNote", body: [num, octave, mode, 0, type]};
-  }
+function parseAbsoluteNotes(tokens) {
+  if (!tokens[0][1])
+    return;
+  let t = nextToken(tokens);
+  const type = t[0];
+  const tone = t[2].toLowerCase();
+  const num = absScale12[tone];
+  const octave = t[3] ? parseInt(t[3]) : 4;   // default octave for absolute tones is 4.
+  const mode = t[4] !== undefined ? t[4] : "ion";
+  return {type: "absNote", body: [num, octave, mode, 0, type]};
 }
 
 function parseFunction(tokens) {
