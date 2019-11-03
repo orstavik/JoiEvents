@@ -233,82 +233,52 @@ describe('relNote: ^+', function () {
 
 describe('relNote: %', function () {
 
-  it("C#4lyd%0", async function () {
-    const str = "C#4lyd%0";
+  it("~6%0", async function () {
+    const str = "~6%0";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 6, 0]};
+    const result2 = {type: "relNote", body: [6, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%2", async function () {
-    const str = "C#4lyd%2";
+  it("~6%2", async function () {
+    const str = "~6%2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [50, 1, 0]};
+    const result2 = {type: "relNote", body: [6, 2, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%-2", async function () {
-    const str = "C#4lyd%-2";
+  it("~6%-2", async function () {
+    const str = "~6%-2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 4, 0]};
+    const result2 = {type: "relNote", body: [6, -2, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%lyd", async function () {
-    const str = "C#4lyd%lyd";
+  it("~6%lyd", async function () {
+    const str = "~6%lyd";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 6, 0]};
+    const result2 = {type: "relNote", body: [6, "lyd", 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%ion", async function () {
-    const str = "C#4lyd%ion";
+  it("~6%ion", async function () {
+    const str = "~6%ion";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [50, 5, 0]};
+    const result2 = {type: "relNote", body: [6, "ion", 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%phr", async function () {
-    const str = "C#4lyd%phr";
+  it("~6%phr", async function () {
+    const str = "~6%phr";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [50, 1, 0]};
+    const result2 = {type: "relNote", body: [6, "phr", 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%-lyd", async function () {
-    const str = "C#4lyd%-lyd";
+  it("~6%-lyd", async function () {
+    const str = "~6%-lyd";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 6, 0]};
+    const result2 = {type: "relNote", body: [6, "-lyd", 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%-ion", async function () {
-    const str = "C#4lyd%-ion";
+  it("~6%-ion", async function () {
+    const str = "~6%-ion";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 5, 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("C#4lyd%-phr", async function () {
-    const str = "C#4lyd%-phr";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 1, 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("C#4dor%-lyd", async function () {
-    const str = "C#4dor%-lyd";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [48, 6, 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("C#4dor%-maj", async function () {
-    const str = "C#4dor%-maj";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [48, 5, 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("C#4lyd%min", async function () {
-    const str = "C#4lyd%min";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [50, 2, 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("C#4min%-aeo", async function () {
-    const str = "C#4min%-aeo";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [49, 2, 0]};
+    const result2 = {type: "relNote", body: [6, "-ion", 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 });
