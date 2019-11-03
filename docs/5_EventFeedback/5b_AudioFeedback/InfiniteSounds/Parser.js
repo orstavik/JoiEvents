@@ -1,3 +1,5 @@
+import {MusicModes} from "./MusicModes.js";
+
 const absScale12 = {
   "c": 0,
   "c#": 1,
@@ -186,12 +188,11 @@ function parseAbsoluteNotes(tokens) {
   if (!tokens[0][1])
     return;
   let t = nextToken(tokens);
-  const type = t[0];
   const tone = t[2].toLowerCase();
   const num = absScale12[tone];
-  const octave = t[3] ? parseInt(t[3]) : 4;   // default octave for absolute tones is 4.
-  const mode = t[4] !== undefined ? t[4] : "ion";
-  return {type: "absNote", body: [num, octave, mode, 0, type]};
+  const octave = t[3] ? parseInt(t[3]) *12 : 48;   // default octave for absolute tones is 4.
+  const mode = MusicModes.getNumber(t[4]);         // default mode is "ion" (major)
+  return {type: "absNoteNum", body: [num + octave, mode, 0]};
 }
 
 function parseFunction(tokens) {

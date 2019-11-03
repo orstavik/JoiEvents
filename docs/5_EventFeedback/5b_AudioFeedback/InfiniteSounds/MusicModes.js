@@ -52,7 +52,8 @@ export class MusicModes {
     return modeNumberToName[num];
   }
 
+  //defaults to maj ionian
   static getNumber(name) {
-    return modeNameToNumber[name];
+    return name === undefined ? 5 : modeNameToNumber[name];
   }
 }

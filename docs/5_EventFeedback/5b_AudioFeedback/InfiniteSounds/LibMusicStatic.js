@@ -22,14 +22,7 @@ function getAbsoluteClef(ctx) {
   }
 }
 
-import {MusicModes} from "./MusicModes.js";
-
 export const MusicStatic = Object.create(null);
-
-MusicStatic["absNote"] = function (node, ctx) {
-  const mode = MusicModes.getNumber(node.body[2]);
-  return {type: "absNoteNum", body: [node.body[0] + node.body[1] * 12, mode, node.body[3]]};
-};
 
 MusicStatic["~"] = function (node, ctx) {
   const [l, r] = node.body;

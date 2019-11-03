@@ -9,7 +9,7 @@ describe('absNoteNum: multiplication *', function () {
     const result = {
       type: "*",
       body: [
-        {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]},
+        {type: "absNoteNum", body: [49, 6, 0]},
         2
       ]
     };
@@ -25,7 +25,7 @@ describe('absNoteNum: multiplication *', function () {
     const result = {
       type: "*",
       body: [
-        {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]},
+        {type: "absNoteNum", body: [49, 6, 0]},
         -2
       ]
     };
@@ -49,7 +49,7 @@ describe('absNoteNum: division /', function () {
     const result = {
       type: "/",
       body: [
-        {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]},
+        {type: "absNoteNum", body: [49, 6, 0]},
         4
       ]
     };
@@ -65,7 +65,7 @@ describe('absNoteNum: division /', function () {
     const result = {
       type: "/",
       body: [
-        {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]},
+        {type: "absNoteNum", body: [49, 6, 0]},
         -4
       ]
     };
@@ -89,7 +89,7 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
     const result = {
       type: "+",
       body: [
-        {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]},
+        {type: "absNoteNum", body: [49, 6, 0]},
         4
       ]
     };
@@ -111,7 +111,7 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
     const result = {
       type: "-",
       body: [
-        {type: "absNote", body: [1, 4, "lyd", 0, "C#4lyd"]},
+        {type: "absNoteNum", body: [49, 6, 0]},
         4
       ]
     };
