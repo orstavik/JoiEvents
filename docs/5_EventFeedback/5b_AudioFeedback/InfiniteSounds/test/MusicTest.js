@@ -22,21 +22,6 @@ describe('absolute notes', function () {
     const result = {type: "absNote", body: [3, 10, "ion", 0, "D#10"]};
     expectToEqualWithDiff(tst, result);
   });
-  it("!E", function () {
-    const tst = parse("!E");
-    const result = {type: "absNote", body: [4, 4, "ion", 1, "!E"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!f#", function () {
-    const tst = parse("!f#");
-    const result = {type: "absNote", body: [6, 4, "ion", 1, "!f#"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!g0", function () {
-    const tst = parse("!g0");
-    const result = {type: "absNote", body: [7, 0, "ion", 1, "!g0"]};
-    expectToEqualWithDiff(tst, result);
-  });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
   //   const result = {type: "absNote", mode: "ion", tone: "d", /*augment: 1, */octave: -2, frozen: 0};
@@ -63,31 +48,6 @@ describe('absolute notes with modes', function () {
   it("D#10mix", function () {
     const tst = parse("D#10mix");
     const result = {type: "absNote", body: [3, 10, "mix", 0, "D#10mix"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!Eion", function () {
-    const tst = parse("!Eion");
-    const result = {type: "absNote", body: [4, 4, "ion", 1, "!Eion"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!f#phr", function () {
-    const tst = parse("!f#phr");
-    const result = {type: "absNote", body: [6, 4, "phr", 1, "!f#phr"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!g0aeo", function () {
-    const tst = parse("!g0aeo");
-    const result = {type: "absNote", body: [7, 0, "aeo", 1, "!g0aeo"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!g0maj", function () {
-    const tst = parse("!g0maj");
-    const result = {type: "absNote", body: [7, 0, "maj", 1, "!g0maj"]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("!g0min", function () {
-    const tst = parse("!g0min");
-    const result = {type: "absNote", body: [7, 0, "min", 1, "!g0min"]};
     expectToEqualWithDiff(tst, result);
   });
   // it("!g0major", function () {

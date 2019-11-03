@@ -287,3 +287,18 @@ MusicMath["%"] = function (node, ctx) {
 MusicMath["%-"] = function (node, ctx) {
   return modeShift(node, -1);
 };
+
+//! close operator
+//When used as a prefix on an absNote, the ! "closes" the note.
+//A closed note is a note that will not be transformed by a parent clef.
+
+MusicMath["!"] = function (node, ctx) {
+  const [nothing, note] = node.body;
+  if (nothing === undefined && note && note.type === "absNoteNum") {
+    const clone = Object.assign({}, note);
+    clone.body = clone.body.slice(0);
+    clone.body[2] = 1;
+    return clone;
+  }
+  return node;
+};

@@ -21,11 +21,11 @@ const absScale12 = {
 //todo make a full operator priority table
 //todo % modulo operator would be interpreted as a step in the mode shifts. % for tone must have higher priority than *, ^, ^^, +
 //todo ~ is very low priority. I think it is below ":".
-const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "*": 10, "/": 10, ":": 1, "~": 0};
+const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "!":50, "*": 10, "/": 10, ":": 1, "~": 0};
 
 const tokens = [
   //absolute notes: C#4lyd, a0dor, baeo, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
-  /!?([a-gA-G][#b]?)(\d+)?(lyd|ion|dor|phr|mix|loc|aeo|maj|min)?(?![_a-zA-Z\d#-])/,
+  /([a-gA-G][#b]?)(\d+)?(lyd|ion|dor|phr|mix|loc|aeo|maj|min)?(?![_a-zA-Z\d#-])/,
   /CANCELLLLL~~([+-]?\d+)/,                            //relative 12 notes: ~~1, ~~0, ~~6, ~~-2, ~~10, ~~-11    //todo remove this
   /CANCELLLLL~([+-]?\d+)([#b]?)/,                      //relative 7 notes: ~1, ~0b, ~6#, ~-2, ~10b, ~-11b
   /CANCELLLLL~([a-gA-G][#b]?)/,                        //relative alpha notes: ~C, ~d#, ~Eb, ~bb
@@ -35,7 +35,7 @@ const tokens = [
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
   /[(),[\]]/,                                //bracket operators:
-  /\^\/|\^\^|\^\+|\^-|%-|[~|>:+*/%^-]/,              //other operators:
+  /\^\/|\^\^|\^\+|\^-|%-|[!~|>:+*/%^-]/,              //other operators:
   /"((?:\\\\|\\"|[^"]|\.)*)"/,               //doubleQuote
   /'((?:\\\\|\\'|[^']|\.)*)'/,               //singleQuote
   /\s+/,                                     //whitespace
@@ -204,10 +204,10 @@ function parseNotes(tokens) {
     const tone = t[2].toLowerCase();
     const num = absScale12[tone];
     const octave = t[3] ? parseInt(t[3]) : 4;   // default octave for absolute tones is 4.
-    const frozen = type[0] === "!" ? 1 : 0;
+    // const frozen = type[0] === "!" ? 1 : 0;
     const mode = t[4] !== undefined ? t[4] : "ion";
     //todo const mode = mode === "maj" ? "ion" : mode === "min" ? "aeol" : mode;
-    return {type: "absNote", body: [num, octave, mode, frozen, type]};
+    return {type: "absNote", body: [num, octave, mode, 0, type]};
   }
 }
 

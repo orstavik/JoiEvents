@@ -312,3 +312,46 @@ describe('absNoteNum: %', function () {
   });
 });
 
+describe('absNoteNum: ! close', function () {
+  it("!E", async function () {
+    const tst = await staticInterpret("!E");
+    const result = {type: "absNoteNum", body: [52, 5, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!f#", async function () {
+    const tst = await staticInterpret("!f#");
+    const result = {type: "absNoteNum", body: [54, 5, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0", async function () {
+    const tst = await staticInterpret("!g0");
+    const result = {type: "absNoteNum", body: [7, 5, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!Eion", async function () {
+    const tst = await staticInterpret("!Eion");
+    const result = {type: "absNoteNum", body: [52, 5, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!f#phr", async function () {
+    const tst = await staticInterpret("!f#phr");
+    const result = {type: "absNoteNum", body: [54, 1, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0aeo", async function () {
+    const tst = await staticInterpret("!g0aeo");
+    const result = {type: "absNoteNum", body: [7, 2, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0maj", async function () {
+    const tst = await staticInterpret("!g0maj");
+    const result = {type: "absNoteNum", body: [7, 5, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+  it("!g0min", async function () {
+    const tst = await staticInterpret("!g0min");
+    const result = {type: "absNoteNum", body: [7, 2, 1]};
+    expectToEqualWithDiff(tst, result);
+  });
+});
+
