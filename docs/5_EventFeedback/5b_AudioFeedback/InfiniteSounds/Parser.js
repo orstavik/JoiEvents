@@ -33,7 +33,7 @@ const tokens = [
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
   /[(),[\]]/,                                //bracket operators:
-  /\^\/|\^\^|\^\+|\^-|%-|[!~|>:+*/%^-]/,              //other operators:
+  /\^\/|\^\^|\^\+|\^-|%-|%+|[!~|>:+*/%^-]/,              //other operators:
   /"((?:\\\\|\\"|[^"]|\.)*)"/,               //doubleQuote
   /'((?:\\\\|\\'|[^']|\.)*)'/,               //singleQuote
   /\s+/,                                     //whitespace
@@ -92,18 +92,18 @@ function parseGroupArray(tokens, start, end) {
 }
 
 function parseOperator(tokens) {
-  //isNegativeNumber: <number><negativeNumber> that should have been <number><minus-operator><positiveNumber>
   if (!tokens[0])
     return;
+  //isOperator
+  if (tokens[0][12])
+    return nextToken(tokens)[0];
+  //isNegativeNumber: <something><negativeNumber> that should have been <something><minus-operator><positiveNumber>
   if (tokens[0][8] && tokens[0][8].startsWith("-")) {
     tokens[0][0] = tokens[0][0].substr(1);
     tokens[0][8] = tokens[0][8].substr(1);
     tokens[0][9] = tokens[0][9].substr(1);
     return "-";
   }
-  //!isOperator
-  if (tokens[0][12])
-    return nextToken(tokens)[0];
 }
 
 function sortOperators(nodeOpNode) {
@@ -161,8 +161,6 @@ function parseExpression(tokens) {
 //the same with the inner clef mode, it is also overwritten. It is converted to %0.
 //we can simply remove the inner clef. It is no longer needed. but, that would make the aom very different from the template.
 //no. its better to leave it in there as an empty clef.
-
-//todo modes in addition to the key, so that we can have ~7 notes
 
 function parseNode(tokens) {
   if (tokens[0])

@@ -104,7 +104,7 @@ function getNoteIntegerOrModeName(node) {
   return {};
 }
 
-function checkPositiveLog2Integer(num) {
+function log2Integer(num) {
   if (num === 0)
     return num;
   if (num > 0 && Number.isInteger(num)) {
@@ -115,24 +115,31 @@ function checkPositiveLog2Integer(num) {
   throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
 }
 
-function switchOctave(node, up) {
-  let {note, num} = getNoteInteger(node);
-  if (!note)
-    return node;
+function alterNote(array, steps){
+  const clone = array.slice(0);
+  clone[0] += steps;
+  return clone;
+}
+
+function switchOctave(note, num, up) {
+  // let {note, num} = getNoteInteger(node);
+  // if (!note)
+  //   return node;
   if (num === 0)
     return note;
-  const addOctave = checkPositiveLog2Integer(num);
   const newNote = Object.assign({}, note);
-  if (note.type === "absNoteNum")
-    newNote.body[0] += addOctave * 12 * up;
-  else if (note.type === "relNote")
-    newNote.body[1] += addOctave * up;  //relNote octave doesn't require normalization
+  const steps = note.type === "absNoteNum" ? 12 : 7;
+  newNote.body = alterNote(note.body, num * steps * up);
+  // if (note.type === "absNoteNum")
+  //   newNote.body[0] += addOctave * 12 * up;
+  // else if (note.type === "relNote")
+  //   newNote.body[1] += addOctave * up;  //relNote octave doesn't require normalization
   return newNote;
 }
 
 function stepNote(node, neg) {
   const {note, num} = getNoteInteger(node);
-  if (!note || num === undefined)
+  if (!note)
     return node;
   let clone = Object.assign({}, note);
   clone.body = clone.body.slice(0);
@@ -188,10 +195,18 @@ export const MusicMath = Object.create(null);
 //
 //Att!! the multiply and divide operators on notes are very similar, they just go up or down.
 MusicMath["*"] = function (node, ctx) {
-  return switchOctave(node, 1);
+  let {note, num} = getNoteInteger(node);
+  if (!note)
+    return node;
+  const addOctave = log2Integer(num);
+  return switchOctave(note, addOctave, 1);
 };
 MusicMath["/"] = function (node, ctx) {
-  return switchOctave(node, -1);
+  let {note, num} = getNoteInteger(node);
+  if (!note)
+    return node;
+  const addOctave = log2Integer(num);
+  return switchOctave(note, addOctave, -1);
 };
 
 //x+y pluss operator   (and "-"-minus)
@@ -239,15 +254,18 @@ MusicMath["^-"] = function (node, ctx) {
 
 MusicMath["^^"] = function (node, ctx) {
   const {note, num} = getNoteInteger(node);
-  if (!note || num === undefined)
+  if (!note)
     return node;
-  const clone = Object.assign({}, note);
-  clone.body = clone.body.slice(0);
-  if (note.type === "absNoteNum")
-    clone.body[0] += num * 12;
-  if (note.type === "relNote")
-    clone.body[0] += num * 7;
-  return clone;
+  if (num === 0)
+    return note;
+  return switchOctave(note, num, 1);
+  // const clone = Object.assign({}, note);
+  // clone.body = clone.body.slice(0);
+  // if (note.type === "absNoteNum")
+  //   clone.body[0] += num * 12;
+  // if (note.type === "relNote")
+  //   clone.body[0] += num * 7;
+  // return clone;
 };
 
 //what is the circle 5 point? 7/12scale abs and 4/7scale
@@ -259,7 +277,7 @@ MusicMath["^^"] = function (node, ctx) {
 
 MusicMath["^/"] = function (node, ctx) {
   const {note, num} = getNoteInteger(node);
-  if (!note || num === undefined)
+  if (!note)
     return node;
   let clone = Object.assign({}, note);
   clone.body = clone.body.slice(0);
@@ -283,6 +301,10 @@ MusicMath["^/"] = function (node, ctx) {
 MusicMath["%"] = function (node, ctx) {
   return modeShift(node, 1);
 };
+
+// MusicMath["%+"] = function (node, ctx) {              //todo not implemented
+//   return modeShift(node, 1);
+// };
 
 MusicMath["%-"] = function (node, ctx) {
   return modeShift(node, -1);
