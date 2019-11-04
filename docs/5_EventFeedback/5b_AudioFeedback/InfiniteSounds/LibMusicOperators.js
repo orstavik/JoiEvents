@@ -1,19 +1,11 @@
 import {MusicModes} from "./MusicModes.js";
 
-function isNote(node) {
-  return node.type === "absNoteNum" || node.type === "relNote";
-}
-
 //Operations that alter the num and augment value of relNote require the relNote to be normalized.
 //Normalization of relnote pushes the value of the num between 0 and 6, and augment between -1,0,1.
 //octave changes does not require normalization.
 //Normalization has the effect that augmentation of notes remain fixed when mode is changed dynamically.
 //if a tone is augmented 1 up or down (out of scale) in one modality, then the augmentation will remain in place even
 //as you swap modality and that modality would "ctach up" to the augmentation.
-
-function normalizeNote(note) {
-  return note.type === "absNoteNum" ? normalizeAbsNoteNum(note) : normalizeRelNote(note);
-}
 
 function normalizeRelNote(relNote, modeArray) {
   let [num, octave, augment, mode] = relNote.body;
@@ -79,13 +71,13 @@ function normalizeAbsNoteNum(note) {
     mode += 7;
     num -= 1;
   }
-  return {type: "absNoteNum", body: [num, mode, frozen]};
+  return {type: "Note", body: [num, mode, frozen]};
 }
 
 function getNoteInteger(node) {
   if (node.body.length === 2) {
     const [l, r] = node.body;
-    if (isNote(l) && Number.isInteger(r))
+    if (l.type === "Note" && Number.isInteger(r))
       return {note: l, num: r};
   }
   return {};
@@ -96,9 +88,9 @@ const modeNames = /maj|min|ion|lyd|loc|dor|phr|aeo|mix/;
 function getNoteIntegerOrModeName(node) {
   if (node.body.length === 2) {
     const [l, r] = node.body;
-    if (isNote(l) && Number.isInteger(r))
+    if (l.type === "Note" && Number.isInteger(r))
       return {note: l, value: r};
-    if (isNote(l) && typeof r.type && modeNames.test(r.type))
+    if (l.type === "Note" && typeof r.type && modeNames.test(r.type))
       return {note: l, value: r.type};
   }
   return {};
@@ -115,33 +107,20 @@ function log2Integer(num) {
   throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
 }
 
-function changeNote(note, steps) {
+function changeNote(note, i, steps) {
+  if (steps === 0)
+    return note;
   const newNote = Object.assign({}, note);
   newNote.body = note.body.slice(0);
-  newNote.body[0] += steps;
+  newNote.body[i] += steps;
   return newNote;
 }
-
-function stepNote(node, neg) {
-  const {note, num} = getNoteInteger(node);
-  if (!note)
-    return node;
-  let clone = Object.assign({}, note);
-  // clone.body = alterNote(note.body, num * neg); //todo need to fix this one
-  clone.body = clone.body.slice(0);
-  if (note.type === "absNoteNum")
-    clone.body[0] += num * neg;
-  if (note.type === "relNote")
-    clone.body[2] += num * neg;
-  return clone;
-}
-
 
 function modeShift(node, upDown) {
   let {note, value} = getNoteIntegerOrModeName(node);
   if (!note)
     return node;
-  const modePos = note.type === "absNoteNum" ? 1 : 3;
+  const modePos = note.type === "Note" ? 1 : 3;
   if (typeof value === "string") {
     let nextPos = MusicModes.getNumber(value);
     let nowPos = note.body[modePos];
@@ -158,7 +137,7 @@ function modeShift(node, upDown) {
   const clone = Object.assign({}, note);
   clone.body = clone.body.slice(0);
   clone.body[modePos] += value * upDown;
-  if (clone.type === "absNoteNum")
+  if (clone.type === "Note")
     return normalizeAbsNoteNum(clone);
   return clone;
   // return normalizeNote(clone);
@@ -183,11 +162,7 @@ function multiplyNote(node, up) {
   let {note, num} = getNoteInteger(node);
   if (!note)
     return node;
-  const addOctave = log2Integer(num);
-  if (addOctave === 0)
-    return note;
-  const scaleType = (note.type === "absNoteNum" ? 12 : 7) * up;
-  return changeNote(note, scaleType * addOctave);
+  return changeNote(note, 2, 12 * log2Integer(num) * up);
 }
 
 //Att!! the multiply and divide operators on notes are very similar, they just go up or down.
@@ -215,7 +190,7 @@ MusicMath["/"] = function (node, ctx) {
 
 MusicMath["+"] = MusicMath["-"] = function (node, ctx) {
   let [l, r] = node.body;
-  if (isNote(l) || isNote(r))
+  if (l.type === "Note" || r.type === "Note")
     throw new SyntaxError("Notes cannot be added or subtracted. Use the ^+ or ^- or ~ to do note step operations.");
 };
 
@@ -229,11 +204,17 @@ MusicMath["+"] = MusicMath["-"] = function (node, ctx) {
 // RelNote (in C4ionian/major): A4^+1=A#4  (freq 466)
 
 MusicMath["^+"] = function (node, ctx) {
-  return stepNote(node, 1);
+  const {note, num} = getNoteInteger(node);
+  if (!note)
+    return node;
+  return changeNote(note, 2, num);
 };
 
 MusicMath["^-"] = function (node, ctx) {
-  return stepNote(node, -1);
+  const {note, num} = getNoteInteger(node);
+  if (!note)
+    return node;
+  return changeNote(note, 2, -num);
 };
 
 //x^^y octave operator.
@@ -245,10 +226,10 @@ MusicMath["^^"] = function (node, ctx) {
   const {note, num} = getNoteInteger(node);
   if (!note)
     return node;
-  if (num === 0)
-    return note;
-  const scaleType = note.type === "absNoteNum" ? 12 : 7;
-  return changeNote(note, scaleType * num);
+  // if (num === 0)
+  //   return note;
+  // const scaleType = note.type === "Note" ? 12 : 7;
+  return changeNote(note, 2, 12 * num);
 };
 
 //what is the circle 5 point? 7/12scale abs and 4/7scale
@@ -264,7 +245,7 @@ MusicMath["^^"] = function (node, ctx) {
 //     return node;
 //   if (num === 0)
 //     return note;
-//   const scaleType = note.type === "absNoteNum" ? 7 : 4;
+//   const scaleType = note.type === "Note" ? 7 : 4;
 //   return changeNote(note, scaleType * num);
 // };
 
@@ -296,7 +277,7 @@ MusicMath["%-"] = function (node, ctx) {
 
 MusicMath["!"] = function (node, ctx) {
   const [nothing, note] = node.body;
-  if (nothing === undefined && note && note.type === "absNoteNum") {
+  if (nothing === undefined && note && note.type === "Note") {
     const clone = Object.assign({}, note);
     clone.body = clone.body.slice(0);
     clone.body[2] = 1;

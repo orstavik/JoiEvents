@@ -16,7 +16,7 @@ describe('~relNote: multiply *', function () {
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [9, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, 12, 2, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 
@@ -57,7 +57,7 @@ describe('~relNote: division /', function () {
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [-12, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, -24, 2, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~2/-4", async function () {
@@ -134,31 +134,31 @@ describe('~relNote: ^^', function () {
   it("~3^^0", async function () {
     const str = "~3^^0";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [3, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, 0, 3, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~3^^2", async function () {
     const str = "~3^^2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [17, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, 24, 3, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~3^^-1", async function () {
     const str = "~3^^-1";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [-4, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, -12, 3, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~3^^-2", async function () {
     const str = "~3^^-2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [-11, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, -24, 3, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~3^^-3", async function () {
     const str = "~3^^-3";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [-18, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, -36, 3, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 });
@@ -168,31 +168,31 @@ describe('relNote: ^+', function () {
   it("~5^+0", async function () {
     const str = "~5^+0";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [5, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, 0, 5, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~5^+2", async function () {
     const str = "~5^+2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [5, 0, 2]};
+    const result2 = {type: "Note", body: [0, 0, 2, 5, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~5^-1", async function () {
     const str = "~5^-1";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [5, 0, -1]};
+    const result2 = {type: "Note", body: [0, 0, -1, 5, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~5^-2", async function () {
     const str = "~5^-2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [5, 0, -2]};
+    const result2 = {type: "Note", body: [0, 0, -2, 5, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~5^-3", async function () {
     const str = "~5^-3";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [5, 0, -3]};
+    const result2 = {type: "Note", body: [0, 0, -3, 5, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 });

@@ -4,27 +4,27 @@ import {staticInterpret, interpret} from "../Interpreter.js";
 describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
-    const result = {type: "absNoteNum", body: [49, 5, 0]};
+    const result = {type: "Note", body: [49, undefined, 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   it("A5", function () {
     const tst = parse("A5");
-    const result = {type: "absNoteNum", body: [69, 5, 0]};
+    const result = {type: "Note", body: [69, undefined, 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5", function () {
     const tst = parse("Bb5");
-    const result = {type: "absNoteNum", body: [70, 5, 0]};
+    const result = {type: "Note", body: [70, undefined, 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10", function () {
     const tst = parse("D#10");
-    const result = {type: "absNoteNum", body: [123, 5, 0]};
+    const result = {type: "Note", body: [123, undefined, 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
-  //   const result = {type: "absNoteNum", mode: 5, tone: "d", /*augment: 1, */octave: -2, frozen: 0};
+  //   const result = {type: "Note", mode: 5, tone: "d", /*augment: 1, */octave: -2, frozen: 0};
   //   expectToEqualWithDiff(tst, result);
   // });
 });
@@ -32,52 +32,52 @@ describe('absolute notes', function () {
 describe('absolute notes with modes', function () {
   it("C#4lyd", function () {
     const tst = parse("C#4lyd");
-    const result = {type: "absNoteNum", body: [49, 6, 0]};
+    const result = {type: "Note", body: [49, "lyd", 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   it("A5loc", function () {
     const tst = parse("A5loc");
-    const result = {type: "absNoteNum", body: [69, 0, 0]};
+    const result = {type: "Note", body: [69, "loc", 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5dor", function () {
     const tst = parse("Bb5dor");
-    const result = {type: "absNoteNum", body: [70, 3, 0]};
+    const result = {type: "Note", body: [70, "dor", 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10mix", function () {
     const tst = parse("D#10mix");
-    const result = {type: "absNoteNum", body: [123, 4, 0]};
+    const result = {type: "Note", body: [123, "mix", 0, 0, 0, 0]};
     expectToEqualWithDiff(tst, result);
   });
   // it("!g0major", function () {
   //   const tst = parse("!g0maj");
-  //   const result = {type: "absNoteNum", body: [7, 0, 5, 1, "!g0"]};
+  //   const result = {type: "Note", body: [7, 0, 5, 1, "!g0"]};
   //   expectToEqualWithDiff(tst, result);
   // });
   // it("!g0min", function () {
   //   const tst = parse("!g0min");
-  //   const result = {type: "absNoteNum", body: [7, 0, "aeo", 1, "!g0"]};
+  //   const result = {type: "Note", body: [7, 0, "aeo", 1, "!g0"]};
   //   expectToEqualWithDiff(tst, result);
   // });
   // it("!g0%2", function () {
   //   const tst = parse("!g0%2");
-  //   const result = {type: "absNoteNum", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 2};
+  //   const result = {type: "Note", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 2};
   //   expectToEqualWithDiff(tst, result);
   // });
   // it("!g0%-1", function () {
   //   const tst = parse("!g0%-1");
-  //   const result = {type: "absNoteNum", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: -1};
+  //   const result = {type: "Note", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: -1};
   //   expectToEqualWithDiff(tst, result);
   // });
   // it("!g0%0", function () {
   //   const tst = parse("!g0%0");
-  //   const result = {type: "absNoteNum", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 0};
+  //   const result = {type: "Note", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 0};
   //   expectToEqualWithDiff(tst, result);
   // });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
   //   const tst = parse("D#-2");
-  //   const result = {type: "absNoteNum", tone: "d", /*augment: 1, */octave: -2, frozen: 0};
+  //   const result = {type: "Note", tone: "d", /*augment: 1, */octave: -2, frozen: 0};
   //   expectToEqualWithDiff(tst, result);
   // });
 });
@@ -85,22 +85,22 @@ describe('absolute notes with modes', function () {
 // describe('relative 12 notes', function () {
 //   it("absNoteNum(0)", function () {
 //     const tst = parse("absNoteNum(0)");
-//     expectToEqualWithDiff(tst, {type: "absNoteNum", body: [0]});
+//     expectToEqualWithDiff(tst, {type: "Note", body: [0]});
 //   });
 //
 //   it("absNoteNum(-11)", function () {
 //     const tst = parse("absNoteNum(-11)");
-//     expectToEqualWithDiff(tst, {type: "absNoteNum", body: [-11]});
+//     expectToEqualWithDiff(tst, {type: "Note", body: [-11]});
 //   });
 //
 //   it("absNoteNum(+11)", function () {
 //     const tst = parse("absNoteNum(+11)");
-//     expectToEqualWithDiff(tst, {type: "absNoteNum", body: [11]});
+//     expectToEqualWithDiff(tst, {type: "Note", body: [11]});
 //   });
 //
 //   it("absNoteNum(10)", function () {
 //     const tst = parse("absNoteNum(10)");
-//     expectToEqualWithDiff(tst, {type: "absNoteNum", body: [10]});
+//     expectToEqualWithDiff(tst, {type: "Note", body: [10]});
 //   });
 // });
 
@@ -134,21 +134,21 @@ describe('7scale prefix operator: relative 7 notes', function () {
     const tst = parse("~0");
     expectToEqualWithDiff(tst, {type: "~", body: [undefined, 0]});
     const tst2 = await staticInterpret("~0");
-    expectToEqualWithDiff(tst2, {type: "relNote", body: [0, 0, 0]});
+    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, 0, 0, 0]});
   });
 
   it("~-11", async function () {
     const tst = parse("~-11");
     expectToEqualWithDiff(tst, {type: "~", body: [undefined, -11]});
     const tst2 = await staticInterpret("~-11");
-    expectToEqualWithDiff(tst2, {type: "relNote", body: [-11, 0, 0]});
+    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, -11, 0, 0]});
   });
 
   it("~11", async function () {
     const tst = parse("~11");
     expectToEqualWithDiff(tst, {type: "~", body: [undefined, 11]});
     const tst2 = await staticInterpret("~11");
-    expectToEqualWithDiff(tst2, {type: "relNote", body: [11, 0, 0]});
+    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, 11, 0, 0]});
   });
 
   // it("~+11b", function () {
@@ -168,8 +168,8 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res = {
 //       type: "expFun",
 //       body: [
-//         {type: "absNoteNum", body: [7, 4, 5, 0, "G4"]},
-//         {type: "absNoteNum", body: [0, 4, 5, 0, "C4"]},
+//         {type: "Note", body: [7, 4, 5, 0, "G4"]},
+//         {type: "Note", body: [0, 4, 5, 0, "C4"]},
 //       ]
 //     };
 //     res.body.isDirty = 1;
@@ -178,7 +178,7 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res2 = {
 //       type: "absClef", num: 7, octave: 4, mode: 5, frozen: 0, text: "G4",
 //       body: [
-//         {type: "absNoteNum", body: [-7]}
+//         {type: "Note", body: [-7]}
 //       ]
 //     };
 //     res2.body.isDirty = 1;
@@ -189,8 +189,8 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res = {
 //       type: "expFun",
 //       body: [
-//         {type: "absNoteNum", body: [7, 4, 5, 0, "G4"]},
-//         {type: "absNoteNum", body: [0, 4, 5, 1, "!C4"]},
+//         {type: "Note", body: [7, 4, 5, 0, "G4"]},
+//         {type: "Note", body: [0, 4, 5, 1, "!C4"]},
 //       ]
 //     };
 //     res.body.isDirty = 1;
@@ -199,7 +199,7 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res2 = {
 //       type: "absClef", num: 7, octave: 4, mode: 5, frozen: 0, text: "G4",
 //       body: [
-//         {type: "absNoteNum", body: [0, 4, 5, 1, "!C4"]}
+//         {type: "Note", body: [0, 4, 5, 1, "!C4"]}
 //       ]
 //     };
 //     res2.body.isDirty = 1;
@@ -210,12 +210,12 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res = {
 //       type: "expFun",
 //       body: [
-//         {type: "absNoteNum", body: [2, 3, 5, 0, "D3"]},
+//         {type: "Note", body: [2, 3, 5, 0, "D3"]},
 //         {
 //           type: "expFun",
 //           body: [
-//             {type: "absNoteNum", body: [7, 4, 5, 0, "G4"]},
-//             {type: "absNoteNum", body: [0, 4, 5, 0, "C4"]},
+//             {type: "Note", body: [7, 4, 5, 0, "G4"]},
+//             {type: "Note", body: [0, 4, 5, 0, "C4"]},
 //           ]
 //         }
 //       ]
@@ -232,7 +232,7 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //           type: "relClef12",
 //           num: 0,
 //           body: [
-//             {type: "absNoteNum", body: [-7]}
+//             {type: "Note", body: [-7]}
 //           ]
 //         }
 //       ]
@@ -246,12 +246,12 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res = {
 //       type: "expFun",
 //       body: [
-//         {type: "absNoteNum", body: [2, 3, 5, 0, "D3"]},
+//         {type: "Note", body: [2, 3, 5, 0, "D3"]},
 //         {
 //           type: "expFun",
 //           body: [
-//             {type: "absNoteNum", body: [7, 4, 5, 1, "!G4"]},
-//             {type: "absNoteNum", body: [0, 4, 5, 0, "C4"]},
+//             {type: "Note", body: [7, 4, 5, 1, "!G4"]},
+//             {type: "Note", body: [0, 4, 5, 0, "C4"]},
 //           ]
 //         }
 //       ]
@@ -267,7 +267,7 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //         {
 //           type: "absClef", num: 7, octave: 4, mode: 5, frozen: 1, text: "!G4",
 //           body: [
-//             {type: "absNoteNum", body: [-7]}
+//             {type: "Note", body: [-7]}
 //           ]
 //         }
 //       ]
@@ -282,15 +282,15 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //     const res = {
 //       type: "expFun",
 //       body: [
-//         {type: "absNoteNum", body: [7, 4, 5, 0, "G4"]},
+//         {type: "Note", body: [7, 4, 5, 0, "G4"]},
 //         [
-//           {type: "absNoteNum", body: [0, 4, 5, 0, "C4"]},
-//           {type: "absNoteNum", body: [1, 4, 5, 0, "Db"]},
-//           {type: "absNoteNum", body: [3, 3, 5, 0, "Eb3"]},
-//           {type: "absNoteNum", body: [5, 4, 5, 0, "F"]},
-//           {type: "absNoteNum", body: [7, 4, 5, 0, "G4"]},
-//           {type: "absNoteNum", body: [10, 4, 5, 0, "A#"]},
-//           {type: "absNoteNum", body: [11, 4, 5, 0, "B4"]}
+//           {type: "Note", body: [0, 4, 5, 0, "C4"]},
+//           {type: "Note", body: [1, 4, 5, 0, "Db"]},
+//           {type: "Note", body: [3, 3, 5, 0, "Eb3"]},
+//           {type: "Note", body: [5, 4, 5, 0, "F"]},
+//           {type: "Note", body: [7, 4, 5, 0, "G4"]},
+//           {type: "Note", body: [10, 4, 5, 0, "A#"]},
+//           {type: "Note", body: [11, 4, 5, 0, "B4"]}
 //         ]
 //       ]
 //     };
@@ -305,13 +305,13 @@ describe('7scale prefix operator: relative 7 notes', function () {
 //       type: "absClef", num: 7,octave:  4, mode: 5, frozen: 0, text: "G4",
 //       body: [
 //         [
-//           {type: "absNoteNum", body: [-7]},
-//           {type: "absNoteNum", body: [-6]},
-//           {type: "absNoteNum", body: [-16]},
-//           {type: "absNoteNum", body: [-2]},
-//           {type: "absNoteNum", body: [0]},
-//           {type: "absNoteNum", body: [3]},
-//           {type: "absNoteNum", body: [4]}
+//           {type: "Note", body: [-7]},
+//           {type: "Note", body: [-6]},
+//           {type: "Note", body: [-16]},
+//           {type: "Note", body: [-2]},
+//           {type: "Note", body: [0]},
+//           {type: "Note", body: [3]},
+//           {type: "Note", body: [4]}
 //         ]
 //       ]
 //     };

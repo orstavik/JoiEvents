@@ -182,15 +182,17 @@ function parseBlock(tokens) {
     return block[0];
 }
 
+//Note[absNum, absMode, relNum12, relNum7, relMode, closed]
 function parseAbsoluteNotes(tokens) {
   if (!tokens[0][1])
     return;
   let t = nextToken(tokens);
   const tone = t[2].toLowerCase();
   const num = absScale12[tone];
-  const octave = t[3] ? parseInt(t[3]) *12 : 48;   // default octave for absolute tones is 4.
-  const mode = MusicModes.getNumber(t[4]);         // default mode is "ion" (major)
-  return {type: "absNoteNum", body: [num + octave, mode, 0]};
+  const octave = t[3] ? parseInt(t[3]) * 12 : 48;   // default octave for absolute tones is 4.
+  const mode = t[4];
+  // const mode = MusicModes.getNumber(t[4]);         // default mode is "ion" (major)
+  return {type: "Note", body: [num + octave, mode, 0, 0, 0, 0]};
 }
 
 function parseFunction(tokens) {

@@ -30,13 +30,13 @@ MusicStatic["~"] = function (node, ctx) {
     throw new SyntaxError("The 7scale operator '~' must have an integer on its right side.");
   //todo handle # and b augment and diminish values for '~'
   if (l === undefined) //prefix
-    return {type: "relNote", body: [r, 0, 0]};
-  if (!l.type || l.type !== "relNote")
+    return {type: "Note", body: [0, 0, 0, r, 0, 0]};
+  if (!l.type || l.type !== "Note")
     throw new SyntaxError("The 7scale operator '~' must be performed on a relative note.");
   //todo and this is why we want to convert the absNoteNum to relNote in the static pass.
   const clone = Object.assign({}, l);
   clone.body = clone.body.slice(0);
-  clone.body[0] += r;
+  clone.body[3] += r;
   return clone;
 };
 
@@ -130,13 +130,13 @@ MusicStatic["expFun"] = function (node, ctx) {
 };
 
 
-MusicStatic["relNote"] = function (node, ctx) {
-  const absClef = getAbsoluteClef(ctx);
-  if (!absClef)
-    throw new SyntaxError("A relative alpha note must have an absolute clef note set.");
-  const num = ((node.num - absClef.num + 12) % 12) + node.octave * 12;
-  return {type: "~~", num, body: node.body};
-};
+// MusicStatic["relNote"] = function (node, ctx) {
+//   const absClef = getAbsoluteClef(ctx);
+//   if (!absClef)
+//     throw new SyntaxError("A relative alpha note must have an absolute clef note set.");
+//   const num = ((node.num - absClef.num + 12) % 12) + node.octave * 12;
+//   return {type: "~~", num, body: node.body};
+// };
 
 // MusicStatic["~~"] = function (node, ctx) {
 //   //todo 1. we get the first parent node which has an absolute mode
