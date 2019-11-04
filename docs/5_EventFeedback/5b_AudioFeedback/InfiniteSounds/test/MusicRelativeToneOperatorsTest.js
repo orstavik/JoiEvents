@@ -1,7 +1,7 @@
 import {parse} from "../Parser.js";
 import {staticInterpret} from "../Interpreter.js";
 
-describe('~relNote: multiply *', function () {
+describe('~Note: multiply *', function () {
 
   it("~2*2", async function () {
     const str = "~2*2";
@@ -43,7 +43,7 @@ describe('~relNote: multiply *', function () {
   });
 });
 
-describe('~relNote: division /', function () {
+describe('~Note: division /', function () {
   it("~2/4", async function () {
     const str = "~2/4";
     const tst = parse(str);
@@ -83,7 +83,7 @@ describe('~relNote: division /', function () {
   });
 });
 
-describe('~relNote: + and - throws SyntaxError', function () {
+describe('~Note: + and - throws SyntaxError', function () {
   it("~-2 + 4", async function () {
     const str = "~-2 + 4";
     const tst = parse(str);
@@ -129,7 +129,7 @@ describe('~relNote: + and - throws SyntaxError', function () {
   });
 });
 
-describe('~relNote: ^^', function () {
+describe('~Note: ^^', function () {
 
   it("~3^^0", async function () {
     const str = "~3^^0";
@@ -163,7 +163,7 @@ describe('~relNote: ^^', function () {
   });
 });
 
-describe('relNote: ^+', function () {
+describe('Note: ^+', function () {
 
   it("~5^+0", async function () {
     const str = "~5^+0";
@@ -196,59 +196,47 @@ describe('relNote: ^+', function () {
     expectToEqualWithDiff(tst2, result2);
   });
 });
-/*
 
-describe('relNote: %', function () {
+describe('Note: %', function () {
 
   it("~6%0", async function () {
     const str = "~6%0";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, 0, 0]};
+    const result2 = {type: "Note", body: [0, 0, 0, 6, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~6%2", async function () {
     const str = "~6%2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, 2, 0]};
+    const result2 = {type: "Note", body: [0, 0, 0, 6, 2, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~6%-2", async function () {
     const str = "~6%-2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, -2, 0]};
+    const result2 = {type: "Note", body: [0, 0, 0, 6, -2, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~6%lyd", async function () {
     const str = "~6%lyd";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, "lyd", 0]};
+    const result2 = {type: "Note", body: [0, "lyd", 0, 6, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("~6%ion", async function () {
-    const str = "~6%ion";
+  it("~6%2%ion", async function () {
+    const str = "~6%2%ion";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, "ion", 0]};
+    const result2 = {type: "Note", body: [0, "ion", 0, 6, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("~6%phr", async function () {
-    const str = "~6%phr";
+  it("~6%phr%-2", async function () {
+    const str = "~6%phr%-2";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, "phr", 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("~6%-lyd", async function () {
-    const str = "~6%-lyd";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, "-lyd", 0]};
-    expectToEqualWithDiff(tst2, result2);
-  });
-  it("~6%-ion", async function () {
-    const str = "~6%-ion";
-    const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [6, "-ion", 0]};
+    const result2 = {type: "Note", body: [0, "phr", 0, 6, -2, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 });
+/*
 */
 
 // describe('relNote: ^/', function () {

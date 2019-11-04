@@ -116,6 +116,14 @@ function changeNote(note, i, steps) {
   return newNote;
 }
 
+function setMode(note, value) {
+  const newNote = Object.assign({}, note);
+  newNote.body = note.body.slice(0);
+  newNote.body[1] = value;
+  newNote.body[4] = 0;
+  return newNote;
+}
+
 function modeShift(node, upDown) {
   let {note, value} = getNoteIntegerOrModeName(node);
   if (!note)
@@ -141,6 +149,17 @@ function modeShift(node, upDown) {
     return normalizeAbsNoteNum(clone);
   return clone;
   // return normalizeNote(clone);
+}
+
+//if the mode change given is a name, it will set the name of the mode and null out any mode changes.
+//if the mode change given is a number, it will be added to the modeModi parameter.
+function modeShift2(node) {
+  let {note, value} = getNoteIntegerOrModeName(node);
+  if (!note)
+    return node;
+  if (typeof value === "string")
+    return setMode(note, value);
+  return changeNote(note, 4, value);  //else number
 }
 
 //all note operators require the note to be on the left hand side. It will look too complex otherwise.
@@ -260,17 +279,17 @@ MusicMath["^^"] = function (node, ctx) {
 // of their relative note num based on the parent clef's mode, not their own.
 
 MusicMath["%"] = function (node, ctx) {
-  return modeShift(node, 1);
+  return modeShift2(node);
 };
 
 // MusicMath["%+"] = function (node, ctx) {              //todo not implemented
 //   return modeShift(node, 1);
 // };
 
-MusicMath["%-"] = function (node, ctx) {
-  return modeShift(node, -1);
-};
-
+// MusicMath["%-"] = function (node, ctx) {
+//   return modeShift(node, -1);
+// };
+//
 //! close operator
 //When used as a prefix on an absNote, the ! "closes" the note.
 //A closed note is a note that will not be transformed by a parent clef.
