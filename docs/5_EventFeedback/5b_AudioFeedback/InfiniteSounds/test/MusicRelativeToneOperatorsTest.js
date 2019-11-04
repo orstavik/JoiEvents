@@ -16,7 +16,7 @@ describe('~relNote: multiply *', function () {
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [2, 1, 0]};
+    const result2 = {type: "relNote", body: [9, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 
@@ -57,7 +57,7 @@ describe('~relNote: division /', function () {
     result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "relNote", body: [2, -2, 0]};
+    const result2 = {type: "relNote", body: [-12, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
   it("~2/-4", async function () {
