@@ -296,11 +296,7 @@ MusicMath["%"] = function (node, ctx) {
 
 MusicMath["!"] = function (node, ctx) {
   const [nothing, note] = node.body;
-  if (nothing === undefined && note && note.type === "Note") {
-    const clone = Object.assign({}, note);
-    clone.body = clone.body.slice(0);
-    clone.body[2] = 1;
-    return clone;
-  }
+  if (nothing === undefined && note && note.type === "Note")
+    return changeNote(note, 5, 1);
   return node;
 };

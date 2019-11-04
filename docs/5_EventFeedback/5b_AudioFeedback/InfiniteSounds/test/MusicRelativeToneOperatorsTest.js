@@ -236,39 +236,3 @@ describe('Note: %', function () {
     expectToEqualWithDiff(tst2, result2);
   });
 });
-/*
-*/
-
-// describe('relNote: ^/', function () {
-//
-//   it("~3^/0", async function () {
-//     const str = "~3^/0";
-//     const tst2 = await staticInterpret(str);
-//     const result2 = {type: "relNote", body: [3, 0, 0]};
-//     expectToEqualWithDiff(tst2, result2);
-//   });
-//   it("~3^/2", async function () {
-//     const str = "~3^/2";
-//     const tst2 = await staticInterpret(str);
-//     const result2 = {type: "relNote", body: [11, 0, 0]};
-//     expectToEqualWithDiff(tst2, result2);
-//   });
-//   it("~3^/-2", async function () {
-//     const str = "~3^/-2";
-//     const tst2 = await staticInterpret(str);
-//     const result2 = {type: "relNote", body: [-5, 0, 0]};
-//     expectToEqualWithDiff(tst2, result2);
-//   });
-//   it("~3^/-3", async function () {
-//     const str = "~3^/-3";
-//     const tst2 = await staticInterpret(str);
-//     const result2 = {type: "relNote", body: [-9, 0, 0]};
-//     expectToEqualWithDiff(tst2, result2);
-//   });
-//   it("~3^/-1", async function () {
-//     const str = "~3^/-1";
-//     const tst2 = await staticInterpret(str);
-//     const result2 = {type: "relNote", body: [-1, 0, 0]};
-//     expectToEqualWithDiff(tst2, result2);
-//   });
-// });
