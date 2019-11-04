@@ -228,16 +228,16 @@ describe('absNoteNum: %', function () {
     const result2 = {type: "Note", body: [49, "ion", 0, 0, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%phr", async function () {
-    const str = "C#4lyd%phr";
+  it("C#4lyd%3%phr", async function () {
+    const str = "C#4lyd%3%phr";
     const tst2 = await staticInterpret(str);
     const result2 = {type: "Note", body: [49, "phr", 0, 0, 0, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
-  it("C#4lyd%min", async function () {
-    const str = "C#4lyd%min";
+  it("C#4lyd%min%3", async function () {
+    const str = "C#4lyd%min%3";
     const tst2 = await staticInterpret(str);
-    const result2 = {type: "Note", body: [49, "min", 0, 0, 0, 0]};
+    const result2 = {type: "Note", body: [49, "min", 0, 0, 3, 0]};
     expectToEqualWithDiff(tst2, result2);
   });
 });
