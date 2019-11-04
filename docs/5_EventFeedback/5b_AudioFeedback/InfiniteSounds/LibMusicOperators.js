@@ -115,25 +115,10 @@ function log2Integer(num) {
   throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
 }
 
-function alterNote(array, steps){
-  const clone = array.slice(0);
-  clone[0] += steps;
-  return clone;
-}
-
-function switchOctave(note, num, up) {
-  // let {note, num} = getNoteInteger(node);
-  // if (!note)
-  //   return node;
-  if (num === 0)
-    return note;
+function changeNote(note, steps) {
   const newNote = Object.assign({}, note);
-  const steps = note.type === "absNoteNum" ? 12 : 7;
-  newNote.body = alterNote(note.body, num * steps * up);
-  // if (note.type === "absNoteNum")
-  //   newNote.body[0] += addOctave * 12 * up;
-  // else if (note.type === "relNote")
-  //   newNote.body[1] += addOctave * up;  //relNote octave doesn't require normalization
+  newNote.body = note.body.slice(0);
+  newNote.body[0] += steps;
   return newNote;
 }
 
@@ -142,6 +127,7 @@ function stepNote(node, neg) {
   if (!note)
     return node;
   let clone = Object.assign({}, note);
+  // clone.body = alterNote(note.body, num * neg); //todo need to fix this one
   clone.body = clone.body.slice(0);
   if (note.type === "absNoteNum")
     clone.body[0] += num * neg;
@@ -193,20 +179,23 @@ export const MusicMath = Object.create(null);
 //x/y absNoteNum means: X is absNoteNum, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=12*(log2(y)) *-1
 //x/y relNote means: X is relNote, Y is positiveLog2Int, Y == 1 ? no change : x.noteNum+=7*(log2(y)) *-1
 //
+function multiplyNote(node, up) {
+  let {note, num} = getNoteInteger(node);
+  if (!note)
+    return node;
+  const addOctave = log2Integer(num);
+  if (addOctave === 0)
+    return note;
+  const scaleType = (note.type === "absNoteNum" ? 12 : 7) * up;
+  return changeNote(note, scaleType * addOctave);
+}
+
 //Att!! the multiply and divide operators on notes are very similar, they just go up or down.
 MusicMath["*"] = function (node, ctx) {
-  let {note, num} = getNoteInteger(node);
-  if (!note)
-    return node;
-  const addOctave = log2Integer(num);
-  return switchOctave(note, addOctave, 1);
+  return multiplyNote(node, 1);
 };
 MusicMath["/"] = function (node, ctx) {
-  let {note, num} = getNoteInteger(node);
-  if (!note)
-    return node;
-  const addOctave = log2Integer(num);
-  return switchOctave(note, addOctave, -1);
+  return multiplyNote(node, -1);
 };
 
 //x+y pluss operator   (and "-"-minus)
@@ -258,14 +247,8 @@ MusicMath["^^"] = function (node, ctx) {
     return node;
   if (num === 0)
     return note;
-  return switchOctave(note, num, 1);
-  // const clone = Object.assign({}, note);
-  // clone.body = clone.body.slice(0);
-  // if (note.type === "absNoteNum")
-  //   clone.body[0] += num * 12;
-  // if (note.type === "relNote")
-  //   clone.body[0] += num * 7;
-  // return clone;
+  const scaleType = note.type === "absNoteNum" ? 12 : 7;
+  return changeNote(note, scaleType * num);
 };
 
 //what is the circle 5 point? 7/12scale abs and 4/7scale
@@ -275,18 +258,15 @@ MusicMath["^^"] = function (node, ctx) {
 //x^/y absNoteNum means: X is absNoteNum, Y is int, x.noteNum+=7*y    Att!! This does not fit with all 7scale modes.
 //x^/y relNote means: X is relNote, Y is int, x.relNoteNum += (4*y)
 
-MusicMath["^/"] = function (node, ctx) {
-  const {note, num} = getNoteInteger(node);
-  if (!note)
-    return node;
-  let clone = Object.assign({}, note);
-  clone.body = clone.body.slice(0);
-  if (note.type === "absNoteNum")
-    clone.body[0] += num * 7;
-  if (note.type === "relNote")
-    clone.body[0] += num * 4;
-  return clone;
-};
+// MusicMath["^/"] = function (node, ctx) {
+//   const {note, num} = getNoteInteger(node);
+//   if (!note)
+//     return node;
+//   if (num === 0)
+//     return note;
+//   const scaleType = note.type === "absNoteNum" ? 7 : 4;
+//   return changeNote(note, scaleType * num);
+// };
 
 //% mode operator.  and %- for stepping down.
 //x%y mathematically means modulus remainder. This operator is not semantically related to the %-mode operator for tones.
