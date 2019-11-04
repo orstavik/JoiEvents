@@ -100,9 +100,9 @@ function log2Integer(num) {
   if (num === 0)
     return num;
   if (num > 0 && Number.isInteger(num)) {
-    const addOctave = Math.log2(num);
-    if (addOctave === Math.floor(addOctave))
-      return addOctave;
+    const octave = Math.log2(num);
+    if (octave === Math.floor(octave))
+      return octave;
   }
   throw new SyntaxError(`Notes can only be multiplied/divided by positive integers in the log2 scale: 1,2,4,8,16,...`);
 }
@@ -268,35 +268,44 @@ MusicMath["^^"] = function (node, ctx) {
 //   return changeNote(note, scaleType * num);
 // };
 
-//% mode operator.  and %- for stepping down.
+//% mode operator.
 //x%y mathematically means modulus remainder. This operator is not semantically related to the %-mode operator for tones.
-//x%y absNoteNum means the same for absNoteNum and relNote:
-//   X is Note, Y is +-int or +-modeName ("lydian", "-major", "lyd", "-min", etc.)
-//   the prefix +/- tells the tone to step up or down as many steps or until it gets to the mode with the same name.
-//   for each step, an int is added or subtracted to different points in the actualModeTable.
-
-// %mode operator is useful for clefs. It has no effect when performed on leaf nodes, as leaf nodes interpret the value
-// of their relative note num based on the parent clef's mode, not their own.
+//x%y Note
+//   X is Note, Y is a modeName ("lyd", "dor", "maj", "min", etc.) => will set the absolute modename for a tone
+//   X is Note, Y is an int => increments the relative modeModi
+//
+//the % mode operator is useful for clef Tones. It has no effect when performed on leaf Tones, as leaf nodes will
+//always use the parent clef tone's mode, never its own.
 
 MusicMath["%"] = function (node, ctx) {
   return modeShift2(node);
 };
 
-// MusicMath["%+"] = function (node, ctx) {              //todo not implemented
-//   return modeShift(node, 1);
-// };
-
-// MusicMath["%-"] = function (node, ctx) {
-//   return modeShift(node, -1);
-// };
-//
 //! close operator
 //When used as a prefix on an absNote, the ! "closes" the note.
-//A closed note is a note that will not be transformed by a parent clef.
+//A closed note is a note that will not be transformed by a parent clef, neither key nor mode.
 
 MusicMath["!"] = function (node, ctx) {
   const [nothing, note] = node.body;
   if (nothing === undefined && note && note.type === "Note")
-    return changeNote(note, 5, 1);
+    return normalizeToAbsolute(changeNote(note, 5, 1));
   return node;
 };
+
+function normalizeToAbsolute(note) {
+  let [absNum, absMode, relNum12, relNum7, relMode, closed] = note.body;
+  //1. eat the relNum12. simply add the rel 12 numbers into the base
+  absNum += relNum12;
+  //2. eat the relMode. shift the mode position in the circle of 7 modes, and up/down the base numevery time you pass by 7 and 0.
+  let absModePos = MusicModes.getNumber(absMode);
+  let nextModePos = absModePos + relMode;
+  absNum += Math.floor(nextModePos / 7);
+  nextModePos = ((nextModePos % 7) + 7) % 7;
+  let nextMode = MusicModes.getName(nextModePos);
+  //3. eat the relNum7. shift the relative 7 numbers into the base
+  absNum += Math.floor(relNum7 / 7) * 12;
+  let next7Num = ((relNum7 % 7) + 7) % 7;
+  let distanceTo7Num = MusicModes.getVector(nextMode)[next7Num];
+  absNum += distanceTo7Num;
+  return {type: "Note", body: [absNum, nextMode, 0, 0, 0, closed]};
+}

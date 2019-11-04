@@ -245,17 +245,17 @@ describe('absNoteNum: %', function () {
 describe('absNoteNum: ! close', function () {
   it("!E", async function () {
     const tst = await staticInterpret("!E");
-    const result = {type: "Note", body: [52, undefined, 0, 0, 0, 1]};
+    const result = {type: "Note", body: [52, "ion", 0, 0, 0, 1]};
     expectToEqualWithDiff(tst, result);
   });
   it("!f#", async function () {
     const tst = await staticInterpret("!f#");
-    const result = {type: "Note", body: [54, undefined, 0, 0, 0, 1]};
+    const result = {type: "Note", body: [54, "ion", 0, 0, 0, 1]};
     expectToEqualWithDiff(tst, result);
   });
   it("!g0", async function () {
     const tst = await staticInterpret("!g0");
-    const result = {type: "Note", body: [7, undefined, 0, 0, 0, 1]};
+    const result = {type: "Note", body: [7, "ion", 0, 0, 0, 1]};
     expectToEqualWithDiff(tst, result);
   });
   it("!Eion", async function () {
@@ -275,13 +275,34 @@ describe('absNoteNum: ! close', function () {
   });
   it("!g0maj", async function () {
     const tst = await staticInterpret("!g0maj");
-    const result = {type: "Note", body: [7, "maj", 0, 0, 0, 1]};
+    const result = {type: "Note", body: [7, "ion", 0, 0, 0, 1]};
     expectToEqualWithDiff(tst, result);
   });
   it("!g0min", async function () {
     const tst = await staticInterpret("!g0min");
-    const result = {type: "Note", body: [7, "min", 0, 0, 0, 1]};
+    const result = {type: "Note", body: [7, "aeo", 0, 0, 0, 1]};
     expectToEqualWithDiff(tst, result);
+  });
+});
+
+describe('normalizeToAbsolute multiple operations', function () {
+  it("C#4lyd~1^+2^^3", async function () {
+    const str = "C4lyd~1^+2^^3%2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "Note", body: [48, "lyd", 38, 1, 2, 0]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("!(C#4lyd~1^+2^^3)", async function () {
+    const str = "!(C4lyd~1^+2^^3%2)";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "Note", body: [88, "phr", 0, 0, 0, 1]};
+    expectToEqualWithDiff(tst2, result2);
+  });
+  it("!C#4lyd~1^+2^^3", async function () {
+    const str = "!C4lyd~1^+2^^3%2";
+    const tst2 = await staticInterpret(str);
+    const result2 = {type: "Note", body: [88, "phr", 0, 0, 0, 1]};
+    expectToEqualWithDiff(tst2, result2);
   });
 });
 

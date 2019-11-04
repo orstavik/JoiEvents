@@ -23,7 +23,20 @@ const absScale12 = {
 //todo make a full operator priority table
 //todo % modulo operator would be interpreted as a step in the mode shifts. % for tone must have higher priority than *, ^, ^^, +
 //todo ~ is very low priority. I think it is below ":".
-const priTable = {"|": 1000000, ">": 100000, "+": 100, "-": 100, "!": 50, "*": 10, "/": 10, ":": 1, "~": 0};
+const priTable = {
+  "|": 1000000,
+  ">": 100000,
+  "!": 1000,
+  "%": 500,
+  "+": 100,
+  "-": 100,
+  "*": 10,
+  "/": 10,
+  "^^": 10,
+  "^+": 10,
+  ":": 1,
+  "~": 0
+};
 
 const tokens = [
   //absolute notes: C#4lyd, a0dor, baeo, Fb, a4, a4,ab, G, aB10 (not notes a-2, abb4, f##, f#b, A+3)
