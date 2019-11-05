@@ -14,6 +14,7 @@
 // to convert lyd into mathematical clicks.
 
 import {isPrimitive} from "./Parser.js";
+import {MusicModes} from "./MusicModes";
 
 function getAbsoluteClef(ctx) {
   for (let scope of ctx) {
@@ -24,21 +25,6 @@ function getAbsoluteClef(ctx) {
 
 export const MusicStatic = Object.create(null);
 
-MusicStatic["~"] = function (node, ctx) {
-  const [l, r] = node.body;
-  if (!Number.isInteger(r))
-    throw new SyntaxError("The 7scale operator '~' must have an integer on its right side.");
-  //todo handle # and b augment and diminish values for '~'
-  if (l === undefined) //prefix
-    return {type: "Note", body: [0, 0, 0, r, 0, 0]};
-  if (!l.type || l.type !== "Note")
-    throw new SyntaxError("The 7scale operator '~' must be performed on a relative note.");
-  //todo and this is why we want to convert the absNoteNum to relNote in the static pass.
-  const clone = Object.assign({}, l);
-  clone.body = clone.body.slice(0);
-  clone.body[3] += r;
-  return clone;
-};
 
 //x~y 7scale operator (note operator ONLY, depends on the existence of a MODE).
 //x~y mathematically, throws a SyntaxError.
@@ -107,27 +93,27 @@ const parseRelativeNotePrefix = /([+-]?\d+)|~([a-gA-G])([#b]?)([+-]?\d*)/;
 //   return node;
 // };
 
-MusicStatic["expFun"] = function (node, ctx) {
-  const [note, ...clef] = node.body;
-  if (node.body[0].type !== "absNoteNum")
-    return node;
-  const absClef = getAbsoluteClef(ctx);
-  if (!absClef || node.body[0].body[3]) {
-    const [num, octave, mode, frozen, text] = node.body[0].body;
-    const body = node.body.slice(1);
-    for (let node of body) {
-      if (!isPrimitive(node))
-        body.isDirty = 1;
-    }
-    return {type: "absClef", num, octave, mode, frozen, text, body};
-  }
-  const body = node.body.slice(1);
-  for (let node of body) {
-    if (!isPrimitive(node))
-      body.isDirty = 1;
-  }
-  return {type: "relClef12", num: 0, body};
-};
+// MusicStatic["expFun"] = function (node, ctx) {
+//   const [note, ...clef] = node.body;
+//   if (node.body[0].type !== "absNoteNum")
+//     return node;
+//   const absClef = getAbsoluteClef(ctx);
+//   if (!absClef || node.body[0].body[3]) {
+//     const [num, octave, mode, frozen, text] = node.body[0].body;
+//     const body = node.body.slice(1);
+//     for (let node of body) {
+//       if (!isPrimitive(node))
+//         body.isDirty = 1;
+//     }
+//     return {type: "absClef", num, octave, mode, frozen, text, body};
+//   }
+//   const body = node.body.slice(1);
+//   for (let node of body) {
+//     if (!isPrimitive(node))
+//       body.isDirty = 1;
+//   }
+//   return {type: "relClef12", num: 0, body};
+// };
 
 
 // MusicStatic["relNote"] = function (node, ctx) {
@@ -146,3 +132,106 @@ MusicStatic["expFun"] = function (node, ctx) {
 //   const num = ((node.num - absClef.num + 12) % 12) + node.octave * 12;
 //   return {type: "~~", num, body: node.body};
 // };
+
+
+function modeShift(node, upDown) {
+  let {note, value} = getNoteIntegerOrModeName(node);
+  if (!note)
+    return node;
+  const modePos = note.type === "Note" ? 1 : 3;
+  if (typeof value === "string") {
+    let nextPos = MusicModes.getNumber(value);
+    let nowPos = note.body[modePos];
+    if (upDown > 0) {
+      while (nextPos < nowPos)
+        nextPos += 7;
+      value = nextPos - nowPos;
+    } else {
+      while (nextPos > nowPos)
+        nextPos -= 7;
+      value = nowPos - nextPos;
+    }
+  }
+  const clone = Object.assign({}, note);
+  clone.body = clone.body.slice(0);
+  clone.body[modePos] += value * upDown;
+  if (clone.type === "Note")
+    return normalizeAbsNoteNum(clone);
+  return clone;
+  // return normalizeNote(clone);
+}
+
+
+//Operations that alter the num and augment value of relNote require the relNote to be normalized.
+//Normalization of relnote pushes the value of the num between 0 and 6, and augment between -1,0,1.
+//octave changes does not require normalization.
+//Normalization has the effect that augmentation of notes remain fixed when mode is changed dynamically.
+//if a tone is augmented 1 up or down (out of scale) in one modality, then the augmentation will remain in place even
+//as you swap modality and that modality would "ctach up" to the augmentation.
+
+function normalizeRelNote(relNote, modeArray) {
+  let [num, octave, augment, mode] = relNote.body;
+  //0. mode to augment
+  while (mode > 7) {
+    mode -= 7;
+    augment += 1;
+  }
+  while (mode < 7) {
+    mode += 7;
+    augment -= 1;
+  }
+  //1. augment to octave
+  while (augment > 12) {
+    augment -= 12;
+    octave += 1;
+  }
+  while (augment < 0) {
+    augment += 12;
+    octave -= 1;
+  }
+  //2. augment to num
+  while (augment > 0) {
+    let relNoteAbsValue = modeArray[num % 7] + Math.floor(num / 7) * 12;
+    let nextRelNoteAbsValue = modeArray[(num + 1) % 7] + Math.floor((num + 1) / 7) * 12;
+    let nextStepDistance = nextRelNoteAbsValue - relNoteAbsValue;
+    if (augment < nextStepDistance)
+      break;
+    num += 1;
+    augment -= nextStepDistance;
+  }
+  while (augment < 0) {
+    let relNoteAbsValue = modeArray[num % 7] + Math.floor(num / 7) * 12;
+    let nextRelNoteAbsValue = modeArray[(num + 6) % 7] + Math.floor((num - 1) / 7) * 12;
+    let nextStepDistance = nextRelNoteAbsValue - relNoteAbsValue;
+    if (augment > nextStepDistance)
+      break;
+    num -= 1;
+    augment += nextStepDistance;
+  }
+  //3. num to octave
+  while (num > 7) {
+    num -= 7;
+    octave += 1;
+  }
+  while (num < 0) {
+    num += 7;
+    octave -= 1;
+  }
+  return {type: "relNote", body: [num, octave, augment]};
+}
+
+//absNoteNum needs normalization when mode switches goes beyond 7 or below 0
+//If actualModeTable[0] !== 0, then the actualModeTable is normalized using its initial value, and the difference is
+//either added or subtracted to the absNoteNum or the relNoteAugment.
+function normalizeAbsNoteNum(note) {
+  let [num, mode, frozen] = note.body;
+  while (mode > 7) {
+    mode -= 7;
+    num += 1;
+  }
+  while (mode < 0) {
+    mode += 7;
+    num -= 1;
+  }
+  return {type: "Note", body: [num, mode, frozen]};
+}

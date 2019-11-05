@@ -1,76 +1,35 @@
 import {parse} from "../Parser.js";
 import {staticInterpret, interpret} from "../Interpreter.js";
 
-// describe('relative 12 notes', function () {
-//   it("absNoteNum(0)", function () {
-//     const tst = parse("absNoteNum(0)");
-//     expectToEqualWithDiff(tst, {type: "Note", body: [0]});
-//   });
-//
-//   it("absNoteNum(-11)", function () {
-//     const tst = parse("absNoteNum(-11)");
-//     expectToEqualWithDiff(tst, {type: "Note", body: [-11]});
-//   });
-//
-//   it("absNoteNum(+11)", function () {
-//     const tst = parse("absNoteNum(+11)");
-//     expectToEqualWithDiff(tst, {type: "Note", body: [11]});
-//   });
-//
-//   it("absNoteNum(10)", function () {
-//     const tst = parse("absNoteNum(10)");
-//     expectToEqualWithDiff(tst, {type: "Note", body: [10]});
-//   });
-// });
-
-// describe('relative alpha notes', function () {
-//   it("~C", function () {
-//     const tst = parse("~C");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [0, "c"]});
-//   });
-//
-//   it("~b", function () {
-//     const tst = parse("~b");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [11, "b"]});
-//   });
-//
-//   it("~f#", function () {
-//     const tst = parse("~f#");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [6, "f#"]});
-//   });
-//
-//   it("~Bb", function () {
-//     const tst = parse("~Bb");
-//     expectToEqualWithDiff(tst, {type: "relNote", body: [10, "bb"]});
-//   });
-//   // it("~Bb#-10", function () {
-//   //   expect error
-//   // });
-// });
-//
-
-// describe('absolute clef, absolute notes', function () {
-//   it("Setting the clef, nice an simple: G4(C4)", async function () {
-//     const tst = parse("G4(C4)");
-//     const res = {
-//       type: "expFun",
-//       body: [
-//         {type: "Note", body: [7, 4, 5, 0, "G4"]},
-//         {type: "Note", body: [0, 4, 5, 0, "C4"]},
-//       ]
-//     };
-//     res.body.isDirty = 1;
-//     expectToEqualWithDiff(tst, res);
-//     const tst2 = await staticInterpret("G4(C4)");
-//     const res2 = {
-//       type: "absClef", num: 7, octave: 4, mode: 5, frozen: 0, text: "G4",
-//       body: [
-//         {type: "Note", body: [-7]}
-//       ]
-//     };
-//     res2.body.isDirty = 1;
-//     expectToEqualWithDiff(tst2, res2);
-//   });
+describe('absolute clef, absolute notes', function () {
+  it("Setting the clef, nice an simple: C4(G4)", async function () {
+    const tst = parse("C4(G4)");
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+      ]
+    };
+    res.body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret("C4(G4)");
+    const res2 = {
+      type: "clef",
+      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+      body: [
+        {
+          type: "Note",
+          body: [0, undefined, 4, 0, 0, 0],
+          staticInterpretationKey: 55,
+          staticInterpretationMode: undefined,
+        }
+      ]
+    };
+    res2.body.isDirty = 1;
+    // res2.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
 //   it("Freezing a note: G4(!C4)", async function () {
 //     const tst = parse("G4(!C4)");
 //     const res = {
@@ -206,8 +165,7 @@ import {staticInterpret, interpret} from "../Interpreter.js";
 //     res2.body[0].isDirty = 1;
 //     expectToEqualWithDiff(tst2, res2);
 //   });
-// })
-//;
+});
 
 //todo older below
 
@@ -305,3 +263,52 @@ import {staticInterpret, interpret} from "../Interpreter.js";
 //     expectToEqualWithDiff(tst, result);
 //   });
 // });
+
+
+// describe('relative 12 notes', function () {
+//   it("absNoteNum(0)", function () {
+//     const tst = parse("absNoteNum(0)");
+//     expectToEqualWithDiff(tst, {type: "Note", body: [0]});
+//   });
+//
+//   it("absNoteNum(-11)", function () {
+//     const tst = parse("absNoteNum(-11)");
+//     expectToEqualWithDiff(tst, {type: "Note", body: [-11]});
+//   });
+//
+//   it("absNoteNum(+11)", function () {
+//     const tst = parse("absNoteNum(+11)");
+//     expectToEqualWithDiff(tst, {type: "Note", body: [11]});
+//   });
+//
+//   it("absNoteNum(10)", function () {
+//     const tst = parse("absNoteNum(10)");
+//     expectToEqualWithDiff(tst, {type: "Note", body: [10]});
+//   });
+// });
+
+// describe('relative alpha notes', function () {
+//   it("~C", function () {
+//     const tst = parse("~C");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [0, "c"]});
+//   });
+//
+//   it("~b", function () {
+//     const tst = parse("~b");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [11, "b"]});
+//   });
+//
+//   it("~f#", function () {
+//     const tst = parse("~f#");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [6, "f#"]});
+//   });
+//
+//   it("~Bb", function () {
+//     const tst = parse("~Bb");
+//     expectToEqualWithDiff(tst, {type: "relNote", body: [10, "bb"]});
+//   });
+//   // it("~Bb#-10", function () {
+//   //   expect error
+//   // });
+// });
+//

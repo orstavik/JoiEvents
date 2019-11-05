@@ -44,4 +44,31 @@ export class MusicModes {
   static getNumber(name) {
     return name === undefined ? 5 : modeNameToNumber[name];
   }
+
+  static extractSevenNotes(twelveStep, modeVector) {
+    const scale = Math.floor(twelveStep / 12);
+    twelveStep = ((twelveStep % 12) + 12) % 12;
+    let seven = modeVector.indexOf(twelveStep);
+    if (seven >= 0)
+      return {seven: seven + scale * 7, twelve: 0};
+    seven = modeVector.indexOf(twelveStep - 1);
+    if (seven >= 0)
+      return {seven: seven + scale * 7, twelve: 1};
+    throw new Error("twelveStep out of bounds");
+  }
+
+  static splitSevenTwelveScale(distInTwelve, mode) {
+    if (distInTwelve === 0)
+      return {seven: 0, twelve: 0};
+    const modeVector = MusicModes.getVector(mode);
+    return MusicModes.extractSevenNotes(distInTwelve, modeVector);
+  }
+
+  static nearestModeModi(clefMode, childMode) {
+    const clefModeNum = MusicModes.getNumber(clefMode);
+    const childModeNum = MusicModes.getNumber(childMode);
+    const distance = childModeNum - clefModeNum;
+    //debugger; todo //5 -> 1, 1 -> 5  //distance is more than four, I want to go in the opposite direction +7 or -7?
+    return distance;
+  }
 }
