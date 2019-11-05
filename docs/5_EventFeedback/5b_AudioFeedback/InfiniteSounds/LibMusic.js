@@ -42,7 +42,7 @@ function normalizeToRelative(absNote, pKey, pMode) {
   const shift12 = absNum - pKey;
   const {seven, twelve} = MusicModes.splitSevenTwelveScale(shift12, pMode);
   const modeModi = MusicModes.nearestModeModi(absMode, pMode);
-  const res = {type: "Note", body: [0, undefined, seven, twelve, modeModi, 0]};
+  const res = {type: "Note", body: [0, undefined, twelve, seven, modeModi, 0]};
   res.staticInterpretationKey = absNum;
   res.staticInterpretationMode = absMode;
   return res;

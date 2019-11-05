@@ -2,7 +2,8 @@ import {parse} from "../Parser.js";
 import {staticInterpret, interpret} from "../Interpreter.js";
 
 describe('absolute clef, absolute notes', function () {
-  it("Setting the clef, nice an simple: C4(G4)", async function () {
+
+  it("basic clef: C4(G4)", async function () {
     const tst = parse("C4(G4)");
     const res = {
       type: "expFun",
@@ -20,17 +21,53 @@ describe('absolute clef, absolute notes', function () {
       body: [
         {
           type: "Note",
-          body: [0, undefined, 4, 0, 0, 0],
+          body: [0, undefined, 0, 4, 0, 0],
           staticInterpretationKey: 55,
           staticInterpretationMode: undefined,
         }
       ]
     };
     res2.body.isDirty = 1;
-    // res2.body[0].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
-//   it("Freezing a note: G4(!C4)", async function () {
+
+  it("clef with operations: C4(G4^^1)", async function () {
+    const str = "C4(G4^^1)";
+    const tst = parse(str);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {
+          type: "^^",
+          body: [
+            {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+            1
+          ]
+        }
+      ]
+    };
+    res.body.isDirty = 1;
+    res.body[1].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "clef",
+      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+      body: [
+        {
+          type: "Note",
+          body: [0, undefined, 12, 4, 0, 0],
+          staticInterpretationKey: 55,
+          staticInterpretationMode: undefined,
+        }
+      ]
+    };
+    res2.body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
+
+  //   it("Freezing a note: G4(!C4)", async function () {
 //     const tst = parse("G4(!C4)");
 //     const res = {
 //       type: "expFun",
