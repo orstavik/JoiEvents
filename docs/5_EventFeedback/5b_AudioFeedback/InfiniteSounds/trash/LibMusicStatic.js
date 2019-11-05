@@ -13,17 +13,7 @@
 // And if so, I have to find the parent mode of lyd in order
 // to convert lyd into mathematical clicks.
 
-import {isPrimitive} from "./Parser.js";
-import {MusicModes} from "./MusicModes";
-
-function getAbsoluteClef(ctx) {
-  for (let scope of ctx) {
-    if (scope.type === "expFun" && scope.body[0].type === "absNoteNum")
-      return scope.body[0];
-  }
-}
-
-export const MusicStatic = Object.create(null);
+import {MusicModes} from "../MusicModes.js";
 
 
 //x~y 7scale operator (note operator ONLY, depends on the existence of a MODE).

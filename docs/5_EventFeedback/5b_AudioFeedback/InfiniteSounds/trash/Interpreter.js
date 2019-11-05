@@ -1,5 +1,5 @@
 import {parse} from "./Parser.js";
-import {Notes} from "../LibNotes.js";
+import {Notes} from "./LibNotes.js";
 import {Random} from "../LibRandom.js";
 import {InterpreterFunctions} from "./LibAudioNodes.js";
 import {ScaleFunctions} from "../LibCircleOfFifth.js";
