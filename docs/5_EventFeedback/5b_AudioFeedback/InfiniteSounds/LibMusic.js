@@ -43,8 +43,8 @@ function normalizeToRelative(absNote, pKey, pMode) {
   const {seven, twelve} = MusicModes.splitSevenTwelveScale(shift12, pMode);
   const modeModi = MusicModes.nearestModeModi(absMode, pMode);
   const res = {type: "Note", body: [0, undefined, twelve, seven, modeModi, 0]};
-  res.staticInterpretationKey = absNum;
-  res.staticInterpretationMode = absMode;
+  // res.staticInterpretationKey = absNum;
+  // res.staticInterpretationMode = absMode;
   return res;
 }
 
@@ -201,6 +201,10 @@ MusicMath["!"] = function (node, ctx) {
   return node;
 };
 
+function getAbsoluteToneKeyMode(clef) {
+  throw new Error("NoteYet implemented");
+}
+
 MusicMath["Note"] = function (node, ctx) {
   if (ctx.length < 2 || node.body[5])     //if the note is a top note, or if it is closed, then normalize to absolute
     return normalizeToAbsolute(node);
@@ -208,11 +212,9 @@ MusicMath["Note"] = function (node, ctx) {
   if (!clef)
     return normalizeToAbsolute(node);
   let [pKey, pMode] = clef.body;
-  if (!pKey) pKey = clef.staticInterpretationKey;
-  if (!pMode) pMode = clef.staticInterpretationMode;
-  const relative = normalizeToRelative(node, pKey, pMode);
-  // relative.clef = clef;   //todo this adds redundancy and complexity
-  return relative;
+  if (!pKey /*|| !pMode*/)
+    [pKey, pMode] = getAbsoluteToneKeyMode(clef);
+  return normalizeToRelative(node, pKey, pMode);
 };
 
 MusicMath["expFun"] = function (node, ctx) {

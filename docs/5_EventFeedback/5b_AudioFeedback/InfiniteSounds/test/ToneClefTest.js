@@ -22,8 +22,6 @@ describe('absolute clef, absolute notes', function () {
         {
           type: "Note",
           body: [0, undefined, 0, 4, 0, 0],
-          staticInterpretationKey: 55,
-          staticInterpretationMode: undefined,
         }
       ]
     };
@@ -58,8 +56,6 @@ describe('absolute clef, absolute notes', function () {
         {
           type: "Note",
           body: [0, undefined, 12, 4, 0, 0],
-          staticInterpretationKey: 55,
-          staticInterpretationMode: undefined,
         }
       ]
     };
