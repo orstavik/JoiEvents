@@ -1,87 +1,6 @@
 import {parse} from "../Parser.js";
 import {staticInterpret, interpret} from "../Interpreter.js";
 
-describe('absolute notes', function () {
-  it("C#4", function () {
-    const tst = parse("C#4");
-    const result = {type: "Note", body: [49, undefined, 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("A5", function () {
-    const tst = parse("A5");
-    const result = {type: "Note", body: [69, undefined, 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("Bb5", function () {
-    const tst = parse("Bb5");
-    const result = {type: "Note", body: [70, undefined, 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("D#10", function () {
-    const tst = parse("D#10");
-    const result = {type: "Note", body: [123, undefined, 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
-  //   const tst = parse("D#-2");
-  //   const result = {type: "Note", mode: 5, tone: "d", /*augment: 1, */octave: -2, frozen: 0};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-});
-
-describe('absolute notes with modes', function () {
-  it("C#4lyd", function () {
-    const tst = parse("C#4lyd");
-    const result = {type: "Note", body: [49, "lyd", 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("A5loc", function () {
-    const tst = parse("A5loc");
-    const result = {type: "Note", body: [69, "loc", 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("Bb5dor", function () {
-    const tst = parse("Bb5dor");
-    const result = {type: "Note", body: [70, "dor", 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  it("D#10mix", function () {
-    const tst = parse("D#10mix");
-    const result = {type: "Note", body: [123, "mix", 0, 0, 0, 0]};
-    expectToEqualWithDiff(tst, result);
-  });
-  // it("!g0major", function () {
-  //   const tst = parse("!g0maj");
-  //   const result = {type: "Note", body: [7, 0, 5, 1, "!g0"]};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-  // it("!g0min", function () {
-  //   const tst = parse("!g0min");
-  //   const result = {type: "Note", body: [7, 0, "aeo", 1, "!g0"]};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-  // it("!g0%2", function () {
-  //   const tst = parse("!g0%2");
-  //   const result = {type: "Note", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 2};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-  // it("!g0%-1", function () {
-  //   const tst = parse("!g0%-1");
-  //   const result = {type: "Note", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: -1};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-  // it("!g0%0", function () {
-  //   const tst = parse("!g0%0");
-  //   const result = {type: "Note", tone: "!g0", octave: 0, num: 7, frozen: 1, mode: 0};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-  // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
-  //   const tst = parse("D#-2");
-  //   const result = {type: "Note", tone: "d", /*augment: 1, */octave: -2, frozen: 0};
-  //   expectToEqualWithDiff(tst, result);
-  // });
-});
-
 // describe('relative 12 notes', function () {
 //   it("absNoteNum(0)", function () {
 //     const tst = parse("absNoteNum(0)");
@@ -129,38 +48,6 @@ describe('absolute notes with modes', function () {
 //   // });
 // });
 //
-describe('7scale prefix operator: relative 7 notes', function () {
-  it("~0", async function () {
-    const tst = parse("~0");
-    expectToEqualWithDiff(tst, {type: "~", body: [undefined, 0]});
-    const tst2 = await staticInterpret("~0");
-    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, 0, 0, 0]});
-  });
-
-  it("~-11", async function () {
-    const tst = parse("~-11");
-    expectToEqualWithDiff(tst, {type: "~", body: [undefined, -11]});
-    const tst2 = await staticInterpret("~-11");
-    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, -11, 0, 0]});
-  });
-
-  it("~11", async function () {
-    const tst = parse("~11");
-    expectToEqualWithDiff(tst, {type: "~", body: [undefined, 11]});
-    const tst2 = await staticInterpret("~11");
-    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, 11, 0, 0]});
-  });
-
-  // it("~+11b", function () {
-  //   const tst = parse("~+11b");
-  //   expectToEqualWithDiff(tst, {type: "~", body: [11, -1]});
-  // });
-  //
-  // it("~10#", function () {
-  //   const tst = parse("~10#");
-  //   expectToEqualWithDiff(tst, {type: "~", body: [10, 1]});
-  // });
-});
 
 // describe('absolute clef, absolute notes', function () {
 //   it("Setting the clef, nice an simple: G4(C4)", async function () {

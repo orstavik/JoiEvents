@@ -1,6 +1,39 @@
 import {parse} from "../Parser.js";
 import {staticInterpret} from "../Interpreter.js";
 
+describe('7scale prefix operator: relative 7 notes', function () {
+  it("~0", async function () {
+    const tst = parse("~0");
+    expectToEqualWithDiff(tst, {type: "~", body: [undefined, 0]});
+    const tst2 = await staticInterpret("~0");
+    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, 0, 0, 0]});
+  });
+
+  it("~-11", async function () {
+    const tst = parse("~-11");
+    expectToEqualWithDiff(tst, {type: "~", body: [undefined, -11]});
+    const tst2 = await staticInterpret("~-11");
+    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, -11, 0, 0]});
+  });
+
+  it("~11", async function () {
+    const tst = parse("~11");
+    expectToEqualWithDiff(tst, {type: "~", body: [undefined, 11]});
+    const tst2 = await staticInterpret("~11");
+    expectToEqualWithDiff(tst2, {type: "Note", body: [0, 0, 0, 11, 0, 0]});
+  });
+
+  // it("~+11b", function () {
+  //   const tst = parse("~+11b");
+  //   expectToEqualWithDiff(tst, {type: "~", body: [11, -1]});
+  // });
+  //
+  // it("~10#", function () {
+  //   const tst = parse("~10#");
+  //   expectToEqualWithDiff(tst, {type: "~", body: [10, 1]});
+  // });
+});
+
 describe('~Note: multiply *', function () {
 
   it("~2*2", async function () {
