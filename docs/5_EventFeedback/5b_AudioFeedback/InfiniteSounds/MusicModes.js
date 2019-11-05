@@ -71,4 +71,8 @@ export class MusicModes {
     //debugger; todo //5 -> 1, 1 -> 5  //distance is more than four, I want to go in the opposite direction +7 or -7?
     return distance;
   }
+
+  static isModeName(name) {
+    return modeNameToNumber.hasOwnProperty(name);
+  }
 }

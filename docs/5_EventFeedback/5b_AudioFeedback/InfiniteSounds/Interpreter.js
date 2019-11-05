@@ -4,7 +4,7 @@ import {MathOps} from "./LibMath.js";
 import {ListOps, AudioPiping} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
 import {MusicDynamic} from "./LibMusicDynamic.js";
-import {MusicMath} from "./LibMusicOperators.js";
+import {MusicMath} from "./LibMusic.js";
 import {Units} from "./LibUnits.js";
 
 function mergeTables(...tables) {
