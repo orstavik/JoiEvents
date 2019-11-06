@@ -48,7 +48,7 @@ export async function interpretNode(node, table, ctx) {
   //topDown processing is possible here. Not supported due to complexity.
   const clone = Object.assign({}, node);
   if (clone.body)
-    clone.body = await interpretArray(clone.body, table, [clone].concat(ctx));
+    clone.body = await interpretArray(clone.body, table, [node].concat(ctx));
   const fun = table[clone.type];
   return fun ? (await fun(clone, ctx)) : clone;
 }
