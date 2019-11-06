@@ -41,11 +41,8 @@ function normalizeToRelative(absNote, pKey, pMode) {
   let [absNum, absMode] = absNote.body;
   const shift12 = absNum - pKey;
   const {seven, twelve} = MusicModes.splitSevenTwelveScale(shift12, pMode);
-  const modeModi = MusicModes.nearestModeModi(absMode, pMode);
-  const res = {type: "Note", body: [0, undefined, twelve, seven, modeModi, 0]};
-  // res.staticInterpretationKey = absNum;
-  // res.staticInterpretationMode = absMode;
-  return res;
+  const modeModi = MusicModes.absoluteModeDistance(absMode, pMode);
+  return {type: "Note", body: [0, undefined, twelve, seven, modeModi, 0]};
 }
 
 function getClef(ctx) {
@@ -207,6 +204,8 @@ function getAbsoluteToneKeyMode(clef) {
 
 MusicMath["Note"] = function (node, ctx) {
   if (ctx.length < 2 || node.body[5])     //if the note is a top note, or if it is closed, then normalize to absolute
+    return normalizeToAbsolute(node);
+  if (ctx[1].type ==="!")                 //if it is a child of "!" close opertor, then normalize to absolute
     return normalizeToAbsolute(node);
   const clef = getClef(ctx);
   if (!clef)

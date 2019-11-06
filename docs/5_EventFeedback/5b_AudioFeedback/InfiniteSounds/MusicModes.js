@@ -64,12 +64,18 @@ export class MusicModes {
     return MusicModes.extractSevenNotes(distInTwelve, modeVector);
   }
 
-  static nearestModeModi(clefMode, childMode) {
-    const clefModeNum = MusicModes.getNumber(clefMode);
-    const childModeNum = MusicModes.getNumber(childMode);
-    const distance = childModeNum - clefModeNum;
-    //debugger; todo //5 -> 1, 1 -> 5  //distance is more than four, I want to go in the opposite direction +7 or -7?
-    return distance;
+  //this function turns converts the distance between two modes to the nearest interval,
+  //thus sometimes causing the key to go up or down a hash (twelve step).
+  static convertToNearestModeDistance(distance) {
+    if (distance < -3)
+      return {distance: 7 + distance, hash: 1};
+    if (distance > 3)
+      return {distance: -7 + distance, hash: -1};
+    return {distance, hash: 0};
+  }
+
+  static absoluteModeDistance(clefMode, childMode) {
+    return MusicModes.getNumber(childMode) - MusicModes.getNumber(clefMode);
   }
 
   static isModeName(name) {

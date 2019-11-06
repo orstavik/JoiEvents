@@ -3,7 +3,7 @@ import {staticInterpret, interpret} from "../Interpreter.js";
 
 describe('absolute clef, absolute notes', function () {
 
-  it("basic clef: C4(G4)", async function () {
+  it("clef up: C4(G4)", async function () {
     const tst = parse("C4(G4)");
     const res = {
       type: "expFun",
@@ -22,6 +22,33 @@ describe('absolute clef, absolute notes', function () {
         {
           type: "Note",
           body: [0, undefined, 0, 4, 0, 0],
+        }
+      ]
+    };
+    res2.body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
+
+  it("clef down: G4(C4)", async function () {
+    const g4C4 = "G4(C4)";
+    const tst = parse(g4C4);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+      ]
+    };
+    res.body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(g4C4);
+    const res2 = {
+      type: "clef",
+      key: {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+      body: [
+        {
+          type: "Note",
+          body: [0, undefined, 0, -4, 0, 0],
         }
       ]
     };
@@ -63,27 +90,79 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst2, res2);
   });
 
-  //   it("Freezing a note: G4(!C4)", async function () {
-//     const tst = parse("G4(!C4)");
-//     const res = {
-//       type: "expFun",
-//       body: [
-//         {type: "Note", body: [7, 4, 5, 0, "G4"]},
-//         {type: "Note", body: [0, 4, 5, 1, "!C4"]},
-//       ]
-//     };
-//     res.body.isDirty = 1;
-//     expectToEqualWithDiff(tst, res);
-//     const tst2 = await staticInterpret("G4(!C4)");
-//     const res2 = {
-//       type: "absClef", num: 7, octave: 4, mode: 5, frozen: 0, text: "G4",
-//       body: [
-//         {type: "Note", body: [0, 4, 5, 1, "!C4"]}
-//       ]
-//     };
-//     res2.body.isDirty = 1;
-//     expectToEqualWithDiff(tst2, res2);
-//   });
+  it("Freezing a note: C4(!G4)", async function () {
+    const str = "C4(!G4)";
+    const tst = parse(str);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {
+          type: "!",
+          body: [
+            undefined,
+            {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+          ]
+        }
+      ]
+    };
+    res.body.isDirty = 1;
+    res.body[1].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "clef",
+      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+      body: [
+        {type: "Note", body: [55, undefined, 0, 0, 0, 1]},
+      ]
+    };
+    res2.body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
+  it("Clef with relative note: C4(~2(G4))", async function () {
+    const str = "C4(~2(G4))";
+    const tst = parse(str);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {
+          type: "expFun",
+          body: [
+            {
+              type: "~",
+              body: [
+                undefined,
+                2
+              ]
+            },
+            {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+          ]
+        }
+      ]
+    };
+    res.body.isDirty = 1;
+    res.body[1].body.isDirty = 1;
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "clef",
+      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+      body: [
+        {
+          type: "clef",
+          key: {type: "Note", body: [0, undefined, 0, 2, 0, 0]},
+          body: [
+            {type: "Note", body: [0, undefined, 0, 2, 0, 0]},
+          ]
+        },
+      ]
+    };
+    res2.body.isDirty = 1;
+    res.body[0].body.isDirty = 1;
+    expectToEqualWithDiff(tst2, res2);
+  });
 //   it("Overriding the clef from above: D3(G4(C4))", async function () {
 //     const tst = parse("D3(G4(C4))");
 //     const res = {
