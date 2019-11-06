@@ -13,61 +13,71 @@ describe('basic arrays', function () {
       },
         {type: "z", body: []}]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
   it("x:y:z - syntax interpreted", async function () {
     const tst2 = await staticInterpret('x:y:z');
-    const result2 = [
-      {type: "x", body: []},
-      {type: "y", body: []},
-      {type: "z", body: []}
-    ];
-    result2['isDirty'] = 1;
+    const result2 = {
+      type: "[]", body: [
+        {type: "x", body: []},
+        {type: "y", body: []},
+        {type: "z", body: []}
+      ]
+    };
+    // result2['isDirty'] = 1;
     expectToEqualWithDiff(tst2, result2);
   });
 
   it("[x,y,z]", function () {
     const tst = parse('[x,y,z]');
-    const result = [
-      {type: "x", body: []},
-      {type: "y", body: []},
-      {type: "z", body: []}
-    ];
-    result['isDirty'] = 1;
+    const result = {
+      type: "[]", body: [
+        {type: "x", body: []},
+        {type: "y", body: []},
+        {type: "z", body: []}
+      ]
+    };
+    // result['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
   it("[x:y:z]", function (done) {
     const tst = parse('[x:y:z]');
-    const result = [{
-      type: ":",
-      body: [{
+    const result = {
+      type: "[]", body: [{
         type: ":",
-        body: [{type: "x", body: []}, {type: "y", body: []}]
-      },
-        {type: "z", body: []}]
-    }];
-    result['isDirty'] = 1;
-    result[0].body[0].body.isDirty = 1;
-    result[0].body.isDirty = 1;
+        body: [{
+          type: ":",
+          body: [{type: "x", body: []}, {type: "y", body: []}]
+        },
+          {type: "z", body: []}]
+      }]
+    };
+    // result['isDirty'] = 1;
+    // result[0].body[0].body.isDirty = 1;
+    // result[0].body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     done();
   });
 
   it("[x:y:z] - syntax interpreted", async function () {
     const tst2 = await staticInterpret('[x:y:z]');
-    const result2 = [
-      [
-        {type: "x", body: []},
-        {type: "y", body: []},
-        {type: "z", body: []}
+    const result2 = {
+      type: "[]", body: [
+        {
+          type: "[]", body: [
+            {type: "x", body: []},
+            {type: "y", body: []},
+            {type: "z", body: []}
+          ]
+        }
       ]
-    ];
-    result2['isDirty'] = 1;
-    result2[0]['isDirty'] = 1;
+    };
+    // result2['isDirty'] = 1;
+    // result2[0]['isDirty'] = 1;
     expectToEqualWithDiff(tst2, result2);
   });
 
@@ -97,8 +107,8 @@ describe('basic pipe and bar', function () {
       },
         {type: "z", body: []}]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -112,44 +122,44 @@ describe('basic pipe and bar', function () {
       },
         {type: "z", body: []}]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 });
 
 describe('basic wrapped', function () {
-it("(x > y > z)", function () {
-  const tst = parse('(x > y > z)');
-  const result = {
-    type: ">",
-    body: [{
+  it("(x > y > z)", function () {
+    const tst = parse('(x > y > z)');
+    const result = {
       type: ">",
-      body: [{type: "x", body: []}, {type: "y", body: []}]
-    },
-      {type: "z", body: []}]
-  };
-  result.body['isDirty'] = 1;
-  result.body[0].body['isDirty'] = 1;
-  expectToEqualWithDiff(tst, result);
-});
-
-it("(x | y | z)", function () {
-  const tst = parse('(x | y | z)');
-  const result = {
-    type: "|",
-    body: [
-      {
-        type: "|",
+      body: [{
+        type: ">",
         body: [{type: "x", body: []}, {type: "y", body: []}]
       },
-      {type: "z", body: []}
-    ]
-  };
-  result.body['isDirty'] = 1;
-  result.body[0].body['isDirty'] = 1;
-  expectToEqualWithDiff(tst, result);
-});
+        {type: "z", body: []}]
+    };
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
+  });
+
+  it("(x | y | z)", function () {
+    const tst = parse('(x | y | z)');
+    const result = {
+      type: "|",
+      body: [
+        {
+          type: "|",
+          body: [{type: "x", body: []}, {type: "y", body: []}]
+        },
+        {type: "z", body: []}
+      ]
+    };
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
+    expectToEqualWithDiff(tst, result);
+  });
 
   it("fn(x,y,z)", function () {
     const tst = parse('fn(x,y,z)');
@@ -161,7 +171,7 @@ it("(x | y | z)", function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 });
@@ -179,8 +189,8 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
 
     expectToEqualWithDiff(tst, result);
   });
@@ -197,8 +207,8 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -214,8 +224,8 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -237,9 +247,9 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
-    result.body[0].body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
+    // result.body[0].body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -255,8 +265,8 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -279,11 +289,11 @@ describe('missing arguments', function () {
         }, undefined]
       }, undefined]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
-    result.body[0].body[0].body['isDirty'] = 1;
-    result.body[0].body[0].body[0].body['isDirty'] = 1;
-    result.body[0].body[0].body[0].body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
+    // result.body[0].body[0].body['isDirty'] = 1;
+    // result.body[0].body[0].body[0].body['isDirty'] = 1;
+    // result.body[0].body[0].body[0].body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -299,8 +309,8 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -316,8 +326,8 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
@@ -333,41 +343,47 @@ describe('missing arguments', function () {
         undefined
       ]
     };
-    result.body['isDirty'] = 1;
-    result.body[0].body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
+    // result.body[0].body['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
   it("[x,,z]", function () {
     const tst = parse('[x,,z]');
-    const result = [
-      {type: "x", body: []},
-      undefined,
-      {type: "z", body: []}
-    ];
-    result['isDirty'] = 1;
+    const result = {
+      type: "[]", body: [
+        {type: "x", body: []},
+        undefined,
+        {type: "z", body: []}
+      ]
+    };
+    // result['isDirty'] = 1;
     expectToEqualWithDiff(tst, result);
   });
 
   it("[,y,z]", function () {
     const tst = parse('[,y,z]');
-    const result = [undefined,
-      {type: "y", body: []},
-      {type: "z", body: []}
-    ];
-    result['isDirty'] = 1;
+    const result = {
+      type: "[]", body: [undefined,
+        {type: "y", body: []},
+        {type: "z", body: []}
+      ]
+    };
+    // result['isDirty'] = 1;
 
     expectToEqualWithDiff(tst, result);
   });
 
   it("[x,y,]", function () {
     const tst = parse('[x,y,]');
-    const result = [
-      {type: "x", body: []},
-      {type: "y", body: []},
-      undefined
-    ];
-    result['isDirty'] = 1;
+    const result = {
+      type: "[]", body: [
+        {type: "x", body: []},
+        {type: "y", body: []},
+        undefined
+      ]
+    };
+    // result['isDirty'] = 1;
 
     expectToEqualWithDiff(tst, result);
   });
@@ -382,7 +398,7 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
 
     expectToEqualWithDiff(tst, result);
   });
@@ -397,7 +413,7 @@ describe('missing arguments', function () {
         {type: "z", body: []}
       ]
     };
-    result.body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
 
     expectToEqualWithDiff(tst, result);
   });
@@ -412,7 +428,7 @@ describe('missing arguments', function () {
         undefined,
       ]
     };
-    result.body['isDirty'] = 1;
+    // result.body['isDirty'] = 1;
 
     expectToEqualWithDiff(tst, result);
   });

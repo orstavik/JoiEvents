@@ -1,5 +1,4 @@
 import {MusicModes} from "./MusicModes.js";
-import {isPrimitive} from "./Parser.js";
 
 function getNoteInteger(node) {
   if (node.body.length === 2) {
@@ -220,10 +219,6 @@ MusicMath["expFun"] = function (node, ctx) {
   const [key, ...body] = node.body;
   if (key.type !== "Note")
     return node;
-  for (let node of body) {
-    if (!isPrimitive(node))
-      body.isDirty = 1;
-  }
   return {type: "clef", key, body};
 };
 

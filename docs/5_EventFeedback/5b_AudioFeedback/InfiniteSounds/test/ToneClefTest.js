@@ -12,7 +12,6 @@ describe('absolute clef, absolute notes', function () {
         {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
       ]
     };
-    res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("C4(G4)");
     const res2 = {
@@ -25,7 +24,6 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    res2.body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
 
@@ -39,7 +37,6 @@ describe('absolute clef, absolute notes', function () {
         {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
       ]
     };
-    res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(g4C4);
     const res2 = {
@@ -52,7 +49,6 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    res2.body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
 
@@ -72,8 +68,6 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    res.body.isDirty = 1;
-    res.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(str);
     const res2 = {
@@ -86,7 +80,6 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    res2.body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
 
@@ -106,8 +99,6 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    res.body.isDirty = 1;
-    res.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(str);
     const res2 = {
@@ -117,7 +108,6 @@ describe('absolute clef, absolute notes', function () {
         {type: "Note", body: [55, undefined, 0, 0, 0, 1]},
       ]
     };
-    res2.body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
   it("Clef with relative note: C4(~2(G4))", async function () {
@@ -142,8 +132,6 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    res.body.isDirty = 1;
-    res.body[1].body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(str);
     const res2 = {
@@ -159,8 +147,6 @@ describe('absolute clef, absolute notes', function () {
         },
       ]
     };
-    res2.body.isDirty = 1;
-    res.body[0].body.isDirty = 1;
     expectToEqualWithDiff(tst2, res2);
   });
 //   it("Overriding the clef from above: D3(G4(C4))", async function () {

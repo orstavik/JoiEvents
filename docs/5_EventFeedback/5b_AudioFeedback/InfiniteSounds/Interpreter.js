@@ -32,19 +32,14 @@ const dynamicTable = mergeTables(Random, MathOps, MusicMath, MusicDynamic, Inter
 
 async function interpretArray(node, table, ctx) {
   const clone = new Array(node.length);
-  for (let i = 0; i < node.length; i++) {
+  for (let i = 0; i < node.length; i++)
     clone[i] = await interpretNode(node[i], table, [i].concat(ctx));
-    if (!isPrimitive(clone[i]))
-      clone.isDirty = 1;
-  }
   return clone;
 }
 
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))
     return node;
-  if (node instanceof Array)
-    return await interpretArray(node, table, [node].concat(ctx));
   //topDown processing is possible here. Not supported due to complexity.
   const clone = Object.assign({}, node);
   if (clone.body)

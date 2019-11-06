@@ -2,29 +2,38 @@ import {isPrimitive} from "./Parser.js";
 
 export const ListOps = Object.create(null);
 
-function reduceList(left, right, isLast) {
-  if (left.todo) {
-    left.push(right);
-    if (!isPrimitive(right))
-      left.isDirty = 1;
-    if (isLast)
-      delete left.todo;
-    return left;
+function reduceList(left, right, isLast, type) {
+  let body;
+  if (left && left.type === type + "[]") {
+    body = left.body;
+    body.push(right);
+  } else {
+    body = [left, right];
   }
-  const res = [left, right];
-  if (!isLast)
-    res.todo = 1;
-  if (!isPrimitive(left) || !isPrimitive(right))
-    res.isDirty = 1;
-  return res;
+  if (isLast) {
+    for (let item of body) {
+      if (!isPrimitive(item))
+        return {type: "[]", body};
+    }
+    return body;
+  }
+  return {type: type + "[]", body};
 }
 
 ListOps[":"] = function ({body: [left, right]}, ctx) {
-  return reduceList(left, right, !(ctx.length>1 && ctx[1].type === ":"));
+  return reduceList(left, right, !(ctx.length > 1 && ctx[1].type === ":"), ":");
 };
 
 ListOps["|"] = function ({body: [left, right]}, ctx) {
-  return reduceList(left, right, !(ctx.length>1 && ctx[1].type === "|"));
+  return reduceList(left, right, !(ctx.length > 1 && ctx[1].type === "|"), "|");
+};
+
+ListOps["[]"] = function (node, ctx) {
+  for (let item of node.body) {
+    if (!isPrimitive(item))
+      return node;
+  }
+  return node.body;
 };
 
 function connectMtoN(a, b) {

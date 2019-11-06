@@ -94,7 +94,6 @@ describe('absNoteNum: multiplication *', function () {
         2
       ]
     };
-    result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
     const result2 = {type: "Note", body: [49, "lyd", 12, 0, 0, 0]};
@@ -110,7 +109,6 @@ describe('absNoteNum: multiplication *', function () {
         -2
       ]
     };
-    result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     let res2;
     try {
@@ -134,7 +132,6 @@ describe('absNoteNum: division /', function () {
         4
       ]
     };
-    result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     const tst2 = await staticInterpret(str);
     const result2 = {type: "Note", body: [49, "lyd", -24, 0, 0, 0]};
@@ -150,7 +147,6 @@ describe('absNoteNum: division /', function () {
         -4
       ]
     };
-    result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     let res2;
     try {
@@ -174,7 +170,6 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
         4
       ]
     };
-    result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     let res2;
     try {
@@ -196,7 +191,6 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
         4
       ]
     };
-    result.body.isDirty = 1;
     expectToEqualWithDiff(tst, result);
     let res2;
     try {

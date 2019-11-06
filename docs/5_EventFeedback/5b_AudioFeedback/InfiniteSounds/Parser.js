@@ -1,5 +1,3 @@
-import {MusicModes} from "./MusicModes.js";
-
 const absScale12 = {
   "c": 0,
   "c#": 1,
@@ -131,8 +129,6 @@ function sortOperators(nodeOpNode) {
       }
     }
     let node = {type: nodeOpNode[I], body: [nodeOpNode[I - 1], nodeOpNode[I + 1]]};
-    if (!isPrimitive(node.body[0]) || !isPrimitive(node.body[1]))
-      node.body.isDirty = 1;
     nodeOpNode.splice(I - 1, 3, node);
   }
   return nodeOpNode[0];
@@ -154,8 +150,7 @@ function parseExpression(tokens) {
   if (!block)
     return exp;
   const body = [exp, ...block];
-  if (block.isDirty || !isPrimitive(exp))
-    body.isDirty = 1;
+  delete body.isDirty;
   return {type: "expFun", body: body};
 }
 
@@ -175,10 +170,20 @@ function parseExpression(tokens) {
 //we can simply remove the inner clef. It is no longer needed. but, that would make the aom very different from the template.
 //no. its better to leave it in there as an empty clef.
 
+function parseArray(tokens) {
+  const body = parseGroupArray(tokens, "[", "]");
+  if (body && body.isDirty) {
+    delete body.isDirty;
+    return {type: "[]", body};
+  } else {
+    return body;
+  }
+}
+
 function parseNode(tokens) {
   if (tokens[0])
     return parseBlock(tokens) ||
-      parseGroupArray(tokens, "[", "]") ||
+      parseArray(tokens) ||
       parseAbsoluteNotes(tokens) ||
       parseFunction(tokens) ||
       parseQuotes(tokens) ||
@@ -212,6 +217,7 @@ function parseFunction(tokens) {
   if (tokens[0][2] || tokens[0][5] || tokens[0][6] || tokens[0][7]) {
     const type = nextToken(tokens)[0].toLowerCase();    //all function names are toLowerCase().
     const body = parseGroupArray(tokens, "(", ")") || [];
+    delete body.isDirty;
     return {type, body};
   }
 }
@@ -236,7 +242,7 @@ export function isPrimitive(node) {
   return node === undefined ||
     typeof node === "number" ||
     typeof node === "string" ||
-    (node instanceof Array && !node.isDirty);
+    node instanceof Array;
 }
 
 export function parse(str) {

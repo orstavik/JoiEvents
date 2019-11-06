@@ -11,7 +11,7 @@ describe('expressionFunctions basic', function () {
         {type: "+", body: [3, 4]},
       ]
     };
-    res.body.isDirty = 1;
+    // res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
   });
   it("expressionFunction: 1+2(3)", async function () {
@@ -23,7 +23,7 @@ describe('expressionFunctions basic', function () {
         3
       ]
     };
-    res.body.isDirty = 1;
+    // res.body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
   });
   it("expressionFunction: 1+2-3(4)", async function () {
@@ -40,8 +40,8 @@ describe('expressionFunctions basic', function () {
         4
       ]
     };
-    res.body.isDirty = 1;
-    res.body[0].body.isDirty = 1;
+    // res.body.isDirty = 1;
+    // res.body[0].body.isDirty = 1;
     expectToEqualWithDiff(tst, res);
   });
 });

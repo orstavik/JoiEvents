@@ -49,19 +49,14 @@ describe('primitive arrays', function () {
   it("[1,2,, 'hello']", function () {
     const tst = parse('[1,2,, \'hello\']');
     expectToEqualWithDiff(tst, [1, 2, undefined, "hello"]);
-    expectToEqualWithDiff(tst.isDirty, undefined);
   });
   it("[1,[2,], 'hello']", function () {
     const tst = parse('[1,[2,], \'hello\']');
     expectToEqualWithDiff(tst, [1, [2, undefined], "hello"]);
-    expectToEqualWithDiff(tst.isDirty, undefined);
-    expectToEqualWithDiff(tst[1].isDirty, undefined);
   });
   it("[1,[2+3,], 'hello']", async function () {
     const tst = await staticInterpret('[1,[2+3,], \'hello\']');
     expectToEqualWithDiff(tst, [1, [5, undefined], "hello"]);
-    expectToEqualWithDiff(tst.isDirty, undefined);
-    expectToEqualWithDiff(tst[1].isDirty, undefined);
   });
 });
 
@@ -119,17 +114,19 @@ describe("Comma and operators", function () {
 
   it("[1+1,2+2,3+3] - syntax interpreted", function () {
     const tst2 = parse('[1+1,2+2,3+3]');
-    const result2 = [{
-      type: "+",
-      body: [1, 1]
-    }, {
-      type: "+",
-      body: [2, 2]
-    }, {
-      type: "+",
-      body: [3, 3]
-    }];
-    result2['isDirty'] = 1;
+    const result2 = {
+      type: "[]",
+      body: [{
+        type: "+",
+        body: [1, 1]
+      }, {
+        type: "+",
+        body: [2, 2]
+      }, {
+        type: "+",
+        body: [3, 3]
+      }]
+    };
     expectToEqualWithDiff(tst2, result2);
   });
 });
