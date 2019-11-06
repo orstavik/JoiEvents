@@ -47,7 +47,7 @@ function normalizeToRelative(absNote, pKey, pMode) {
 function getClef(ctx) {
   for (let i = 0; i < ctx.length; i++) {
     let scope = ctx[i];
-    if (scope.type === "expFun" && scope.body[0].type === "Note" && (i > 1 || ctx[i - 1] !== 0))
+    if (scope.type === "expFun" && scope.body[0] && scope.body[0].type === "Note")
       return scope.body[0]
   }
   return undefined;
@@ -202,10 +202,10 @@ function getAbsoluteToneKeyMode(clef) {
 }
 
 MusicMath["Note"] = function (node, ctx) {
-  if (ctx.length < 2 || node.body[5])     //if the note is a top note, or if it is closed, then normalize to absolute
+  if (!ctx.length || node.body[5])     //if the note is a top note, or if it is closed, then normalize to absolute
     return normalizeToAbsolute(node);
-  if (ctx[1].type ==="!")                 //if it is a child of "!" close opertor, then normalize to absolute
-    return normalizeToAbsolute(node);
+  if (ctx[0].type ==="!")                 //if it is a child of "!" close opertor, then normalize to absolute
+    return normalizeToAbsolute(node);     //todo, make the ! have very low priority..
   const clef = getClef(ctx);
   if (!clef)
     return normalizeToAbsolute(node);

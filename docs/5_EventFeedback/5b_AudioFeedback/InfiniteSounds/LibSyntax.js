@@ -21,11 +21,11 @@ function reduceList(left, right, isLast, type) {
 }
 
 ListOps[":"] = function ({body: [left, right]}, ctx) {
-  return reduceList(left, right, !(ctx.length > 1 && ctx[1].type === ":"), ":");
+  return reduceList(left, right, !ctx.length || ctx[0].type !== ":", ":");
 };
 
 ListOps["|"] = function ({body: [left, right]}, ctx) {
-  return reduceList(left, right, !(ctx.length > 1 && ctx[1].type === "|"), "|");
+  return reduceList(left, right, !ctx.length || ctx[0].type !== "|", "|");
 };
 
 ListOps["[]"] = function (node, ctx) {
