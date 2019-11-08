@@ -40,28 +40,28 @@ export class MusicModes {
     return modeNumberToName[num];
   }
 
+  static isModeName(name) {
+    return modeNameToNumber.hasOwnProperty(name);
+  }
+
   //defaults to maj ionian
   static getNumber(name) {
     return name === undefined ? 5 : modeNameToNumber[name];
   }
 
-  static extractSevenNotes(twelveStep, modeVector) {
+  static toSeven(mode, twelveStep) {           //todo rename to toSeven(mode, twelveSteps)
+    if (twelveStep === 0)
+      return {seven: 0, twelve: 0};
+    mode = MusicModes.getVector(mode);
     const scale = Math.floor(twelveStep / 12);
     twelveStep = ((twelveStep % 12) + 12) % 12;
-    let seven = modeVector.indexOf(twelveStep);
+    let seven = mode.indexOf(twelveStep);
     if (seven >= 0)
       return {seven: seven + scale * 7, twelve: 0};
-    seven = modeVector.indexOf(twelveStep - 1);
+    seven = mode.indexOf(twelveStep - 1);
     if (seven >= 0)
       return {seven: seven + scale * 7, twelve: 1};
     throw new Error("twelveStep out of bounds");
-  }
-
-  static splitSevenTwelveScale(distInTwelve, mode) {           //todo rename to toSeven(mode, twelveSteps)
-    if (distInTwelve === 0)
-      return {seven: 0, twelve: 0};
-    const modeVector = MusicModes.getVector(mode);
-    return MusicModes.extractSevenNotes(distInTwelve, modeVector);
   }
 
   //this function turns converts the distance between two modes to the nearest interval,
@@ -78,22 +78,6 @@ export class MusicModes {
     return MusicModes.getNumber(childMode) - MusicModes.getNumber(clefMode);
   }
 
-  static isModeName(name) {
-    return modeNameToNumber.hasOwnProperty(name);
-  }
-
-  // static mergeModes(a, b) {
-  //   if (typeof b === "string")
-  //     return b;
-  //   if (a === undefined)
-  //     return b;
-  //   if (b === undefined)
-  //     return a;
-  //   if (typeof a === "number" && typeof b === "number")
-  //     return a + b;
-  //   throw new Error("OMG, WTF?");
-  // }
-  //
   //todo test this one
   static toTwelve(modeName, sevenSteps) {
     const octaves = Math.floor(sevenSteps / 7);
