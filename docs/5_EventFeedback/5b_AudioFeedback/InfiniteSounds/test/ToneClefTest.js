@@ -8,8 +8,8 @@ describe('absolute clef, absolute notes', function () {
     const res = {
       type: "expFun",
       body: [
-        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
-        {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [48, undefined]},
+        {type: "Note", body: [55, undefined]},
       ]
     };
     expectToEqualWithDiff(tst, res);
@@ -35,8 +35,8 @@ describe('absolute clef, absolute notes', function () {
     const res = {
       type: "expFun",
       body: [
-        {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
-        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [55, undefined]},
+        {type: "Note", body: [48, undefined]},
       ]
     };
     expectToEqualWithDiff(tst, res);
@@ -62,11 +62,11 @@ describe('absolute clef, absolute notes', function () {
     const res = {
       type: "expFun",
       body: [
-        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [48, undefined]},
         {
           type: "^^",
           body: [
-            {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+            {type: "Note", body: [55, undefined]},
             1
           ]
         }
@@ -95,12 +95,12 @@ describe('absolute clef, absolute notes', function () {
     const res = {
       type: "expFun",
       body: [
-        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [48, undefined]},
         {
           type: "!",
           body: [
             undefined,
-            {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+            {type: "Note", body: [55, undefined]},
           ]
         }
       ]
@@ -126,7 +126,7 @@ describe('absolute clef, absolute notes', function () {
     const res = {
       type: "expFun",
       body: [
-        {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
+        {type: "Note", body: [48, undefined]},
         {
           type: "expFun",
           body: [
@@ -137,7 +137,7 @@ describe('absolute clef, absolute notes', function () {
                 2
               ]
             },
-            {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
+            {type: "Note", body: [55, undefined]},
           ]
         }
       ]

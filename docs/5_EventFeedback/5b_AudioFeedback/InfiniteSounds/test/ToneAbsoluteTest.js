@@ -4,22 +4,22 @@ import {staticInterpret} from "../Interpreter.js";
 describe('absolute notes', function () {
   it("C#4", function () {
     const tst = parse("C#4");
-    const result = {type: "Note", body: [49, undefined, 0, 0, 0, 0]};
+    const result = {type: "Note", body: [49, undefined]};
     expectToEqualWithDiff(tst, result);
   });
   it("A5", function () {
     const tst = parse("A5");
-    const result = {type: "Note", body: [69, undefined, 0, 0, 0, 0]};
+    const result = {type: "Note", body: [69, undefined]};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5", function () {
     const tst = parse("Bb5");
-    const result = {type: "Note", body: [70, undefined, 0, 0, 0, 0]};
+    const result = {type: "Note", body: [70, undefined]};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10", function () {
     const tst = parse("D#10");
-    const result = {type: "Note", body: [123, undefined, 0, 0, 0, 0]};
+    const result = {type: "Note", body: [123, undefined]};
     expectToEqualWithDiff(tst, result);
   });
   // it("D#-2", function () {//todo this should throw an error. Absolute tones cannot have negative octave
@@ -32,22 +32,22 @@ describe('absolute notes', function () {
 describe('absolute notes with modes', function () {
   it("C#4lyd", function () {
     const tst = parse("C#4lyd");
-    const result = {type: "Note", body: [49, "lyd", 0, 0, 0, 0]};
+    const result = {type: "Note", body: [49, "lyd"]};
     expectToEqualWithDiff(tst, result);
   });
   it("A5loc", function () {
     const tst = parse("A5loc");
-    const result = {type: "Note", body: [69, "loc", 0, 0, 0, 0]};
+    const result = {type: "Note", body: [69, "loc"]};
     expectToEqualWithDiff(tst, result);
   });
   it("Bb5dor", function () {
     const tst = parse("Bb5dor");
-    const result = {type: "Note", body: [70, "dor", 0, 0, 0, 0]};
+    const result = {type: "Note", body: [70, "dor"]};
     expectToEqualWithDiff(tst, result);
   });
   it("D#10mix", function () {
     const tst = parse("D#10mix");
-    const result = {type: "Note", body: [123, "mix", 0, 0, 0, 0]};
+    const result = {type: "Note", body: [123, "mix"]};
     expectToEqualWithDiff(tst, result);
   });
   // it("!g0major", function () {
@@ -90,7 +90,7 @@ describe('absNoteNum: multiplication *', function () {
     const result = {
       type: "*",
       body: [
-        {type: "Note", body: [49, "lyd", 0, 0, 0, 0]},
+        {type: "Note", body: [49, "lyd"]},
         2
       ]
     };
@@ -105,7 +105,7 @@ describe('absNoteNum: multiplication *', function () {
     const result = {
       type: "*",
       body: [
-        {type: "Note", body: [49, "lyd", 0, 0, 0, 0]},
+        {type: "Note", body: [49, "lyd"]},
         -2
       ]
     };
@@ -128,7 +128,7 @@ describe('absNoteNum: division /', function () {
     const result = {
       type: "/",
       body: [
-        {type: "Note", body: [49, "lyd", 0, 0, 0, 0]},
+        {type: "Note", body: [49, "lyd"]},
         4
       ]
     };
@@ -143,7 +143,7 @@ describe('absNoteNum: division /', function () {
     const result = {
       type: "/",
       body: [
-        {type: "Note", body: [49, "lyd", 0, 0, 0, 0]},
+        {type: "Note", body: [49, "lyd"]},
         -4
       ]
     };
@@ -166,7 +166,7 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
     const result = {
       type: "+",
       body: [
-        {type: "Note", body: [49, "lyd", 0, 0, 0, 0]},
+        {type: "Note", body: [49, "lyd"]},
         4
       ]
     };
@@ -187,7 +187,7 @@ describe('absNoteNum: + and - throws SyntaxError', function () {
     const result = {
       type: "-",
       body: [
-        {type: "Note", body: [49, "lyd", 0, 0, 0, 0]},
+        {type: "Note", body: [49, "lyd"]},
         4
       ]
     };

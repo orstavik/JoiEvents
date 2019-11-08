@@ -9,8 +9,8 @@ function getNoteInteger(node) {
   return {};
 }
 
-function normalizeToAbs(key, relNote) {
-  let [absNum, absMode] = key.body;
+function normalizeToAbs(absNote, relNote) {
+  let [absNum, absMode] = absNote.body;
   let [relNum12, relMode, relNum7] = relNote.body;
   absNum += relNum12;
   if (relNum7)
@@ -174,7 +174,7 @@ MusicMath["%"] = function (node, ctx) {
 };
 
 //! root key operator
-//When used as a prefix on a Note or relNote, the ! connects the note to the root key.
+//When used as a prefix on a Note or relNote, the ! closes the note.
 //A closed note is a note that will not be transformed by a parent clef, neither key nor mode.
 
 MusicMath["!"] = function (node, ctx) {
