@@ -50,7 +50,7 @@ export async function interpretNode(node, table, ctx) {
 //I choose the document, cannot foresee all complexity.
 export async function staticInterpret(str) {
   let node = parse(str);
-  node = {type: "DOCUMENT", body: [node], key: {type: "AbsNote", body: [48, "maj"]}};
+  node = {type: "DOCUMENT", body: [node], key: {type: "absNote", body: [48, "maj"]}};
   node = await interpretNode(node, staticTable, []);
   //variables: declare and replace
   //cache temporarily

@@ -15,16 +15,18 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret("C4(G4)");
     const res2 = {
-      type: "clef",
-      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
-      body: [
-        {
-          type: "Note",
-          body: [0, undefined, 0, 4, 0, 0],
-        }
-      ]
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "clef",
+        key: {type: "relNote", body: [0, 0, 0]},
+        body: [{
+          type: "relNote",
+          body: [0, 0, 4],
+        }]
+      }]
     };
-    expectToEqualWithDiff(tst2.body[0], res2);
+    expectToEqualWithDiff(tst2, res2);
   });
 
   it("clef down: G4(C4)", async function () {
@@ -40,16 +42,18 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(g4C4);
     const res2 = {
-      type: "clef",
-      key: {type: "Note", body: [55, undefined, 0, 0, 0, 0]},
-      body: [
-        {
-          type: "Note",
-          body: [0, undefined, 0, -4, 0, 0],
-        }
-      ]
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "clef",
+        key: {type: "relNote", body: [0, 0, 4]},
+        body: [{
+          type: "relNote",
+          body: [0, 0, -4],
+        }]
+      }]
     };
-    expectToEqualWithDiff(tst2.body[0], res2);
+    expectToEqualWithDiff(tst2, res2);
   });
 
   it("clef with operations: C4(G4^^1)", async function () {
@@ -71,16 +75,18 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(str);
     const res2 = {
-      type: "clef",
-      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
-      body: [
-        {
-          type: "Note",
-          body: [0, undefined, 12, 4, 0, 0],
-        }
-      ]
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "clef",
+        key: {type: "relNote", body: [0, 0, 0]},
+        body: [{
+          type: "relNote",
+          body: [12, 0, 4],
+        }]
+      }]
     };
-    expectToEqualWithDiff(tst2.body[0], res2);
+    expectToEqualWithDiff(tst2, res2);
   });
 
   it("Freezing a note: C4(!G4)", async function () {
@@ -102,13 +108,17 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(str);
     const res2 = {
-      type: "clef",
-      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
-      body: [
-        {type: "Note", body: [55, undefined, 0, 0, 0, 1]},
-      ]
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "clef",
+        key: {type: "relNote", body: [0, 0, 0]},
+        body: [
+          {type: "absNote", body: [55, "maj"]},
+        ]
+      }]
     };
-    expectToEqualWithDiff(tst2.body[0], res2);
+    expectToEqualWithDiff(tst2, res2);
   });
   it("Clef with relative note: C4(~2(G4))", async function () {
     const str = "C4(~2(G4))";
@@ -135,19 +145,23 @@ describe('absolute clef, absolute notes', function () {
     expectToEqualWithDiff(tst, res);
     const tst2 = await staticInterpret(str);
     const res2 = {
-      type: "clef",
-      key: {type: "Note", body: [48, undefined, 0, 0, 0, 0]},
-      body: [
-        {
-          type: "clef",
-          key: {type: "Note", body: [0, undefined, 0, 2, 0, 0]},
-          body: [
-            {type: "Note", body: [0, undefined, 0, 2, 0, 0]},
-          ]
-        },
-      ]
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "clef",
+        key: {type: "relNote", body: [0, 0, 0]},
+        body: [
+          {
+            type: "clef",
+            key: {type: "relNote", body: [0, 0, 2]},
+            body: [
+              {type: "relNote", body: [0, 0, 2]},
+            ]
+          }
+        ]
+      }]
     };
-    expectToEqualWithDiff(tst2.body[0], res2);
+    expectToEqualWithDiff(tst2, res2);
   });
 //   it("Overriding the clef from above: D3(G4(C4))", async function () {
 //     const tst = parse("D3(G4(C4))");

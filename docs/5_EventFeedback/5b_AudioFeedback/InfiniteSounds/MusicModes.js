@@ -57,7 +57,7 @@ export class MusicModes {
     throw new Error("twelveStep out of bounds");
   }
 
-  static splitSevenTwelveScale(distInTwelve, mode) {
+  static splitSevenTwelveScale(distInTwelve, mode) {           //todo rename to toSeven(mode, twelveSteps)
     if (distInTwelve === 0)
       return {seven: 0, twelve: 0};
     const modeVector = MusicModes.getVector(mode);
@@ -82,15 +82,36 @@ export class MusicModes {
     return modeNameToNumber.hasOwnProperty(name);
   }
 
-  static mergeModes(a, b) {
-    if (typeof b === "string")
-      return b;
-    if (a === undefined)
-      return b;
-    if (b === undefined)
-      return a;
-    if (typeof a === "number" && typeof b === "number")
-      return a+b;
-    throw new Error("OMG, WTF?");
+  // static mergeModes(a, b) {
+  //   if (typeof b === "string")
+  //     return b;
+  //   if (a === undefined)
+  //     return b;
+  //   if (b === undefined)
+  //     return a;
+  //   if (typeof a === "number" && typeof b === "number")
+  //     return a + b;
+  //   throw new Error("OMG, WTF?");
+  // }
+  //
+  //todo test this one
+  static toTwelve(modeName, sevenSteps) {
+    const octaves = Math.floor(sevenSteps / 7);
+    let sevenToTwelve;
+    if (sevenSteps >= 0) {
+      sevenToTwelve = MusicModes.getVector(modeName)[sevenSteps % 7];
+    } else {
+      //todo negatives are untested
+      sevenToTwelve = 12 - MusicModes.getVector(modeName)[sevenSteps % 7];
+    }
+    return sevenToTwelve + octaves * 12;
+  }
+
+  static switchMode(modeName, number){
+    const modeNum = MusicModes.getNumber(modeName);
+    number += modeNum;
+    const hashes = Math.floor(number / 7);
+    const newName = MusicModes.getName(number % 7);
+    return [newName, hashes];
   }
 }
