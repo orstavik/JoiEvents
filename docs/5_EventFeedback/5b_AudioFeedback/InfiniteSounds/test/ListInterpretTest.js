@@ -5,28 +5,28 @@ describe('[ outside, : inside', function () {
   it("[1:2,3]", async function () {
     const tst = await staticInterpret('[1:2,3]');
     const result = [[1, 2], 3];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("[1:2:3,4]", async function () {
     const tst = await staticInterpret('[1:2:3,4]');
     const result = [[1, 2, 3], 4];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("[1,2:3,4]", async function () {
     const tst = await staticInterpret('[1,2:3,4]');
     const result = [1, [2, 3], 4];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("[1:2,3:4]", async function () {
     const tst = await staticInterpret('[1:2,3:4]');
     const result = [[1, 2], [3, 4]];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("[1:2:,4]", async function () {
     // try {
     const tst = await staticInterpret('[1:2:,4]');
     const result = [[1, 2, undefined], 4];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
     // } catch (e) {
     //   expect(e.message).to.deep.equal("Illegal end of colon implied list: ','.");
     // }
@@ -38,27 +38,27 @@ describe(': outside, [ inside', function () {
   it("1:[2,3]", async function () {
     const tst = await staticInterpret('1:[2,3]');
     const result = [1, [2, 3]];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("[1,2]:3", async function () {
     const tst = await staticInterpret('[1,2]:3');
     const result = [[1, 2], 3];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("1:2:[3,4]", async function () {
     const tst = await staticInterpret('1:2:[3,4]');
     const result = [1, 2, [3, 4]];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("[1,2]:3:4", async function () {
     const tst = await staticInterpret('[1,2]:3:4');
     const result = [[1, 2], 3, 4];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("1:[2,3]:4", async function () {
     const tst = await staticInterpret('1:[2,3]:4');
     const result = [1, [2, 3], 4];
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 });
 
@@ -84,7 +84,7 @@ describe('> combined with array [...] and group (...)', function () {
     // result.body.isDirty = 1;
     // result.body[0].body.isDirty = 1;
     // result.body[1].isDirty = 1;
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
   it("x > (y > z)", async function () {
     const tst = await staticInterpret('x > (y > z)');
@@ -100,7 +100,7 @@ describe('> combined with array [...] and group (...)', function () {
     };
     // res.body.isDirty = 1;
     // res.body[1].body.isDirty = 1;
-    expectToEqualWithDiff(tst, res);
+    expectToEqualWithDiff(tst.body[0], res);
   });
 });
 describe('| and > combined', function () {
@@ -114,11 +114,11 @@ describe('| and > combined', function () {
       }]
     };
     // result.isDirty = 1;
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 
   it("1 | (2 > 3)", async function () {
-    const tst2 = await staticInterpret('1 | (2 > 3)');
+    const tst = await staticInterpret('1 | (2 > 3)');
     const result = {
       type: "[]", body: [1, {
         type: ">",
@@ -126,7 +126,7 @@ describe('| and > combined', function () {
       }]
     };
     // result.isDirty = 1;
-    expectToEqualWithDiff(tst2, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 
   it("1 > 2 | 3", async function () {
@@ -138,11 +138,11 @@ describe('| and > combined', function () {
       }, 3]
     };
     // result.isDirty = 1;
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 
   it("(1 > 2) | 3", async function () {
-    const tst2 = await staticInterpret('(1 > 2) | 3');
+    const tst = await staticInterpret('(1 > 2) | 3');
     const result = {
       type: "[]", body: [{
         type: ">",
@@ -150,7 +150,7 @@ describe('| and > combined', function () {
       }, 3]
     };
     // res.isDirty = 1;
-    expectToEqualWithDiff(tst2, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 
 });
@@ -168,7 +168,7 @@ describe('ALL combined', function () {
         }
       ]
     };
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 
   it("1 | 2 > [3, 4:5]", async function () {
@@ -186,7 +186,7 @@ describe('ALL combined', function () {
         }
       ]
     };
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 
   it("1 | 2 > [3, 4:5, ] > 6 | 7", async function () {
@@ -203,7 +203,7 @@ describe('ALL combined', function () {
         ]
       }, 7]
     };
-    expectToEqualWithDiff(tst, result);
+    expectToEqualWithDiff(tst.body[0], result);
   });
 });
 

@@ -56,6 +56,6 @@ describe('expressionFunction: static interpret', function () {
         7,
       ]
     };
-    expectToEqualWithDiff(tst2, res2);
+    expectToEqualWithDiff(tst2.body[0], res2);
   });
 });

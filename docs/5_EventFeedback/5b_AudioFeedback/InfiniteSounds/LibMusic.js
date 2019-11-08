@@ -197,22 +197,48 @@ MusicMath["!"] = function (node, ctx) {
   return node;
 };
 
-function getAbsoluteToneKeyMode(clef) {
-  throw new Error("NoteYet implemented");
+function mergeRelativeNodes(key, note) {
+  const rel12 = key[2] + note[2];
+  const rel7 = key[3] + note[3];
+  const modeModi = MusicModes.mergeModes(key[4], note[4]);
+  return [0, undefined, rel12, rel7, modeModi];
+}
+
+function getAbsoluteToneKeyMode(ctx) {
+  let res = [0, undefined, 0, 0, undefined];
+  for (let scope of ctx) {
+    if (scope.type !== "expFun" || scope.body[0].type !== "Note") //not a clef
+      continue;
+    const key = scope.body[0];
+    if (key.body[0]) {   //absNote
+      const absNoteWithRelativeTwist = {
+        type: "Note",
+        body: [key.body[0], key.body[1], res[2], res[3], res[4]]
+      };
+      res = normalizeToAbsolute(absNoteWithRelativeTwist).body;
+    } else {
+      res = mergeRelativeNodes(key.body, res);
+    }
+    // } else if ((scope.key.computedAbsNote){ //relNote with cached values
+  }
+  res[0] = res[0] || 48;   //C4 maj is the default note
+  res[1] = res[1] || "maj";
+  return normalizeToAbsolute({type: "Note", body: res});
 }
 
 MusicMath["Note"] = function (node, ctx) {
   if (!ctx.length || node.body[5])     //if the note is a top note, or if it is closed, then normalize to absolute
     return normalizeToAbsolute(node);
-  if (ctx[0].type ==="!")                 //if it is a child of "!" close opertor, then normalize to absolute
+  if (ctx[0].type === "!")                 //if it is a child of "!" close opertor, then normalize to absolute
     return normalizeToAbsolute(node);     //todo, make the ! have very low priority..
   const clef = getClef(ctx);
   if (!clef)
     return normalizeToAbsolute(node);
   let [pKey, pMode] = clef.body;
-  if (!pKey /*|| !pMode*/)
-    [pKey, pMode] = getAbsoluteToneKeyMode(clef);
-  return normalizeToRelative(node, pKey, pMode);
+  if (pKey /*|| !pMode*/)
+    return normalizeToRelative(node, pKey, pMode);
+  let {body} = getAbsoluteToneKeyMode(ctx);
+  return normalizeToRelative(node, body[0], body[0]);
 };
 
 MusicMath["expFun"] = function (node, ctx) {

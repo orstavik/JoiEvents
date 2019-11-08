@@ -28,7 +28,7 @@ describe('basic arrays', function () {
       ]
     };
     // result2['isDirty'] = 1;
-    expectToEqualWithDiff(tst2, result2);
+    expectToEqualWithDiff(tst2.body[0], result2);
   });
 
   it("[x,y,z]", function () {
@@ -78,7 +78,7 @@ describe('basic arrays', function () {
     };
     // result2['isDirty'] = 1;
     // result2[0]['isDirty'] = 1;
-    expectToEqualWithDiff(tst2, result2);
+    expectToEqualWithDiff(tst2.body[0], result2);
   });
 
   it("[]", function () {

@@ -24,7 +24,7 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    expectToEqualWithDiff(tst2, res2);
+    expectToEqualWithDiff(tst2.body[0], res2);
   });
 
   it("clef down: G4(C4)", async function () {
@@ -49,7 +49,7 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    expectToEqualWithDiff(tst2, res2);
+    expectToEqualWithDiff(tst2.body[0], res2);
   });
 
   it("clef with operations: C4(G4^^1)", async function () {
@@ -80,7 +80,7 @@ describe('absolute clef, absolute notes', function () {
         }
       ]
     };
-    expectToEqualWithDiff(tst2, res2);
+    expectToEqualWithDiff(tst2.body[0], res2);
   });
 
   it("Freezing a note: C4(!G4)", async function () {
@@ -108,7 +108,7 @@ describe('absolute clef, absolute notes', function () {
         {type: "Note", body: [55, undefined, 0, 0, 0, 1]},
       ]
     };
-    expectToEqualWithDiff(tst2, res2);
+    expectToEqualWithDiff(tst2.body[0], res2);
   });
   it("Clef with relative note: C4(~2(G4))", async function () {
     const str = "C4(~2(G4))";
@@ -147,7 +147,7 @@ describe('absolute clef, absolute notes', function () {
         },
       ]
     };
-    expectToEqualWithDiff(tst2, res2);
+    expectToEqualWithDiff(tst2.body[0], res2);
   });
 //   it("Overriding the clef from above: D3(G4(C4))", async function () {
 //     const tst = parse("D3(G4(C4))");

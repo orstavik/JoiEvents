@@ -1,7 +1,7 @@
-import {parse, isPrimitive} from "./Parser.js";
+import {isPrimitive, parse} from "./Parser.js";
 import {Random} from "./LibRandom.js";
 import {MathOps} from "./LibMath.js";
-import {ListOps, AudioPiping} from "./LibSyntax.js";
+import {AudioPiping, ListOps} from "./LibSyntax.js";
 import {InterpreterFunctions} from "./LibAudio.js";
 import {MusicDynamic} from "./LibMusicDynamic.js";
 import {MusicMath} from "./LibMusic.js";
@@ -43,8 +43,14 @@ export async function interpretNode(node, table, ctx) {
   return fun ? (await fun(clone, ctx)) : clone;
 }
 
+//the document is both an AbsClef and a bpm? It has all the properties of these?
+//or, do I add those units as default nodes below, like head and title in an html file?
+//If i add them like nodes, the tree will be a bit unrecognizable for the developer.
+//If I lump it into the Document, then the needs of this document might need to grow.
+//I choose the document, cannot foresee all complexity.
 export async function staticInterpret(str) {
   let node = parse(str);
+  node = {type: "DOCUMENT", body: [node], key: {type: "AbsNote", body: [48, "maj"]}};
   node = await interpretNode(node, staticTable, []);
   //variables: declare and replace
   //cache temporarily
@@ -53,6 +59,7 @@ export async function staticInterpret(str) {
 
 export async function interpret(str, ctx) {
   let node = await staticInterpret(str);
+  //todo here I should append the audioContext to the DOCUMENT instead of sending it in as a root ctx
   node = await interpretNode(node, dynamicTable, [ctx]);
   return node;
 }

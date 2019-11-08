@@ -81,4 +81,16 @@ export class MusicModes {
   static isModeName(name) {
     return modeNameToNumber.hasOwnProperty(name);
   }
+
+  static mergeModes(a, b) {
+    if (typeof b === "string")
+      return b;
+    if (a === undefined)
+      return b;
+    if (b === undefined)
+      return a;
+    if (typeof a === "number" && typeof b === "number")
+      return a+b;
+    throw new Error("OMG, WTF?");
+  }
 }

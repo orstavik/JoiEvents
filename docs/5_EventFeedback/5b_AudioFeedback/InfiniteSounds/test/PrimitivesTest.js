@@ -56,7 +56,7 @@ describe('primitive arrays', function () {
   });
   it("[1,[2+3,], 'hello']", async function () {
     const tst = await staticInterpret('[1,[2+3,], \'hello\']');
-    expectToEqualWithDiff(tst, [1, [5, undefined], "hello"]);
+    expectToEqualWithDiff(tst.body[0], [1, [5, undefined], "hello"]);
   });
 });
 
@@ -113,8 +113,8 @@ describe("expression test: 0+1", function () {
 describe("Comma and operators", function () {
 
   it("[1+1,2+2,3+3] - syntax interpreted", function () {
-    const tst2 = parse('[1+1,2+2,3+3]');
-    const result2 = {
+    const tst = parse('[1+1,2+2,3+3]');
+    const res = {
       type: "[]",
       body: [{
         type: "+",
@@ -127,7 +127,7 @@ describe("Comma and operators", function () {
         body: [3, 3]
       }]
     };
-    expectToEqualWithDiff(tst2, result2);
+    expectToEqualWithDiff(tst, res);
   });
 });
 
