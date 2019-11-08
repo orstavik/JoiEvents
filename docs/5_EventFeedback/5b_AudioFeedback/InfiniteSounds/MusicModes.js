@@ -75,6 +75,8 @@ export class MusicModes {
   }
 
   static absoluteModeDistance(clefMode, childMode) {
+    if (childMode === undefined)
+      return 0;
     return MusicModes.getNumber(childMode) - MusicModes.getNumber(clefMode);
   }
 

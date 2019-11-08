@@ -1,29 +1,130 @@
-function makeFrequencyGain(audioCtx, freq) {
-  const clefOrigin = audioCtx.rootClef;
+import {setAudioParameter} from "./LibAudio.js";
+import {MusicModes} from "./MusicModes.js";
+
+class AbsoluteClef {
+  constructor(absNote, children) {
+    this.key = absNote;
+    this.children = children;
+    this.update();
+  }
+
+  update() {
+    for (let child of this.children)
+      child.key.update(this.key.body[0], this.key.body[1]);
+  }
+}
+
+class RelativeClef {
+  constructor(relNote, children) {
+    this.relNote = relNote;
+    this.children = children;
+  }
+
+  update(key, mode) {
+    const [twelve, myMode, seven] = this.relNote.body;
+    key += twelve;
+    key += MusicModes.toTwelve(mode, seven);
+    mode = MusicModes.switchMode(mode, myMode);
+    for (let child of this.children)
+      child.key.update(key, mode);
+  }
+}
+
+class RelativeNote {
+  constructor(relNote, output) {
+    this.relNote = relNote;
+    this.output = output;
+  }
+
+  update(key, mode) {
+    const [twelve, myMode, seven] = this.relNote.body;
+    key += twelve;
+    key += MusicModes.toTwelve(mode, seven);
+    // mode = MusicModes.switchMode(mode, myMode);  todo don't need this for leaf notes.
+    setAudioParameter(this.output.gain, Notes[key]);
+  }
+}
+
+class AbsoluteNote {
+  constructor(absNote, output) {
+    this.absNote = absNote;
+    this.output = output;
+    this.update();
+  }
+
+  update() {
+    const [twelve, mode] = this.absNote.body;
+    setAudioParameter(this.output.gain, Notes[twelve]);
+  }
+}
+
+function getParentClef(ctx) {
+  for (let scope of ctx) {
+    if (scope.type === "DOCUMENT" || scope.type === "relClef" || scope.type === "absClef")
+      return scope;
+  }
+  throw Error("OMG!!!! due");
+}
+
+function makeFrequencyGain(ctx) {
+  const audioCtx = ctx[ctx.length - 1].webAudio;
+  const constant = audioCtx.createConstantSource();
+  constant.start();
   const toneGain = audioCtx.createGain();
-  toneGain.gain.value = freq;
-  clefOrigin.connect(toneGain);
+  constant.connect(toneGain);
   return toneGain;
 }
 
 //https://pages.mtu.edu/~suits/NoteFreqCalcs.html
-const a12th = Math.pow(2, 1/12);
+const a12th = Math.pow(2, 1 / 12);
 
 export const MusicDynamic = Object.create(null);
 
 MusicDynamic["absNote"] = function (node, ctx) {
-  const [tone, octave] = node.body;
-  const freq = Notes[tone + octave * 12];
-  const rootCtx = ctx[ctx.length - 1];
-  const toneGain = makeFrequencyGain(rootCtx, freq);
-  return {graph: node, input: toneGain, output: toneGain};
+  const toneGain = makeFrequencyGain(ctx);
+  const tone = node.body[0];
+  const freq = Notes[tone];
+  setAudioParameter(toneGain, freq);
+  return {graph: node, output: toneGain};
+};
+
+MusicDynamic["relNote"] = function (node, ctx) {
+  const res = {graph: node};
+  res.output = makeFrequencyGain(ctx);
+  res.key = new RelativeNote(node, res.output);
+  const clef = getParentClef(ctx);
+  (clef.children ||(clef.children = [])).push(res);
+  return res;
+};
+
+MusicDynamic["relClef"] = function (node, ctx) {
+  const res = {graph: node, type: "relClef"};
+  res.key = new RelativeClef(node.key, node.children);
+  delete node.children;
+  const clef = getParentClef(ctx);
+  (clef.children ||(clef.children = [])).push(res);    //the clef will call the update function on the note
+  return res;
+};
+
+MusicDynamic["absClef"] = function (node, ctx) {
+  const res = {graph: node, type: "absClef"};
+  res.key = new AbsoluteClef(node.key, node.children);
+  delete node.children;
+  return res;
+};
+
+MusicDynamic["DOCUMENT"] = function (node, ctx) {
+  const docClone = Object.assign({}, node);
+  docClone.key = new AbsoluteClef(node.key, node.children);
+  delete node.children;
+  return docClone;
 };
 
 MusicDynamic["~~"] = function (node, ctx) {
   const tone = node.body[0];
   const freq = Math.pow(a12th, tone);
   const rootCtx = ctx[ctx.length - 1];
-  const toneGain = makeFrequencyGain(rootCtx, freq);
+  const toneGain = makeFrequencyGain(rootCtx);
   return {graph: node, input: toneGain, output: toneGain};
 };
 

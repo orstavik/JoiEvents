@@ -15,7 +15,7 @@ function plotEnvelope(target, points) {
 //todo Make audioparam accept array of audio nodes??
 
 //todo "gain()" or "gain", does that equal "mute" or "gain(1)"?
-function setAudioParameter(target, param) {
+export function setAudioParameter(target, param) {
   if (param === undefined) {
     return;
   } else if (param.output) {

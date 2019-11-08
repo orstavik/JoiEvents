@@ -18,7 +18,7 @@ describe('absolute clef, absolute notes', function () {
       type: "DOCUMENT",
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
-        type: "clef",
+        type: "relClef",
         key: {type: "relNote", body: [0, 0, 0]},
         body: [{
           type: "relNote",
@@ -45,7 +45,7 @@ describe('absolute clef, absolute notes', function () {
       type: "DOCUMENT",
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
-        type: "clef",
+        type: "relClef",
         key: {type: "relNote", body: [0, 0, 4]},
         body: [{
           type: "relNote",
@@ -78,7 +78,7 @@ describe('absolute clef, absolute notes', function () {
       type: "DOCUMENT",
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
-        type: "clef",
+        type: "relClef",
         key: {type: "relNote", body: [0, 0, 0]},
         body: [{
           type: "relNote",
@@ -111,7 +111,7 @@ describe('absolute clef, absolute notes', function () {
       type: "DOCUMENT",
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
-        type: "clef",
+        type: "relClef",
         key: {type: "relNote", body: [0, 0, 0]},
         body: [
           {type: "absNote", body: [55, "maj"]},
@@ -148,14 +148,57 @@ describe('absolute clef, absolute notes', function () {
       type: "DOCUMENT",
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
-        type: "clef",
+        type: "relClef",
         key: {type: "relNote", body: [0, 0, 0]},
         body: [
           {
-            type: "clef",
+            type: "relClef",
             key: {type: "relNote", body: [0, 0, 2]},
             body: [
               {type: "relNote", body: [0, 0, 2]},
+            ]
+          }
+        ]
+      }]
+    };
+    expectToEqualWithDiff(tst2, res2);
+  });
+  it("Clef with relative note: C4(!G2lyd(G4))", async function () {
+    const str = "C4(!G2lyd(G4))";
+    const tst = parse(str);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [48, undefined]},
+        {
+          type: "expFun",
+          body: [
+            {
+              type: "!",
+              body: [
+                undefined,
+                 {type: "Note", body: [31, "lyd"]}
+              ]
+            },
+            {type: "Note", body: [55, undefined]},
+          ]
+        }
+      ]
+    };
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "relClef",
+        key: {type: "relNote", body: [0, 0, 0]},
+        body: [
+          {
+            type: "absClef",
+            key: {type: "absNote", body: [31, "lyd"]},
+            body: [
+              {type: "relNote", body: [0, 0, 14]},
             ]
           }
         ]

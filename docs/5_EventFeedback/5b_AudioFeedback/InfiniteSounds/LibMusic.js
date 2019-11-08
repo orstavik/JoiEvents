@@ -206,9 +206,11 @@ MusicMath["Note"] = function (node, ctx) {
 
 MusicMath["expFun"] = function (node, ctx) {
   const [key, ...body] = node.body;
-  return key.type === "relNote" || key.type === "absNote" ?
-    {type: "clef", key, body} :
-    node;
+  if (key.type === "relNote")
+    return {type: "relClef", key, body};
+  if (key.type === "absNote")
+    return {type: "absClef", key, body};
+  return node;
 };
 
 MusicMath["~"] = function (node, ctx) {
