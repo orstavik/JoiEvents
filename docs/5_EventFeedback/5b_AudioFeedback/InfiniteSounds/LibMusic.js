@@ -9,7 +9,7 @@ function getNoteInteger(node) {
   return {};
 }
 
-function normalizeToAbsolute2(key, relNote) {
+function normalizeToAbs(key, relNote) {
   let [absNum, absMode] = key.body;
   let [relNum12, relMode, relNum7] = relNote.body;
   absNum += relNum12;
@@ -23,66 +23,6 @@ function normalizeToAbsolute2(key, relNote) {
   return {type: "absNote", body: [absNum, absMode]};
 }
 
-function normalizeToAbsolute(note) {
-  let [absNum, absMode, relNum12, relNum7, relMode, closed] = note.body;
-  if (relNum12 === 0 && relMode === 0 && relNum7 === 0)
-    return note;
-  //todo I have a problem with ~0 notes as the top note. it will have 0,undefined,0,0,0,0 and it is the same as C0.
-  //todo relNum7 should be undefined if not set. A ~0 without a clef should be 48,undefined,0,0,0,0
-  //1. eat the relNum12. simply add the rel 12 numbers into the base
-  absNum += relNum12;
-  //2. eat the relNum7. shift the relative 7 numbers into the base
-  if (relNum7) {
-    absNum += Math.floor(relNum7 / 7) * 12;
-    let next7Num = ((relNum7 % 7) + 7) % 7;
-    let distanceTo7Num = MusicModes.getVector(absMode)[next7Num];
-    absNum += distanceTo7Num;
-  }
-  //3. eat the relMode. shift the mode position in the circle of 7 modes, and +1/-1 to the base num every time you pass +7/0.
-  if (relMode) {
-    const [nextMode, hashes] = MusicModes.switchMode(absMode, relMode);
-    absNum += hashes;
-    absMode = nextMode;
-    // let absModePos = MusicModes.getNumber(absMode);
-    // let nextModePos = absModePos + relMode;
-    // absNum += Math.floor(nextModePos / 7);
-    // nextModePos = ((nextModePos % 7) + 7) % 7;
-    // absMode = MusicModes.getName(nextModePos);
-  }
-
-  return {type: "Note", body: [absNum, absMode, 0, 0, 0, closed]};
-}
-
-// function normalizeToRelative(absNote, pKey, pMode) {
-//   let [absNum, absMode] = absNote.body;
-//   const shift12 = absNum - pKey;
-//   const {seven, twelve} = MusicModes.splitSevenTwelveScale(shift12, pMode);
-//   const modeModi = MusicModes.absoluteModeDistance(absMode, pMode);
-//   return {type: "Note", body: [0, undefined, twelve, seven, modeModi, 0]};
-// }
-//
-// function getClef(ctx) {
-//   for (let i = 0; i < ctx.length; i++) {
-//     let scope = ctx[i];
-//     if (scope.type === "expFun" && scope.body[0] && scope.body[0].type === "Note")
-//       return scope.body[0]
-//   }
-//   return undefined;
-// }
-//
-// function getNoteIntegerOrModeName(node) {
-//   if (node.body.length === 2) {
-//     const [l, r] = node.body;
-//     if (!(l.type === "relNote" || l.type === "absNote"))
-//       return {};
-//     if (Number.isInteger(r))
-//       return {note: l, value: r};
-//     if (MusicModes.isModeName(r.type))
-//       return {note: l, value: r.type};
-//   }
-//   return {};
-// }
-//
 function log2Integer(num) {
   if (num === 0)
     return num;
@@ -103,12 +43,33 @@ function changeNote(note, steps) {
   return newNote;
 }
 
-// function setMode(note, value) {
-//   const newNote = Object.assign({}, note);
-//   newNote.body = note.body.slice(0);
-//   newNote.body[1] = value;
-//   return newNote;
-// }
+function findNearestAbsoluteClef(ctx) {
+  for (let scope of ctx) {
+    const key = scope.key || scope.body[0];
+    if (key && key.type === "absNote")
+      return key.body;
+    if (key && key.type === "!")
+      return ctx[0].key.body;
+  }
+  throw new Error("Wtf, the context is lacking a key!!")
+}
+
+function computeRelativeSubtracts(ctx) {
+  let res = [0, 0, 0];
+  for (let scope of ctx) {
+    const key = scope.key || scope.body[0];
+    if (!key)
+      continue;
+    if (key.type === "absNote")
+      return res;
+    if (key.type === "relNote") {
+      res[0] += key.body[0];
+      res[1] += key.body[1];
+      res[2] += key.body[2];
+    }
+  }
+  throw new Error("omg");
+}
 
 //all note operators require the note to be on the left hand side. It will look too complex otherwise.
 export const MusicMath = Object.create(null);
@@ -194,13 +155,10 @@ MusicMath["^^"] = function (node, ctx) {
 //always use the parent clef tone's mode, never its own.
 
 MusicMath["%"] = function (node, ctx) {
-  // let {note, value} = getNoteIntegerOrModeName(node);
   let {note, num} = getNoteInteger(node);
   if (!note)
     return node;
   if (note.type === "absNote") {
-    // if (typeof value === "string")
-    //   return setMode(note, value);        //%name, sets the name of the mode and null out any mode changes.
     const [nextMode, hashes] = MusicModes.switchMode(note.body[1], num);
     const clone = Object.assign({}, note);
     clone.body = clone.body.slice();
@@ -215,89 +173,30 @@ MusicMath["%"] = function (node, ctx) {
   }
 };
 
-//! close operator
-//When used as a prefix on an absNote, the ! "closes" the note.
+//! root key operator
+//When used as a prefix on a Note or relNote, the ! connects the note to the root key.
 //A closed note is a note that will not be transformed by a parent clef, neither key nor mode.
 
 MusicMath["!"] = function (node, ctx) {
   let [nothing, note] = node.body;
   if (nothing !== undefined || !note)
     return node;
+  const documentKey = ctx[ctx.length - 1].key;
   if (note.type === "Note")
-    return {type: "absNote", body: [note.body[0], note.body[1] || ctx[ctx.length - 1].key.body[1]]};
+    return {type: "absNote", body: [note.body[0], note.body[1] || documentKey.body[1]]};
   if (note.type === "relNote")
-    return normalizeToAbsolute2(ctx[0].key, note);
+    return normalizeToAbs(documentKey, note);
   return node;
 };
-
-// function mergeRelativeNodes(key, note) {
-//   const rel12 = key[2] + note[2];
-//   const rel7 = key[3] + note[3];
-//   const modeModi = MusicModes.mergeModes(key[4], note[4]);
-//   return [0, undefined, rel12, rel7, modeModi];
-// }
-// function isRawClef(scope) {
-//   if (scope.type === "DOCUMENT")
-//     return true;
-//   if (scope.type !== "expFun" || !scope.body[0])
-//     return false;
-//   return scope.body[0].type === "relNote" || scope.body[0].type === "absNote";
-// }
-
-function findNearestAbsoluteClef(ctx) {
-  for (let scope of ctx) {
-    const key = scope.key || scope.body[0];
-    if (key && key.type === "absNote")
-      return key;
-    if (key && key.type === "!")
-      return ctx[0].key;
-  }
-}
-
-// function getAbsoluteToneKeyMode(ctx) {
-//   ctx = ctx.filter(scope => isRawClef(scope)).reverse();
-//   let res = [undefined, undefined];
-//   for (let scope of ctx) {
-//     const key = scope.key || scope.body[0];
-//     if (key.type === "absNote") {
-//       res[0] = key.body[0];
-//       res[1] = key.body[1];
-//     } else {
-//       res[0] += key.body[0];
-//       res[0] += MusicModes.toTwelve(res[1], key.body[2]);
-//       const [nextMode, hashes] = MusicModes.switchMode(res[1], key.body[1]);
-//       res[1] = nextMode;
-//       res[0] += hashes;
-//     }
-//   }
-//   return {type: "absNote", body: res};
-// }
-//
-function computeRelativeSubtracts(ctx) {
-  let res = [0, 0, 0];
-  for (let scope of ctx) {
-    const key = scope.key || scope.body[0];
-    if (!key)
-      continue;
-    if (key.type === "absNote")
-      return res;
-    if (key.type === "relNote") {
-      res[0] += key.body[0];
-      res[1] += key.body[1];
-      res[2] += key.body[2];
-    }
-  }
-  throw new Error("omg");
-}
 
 MusicMath["Note"] = function (node, ctx) {
   if (ctx[0].type === "!")                 //if it is a child of "!" close opertor, process under "!"
     return node;
-  // const key = getAbsoluteToneKeyMode(ctx);
-  const key = findNearestAbsoluteClef(ctx);
-  const num12 = node.body[0] - key.body[0];
-  let modeModi = MusicModes.absoluteModeDistance(key.body[1], node.body[1]);
-  let {seven, twelve} = MusicModes.splitSevenTwelveScale(num12, key.body[1]);
+  let [num12, mode] = node.body;
+  const [keyNum, keyMode] = findNearestAbsoluteClef(ctx);
+  num12 -= keyNum;
+  let modeModi = MusicModes.absoluteModeDistance(keyMode, mode);
+  let {seven, twelve} = MusicModes.splitSevenTwelveScale(num12, keyMode);
   const relativeSubtracts = computeRelativeSubtracts(ctx);
   twelve -= relativeSubtracts[0];
   modeModi -= relativeSubtracts[1];

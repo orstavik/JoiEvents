@@ -43,17 +43,12 @@ export async function interpretNode(node, table, ctx) {
   return fun ? (await fun(clone, ctx)) : clone;
 }
 
-//the document is both an AbsClef and a bpm? It has all the properties of these?
-//or, do I add those units as default nodes below, like head and title in an html file?
-//If i add them like nodes, the tree will be a bit unrecognizable for the developer.
-//If I lump it into the Document, then the needs of this document might need to grow.
-//I choose the document, cannot foresee all complexity.
 export async function staticInterpret(str) {
   let node = parse(str);
   node = {type: "DOCUMENT", body: [node], key: {type: "absNote", body: [48, "maj"]}};
   node = await interpretNode(node, staticTable, []);
   //variables: declare and replace
-  //cache temporarily
+  //cache temporarily  //deepfreeze the nodes between caching to prevent functions doing something stupid?
   return node;
 }
 
