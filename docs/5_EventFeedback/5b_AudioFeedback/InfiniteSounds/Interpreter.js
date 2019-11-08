@@ -54,7 +54,7 @@ export async function staticInterpret(str) {
 
 export async function interpret(str, ctx) {
   let node = await staticInterpret(str);
-  //todo here I should append the audioContext to the DOCUMENT instead of sending it in as a root ctx
-  node = await interpretNode(node, dynamicTable, [ctx]);
+  node.webAudio = ctx;          //todo here I should append the audioContext to the DOCUMENT instead of sending it in as a root ctx
+  node = await interpretNode(node, dynamicTable, []);
   return node;
 }

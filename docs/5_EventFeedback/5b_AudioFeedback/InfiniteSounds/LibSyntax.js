@@ -52,6 +52,14 @@ function connectMtoN(a, b) {
 
 export const AudioPiping = Object.create(null);
 
+AudioPiping["[]"] = function (node, ctx) {
+  for (let item of node.body) {
+    if (!item.graph)          //todo I might need to allow for primitivies here as well just add isPrimitive(item)
+      return node;
+  }
+  return node.body;
+};
+
 function extractAudioArray(node, outputInput) {
   return node.flat(Infinity).map(node => {
     if (node[outputInput])

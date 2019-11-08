@@ -16,7 +16,7 @@ export class CssMusic extends AudioContext {
     const ctx = new CssMusic();
     ctx.rootClef = ctx.createConstantSource();
     ctx.rootClef.start();
-    const result = await interpret(sound, ctx);
+    const result = (await interpret(sound, ctx)).body[0];
 
     if (result.type === "bpm") {
       let [bpm, heavy, bars] = result.body;
