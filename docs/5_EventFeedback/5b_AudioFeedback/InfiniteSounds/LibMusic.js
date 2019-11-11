@@ -57,6 +57,8 @@ function findNearestAbsoluteClef(ctx) {
 function computeRelativeSubtracts(ctx) {
   let res = [0, 0, 0];
   for (let scope of ctx) {
+    if (scope.type !== "expFun" && scope.type !== "DOCUMENT")
+      continue;
     const key = scope.key || scope.body[0];
     if (!key)
       continue;

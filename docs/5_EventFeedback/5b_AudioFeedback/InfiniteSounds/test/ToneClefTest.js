@@ -177,7 +177,7 @@ describe('absolute clef, absolute notes', function () {
               type: "!",
               body: [
                 undefined,
-                 {type: "Note", body: [31, "lyd"]}
+                {type: "Note", body: [31, "lyd"]}
               ]
             },
             {type: "Note", body: [55, undefined]},
@@ -206,120 +206,89 @@ describe('absolute clef, absolute notes', function () {
     };
     expectToEqualWithDiff(tst2, res2);
   });
-//   it("Overriding the clef from above: D3(G4(C4))", async function () {
-//     const tst = parse("D3(G4(C4))");
-//     const res = {
-//       type: "expFun",
-//       body: [
-//         {type: "Note", body: [2, 3, 5, 0, "D3"]},
-//         {
-//           type: "expFun",
-//           body: [
-//             {type: "Note", body: [7, 4, 5, 0, "G4"]},
-//             {type: "Note", body: [0, 4, 5, 0, "C4"]},
-//           ]
-//         }
-//       ]
-//     };
-//     res.body.isDirty = 1;
-//     res.body[1].body.isDirty = 1;
-//     expectToEqualWithDiff(tst, res);
-//     //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
-//     const tst2 = await staticInterpret("D3(G4(C4))");
-//     const res2 = {
-//       type: "absClef", num: 2, octave: 3, mode: 5, frozen: 0, text: "D3",
-//       body: [
-//         {
-//           type: "relClef12",
-//           num: 0,
-//           body: [
-//             {type: "Note", body: [-7]}
-//           ]
-//         }
-//       ]
-//     };
-//     res2.body.isDirty = 1;
-//     res2.body[0].body.isDirty = 1;
-//     expectToEqualWithDiff(tst2, res2);
-//   });
-//   it("Freezing the clef, overriding the clef from below: D3(!G4(C4))", async function () {
-//     const tst = parse("D3(!G4(C4))");
-//     const res = {
-//       type: "expFun",
-//       body: [
-//         {type: "Note", body: [2, 3, 5, 0, "D3"]},
-//         {
-//           type: "expFun",
-//           body: [
-//             {type: "Note", body: [7, 4, 5, 1, "!G4"]},
-//             {type: "Note", body: [0, 4, 5, 0, "C4"]},
-//           ]
-//         }
-//       ]
-//     };
-//     res.body.isDirty = 1;
-//     res.body[1].body.isDirty = 1;
-//     expectToEqualWithDiff(tst, res);
-//     //the clef G4 is frozen, it is not converted into a relative clef.
-//     const tst2 = await staticInterpret("D3(!G4(C4))");
-//     const res2 = {
-//       type: "absClef", num: 2, octave: 3, mode: 5, frozen: 0, text: "D3",
-//       body: [
-//         {
-//           type: "absClef", num: 7, octave: 4, mode: 5, frozen: 1, text: "!G4",
-//           body: [
-//             {type: "Note", body: [-7]}
-//           ]
-//         }
-//       ]
-//     };
-//     res2.body.isDirty = 1;
-//     res2.body[0].body.isDirty = 1;
-//     expectToEqualWithDiff(tst2, res2);
-//   });
-//   it("parse: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
-//     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
-//     const tst = parse(str);
-//     const res = {
-//       type: "expFun",
-//       body: [
-//         {type: "Note", body: [7, 4, 5, 0, "G4"]},
-//         [
-//           {type: "Note", body: [0, 4, 5, 0, "C4"]},
-//           {type: "Note", body: [1, 4, 5, 0, "Db"]},
-//           {type: "Note", body: [3, 3, 5, 0, "Eb3"]},
-//           {type: "Note", body: [5, 4, 5, 0, "F"]},
-//           {type: "Note", body: [7, 4, 5, 0, "G4"]},
-//           {type: "Note", body: [10, 4, 5, 0, "A#"]},
-//           {type: "Note", body: [11, 4, 5, 0, "B4"]}
-//         ]
-//       ]
-//     };
-//     res.body.isDirty = 1;
-//     res.body[1].isDirty = 1;
-//     expectToEqualWithDiff(tst, res);
-//   });
-//   it("interpret: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
-//     const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
-//     const tst2 = await staticInterpret(str);
-//     const res2 = {
-//       type: "absClef", num: 7,octave:  4, mode: 5, frozen: 0, text: "G4",
-//       body: [
-//         [
-//           {type: "Note", body: [-7]},
-//           {type: "Note", body: [-6]},
-//           {type: "Note", body: [-16]},
-//           {type: "Note", body: [-2]},
-//           {type: "Note", body: [0]},
-//           {type: "Note", body: [3]},
-//           {type: "Note", body: [4]}
-//         ]
-//       ]
-//     };
-//     res2.body.isDirty = 1;
-//     res2.body[0].isDirty = 1;
-//     expectToEqualWithDiff(tst2, res2);
-//   });
+  it("Overriding the clef from above: D3(G4(C4))", async function () {
+    const str = "D3(G4(C4))";
+    const tst = parse(str);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [38, undefined]},
+        {
+          type: "expFun",
+          body: [
+            {type: "Note", body: [55, undefined]},
+            {type: "Note", body: [48, undefined]},
+          ]
+        }
+      ]
+    };
+    expectToEqualWithDiff(tst, res);
+    //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "relClef",
+        key: {type: "relNote", body: [0, 0, -6]},
+        body: [
+          {
+            type: "relClef",
+            key: {type: "relNote", body: [0, 0, 10]},
+            body: [
+              {type: "relNote", body: [0, 0, -4]},
+            ]
+          }
+        ]
+      }]
+    };
+    expectToEqualWithDiff(tst2, res2);
+  });
+  it("parse: G4( [C4, Db, Eb3, F, G4, A#, B4])", async function () {
+    const str = "G4( [C4, Db, Eb3, F, G4, A#, B4])";
+    const tst = parse(str);
+    const res = {
+      type: "expFun",
+      body: [
+        {type: "Note", body: [55, undefined]},
+        {
+          type: "[]", body: [
+            {type: "Note", body: [48, undefined]},
+            {type: "Note", body: [49, undefined]},
+            {type: "Note", body: [39, undefined]},
+            {type: "Note", body: [53, undefined]},
+            {type: "Note", body: [55, undefined]},
+            {type: "Note", body: [58, undefined]},
+            {type: "Note", body: [59, undefined]},
+          ]
+        }
+      ]
+    };
+    expectToEqualWithDiff(tst, res);
+    const tst2 = await staticInterpret(str);
+    const res2 = {
+      type: "DOCUMENT",
+      key: {type: "absNote", body: [48, "maj"]},
+      body: [{
+        type: "relClef",
+        key: {type: "relNote", body: [0, 0, 4]},
+        body: [
+          {
+            type: "[]", body: [
+              {type: "relNote", body: [0, 0, -4]},
+              {type: "relNote", body: [1, 0, -4]},
+              {type: "relNote", body: [1, 0, -10]},
+              {type: "relNote", body: [0, 0, -1]},
+              {type: "relNote", body: [0, 0, 0]},
+              {type: "relNote", body: [1, 0, 1]},
+              {type: "relNote", body: [0, 0, 2]}
+            ]
+          }
+        ]
+      }]
+    };
+    expectToEqualWithDiff(tst2, res2);
+  });
 });
 
 //todo older below
