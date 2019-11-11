@@ -155,7 +155,7 @@ describe('absolute clef, absolute notes', function () {
             type: "relClef",
             key: {type: "relNote", body: [0, 0, 2]},
             body: [
-              {type: "relNote", body: [0, 0, 2]},
+              {type: "relNote", body: [0, 0, 4]},
             ]
           }
         ]
