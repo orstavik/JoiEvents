@@ -86,7 +86,7 @@ class AudioFileRegister {
   }
 
   static async makeFileBufferSource(node, ctx) {
-    const {body: [url, loop]} = node;
+    const [url, loop] = node.body;
     const data = await AudioFileRegister.getFileBuffer(url);
     const bufferSource = ctx.createBufferSource();
     bufferSource.buffer = await ctx.decodeAudioData(data);
@@ -126,7 +126,7 @@ async function createPeriodicWave(ctx, wave) {
 }
 
 async function makeOscillator(node, ctx, type) {
-  const {body: [freq, wave]} = node;
+  const [freq, wave] = node.body;
   //todo convert the factory methods to constructors as specified by MDN?
   const oscillator = ctx.createOscillator();
   oscillator.type = type;
@@ -152,22 +152,16 @@ function makeFilter(ctx, type, node, p) {
 }
 
 function makeGain(node, ctx) {
-  const {body: [gainParam]} = node;
+  const [gainParam] = node.body;
   const audio = ctx.createGain();
   setAudioParameter(audio.gain, gainParam);
   return {graph: node, input: audio, output: audio};
 }
 
 function makeDelay(node, ctx) {
-  let goal, max;
-  if (!node.body)
-    goal = 0, max = 1;
-  else
-    [goal, max] = node.body;
-  if (goal === undefined) goal = 0;
-  if (max === undefined) max = 1;
-  if (goal.num) goal = goal.num;
-  if (max.num) max = max.num;
+  let [goal = 0, max = 1] = node.body;
+  // if (goal.num) goal = goal.num;    //this should be handled prior to node creation, converting ms to s etc.
+  // if (max.num) max = max.num;       //if we need to do type checks, we should do so later.
   if (typeof goal !== "number" || typeof max !== "number")
     throw new Error("omg, cannot delay without a number.");
   let delayNode = new DelayNode(ctx, {
@@ -234,47 +228,50 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   return {graph: node, input: convolver, output: convolver};
 };
 
-InterpreterFunctions.delay = (node, ctx) => makeDelay(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.delay = function (node, ctx) {
+  return makeDelay(node, ctx[ctx.length - 1].webAudio);
+};
 
 InterpreterFunctions.lowpass = function (node, ctx) {
-  const {body: [freq, q, detune]} = node;
+  const [freq, q, detune] = node.body;
   return makeFilter(ctx[ctx.length - 1].webAudio, "lowpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.highpass = function (node, ctx) {
-  const {body: [freq, q, detune]} = node;
+  const [freq, q, detune] = node.body;
   return makeFilter(ctx[ctx.length - 1].webAudio, "highpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.bandpass = function (node, ctx) {
-  const {body: [freq, q, detune]} = node;
+  const [freq, q, detune] = node.body;
   return makeFilter(ctx[ctx.length - 1].webAudio, "bandpass", node, {freq, q, detune});
 };
 
 InterpreterFunctions.lowshelf = function (node, ctx) {
-  const {body: [freq, gain, detune]} = node;
+  const [freq, gain, detune] = node.body;
   return makeFilter(ctx[ctx.length - 1].webAudio, "lowshelf", node, {freq, gain, detune});
 };
 
 InterpreterFunctions.highshelf = function (node, ctx) {
-  const {body: [freq, gain, detune]} = node;
+  const [freq, gain, detune] = node.body;
   return makeFilter(ctx[ctx.length - 1].webAudio, "highshelf", node, {freq, gain, detune});
 };
 
 InterpreterFunctions.peaking = function (node, ctx) {
-  const {body: [freq, q, gain, detune]} = node;
+  const [freq, q, gain, detune] = node.body;
   return makeFilter(ctx[ctx.length - 1].webAudio, "peaking", node, {freq, q, gain, detune});
 };
 
 InterpreterFunctions.notch = function (node, ctx) {
-  const {body: [freq, q, detune]} = node;
+  const [freq, q, detune] = node.body;
   const webAudio = ctx[ctx.length - 1].webAudio;
   return makeFilter(webAudio, "notch", node, {freq, q, detune});
 };
 
 InterpreterFunctions.allpass = function (node, ctx) {
-  const {body: [freq, q, detune]} = node;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "allpass", node, {freq, q, detune});
+  const [freq, q, detune] = node.body;
+  const webAudio = ctx[ctx.length - 1].webAudio;
+  return makeFilter(webAudio, "allpass", node, {freq, q, detune});
 };
 
 
@@ -287,18 +284,31 @@ InterpreterFunctions.url = (node, ctx) => AudioFileRegister.makeFileBufferSource
 InterpreterFunctions.noise = (node, ctx) => AudioFileRegister.noise(node, ctx[ctx.length - 1].webAudio);
 
 InterpreterFunctions.lfo = async function (node, ctx) {
-  let [min, max, freq, type] = node.body;
-  if (min === undefined) min = 0;
-  if (max === undefined) max = 1;
-  if (freq === undefined) freq = 1;
+  let [min = 0, max = 1, freq = 1, type] = node.body;
   type = type.value || "sine";
   const webAudio = ctx[ctx.length - 1].webAudio;
   return {graph: node, output: await makeLfo(webAudio, min, max, freq, type)};
 };
 
-InterpreterFunctions.constant = async function (node, ctx) {
-  let value = node.body[0] || 1;
+InterpreterFunctions.constant = function (node, ctx) {
+  let [value = 1] = node.body;
   const webAudio = ctx[ctx.length - 1].webAudio;
   let output = makeConstant(webAudio, value);
   return {graph: node, output: output};
 };
+
+class StartAble {
+  constructor(graph, output, input, parameters) {
+    this.graph = graph;
+    this.output = output;
+    this.input = input;
+    this.parameters = parameters;
+  }
+
+  start() {
+    this.setParameters(this.parameters);    //ok, need to make the setParameters method contain some key value pairs.
+    this.output.start();                    //here I need to iterate the parameters.
+    this.input.start();                     //but this is not fine. The input elements need to be a list of StartAbles.
+    this.parameters.start();                //The parameters given inn here need to be a set of StartAbles.
+  }
+}
