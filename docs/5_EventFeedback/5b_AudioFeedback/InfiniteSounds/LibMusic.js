@@ -43,34 +43,31 @@ function changeNote(note, steps) {
   return newNote;
 }
 
-function findNearestAbsoluteClef(ctx) {
-  for (let scope of ctx) {
-    const key = scope.key || scope.body[0];
-    if (key && key.type === "absNote")
+function getAbsKeyFromScope(scope) {
+  if (scope.type === "expFun") {
+    let key = scope.body[0];
+    if (!key)
+      return undefined;
+    if (key.type === "absNote")
       return key.body;
-    if (key && key.type === "!")
-      return ctx[0].key.body;
+    if (key.type === "relNote" && key.original)
+      return key.original;
   }
-  throw new Error("Wtf, the context is lacking a key!!")
+  if (scope.type === "DOCUMENT")
+    return scope.key.body;
+  return undefined;
 }
 
-function computeRelativeSubtracts(ctx) {
-  let res = [0, 0, 0];
+function findNearestStaticKeyAndMode(ctx) {
+  let key, mode;
   for (let scope of ctx) {
-    if (scope.type !== "expFun" && scope.type !== "DOCUMENT")
-      continue;
-    const key = scope.key || scope.body[0];
-    if (!key)
-      continue;
-    if (key.type === "absNote")
-      return res;
-    if (key.type === "relNote") {
-      res[0] += key.body[0];
-      res[1] += key.body[1];
-      res[2] += key.body[2];
-    }
+    let absKey = getAbsKeyFromScope(scope);
+    if (!absKey) continue;
+    if (key === undefined) key = absKey[0];
+    if (mode === undefined) mode = absKey[1];
+    if (key && mode) return [key, mode];
   }
-  throw new Error("omg");
+  throw new Error("There must always be a Document that specifies an absolute clef in dynamic interpretation.");
 }
 
 //all note operators require the note to be on the left hand side. It will look too complex otherwise.
@@ -195,15 +192,11 @@ MusicMath["Note"] = function (node, ctx) {
   if (ctx[0].type === "!")                 //if it is a child of "!" close opertor, process under "!"
     return node;
   let [num12, mode] = node.body;
-  const [keyNum, keyMode] = findNearestAbsoluteClef(ctx);
+  const [keyNum, keyMode] = findNearestStaticKeyAndMode(ctx);
   num12 -= keyNum;
   let modeModi = MusicModes.absoluteModeDistance(keyMode, mode);
   let {seven, twelve} = MusicModes.toSeven(keyMode, num12);
-  const relativeSubtracts = computeRelativeSubtracts(ctx);
-  twelve -= relativeSubtracts[0];
-  modeModi -= relativeSubtracts[1];
-  seven -= relativeSubtracts[2];
-  return {type: "relNote", body: [twelve, modeModi, seven]};
+  return {type: "relNote", body: [twelve, modeModi, seven], original: node.body.slice()};
 };
 
 MusicMath["expFun"] = function (node, ctx) {

@@ -223,7 +223,6 @@ describe('absolute clef, absolute notes', function () {
       ]
     };
     expectToEqualWithDiff(tst, res);
-    //the clef G4 is essentially nulled out, after the relative value of C4 is interpreted within the G4 scale.
     const tst2 = await staticInterpret(str);
     const res2 = {
       type: "DOCUMENT",
@@ -278,7 +277,7 @@ describe('absolute clef, absolute notes', function () {
               {type: "relNote", body: [0, 0, -4]},
               {type: "relNote", body: [1, 0, -4]},
               {type: "relNote", body: [1, 0, -10]},
-              {type: "relNote", body: [0, 0, -1]},
+              {type: "relNote", body: [1, 0, -2]},
               {type: "relNote", body: [0, 0, 0]},
               {type: "relNote", body: [1, 0, 1]},
               {type: "relNote", body: [0, 0, 2]}
