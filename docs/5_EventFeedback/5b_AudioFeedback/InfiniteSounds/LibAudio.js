@@ -37,7 +37,9 @@ class MomNode {
 }
 
 function createMomGain(node, ctx) {
-  return new MomNode(node, ["gain"], ctx.createGain());
+  const momNode = new MomNode(node, ["gain"], ctx.createGain());
+  momNode.start();
+  return momNode;
 }
 
 async function createMomOscillator(node, ctx, type) {
@@ -45,13 +47,28 @@ async function createMomOscillator(node, ctx, type) {
   osc.type = type;
   osc.start();
   node.body[1] = await createPeriodicWave(ctx, node.body[1]);
-  return new MomNode(node, ["frequency", "setPeriodicWave"], osc);
+  const momNode = new MomNode(node, ["frequency", "setPeriodicWave"], osc);
+  momNode.start();
+  return momNode;
 }
 
 function createMomFilter(node, ctx, params, type) {
   const filter = ctx.createBiquadFilter();
   filter.type = type;
-  return new MomNode(node, params, filter);
+  const momNode = new MomNode(node, params, filter);
+  momNode.start();
+  return momNode;
+}
+
+function createMomDelay(node, ctx) {
+  const [goal = 0, max = 1] = node.body;
+  if (typeof goal !== "number" || typeof max !== "number")
+    throw new Error("Delay nodes accept only and max two number parameters.");
+  let delayNode = new DelayNode(ctx, {
+    delayTime: goal,
+    maxDelayTime: max
+  });
+  return new MomNode(node, [], delayNode);    //todo doesn't need to start()
 }
 
 function plotEnvelope(target, points) {
@@ -171,29 +188,6 @@ async function createPeriodicWave(ctx, wave) {
   return ctx.createPeriodicWave(real, imag);
 }
 
-async function makeOscillator(node, ctx, type) {
-  const osc = await createMomOscillator(node, ctx, type);
-  osc.start();
-  return osc;
-}
-
-function makeGain(node, ctx) {
-  const g = createMomGain(node, ctx);
-  g.start();
-  return g;
-}
-
-function makeDelay(node, ctx) {
-  const [goal = 0, max = 1] = node.body;
-  if (typeof goal !== "number" || typeof max !== "number")
-    throw new Error("Delay nodes accept only and max two number parameters.");
-  let delayNode = new DelayNode(ctx, {
-    delayTime: goal,
-    maxDelayTime: max
-  });
-  return new MomNode(node, [], delayNode);
-}
-
 function merge(ctx, a, b) {
   const merger = ctx.createChannelMerger(2);
   a.connect(merger);
@@ -225,12 +219,20 @@ async function makeLfo(ctx, min, max, frequency, type) {
 
 export const InterpreterFunctions = {};
 
-InterpreterFunctions.sine = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1].webAudio, "sine");
-InterpreterFunctions.square = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1].webAudio, "square");
-InterpreterFunctions.triangle = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1].webAudio, "triangle");
-InterpreterFunctions.sawtooth = (node, ctx) => makeOscillator(node, ctx[ctx.length - 1].webAudio, "sawtooth");
-
-InterpreterFunctions.gain = (node, ctx) => makeGain(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.sine = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "sine");
+InterpreterFunctions.square = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "square");
+InterpreterFunctions.triangle = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "triangle");
+InterpreterFunctions.sawtooth = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "sawtooth");
+InterpreterFunctions.gain = (node, ctx) => createMomGain(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.delay = (node, ctx) => createMomDelay(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.lowpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "lowpass");
+InterpreterFunctions.highpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune", "highpass"]);
+InterpreterFunctions.bandpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "bandpass");
+InterpreterFunctions.lowshelf = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "gain", "detune"], "lowshelf");
+InterpreterFunctions.highshelf = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "gain", "detune"], "highshelf");
+InterpreterFunctions.peaking = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "gain", "detune"], "peaking");
+InterpreterFunctions.notch = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "notch");
+InterpreterFunctions.allpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, undefined, ["frequency", "q", "detune"], "allpass");
 
 //todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
 InterpreterFunctions.convolver = async function (node, ctx) {
@@ -251,41 +253,6 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   return {graph: node, input: convolver, output: convolver};
 };
 
-InterpreterFunctions.delay = function (node, ctx) {
-  return makeDelay(node, ctx[ctx.length - 1].webAudio);
-};
-
-InterpreterFunctions.lowpass = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "lowpass");
-};
-
-InterpreterFunctions.highpass = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "q", "detune", "highpass"]);
-};
-
-InterpreterFunctions.bandpass = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "q", "detune"], "bandpass");
-};
-
-InterpreterFunctions.lowshelf = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "gain", "detune"], "lowshelf");
-};
-
-InterpreterFunctions.highshelf = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "gain", "detune"], "highshelf");
-};
-
-InterpreterFunctions.peaking = function (node, ctx) {
-  return createMomFilter(node,ctx[ctx.length - 1].webAudio,["frequency", "q", "gain", "detune"], "peaking");
-};
-
-InterpreterFunctions.notch = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "q", "detune"], "notch");
-};
-
-InterpreterFunctions.allpass = function (node, ctx) {
-  return createMomFilter(node, ctx[ctx.length - 1].webAudio, undefined, ["frequency", "q", "detune"], "allpass");
-};
 
 
 /**
