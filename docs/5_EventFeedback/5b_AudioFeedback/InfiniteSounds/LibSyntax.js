@@ -96,11 +96,11 @@ AudioPiping[">"] = function (node, ctx) {
 
 //If you try to "x >(y, z)" or "(x, y) > z", the piping function will throw an error.
 //todo should this error be moved to the Parser? Likely yes..
-AudioPiping["()"] = function (node, ctx) {
-  if (node.body.length !== 1)
-    throw new SyntaxError("Cannot pipe audio into a ()-block with commas.");
-  return {graph: node, input: node.body[0].input, output: node.body[0].output};
-};
+//AudioPiping["()"] = function (node, ctx) {
+//   if (node.body.length !== 1)
+//     throw new SyntaxError("Cannot pipe audio into a ()-block with commas.");
+//   return {graph: node, input: node.body[0].input, output: node.body[0].output};
+// };
 
 //todo parse body here..
 //todo fix handle ()-blocks
