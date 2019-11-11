@@ -41,11 +41,17 @@ function createMomGain(node, ctx) {
 }
 
 async function createMomOscillator(node, ctx, type) {
-  const output = ctx.createOscillator();
-  output.type = type;
-  output.start();
+  const osc = ctx.createOscillator();
+  osc.type = type;
+  osc.start();
   node.body[1] = await createPeriodicWave(ctx, node.body[1]);
-  return new MomNode(node, ["frequency", "setPeriodicWave"], output);
+  return new MomNode(node, ["frequency", "setPeriodicWave"], osc);
+}
+
+function createMomFilter(node, ctx, params, type) {
+  const filter = ctx.createBiquadFilter();
+  filter.type = type;
+  return new MomNode(node, params, filter);
 }
 
 function plotEnvelope(target, points) {
@@ -65,18 +71,6 @@ function plotEnvelope(target, points) {
 //todo Make audioparam accept array of audio nodes??
 
 //todo "gain()" or "gain", does that equal "mute" or "gain(1)"?
-export function setAudioParameter(target, param) {
-  if (param === undefined) {
-    return;
-  } else if (param.output) {
-    param.output.connect(target);
-  } else if (typeof param === "number") {
-    target.value = param;
-  } else if (param instanceof Array) {
-    plotEnvelope(target, param);
-  } else
-    throw new Error("CssAudio: Illegal input to gain node: " + param);
-}
 
 /**
  * AudioFileRegister caches the arrayBuffers for different audio url's.
@@ -183,16 +177,6 @@ async function makeOscillator(node, ctx, type) {
   return osc;
 }
 
-function makeFilter(ctx, type, node, p) {
-  const filterNode = ctx.createBiquadFilter();
-  filterNode.type = type;
-  setAudioParameter(filterNode.frequency, p.freq);
-  setAudioParameter(filterNode.Q, p.q);
-  setAudioParameter(filterNode.gain, p.gain);
-  setAudioParameter(filterNode.detune, p.detune);
-  return {graph: node, input: filterNode, output: filterNode};
-}
-
 function makeGain(node, ctx) {
   const g = createMomGain(node, ctx);
   g.start();
@@ -274,45 +258,35 @@ InterpreterFunctions.delay = function (node, ctx) {
 };
 
 InterpreterFunctions.lowpass = function (node, ctx) {
-  const [freq, q, detune] = node.body;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "lowpass", node, {freq, q, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "lowpass");
 };
 
 InterpreterFunctions.highpass = function (node, ctx) {
-  const [freq, q, detune] = node.body;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "highpass", node, {freq, q, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "q", "detune", "highpass"]);
 };
 
 InterpreterFunctions.bandpass = function (node, ctx) {
-  const [freq, q, detune] = node.body;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "bandpass", node, {freq, q, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "q", "detune"], "bandpass");
 };
 
 InterpreterFunctions.lowshelf = function (node, ctx) {
-  const [freq, gain, detune] = node.body;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "lowshelf", node, {freq, gain, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "gain", "detune"], "lowshelf");
 };
 
 InterpreterFunctions.highshelf = function (node, ctx) {
-  const [freq, gain, detune] = node.body;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "highshelf", node, {freq, gain, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "gain", "detune"], "highshelf");
 };
 
 InterpreterFunctions.peaking = function (node, ctx) {
-  const [freq, q, gain, detune] = node.body;
-  return makeFilter(ctx[ctx.length - 1].webAudio, "peaking", node, {freq, q, gain, detune});
+  return createMomFilter(node,ctx[ctx.length - 1].webAudio,["frequency", "q", "gain", "detune"], "peaking");
 };
 
 InterpreterFunctions.notch = function (node, ctx) {
-  const [freq, q, detune] = node.body;
-  const webAudio = ctx[ctx.length - 1].webAudio;
-  return makeFilter(webAudio, "notch", node, {freq, q, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio,  ["frequency", "q", "detune"], "notch");
 };
 
 InterpreterFunctions.allpass = function (node, ctx) {
-  const [freq, q, detune] = node.body;
-  const webAudio = ctx[ctx.length - 1].webAudio;
-  return makeFilter(webAudio, "allpass", node, {freq, q, detune});
+  return createMomFilter(node, ctx[ctx.length - 1].webAudio, undefined, ["frequency", "q", "detune"], "allpass");
 };
 
 
