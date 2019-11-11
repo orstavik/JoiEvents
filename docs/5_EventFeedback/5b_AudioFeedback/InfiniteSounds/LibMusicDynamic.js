@@ -4,7 +4,7 @@ import {MusicModes} from "./MusicModes.js";
 class AbsoluteClef {
   constructor(absNote, children) {
     this.key = absNote;
-    this.children = children;
+    this.children = children || [];
     this.update();
   }
 
@@ -17,7 +17,7 @@ class AbsoluteClef {
 class RelativeClef {
   constructor(relNote, children) {
     this.relNote = relNote;
-    this.children = children;
+    this.children = children ||[];
   }
 
   update(key, mode) {
