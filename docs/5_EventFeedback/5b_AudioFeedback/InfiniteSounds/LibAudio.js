@@ -184,16 +184,14 @@ function makeGain(node, ctx) {
 }
 
 function makeDelay(node, ctx) {
-  let [goal = 0, max = 1] = node.body;
-  // if (goal.num) goal = goal.num;    //this should be handled prior to node creation, converting ms to s etc.
-  // if (max.num) max = max.num;       //if we need to do type checks, we should do so later.
+  const [goal = 0, max = 1] = node.body;
   if (typeof goal !== "number" || typeof max !== "number")
-    throw new Error("omg, cannot delay without a number.");
+    throw new Error("Delay nodes accept only and max two number parameters.");
   let delayNode = new DelayNode(ctx, {
     delayTime: goal,
     maxDelayTime: max
   });
-  return {graph: node, output: delayNode, input: delayNode};
+  return new MomNode(node, [], delayNode);
 }
 
 function merge(ctx, a, b) {
