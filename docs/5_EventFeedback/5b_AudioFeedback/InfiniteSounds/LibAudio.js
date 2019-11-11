@@ -1,3 +1,51 @@
+//todo convert the factory methods to constructors as specified by MDN?
+//todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
+//todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
+
+class MomGain {
+
+  constructor(node, ctx) {
+    this.body = node.body;
+    this.ctx = ctx;
+    this.output = ctx.createGain();
+    this.input = this.output;
+    this.gainValue = node.body[0];
+
+    this.graph = node;                           //todo remove graph?
+    this.start();
+  }
+
+  start() {
+    this.gainValue.start && this.gainValue.start();
+    setAudioParameter(this.output.gain, this.gainValue);
+  }
+}
+
+class MomOscillator {
+
+  constructor(node, ctx, type) {
+    this.body = node.body;
+    this.ctx = ctx;
+    this.output = ctx.createOscillator();
+    this.output.type = type;
+    this.output.start();
+    this.freq = node.body[0];
+    this.wave = node.body[1];
+
+    this.graph = node;                           //todo remove graph?
+  }
+
+  async start() {
+    this.freq.start && this.freq.start();
+    setAudioParameter(this.output.frequency, this.freq);
+    if (this.wave) {                            //todo cache the creation of the wave in the constructor?
+      //todo it is probably better to move the construction of the wave into another class / object?
+      const table = await createPeriodicWave(this.ctx, this.wave);
+      this.output.setPeriodicWave(table);
+    }
+  }
+}
+
 function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
@@ -126,22 +174,12 @@ async function createPeriodicWave(ctx, wave) {
 }
 
 async function makeOscillator(node, ctx, type) {
-  const [freq, wave] = node.body;
-  //todo convert the factory methods to constructors as specified by MDN?
-  const oscillator = ctx.createOscillator();
-  oscillator.type = type;
-  setAudioParameter(oscillator.frequency, freq);
-  if (wave) {
-    const table = await createPeriodicWave(ctx, wave);
-    oscillator.setPeriodicWave(table);
-  }
-  oscillator.start();
-  return {graph: node, output: oscillator};
+  const osc = new MomOscillator(node, ctx, type);
+  osc.start();
+  return osc;
 }
 
 function makeFilter(ctx, type, node, p) {
-  //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
-  //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
   const filterNode = ctx.createBiquadFilter();
   filterNode.type = type;
   setAudioParameter(filterNode.frequency, p.freq);
@@ -152,10 +190,9 @@ function makeFilter(ctx, type, node, p) {
 }
 
 function makeGain(node, ctx) {
-  const [gainParam] = node.body;
-  const audio = ctx.createGain();
-  setAudioParameter(audio.gain, gainParam);
-  return {graph: node, input: audio, output: audio};
+  const g = new MomGain(node, ctx);
+  g.start();
+  return g;
 }
 
 function makeDelay(node, ctx) {
@@ -296,19 +333,3 @@ InterpreterFunctions.constant = function (node, ctx) {
   let output = makeConstant(webAudio, value);
   return {graph: node, output: output};
 };
-
-class StartAble {
-  constructor(graph, output, input, parameters) {
-    this.graph = graph;
-    this.output = output;
-    this.input = input;
-    this.parameters = parameters;
-  }
-
-  start() {
-    this.setParameters(this.parameters);    //ok, need to make the setParameters method contain some key value pairs.
-    this.output.start();                    //here I need to iterate the parameters.
-    this.input.start();                     //but this is not fine. The input elements need to be a list of StartAbles.
-    this.parameters.start();                //The parameters given inn here need to be a set of StartAbles.
-  }
-}
