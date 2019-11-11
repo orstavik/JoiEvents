@@ -49,7 +49,7 @@ export class MusicModes {
     return name === undefined ? 5 : modeNameToNumber[name];
   }
 
-  static toSeven(mode, twelveStep) {           //todo rename to toSeven(mode, twelveSteps)
+  static toSeven(mode, twelveStep) {
     if (twelveStep === 0)
       return {seven: 0, twelve: 0};
     mode = MusicModes.getVector(mode);
@@ -80,20 +80,13 @@ export class MusicModes {
     return MusicModes.getNumber(childMode) - MusicModes.getNumber(clefMode);
   }
 
-  //todo test this one
   static toTwelve(modeName, sevenSteps) {
     const octaves = Math.floor(sevenSteps / 7);
-    let sevenToTwelve;
-    if (sevenSteps >= 0) {
-      sevenToTwelve = MusicModes.getVector(modeName)[sevenSteps % 7];
-    } else {
-      //todo negatives are untested
-      sevenToTwelve = 12 - MusicModes.getVector(modeName)[sevenSteps % 7];
-    }
+    let sevenToTwelve = MusicModes.getVector(modeName)[((sevenSteps % 7) + 7) % 7];
     return sevenToTwelve + octaves * 12;
   }
 
-  static switchMode(modeName, number){
+  static switchMode(modeName, number) {
     const modeNum = MusicModes.getNumber(modeName);
     number += modeNum;
     const hashes = Math.floor(number / 7);
