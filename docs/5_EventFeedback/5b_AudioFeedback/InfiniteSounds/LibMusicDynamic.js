@@ -2,40 +2,47 @@ import {MusicModes} from "./MusicModes.js";
 
 class Clef {
   constructor(clef) {
+    this.type = "start";            //this makes the interpreter able to run it
     this.graph = clef;
     this.key = clef.key;
     this.body = clef.body;
     this.children = clef.children || [];
-    delete clef.children;     //todo very unsure about this mutation
-    this.update();
+    // delete clef.children;
+    // todo very unsure about this mutation. Because of the setup, the clef object will simply be discarded
+    this.start();                        //todo don't need to start it.
   }
 
-  update() {
+  start() {
     const [key, mode] = this.key.body;
     for (let child of this.children)
-      child.update(key, mode);
+      child.start(key, mode);
   }
 }
 
 class RelativeClef extends Clef {
 
-  update(key, mode) {
+  start(key, mode) {
+    if (key === undefined/*&&mode=== undefined*/)
+      return;
     const [twelve, myMode, seven] = this.key.body;
     key += twelve;
     key += MusicModes.toTwelve(mode, seven);
     mode = MusicModes.switchMode(mode, myMode);
     for (let child of this.children)
-      child.update(key, mode);
+      child.start(key, mode);
   }
 }
 
 class RelativeNote {
   constructor(relNote, audioCtx) {
+    this.type = "start";            //this makes the interpreter able to run it
     this.graph = relNote;
     this.output = makeFrequencyGain(audioCtx);
   }
 
-  update(key, mode) {
+  start(key, mode) {
+    if (key === undefined/*&&mode=== undefined*/)
+      return;
     const [twelve, myMode, seven] = this.graph.body;
     key += twelve;
     key += MusicModes.toTwelve(mode, seven);
@@ -44,14 +51,16 @@ class RelativeNote {
   }
 }
 
+//todo untested
 class AbsoluteNote {
   constructor(absNote, audioCtx) {
+    this.type = "start";            //this makes the interpreter able to run it
     this.graph = absNote;
     this.output = makeFrequencyGain(audioCtx);
-    this.update();
+    this.start();
   }
 
-  update() {
+  start() {
     const [twelve, mode] = this.graph.body;
     this.output.gain.value = Notes[twelve];
   }
