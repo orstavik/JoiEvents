@@ -2,48 +2,50 @@
 //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
 //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
 
-class MomGain {
-
-  constructor(node, ctx) {
+class MomNode {
+  constructor(node, params, output) {
     this.body = node.body;
-    this.ctx = ctx;
-    this.output = ctx.createGain();
-    this.input = this.output;
-    this.gainValue = node.body[0];
-
+    this.params = params;
     this.graph = node;                           //todo remove graph?
-    this.start();
+    this.output = output;
+    this.input = output;
   }
 
   start() {
-    this.gainValue.start && this.gainValue.start();
-    setAudioParameter(this.output.gain, this.gainValue);
+    for (let child of this.body)
+      child && child.start && child.start();
+    for (let i = 0; i < this.params.length; i++) {
+      let param = this.params[i];
+      this.setAudioParameter(this.output[param], this.body[i], this.output, param);
+    }
+  }
+
+  setAudioParameter(target, param, output, paramName) {
+    if (param === undefined)
+      return;
+    if (target instanceof Function)
+      output[paramName](param);
+    else if (param.output) {
+      param.output.connect(target);
+    } else if (typeof param === "number") {
+      target.value = param;
+    } else if (param instanceof Array) {
+      plotEnvelope(target, param);
+    } else
+      throw new Error("CssAudio: Illegal input to gain node: " + param);
   }
 }
 
-class MomOscillator {
+function createMomGain(node, ctx) {
+  return new MomNode(node, ["gain"], ctx.createGain());
+}
 
-  constructor(node, ctx, type) {
-    this.body = node.body;
-    this.ctx = ctx;
-    this.output = ctx.createOscillator();
-    this.output.type = type;
-    this.output.start();
-    this.freq = node.body[0];
-    this.wave = node.body[1];
-
-    this.graph = node;                           //todo remove graph?
-  }
-
-  async start() {
-    this.freq.start && this.freq.start();
-    setAudioParameter(this.output.frequency, this.freq);
-    if (this.wave) {                            //todo cache the creation of the wave in the constructor?
-      //todo it is probably better to move the construction of the wave into another class / object?
-      const table = await createPeriodicWave(this.ctx, this.wave);
-      this.output.setPeriodicWave(table);
-    }
-  }
+async function createMomOscillator(node, ctx, type) {
+  const output = ctx.createOscillator();
+  output.type = type;
+  output.start();
+  node.body[1] = await createPeriodicWave(ctx, node.body[1]);
+  return new MomNode(node, ["frequency", "setPeriodicWave"], output);
 }
 
 function plotEnvelope(target, points) {
@@ -161,6 +163,8 @@ class AudioFileRegister {
 }
 
 async function createPeriodicWave(ctx, wave) {
+  if (wave === undefined)
+    return undefined;
   if (typeof wave === "string") {
     const file = await fetch(wave);
     const data = await file.json();
@@ -174,7 +178,7 @@ async function createPeriodicWave(ctx, wave) {
 }
 
 async function makeOscillator(node, ctx, type) {
-  const osc = new MomOscillator(node, ctx, type);
+  const osc = await createMomOscillator(node, ctx, type);
   osc.start();
   return osc;
 }
@@ -190,7 +194,7 @@ function makeFilter(ctx, type, node, p) {
 }
 
 function makeGain(node, ctx) {
-  const g = new MomGain(node, ctx);
+  const g = createMomGain(node, ctx);
   g.start();
   return g;
 }
@@ -234,7 +238,7 @@ async function makeLfo(ctx, min, max, frequency, type) {
   let diff = max - min;
   gainNode.gain.value = type === "sine" ? diff / 2 : diff;
   osc1.connect(gainNode);
-  return merge(ctx, makeConstant(ctx, min), gainNode);
+  return merge(ctx, makeConstant(ctx, min), gainNode);            //todo merge doesn't work well
 }
 
 export const InterpreterFunctions = {};
