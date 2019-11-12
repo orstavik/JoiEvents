@@ -45,7 +45,7 @@ const tokens = [
   /\$[\d]+/,                                 //dollarVariable:
   /(-?(?:\d*\.\d+|\d+)(?:[Ee][+-]?\d+)?)([a-zA-Z]*)/,     //number: //unit can only be latin letters
   /[(),[\]]/,                                //bracket operators:
-  /\^\/|\^\^|\^\+|\^-|[!~|>:+*/%^-]/,              //other operators:  |%-|%+
+  /\^\/|\^\^|\^\+|\^-|[#!~|>:+*/%^-]/,       //other operators:  |%-|%+
   /"((?:\\\\|\\"|[^"]|\.)*)"/,               //doubleQuote
   /'((?:\\\\|\\'|[^']|\.)*)'/,               //singleQuote
   /\s+/,                                     //whitespace

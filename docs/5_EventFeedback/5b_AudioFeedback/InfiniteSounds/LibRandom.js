@@ -63,5 +63,20 @@ Translations.lfo = function (node, ctx) {
 
 Translations.noise = function (node, ctx) {
   const [dur = 3, sampleRate = 44100] = node.body;
-  return {type: "url", body: ["noise:" + dur + ":" + sampleRate, 1]};
+  return {type: "url", body: [{type: "#", body: [undefined, "noise:" + dur + ":" + sampleRate]}, 1]};
+};
+
+Translations.convolver = function (node, ctx) {
+  if (node.body.length === 0)
+    node.body[0] = {
+      type: "#",
+      body: [
+        undefined,
+        "https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json"
+      ]
+    };
+  return node;
+};
+Translations.mute = function (node, ctx) {
+  return {type: "gain", body: [0]};
 };

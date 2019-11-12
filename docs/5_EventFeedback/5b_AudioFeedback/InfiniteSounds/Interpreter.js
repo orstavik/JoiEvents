@@ -6,6 +6,7 @@ import {InterpreterFunctions} from "./LibAudio.js";
 import {MusicDynamic} from "./LibMusicDynamic.js";
 import {MusicMath} from "./LibMusic.js";
 import {Units} from "./LibUnits.js";
+import {AudioBufferFunctions} from "./LibAudioBuffer.js";
 
 function mergeTables(...tables) {
   const res = {};
@@ -31,7 +32,8 @@ const staticTable = mergeTables(ListOps, Units, MathOps, MusicMath, Translations
 //todo the static table produce a JSONable, pure data object.
 //todo the dynamic table produce an object graph with particular classes.
 //todo both lists children as body, as it enables the running of all in the same machines.
-const dynamicTable = mergeTables(Random, MathOps, MusicMath, MusicDynamic, InterpreterFunctions, AudioPiping);
+const dynamicTable = mergeTables(Random, MathOps, MusicMath, MusicDynamic, InterpreterFunctions, AudioBufferFunctions,
+AudioPiping);
 
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))

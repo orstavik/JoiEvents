@@ -20,6 +20,7 @@ class MomNode {
     }
   }
 
+//todo Make audioparam accept array of audio nodes??
   setAudioParameter(target, param, output, paramName) {
     if (param === undefined)
       return;
@@ -75,7 +76,7 @@ function createMomDelay(node, ctx) {
   return new MomNode(node, [], delayNode);    //todo doesn't need to start()
 }
 
-function makeMomConstant(node, ctx) {
+function createMomConstant(node, ctx) {
   const constant = ctx.createConstantSource();
   constant.start();
   const res = new MomNode(node, ["offset"], constant);
@@ -83,6 +84,21 @@ function makeMomConstant(node, ctx) {
   return res;
 }
 
+async function createMomConvolver(node, ctx) {
+  const convolver = ctx.createConvolver();
+  const momNode = new MomNode(node, ["buffer"], convolver);
+  momNode.start();
+  return momNode;
+}
+
+function createMomBufferSource(node, ctx) {
+  node.body[1] = !!node.body[1];
+  const bufferSource = ctx.createBufferSource();
+  bufferSource.start();
+  const momNode = new MomNode(node, ["buffer", "loop"], bufferSource);
+  momNode.start();
+  return momNode;
+}
 
 function plotEnvelope(target, points) {
   target.value = 0;
@@ -97,64 +113,6 @@ function plotEnvelope(target, points) {
     nextStart += time;
   }
 }
-
-//todo Make audioparam accept array of audio nodes??
-
-//todo "gain()" or "gain", does that equal "mute" or "gain(1)"?
-
-/**
- * AudioFileRegister caches the arrayBuffers for different audio url's.
- * This implementation is naive because it:
- * 1. doesn't handle url files that change dynamically
- * 2. stores potentially infinite audio url files directly in memory
- *
- * Can be made smarter by:
- * 1. keeping a limit on how many files are stored.
- *    If more than 100 audiofiles, or 20mb data
- *    (ie. the sum of the length/size of each arrayBuffer in the cache),
- *    then delete the cached arrayBuffer last retrieved from the cache.
- * 2. Add a static method AudioFileRegister.clearCache(url) that can be called manually from js.
- * 3. Preferably use the ttl of the http request to control the cache. If the ttl of the http request is not ok, then:
- *    a. When the file is first added to the cache register,
- *       check if trying to get the same file again returns a 304, not modified.
- *    b. if the file was not modified last time, then use the cache and check *after* the cache has been delivered
- *       if the assumption that the server returns a 304.
- *    c. check rarely if the cache needs updating, ie. after every 10n uses of the cache, ie. 1, 10, 100, 1000 etc.
- *
- * A combination of 1 and 3 should be ok.
- */
-const cachedFiles = Object.create(null);
-
-class AudioBufferRegister {
-
-  static async fetchAudioBufferUrl(url, ctx, type) {
-    if (url.startsWith("noise:")) {
-      const [dur, sample] = url.substr(6).split(":").map(n => parseInt(n));
-      return AudioBufferRegister.makeNoiseNode(dur, sample);
-    }
-    if (type === "json")
-      return await ctx.decodeAudioData(new Uint8Array(await (await fetch(url)).json()).buffer);
-    return await ctx.decodeAudioData(await (await fetch(url)).arrayBuffer());
-  }
-
-  static async getAudioBuffer(url, ctx, type) {
-    return cachedFiles[url] ?
-      cachedFiles[url] :
-      cachedFiles[url] = AudioBufferRegister.fetchAudioBufferUrl(url, ctx, type);
-  }
-
-  static makeNoiseNode(duration, sampleRate) {
-    const ctx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
-    const bufferSize = sampleRate * duration; // set the time of the note
-    const buffer = ctx.createBuffer(1, bufferSize, sampleRate); // create an empty buffer
-    let data = buffer.getChannelData(0); // get data
-    // fill the buffer with noise
-    for (let i = 0; i < bufferSize; i++)
-      data[i] = Math.random() * 2 - 1;
-    return buffer;
-  }
-}
-
 async function createPeriodicWave(ctx, wave) {
   if (wave === undefined)
     return undefined;
@@ -196,37 +154,19 @@ InterpreterFunctions.peaking = (node, ctx) => createMomFilter(node, ctx[ctx.leng
 InterpreterFunctions.notch = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "notch");
 InterpreterFunctions.allpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "allpass");
 
-InterpreterFunctions.constant = (node, ctx) => makeMomConstant(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.constant = (node, ctx) => createMomConstant(node, ctx[ctx.length - 1].webAudio);
 
 //todo test Uint8Array input different types of
-InterpreterFunctions.convolver = async function (node, ctx) {
-  let data = node.body[0] || "https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json";
-  ctx = ctx[ctx.length - 1].webAudio;
-  node.body[0] = await (
-    typeof data === "string" ? await AudioBufferRegister.getAudioBuffer(data, ctx, "json") :
-      data instanceof Array ? new Uint8Array(data).buffer :
-        // array.type === "base64" ? convertToAudioBuffer(array) :
-        undefined);
-
-  if (!node.body[0])
-    throw new Error("Cannot create convolver without a valid description.");
-
-  const convolver = ctx.createConvolver();
-  const momNode = new MomNode(node, ["buffer"], convolver);
-  momNode.start();
-  return momNode;
-};
+InterpreterFunctions.convolver = async (node, ctx) => createMomConvolver(node, ctx[ctx.length - 1].webAudio);
 
 /**
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = async function (node, ctx) {
-  ctx = ctx[ctx.length - 1].webAudio;
-  node.body = [await AudioBufferRegister.getAudioBuffer(node.body[0], ctx), !!node.body[1]];
-  const bufferSource = ctx.createBufferSource();
-  bufferSource.start();
-  const momNode = new MomNode(node, ["buffer", "loop"], bufferSource);
-  momNode.start();
-  return momNode;
-};
+InterpreterFunctions.url = async (node, ctx) => createMomBufferSource(node, ctx[ctx.length - 1].webAudio);
+
+//todo fix the bug for the original property on notes
+
+//todo add "map" operations on arrays.
+
+//todo add static tests for noise and lfo!
