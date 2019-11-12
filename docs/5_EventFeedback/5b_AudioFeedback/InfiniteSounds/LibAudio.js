@@ -137,6 +137,14 @@ class AudioFileRegister {
       data[i] = Math.random() * 2 - 1;
     return buffer;
   }
+
+  static async makeNoise(duration = 3, sampleRate = 44100) {
+    const id = "cache:noise:" + duration + ":" + sampleRate;
+    let cache = cachedFiles[id];
+    if (!cache)
+      cache = cachedFiles[id] = await AudioFileRegister.makeNoiseNode(duration, sampleRate);
+    return cache;
+  }
 }
 
 async function createPeriodicWave(ctx, wave) {
@@ -218,7 +226,6 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   return {graph: node, input: convolver, output: convolver};
 };
 
-
 /**
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
@@ -237,7 +244,7 @@ InterpreterFunctions.url = async function (node, ctx) {
 InterpreterFunctions.noise = async function (node, ctx) {
   ctx = ctx[ctx.length - 1].webAudio;
   const aNoise = ctx.createBufferSource();
-  aNoise.buffer = await (cachedFiles["cache:////noise"] || (cachedFiles["cache:////noise"] = AudioFileRegister.makeNoiseNode(3, 44100)));
+  aNoise.buffer = await AudioFileRegister.makeNoise();
   aNoise.loop = true;
   aNoise.start();
   return {graph: node, output: aNoise};
