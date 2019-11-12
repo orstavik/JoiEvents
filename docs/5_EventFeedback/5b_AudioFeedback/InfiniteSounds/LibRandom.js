@@ -26,7 +26,7 @@ Random.random = function (node) {
 
 export const Translations = {};
 
-//todo make it possible to pass in a 
+//todo maybe alter this one to simply add four arguments to the sine, square, etc
 //lfo(hz=1, type=sine, min=0, max=1).
 Translations.lfo = function (node, ctx) {
   let [frequency = 1, type = "sine", min = 0, max = 1] = node.body;
@@ -58,16 +58,10 @@ Translations.lfo = function (node, ctx) {
       },
       {type: "gain", body: [1]}
     ]
-    // type: "[]",
-    // body: [
-    //   {type: "constant", body: [min]},
-    //   {
-    //     type: ">",
-    //     body: [
-    //       {type: type, body: [frequency]},
-    //       {type: "gain", body: [diff]}
-    //     ]
-    //   }
-    // ]
   }
+};
+
+Translations.noise = function (node, ctx) {
+  const [dur = 3, sampleRate = 44100] = node.body;
+  return {type: "url", body: ["noise:" + dur + ":" + sampleRate, 1]};
 };

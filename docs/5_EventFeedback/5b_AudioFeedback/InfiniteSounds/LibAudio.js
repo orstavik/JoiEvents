@@ -29,6 +29,8 @@ class MomNode {
       output[paramName] = param;
     else if (param.output) {
       param.output.connect(target);
+    } else if (!target.value) {
+      output[paramName] = param;
     } else if (typeof param === "number") {
       target.value = param;
     } else if (param instanceof Array) {
@@ -73,10 +75,8 @@ function createMomDelay(node, ctx) {
   return new MomNode(node, [], delayNode);    //todo doesn't need to start()
 }
 
-function makeMomConstant(node, ctx, value) {
+function makeMomConstant(node, ctx) {
   const constant = ctx.createConstantSource();
-  // if (node.body[0] === undefined)
-  //   node.body = [1];
   constant.start();
   const res = new MomNode(node, ["offset"], constant);
   res.start();
@@ -127,18 +127,20 @@ const cachedFiles = Object.create(null);
 
 class AudioBufferRegister {
 
-  static async getAudioBuffer(url, ctx, type) {
-    let cache = cachedFiles[url];
-    if (!cache) {
-      const file = await fetch(url);
-      cache = (
-        type === "json" ?
-          new Uint8Array(await file.json()).buffer :
-          await file.arrayBuffer()
-      );
-      cache = cachedFiles[url] = ctx.decodeAudioData(cache);
+  static async fetchAudioBufferUrl(url, ctx, type) {
+    if (url.startsWith("noise:")) {
+      const [dur, sample] = url.substr(6).split(":").map(n => parseInt(n));
+      return AudioBufferRegister.makeNoiseNode(dur, sample);
     }
-    return cache;//.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
+    if (type === "json")
+      return await ctx.decodeAudioData(new Uint8Array(await (await fetch(url)).json()).buffer);
+    return await ctx.decodeAudioData(await (await fetch(url)).arrayBuffer());
+  }
+
+  static async getAudioBuffer(url, ctx, type) {
+    return cachedFiles[url] ?
+      cachedFiles[url] :
+      cachedFiles[url] = AudioBufferRegister.fetchAudioBufferUrl(url, ctx, type);
   }
 
   static makeNoiseNode(duration, sampleRate) {
@@ -150,14 +152,6 @@ class AudioBufferRegister {
     for (let i = 0; i < bufferSize; i++)
       data[i] = Math.random() * 2 - 1;
     return buffer;
-  }
-
-  static async makeNoise(duration = 3, sampleRate = 44100) {
-    const id = "cache:noise:" + duration + ":" + sampleRate;
-    let cache = cachedFiles[id];
-    if (!cache)
-      cache = cachedFiles[id] = await AudioBufferRegister.makeNoiseNode(duration, sampleRate);
-    return cache;
   }
 }
 
@@ -208,18 +202,19 @@ InterpreterFunctions.constant = (node, ctx) => makeMomConstant(node, ctx[ctx.len
 InterpreterFunctions.convolver = async function (node, ctx) {
   let data = node.body[0] || "https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json";
   ctx = ctx[ctx.length - 1].webAudio;
-  const buffer = await (
+  node.body[0] = await (
     typeof data === "string" ? await AudioBufferRegister.getAudioBuffer(data, ctx, "json") :
       data instanceof Array ? new Uint8Array(data).buffer :
         // array.type === "base64" ? convertToAudioBuffer(array) :
         undefined);
 
-  if (!buffer)
+  if (!node.body[0])
     throw new Error("Cannot create convolver without a valid description.");
 
   const convolver = ctx.createConvolver();
-  convolver.buffer = buffer;
-  return {graph: node, input: convolver, output: convolver};
+  const momNode = new MomNode(node, ["buffer"], convolver);
+  momNode.start();
+  return momNode;
 };
 
 /**
@@ -228,19 +223,10 @@ InterpreterFunctions.convolver = async function (node, ctx) {
  */
 InterpreterFunctions.url = async function (node, ctx) {
   ctx = ctx[ctx.length - 1].webAudio;
-  const [url, loop] = node.body;
+  node.body = [await AudioBufferRegister.getAudioBuffer(node.body[0], ctx), !!node.body[1]];
   const bufferSource = ctx.createBufferSource();
   bufferSource.start();
-  bufferSource.buffer = await AudioBufferRegister.getAudioBuffer(url, ctx);
-  bufferSource.loop = loop;
-  return {graph: node, output: bufferSource};
-};
-
-InterpreterFunctions.noise = async function (node, ctx) {
-  ctx = ctx[ctx.length - 1].webAudio;
-  const aNoise = ctx.createBufferSource();
-  aNoise.buffer = await AudioBufferRegister.makeNoise();
-  aNoise.loop = true;
-  aNoise.start();
-  return {graph: node, output: aNoise};
+  const momNode = new MomNode(node, ["buffer", "loop"], bufferSource);
+  momNode.start();
+  return momNode;
 };
