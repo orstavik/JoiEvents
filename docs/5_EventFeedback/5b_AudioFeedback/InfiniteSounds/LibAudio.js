@@ -127,24 +127,6 @@ class AudioFileRegister {
     return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
 
-  static async makeFileBufferSource(node, ctx) {
-    const [url, loop] = node.body;
-    const bufferSource = ctx.createBufferSource();
-    const data = await AudioFileRegister.getFileBuffer(url);
-    bufferSource.buffer = await ctx.decodeAudioData(data);
-    bufferSource.loop = !!loop;
-    bufferSource.start();
-    return {graph: node, output: bufferSource};
-  }
-
-  static async noise(node, ctx) {
-      const aNoise = ctx.createBufferSource();
-    aNoise.buffer = await (cachedFiles["cache:////noise"] || (cachedFiles["cache:////noise"] = AudioFileRegister.makeNoiseNode(3, 44100)));
-    aNoise.loop = true;
-    aNoise.start();
-    return {graph: node, output: aNoise};
-  }
-
   static makeNoiseNode(duration, sampleRate) {
     const ctx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
     const bufferSize = sampleRate * duration; // set the time of the note
@@ -241,9 +223,25 @@ InterpreterFunctions.convolver = async function (node, ctx) {
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = (node, ctx) => AudioFileRegister.makeFileBufferSource(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.url = async function (node, ctx) {
+  ctx = ctx[ctx.length - 1].webAudio;
+  const [url, loop] = node.body;
+  const bufferSource = ctx.createBufferSource();
+  const data = await AudioFileRegister.getFileBuffer(url);
+  bufferSource.buffer = await ctx.decodeAudioData(data);
+  bufferSource.loop = !!loop;
+  bufferSource.start();
+  return {graph: node, output: bufferSource};
+};
 
-InterpreterFunctions.noise = (node, ctx) => AudioFileRegister.noise(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.noise = async function (node, ctx) {
+  ctx = ctx[ctx.length - 1].webAudio;
+  const aNoise = ctx.createBufferSource();
+  aNoise.buffer = await (cachedFiles["cache:////noise"] || (cachedFiles["cache:////noise"] = AudioFileRegister.makeNoiseNode(3, 44100)));
+  aNoise.loop = true;
+  aNoise.start();
+  return {graph: node, output: aNoise};
+};
 
 InterpreterFunctions.lfo = async function (node, ctx) {
   let [min = 0, max = 1, freq = 1, type] = node.body;
