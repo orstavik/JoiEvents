@@ -47,18 +47,19 @@ function createMomGain(node, ctx) {
   return momNode;
 }
 
-async function createMomOscillator(node, ctx, type) {
+async function createMomOscillator(node, ctx) {
   const osc = ctx.createOscillator();
-  osc.type = type;
   osc.start();
-  const momNode = new MomNode(node, ["frequency", "setPeriodicWave"], osc);
+  const momNode = new MomNode(node, ["type", "frequency", "setPeriodicWave"], osc);
   momNode.start();
   return momNode;
 }
 
 function createMomFilter(node, ctx, params, type) {
+  node.body.unshift(type);
+  params.unshift("type");
   const filter = ctx.createBiquadFilter();
-  filter.type = type;
+  // filter.type = type;
   const momNode = new MomNode(node, params, filter);
   momNode.start();
   return momNode;
@@ -124,10 +125,8 @@ function plotEnvelope(target, points) {
 
 export const InterpreterFunctions = {};
 
-InterpreterFunctions.sine = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "sine");
-InterpreterFunctions.square = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "square");
-InterpreterFunctions.triangle = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "triangle");
-InterpreterFunctions.sawtooth = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio, "sawtooth");
+InterpreterFunctions.oscillator = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio);
+
 InterpreterFunctions.gain = (node, ctx) => createMomGain(node, ctx[ctx.length - 1].webAudio);
 InterpreterFunctions.delay = (node, ctx) => createMomDelay(node, ctx[ctx.length - 1].webAudio);
 InterpreterFunctions.lowpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "lowpass");

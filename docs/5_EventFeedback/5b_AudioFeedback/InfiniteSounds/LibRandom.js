@@ -79,5 +79,28 @@ Translations.convolver = function (node, ctx) {
 };
 
 Translations.mute = function (node, ctx) {
-  return {type: "gain", body: [0]};
+  node.type = "gain";
+  node.body[0] = 0;
+  return node;
+};
+
+Translations.sine = function (node, ctx) {
+  node.type = "oscillator";
+  node.body.unshift("sine");
+  return node;
+};
+Translations.triangle = function (node, ctx) {
+  node.type = "oscillator";
+  node.body.unshift("triangle");
+  return node;
+};
+Translations.square = function (node, ctx) {
+  node.type = "oscillator";
+  node.body.unshift("square");
+  return node;
+};
+Translations.sawtooth = function (node, ctx) {
+  node.type = "oscillator";
+  node.body.unshift("sawtooth");
+  return node;
 };
