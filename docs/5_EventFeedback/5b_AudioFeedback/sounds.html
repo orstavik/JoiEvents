@@ -16,16 +16,16 @@
 <sound-strip sound="sawtooth(440Hz)"></sound-strip>
 <sound-strip sound="square(500Hz)" sound-two="square(500Hz)"></sound-strip>
 <h2>Oscillators with periodic wave:</h2>
-<sound-strip sound="sine(160hz, 'https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/wavetables/trombone.json')"></sound-strip>
-<sound-strip sound="sawtooth(160hz, [[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]])"></sound-strip>
+<sound-strip sound="sine(160hz, ##'https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/wavetables/trombone.json')"></sound-strip>
+<sound-strip sound="sawtooth(160hz, ##[[0,0.4,0.4,1,1,1,0.3,0.7,0.6,0.5,0.9,0.8]])"></sound-strip>
 
 <h1>Pipe through gain</h1>
 <sound-strip sound="sine(340hz) > gain([0.9:0.9, 0.6:0.001, 0.6:0.4, 0:0.02])"></sound-strip>
 <sound-strip sound="sine(340hz) > gain(0.2)"></sound-strip>
 
 <h1>File sounds and WhiteNoise</h1>
-<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3')"></sound-strip>
-<sound-strip sound="url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3', 1)" dont-stop></sound-strip>
+<sound-strip sound="url(#'https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3')"></sound-strip>
+<sound-strip sound="url(#'https://s3-us-west-2.amazonaws.com/s.cdpn.io/355309/G4.mp3', 1)" dont-stop></sound-strip>
 <sound-strip sound="noise"></sound-strip>
 
 <h1>Random</h1>

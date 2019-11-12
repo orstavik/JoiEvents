@@ -53,7 +53,25 @@ class AudioBufferRegister {
 
 export const AudioBufferFunctions = Object.create(null);
 
+//AudioBuffers
 AudioBufferFunctions["#"] = async (node, ctx) => await AudioBufferRegister.getAudioBuffer(node.body[1], ctx[ctx.length - 1].webAudio);
+//PeriodicWaves
+AudioBufferFunctions["##"] = async function (node, ctx) {
+  ctx = ctx[ctx.length - 1].webAudio;
+  const [nothing, wave] = node.body;
+  if (wave === undefined)
+    return undefined;
+  if (typeof wave === "string") {
+    const file = await fetch(wave);
+    const data = await file.json();
+    return ctx.createPeriodicWave(data.real, data.imag);
+  }
+  if (!(wave instanceof Array))
+    throw new SyntaxError("Semantics: A periodic wavetable must be an array of raw numbers or a URL point to a json file with such an array");
+  const real = wave[0];
+  const imag = !wave[1] ? new Float32Array(real.length) : wave[1];
+  return ctx.createPeriodicWave(real, imag);
+};
 // node.body[0] = await (
 //   typeof data === "string" ? await AudioBufferRegister.getAudioBuffer(data, ctx) :
 //     data instanceof Array ? new Uint8Array(data).buffer :

@@ -51,7 +51,6 @@ async function createMomOscillator(node, ctx, type) {
   const osc = ctx.createOscillator();
   osc.type = type;
   osc.start();
-  node.body[1] = await createPeriodicWave(ctx, node.body[1]);
   const momNode = new MomNode(node, ["frequency", "setPeriodicWave"], osc);
   momNode.start();
   return momNode;
@@ -73,7 +72,7 @@ function createMomDelay(node, ctx) {
     delayTime: goal,
     maxDelayTime: max
   });
-  return new MomNode(node, [], delayNode);    //todo doesn't need to start()
+  return new MomNode(node, [], delayNode);    //todo doesn't need to start() as it has no params
 }
 
 function createMomConstant(node, ctx) {
@@ -112,20 +111,6 @@ function plotEnvelope(target, points) {
       throw new Error("todo: implement 'l' or 'a' type of time coordinate.");
     nextStart += time;
   }
-}
-async function createPeriodicWave(ctx, wave) {
-  if (wave === undefined)
-    return undefined;
-  if (typeof wave === "string") {
-    const file = await fetch(wave);
-    const data = await file.json();
-    return ctx.createPeriodicWave(data.real, data.imag);
-  }
-  if (!(wave instanceof Array))
-    throw new SyntaxError("Semantics: A periodic wavetable must be an array of raw numbers or a URL point to a json file with such an array");
-  const real = wave[0];
-  const imag = !wave[1] ? new Float32Array(real.length) : wave[1];
-  return ctx.createPeriodicWave(real, imag);
 }
 
 //todo make a better merge than [x,y,z] > gain(1)
