@@ -25,6 +25,8 @@ class MomNode {
       return;
     if (target instanceof Function)
       output[paramName](param);
+    else if (param instanceof AudioBuffer)
+      output[paramName] = param;
     else if (param.output) {
       param.output.connect(target);
     } else if (typeof param === "number") {
@@ -123,19 +125,20 @@ function plotEnvelope(target, points) {
  */
 const cachedFiles = Object.create(null);
 
-class AudioFileRegister {
+class AudioBufferRegister {
 
-  static async getFileBuffer(url, type) {
+  static async getAudioBuffer(url, ctx, type) {
     let cache = cachedFiles[url];
     if (!cache) {
       const file = await fetch(url);
-      cachedFiles[url] = cache = (
+      cache = (
         type === "json" ?
           new Uint8Array(await file.json()).buffer :
           await file.arrayBuffer()
       );
+      cache = cachedFiles[url] = ctx.decodeAudioData(cache);
     }
-    return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
+    return cache;//.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
 
   static makeNoiseNode(duration, sampleRate) {
@@ -153,7 +156,7 @@ class AudioFileRegister {
     const id = "cache:noise:" + duration + ":" + sampleRate;
     let cache = cachedFiles[id];
     if (!cache)
-      cache = cachedFiles[id] = await AudioFileRegister.makeNoiseNode(duration, sampleRate);
+      cache = cachedFiles[id] = await AudioBufferRegister.makeNoiseNode(duration, sampleRate);
     return cache;
   }
 }
@@ -206,7 +209,7 @@ InterpreterFunctions.convolver = async function (node, ctx) {
   let data = node.body[0] || "https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json";
   ctx = ctx[ctx.length - 1].webAudio;
   const buffer = await (
-    typeof data === "string" ? await AudioFileRegister.getFileBuffer(data, "json") :
+    typeof data === "string" ? await AudioBufferRegister.getAudioBuffer(data, ctx, "json") :
       data instanceof Array ? new Uint8Array(data).buffer :
         // array.type === "base64" ? convertToAudioBuffer(array) :
         undefined);
@@ -215,7 +218,7 @@ InterpreterFunctions.convolver = async function (node, ctx) {
     throw new Error("Cannot create convolver without a valid description.");
 
   const convolver = ctx.createConvolver();
-  convolver.buffer = await ctx.decodeAudioData(buffer);
+  convolver.buffer = buffer;
   return {graph: node, input: convolver, output: convolver};
 };
 
@@ -227,17 +230,16 @@ InterpreterFunctions.url = async function (node, ctx) {
   ctx = ctx[ctx.length - 1].webAudio;
   const [url, loop] = node.body;
   const bufferSource = ctx.createBufferSource();
-  const data = await AudioFileRegister.getFileBuffer(url);
-  bufferSource.buffer = await ctx.decodeAudioData(data);
-  bufferSource.loop = !!loop;
   bufferSource.start();
+  bufferSource.buffer = await AudioBufferRegister.getAudioBuffer(url, ctx);
+  bufferSource.loop = loop;
   return {graph: node, output: bufferSource};
 };
 
 InterpreterFunctions.noise = async function (node, ctx) {
   ctx = ctx[ctx.length - 1].webAudio;
   const aNoise = ctx.createBufferSource();
-  aNoise.buffer = await AudioFileRegister.makeNoise();
+  aNoise.buffer = await AudioBufferRegister.makeNoise();
   aNoise.loop = true;
   aNoise.start();
   return {graph: node, output: aNoise};
