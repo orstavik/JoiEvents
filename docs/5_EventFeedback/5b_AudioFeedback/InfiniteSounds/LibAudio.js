@@ -71,6 +71,17 @@ function createMomDelay(node, ctx) {
   return new MomNode(node, [], delayNode);    //todo doesn't need to start()
 }
 
+function makeMomConstant(node, ctx, value) {
+  const constant = ctx.createConstantSource();
+  // if (node.body[0] === undefined)
+  //   node.body = [1];
+  constant.start();
+  const res = new MomNode(node, ["offset"], constant);
+  res.start();
+  return res;
+}
+
+
 function plotEnvelope(target, points) {
   target.value = 0;
   let nextStart = 0;
@@ -170,12 +181,6 @@ async function createPeriodicWave(ctx, wave) {
 //   return merger;
 // }
 //
-function makeConstant(ctx, value) {
-  const constant = ctx.createConstantSource();
-  constant.offset.value = value;
-  constant.start();
-  return constant;
-}
 
 export const InterpreterFunctions = {};
 
@@ -192,7 +197,9 @@ InterpreterFunctions.lowshelf = (node, ctx) => createMomFilter(node, ctx[ctx.len
 InterpreterFunctions.highshelf = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "gain", "detune"], "highshelf");
 InterpreterFunctions.peaking = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "gain", "detune"], "peaking");
 InterpreterFunctions.notch = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "notch");
-InterpreterFunctions.allpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, undefined, ["frequency", "q", "detune"], "allpass");
+InterpreterFunctions.allpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "allpass");
+
+InterpreterFunctions.constant = (node, ctx) => makeMomConstant(node, ctx[ctx.length - 1].webAudio);
 
 //todo test Uint8Array input different types of
 InterpreterFunctions.convolver = async function (node, ctx) {
@@ -205,7 +212,7 @@ InterpreterFunctions.convolver = async function (node, ctx) {
         undefined);
 
   if (!buffer)
-    throw new Error("omg, cannot reverb without array");
+    throw new Error("Cannot create convolver without a valid description.");
 
   const convolver = ctx.createConvolver();
   convolver.buffer = await ctx.decodeAudioData(buffer);
@@ -234,11 +241,4 @@ InterpreterFunctions.noise = async function (node, ctx) {
   aNoise.loop = true;
   aNoise.start();
   return {graph: node, output: aNoise};
-};
-
-InterpreterFunctions.constant = function (node, ctx) {
-  let [value = 1] = node.body;
-  const webAudio = ctx[ctx.length - 1].webAudio;
-  let output = makeConstant(webAudio, value);
-  return {graph: node, output: output};
 };
