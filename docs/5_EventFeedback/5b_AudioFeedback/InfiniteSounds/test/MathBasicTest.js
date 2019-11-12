@@ -94,3 +94,11 @@ describe('math priority: interpret', function () {
   });
 });
 
+describe('math on arrays: interpret', function () {
+
+  it("[13,27,31]+1", async function () {
+    const tst2 = await staticInterpret('[13,27,31]+1',[]);
+    expect([14, 28, 32]).toEqual(tst2.body[0]);
+  });
+});
+
