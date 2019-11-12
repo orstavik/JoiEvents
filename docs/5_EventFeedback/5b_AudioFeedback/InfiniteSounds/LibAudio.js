@@ -162,33 +162,19 @@ async function createPeriodicWave(ctx, wave) {
   return ctx.createPeriodicWave(real, imag);
 }
 
-function merge(ctx, a, b) {
-  const merger = ctx.createChannelMerger(2);
-  a.connect(merger);
-  b.connect(merger);
-  return merger;
-}
-
+//todo make a better merge than [x,y,z] > gain(1)
+// function merge(ctx, a, b) {
+//   const merger = ctx.createChannelMerger(2);
+//   a.connect(merger);
+//   b.connect(merger);
+//   return merger;
+// }
+//
 function makeConstant(ctx, value) {
   const constant = ctx.createConstantSource();
   constant.offset.value = value;
   constant.start();
   return constant;
-}
-
-//todo lfo function (min, max, type, hz).
-//creates an oscillator that goes from min to max at specified hz.
-//The calculation varies from square (0-1),and sine (-1-1). verify.
-async function makeLfo(ctx, min, max, frequency, type) {
-  const osc1 = ctx.createOscillator();
-  osc1.frequency.value = frequency;
-  osc1.type = type;
-  osc1.start();
-  const gainNode = ctx.createGain();
-  let diff = max - min;
-  gainNode.gain.value = type === "sine" ? diff / 2 : diff;
-  osc1.connect(gainNode);
-  return merge(ctx, makeConstant(ctx, min), gainNode);            //todo merge doesn't work well
 }
 
 export const InterpreterFunctions = {};
@@ -248,13 +234,6 @@ InterpreterFunctions.noise = async function (node, ctx) {
   aNoise.loop = true;
   aNoise.start();
   return {graph: node, output: aNoise};
-};
-
-InterpreterFunctions.lfo = async function (node, ctx) {
-  let [min = 0, max = 1, freq = 1, type] = node.body;
-  type = type.value || "sine";
-  const webAudio = ctx[ctx.length - 1].webAudio;
-  return {graph: node, output: await makeLfo(webAudio, min, max, freq, type)};
 };
 
 InterpreterFunctions.constant = function (node, ctx) {

@@ -50,8 +50,8 @@
 <h1>lfo and constant</h1>
 <sound-strip sound="sine(340hz) > gain(square(3hz))"></sound-strip>
 <sound-strip sound="sine(340hz) > gain([constant(0.4), square(1) > gain(0.4)] > gain(1))"></sound-strip>
-<sound-strip sound="sine(340hz) > gain(lfo(0.4, 0.8, 1, 'square'))"></sound-strip>
-<sound-strip sound="sine(lfo(400, 800, 1, 'sine'))"></sound-strip>
+<sound-strip sound="sine(340hz) > gain(lfo(1, 'square',0.4, 0.8))"></sound-strip>
+<sound-strip sound="sine(lfo(2, 'sine', 400, 800))"></sound-strip>
 <sound-strip sound="sine(constant(340))"></sound-strip>
 
 <h1>Notes</h1>
