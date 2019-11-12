@@ -30,7 +30,7 @@ class MomNode {
       output[paramName] = param;
     else if (param.output) {
       param.output.connect(target);
-    } else if (!target.value) {
+    } else if (target.value === undefined) {
       output[paramName] = param;
     } else if (typeof param === "number") {
       target.value = param;
@@ -42,7 +42,8 @@ class MomNode {
 }
 
 function createMomGain(node, ctx) {
-  const momNode = new MomNode(node, ["gain"], ctx.createGain());
+  const gain = ctx.createGain();
+  const momNode = new MomNode(node, ["gain"], gain);
   momNode.start();
   return momNode;
 }
@@ -55,7 +56,7 @@ async function createMomOscillator(node, ctx) {
   return momNode;
 }
 
-function createMomFilter(node, ctx, params, type) {
+function createMomFilter(node, ctx) {
   const filter = ctx.createBiquadFilter();
   const momNode = new MomNode(node, ["type", "frequency", "q", "gain", "detune"], filter);
   momNode.start();
@@ -63,14 +64,10 @@ function createMomFilter(node, ctx, params, type) {
 }
 
 function createMomDelay(node, ctx) {
-  const [goal = 0, max = 1] = node.body;
-  if (typeof goal !== "number" || typeof max !== "number")
-    throw new Error("Delay nodes accept only and max two number parameters.");
-  let delayNode = new DelayNode(ctx, {
-    delayTime: goal,
-    maxDelayTime: max
-  });
-  return new MomNode(node, [], delayNode);    //todo doesn't need to start() as it has no params
+  let delayNode = ctx.createDelay();
+  const momNode = new MomNode(node, ["delayTime"], delayNode);
+  momNode.start();   //todo doesn't really need to start() as it has no params
+  return momNode;
 }
 
 function createMomConstant(node, ctx) {
@@ -89,7 +86,7 @@ async function createMomConvolver(node, ctx) {
 }
 
 function createMomBufferSource(node, ctx) {
-  node.body[1] = !!node.body[1];
+  node.body[1] = !!node.body[1];                                         //todo fix booleans?
   const bufferSource = ctx.createBufferSource();
   bufferSource.start();
   const momNode = new MomNode(node, ["buffer", "loop"], bufferSource);
