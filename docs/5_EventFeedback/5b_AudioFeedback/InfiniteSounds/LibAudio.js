@@ -56,11 +56,8 @@ async function createMomOscillator(node, ctx) {
 }
 
 function createMomFilter(node, ctx, params, type) {
-  node.body.unshift(type);
-  params.unshift("type");
   const filter = ctx.createBiquadFilter();
-  // filter.type = type;
-  const momNode = new MomNode(node, params, filter);
+  const momNode = new MomNode(node, ["type", "frequency", "q", "gain", "detune"], filter);
   momNode.start();
   return momNode;
 }
@@ -126,21 +123,10 @@ function plotEnvelope(target, points) {
 export const InterpreterFunctions = {};
 
 InterpreterFunctions.oscillator = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio);
-
 InterpreterFunctions.gain = (node, ctx) => createMomGain(node, ctx[ctx.length - 1].webAudio);
 InterpreterFunctions.delay = (node, ctx) => createMomDelay(node, ctx[ctx.length - 1].webAudio);
-InterpreterFunctions.lowpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "lowpass");
-InterpreterFunctions.highpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune", "highpass"]);
-InterpreterFunctions.bandpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "bandpass");
-InterpreterFunctions.lowshelf = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "gain", "detune"], "lowshelf");
-InterpreterFunctions.highshelf = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "gain", "detune"], "highshelf");
-InterpreterFunctions.peaking = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "gain", "detune"], "peaking");
-InterpreterFunctions.notch = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "notch");
-InterpreterFunctions.allpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "allpass");
-
+InterpreterFunctions.filter = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio);
 InterpreterFunctions.constant = (node, ctx) => createMomConstant(node, ctx[ctx.length - 1].webAudio);
-
-//todo test Uint8Array input different types of
 InterpreterFunctions.convolver = async (node, ctx) => createMomConvolver(node, ctx[ctx.length - 1].webAudio);
 
 /**
@@ -149,8 +135,12 @@ InterpreterFunctions.convolver = async (node, ctx) => createMomConvolver(node, c
  */
 InterpreterFunctions.url = async (node, ctx) => createMomBufferSource(node, ctx[ctx.length - 1].webAudio);
 
-//todo fix the bug for the original property on notes
+//todo test Uint8Array input different types of
 
-//todo add "map" operations on arrays.
+//todo Fix the bug for the original property on notes
 
-//todo add static tests for noise and lfo!
+//todo Add "map" operations on arrays.
+
+//todo Add static tests for noise and lfo and oscillator and filter!
+
+//todo In the static lib, I can also add the type checks. That can be voluntary, we can turn them off. We just run through the output early, and then we test it before it goes into MomCreation.

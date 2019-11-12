@@ -104,3 +104,59 @@ Translations.sawtooth = function (node, ctx) {
   node.body.unshift("sawtooth");
   return node;
 };
+
+//lowpass(frequency, q, detune) => filter("lowpass", frequency, q, null, detune)
+Translations.lowpass = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("lowpass");
+  node.body.splice(2, 0, undefined);
+  return node;
+};
+//highpass(frequency, q, detune) => filter("highpass", frequency, q, null, detune)
+Translations.highpass = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("highpass");
+  node.body.splice(2, 0, undefined);
+  return node;
+};
+//bandpass(frequency, q, detune) => filter("bandpass", frequency, q, null, detune)
+Translations.bandpass = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("bandpass");
+  node.body.splice(2, 0, undefined);
+  return node;
+};
+//allpass(frequency, q, detune) => filter("allpass", frequency, q, null, detune)
+Translations.allpass = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("allpass");
+  node.body.splice(2, 0, undefined);
+  return node;
+};
+//notch(frequency, q, detune) => filter("notch", frequency, q, null, detune)
+Translations.notch = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("notch");
+  node.body.splice(2, 0, undefined);
+  return node;
+};
+//lowshelf(frequency, gain, detune) => filter("lowshelf", frequency, null, gain, detune)
+Translations.lowshelf = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("lowshelf");
+  node.body.splice(1, 0, undefined);
+  return node;
+};
+//highshelf(frequency, gain, detune) => filter("highshelf", frequency, null, gain, detune)
+Translations.highshelf = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("highshelf");
+  node.body.splice(1, 0, undefined);
+  return node;
+};
+//peaking(frequency, q, gain, detune) => filter("peaking", frequency, q, null, detune)
+Translations.peaking = function (node, ctx) {
+  node.type = "filter";
+  node.body.unshift("peaking");
+  return node;
+};
