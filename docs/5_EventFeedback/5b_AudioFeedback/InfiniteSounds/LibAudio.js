@@ -111,45 +111,26 @@ function plotEnvelope(target, points) {
  * A combination of 1 and 3 should be ok.
  */
 const cachedFiles = Object.create(null);
-let noise;
-
-function makeNoiseNode(duration, sampleRate) {
-  const ctx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
-  const bufferSize = sampleRate * duration; // set the time of the note
-  const buffer = ctx.createBuffer(1, bufferSize, sampleRate); // create an empty buffer
-  let data = buffer.getChannelData(0); // get data
-  // fill the buffer with noise
-  for (let i = 0; i < bufferSize; i++)
-    data[i] = Math.random() * 2 - 1;
-  return buffer;
-}
-
-function convertConvolverBuffer(data) {
-  return new Uint8Array(data).buffer;
-}
-
-async function fetchAConvolverBuffer(url) {
-  const file = await fetch(url);
-  const data = await file.json();
-  return convertConvolverBuffer(data);
-}
-
-const aConvolverBuffer = fetchAConvolverBuffer("https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json");
 
 class AudioFileRegister {
-  static async getFileBuffer(url) {
+
+  static async getFileBuffer(url, type) {
     let cache = cachedFiles[url];
     if (!cache) {
       const file = await fetch(url);
-      cache = cachedFiles[url] = await file.arrayBuffer();
+      cachedFiles[url] = cache = (
+        type === "json" ?
+          new Uint8Array(await file.json()).buffer :
+          await file.arrayBuffer()
+      );
     }
     return cache.slice();//att! must use .slice() to avoid depleting the ArrayBuffer
   }
 
   static async makeFileBufferSource(node, ctx) {
     const [url, loop] = node.body;
-    const data = await AudioFileRegister.getFileBuffer(url);
     const bufferSource = ctx.createBufferSource();
+    const data = await AudioFileRegister.getFileBuffer(url);
     bufferSource.buffer = await ctx.decodeAudioData(data);
     bufferSource.loop = !!loop;
     bufferSource.start();
@@ -157,19 +138,22 @@ class AudioFileRegister {
   }
 
   static async noise(node, ctx) {
-    const aNoise = ctx.createBufferSource();
-    aNoise.buffer = await (noise || (noise = makeNoiseNode(3, 44100)));
+      const aNoise = ctx.createBufferSource();
+    aNoise.buffer = await (cachedFiles["cache:////noise"] || (cachedFiles["cache:////noise"] = AudioFileRegister.makeNoiseNode(3, 44100)));
     aNoise.loop = true;
     aNoise.start();
     return {graph: node, output: aNoise};
   }
 
-  //to max: it doesn't seem to matter which AudioContext makes the AudioBuffer
-  //to max: this makes me think that the method .createBuffer could have been static
-  //to max: but it means that the AudioBuffer objects are context free. Also for OfflineAudioContexts.
-
-  static async aConvolverBuffer() {
-    return (await aConvolverBuffer).slice();
+  static makeNoiseNode(duration, sampleRate) {
+    const ctx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+    const bufferSize = sampleRate * duration; // set the time of the note
+    const buffer = ctx.createBuffer(1, bufferSize, sampleRate); // create an empty buffer
+    let data = buffer.getChannelData(0); // get data
+    // fill the buffer with noise
+    for (let i = 0; i < bufferSize; i++)
+      data[i] = Math.random() * 2 - 1;
+    return buffer;
   }
 }
 
@@ -183,8 +167,8 @@ async function createPeriodicWave(ctx, wave) {
   }
   if (!(wave instanceof Array))
     throw new SyntaxError("Semantics: A periodic wavetable must be an array of raw numbers or a URL point to a json file with such an array");
-  const real = wave[0];//.map(num => parseFloat(num.value));
-  const imag = !wave[1] ? new Float32Array(real.length) : wave[1];  //.map(num => parseFloat(num.value))
+  const real = wave[0];
+  const imag = !wave[1] ? new Float32Array(real.length) : wave[1];
   return ctx.createPeriodicWave(real, imag);
 }
 
@@ -234,25 +218,23 @@ InterpreterFunctions.peaking = (node, ctx) => createMomFilter(node, ctx[ctx.leng
 InterpreterFunctions.notch = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, ["frequency", "q", "detune"], "notch");
 InterpreterFunctions.allpass = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio, undefined, ["frequency", "q", "detune"], "allpass");
 
-//todo which input types for the convolver, only a single UInt8 array buffer, that can be given as a url?? or should we add a gain to it as well?? I think maybe the gain should be for the reverb, that produce both wet and dry pipe
+//todo test Uint8Array input different types of
 InterpreterFunctions.convolver = async function (node, ctx) {
-  const array = node.body;
+  let data = node.body[0] || "https://raw.githack.com/orstavik/JoiEvents/master/docs/5_EventFeedback/5b_AudioFeedback/InfiniteSounds/test/convolver.json";
   ctx = ctx[ctx.length - 1].webAudio;
-  const convolver = ctx.createConvolver();
   const buffer = await (
-    array.length === 0 ? AudioFileRegister.aConvolverBuffer() :
-      array instanceof Array ? convertColvolverBuffer(array) :
-        array.startsWith('"') ? fetchAConvolverBuffer(array) :
-          array.type === "base64" ? convertToAudioBuffer(array) :
-            null);
+    typeof data === "string" ? await AudioFileRegister.getFileBuffer(data, "json") :
+      data instanceof Array ? new Uint8Array(data).buffer :
+        // array.type === "base64" ? convertToAudioBuffer(array) :
+        undefined);
 
   if (!buffer)
     throw new Error("omg, cannot reverb without array");
-  const audioBuffer = await ctx.decodeAudioData(buffer);
-  convolver.buffer = audioBuffer;
+
+  const convolver = ctx.createConvolver();
+  convolver.buffer = await ctx.decodeAudioData(buffer);
   return {graph: node, input: convolver, output: convolver};
 };
-
 
 
 /**
