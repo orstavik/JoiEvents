@@ -50,7 +50,7 @@ Translations.lfo = function (node, ctx) {
           {
             type: ">",
             body: [
-              {type: type, body: [frequency]},
+              {type: "oscillator", body: [type, frequency]},
               {type: "gain", body: [diff]}
             ]
           }

@@ -34,67 +34,23 @@ class MomNode {
       output[paramName] = param;
     } else if (typeof param === "number") {
       target.value = param;
-    } else if (param instanceof Array) {
+    } else if (param instanceof Array || param.type === "[]") {
       plotEnvelope(target, param);
     } else
       throw new Error("CssAudio: Illegal input to gain node: " + param);
   }
-}
 
-function createMomGain(node, ctx) {
-  const gain = ctx.createGain();
-  const momNode = new MomNode(node, ["gain"], gain);
-  momNode.start();
-  return momNode;
-}
-
-async function createMomOscillator(node, ctx) {
-  const osc = ctx.createOscillator();
-  osc.start();
-  const momNode = new MomNode(node, ["type", "frequency", "setPeriodicWave"], osc);
-  momNode.start();
-  return momNode;
-}
-
-function createMomFilter(node, ctx) {
-  const filter = ctx.createBiquadFilter();
-  const momNode = new MomNode(node, ["type", "frequency", "q", "gain", "detune"], filter);
-  momNode.start();
-  return momNode;
-}
-
-function createMomDelay(node, ctx) {
-  let delayNode = ctx.createDelay();
-  const momNode = new MomNode(node, ["delayTime"], delayNode);
-  momNode.start();   //todo doesn't really need to start() as it has no params
-  return momNode;
-}
-
-function createMomConstant(node, ctx) {
-  const constant = ctx.createConstantSource();
-  constant.start();
-  const res = new MomNode(node, ["offset"], constant);
-  res.start();
-  return res;
-}
-
-async function createMomConvolver(node, ctx) {
-  const convolver = ctx.createConvolver();
-  const momNode = new MomNode(node, ["buffer"], convolver);
-  momNode.start();
-  return momNode;
-}
-
-function createMomBufferSource(node, ctx) {
-  // node.body[1] = !!node.body[1];                                         //todo fix booleans?
-  const bufferSource = ctx.createBufferSource();
-  bufferSource.start();
-  const momNode = new MomNode(node, ["buffer", "loop"], bufferSource);
-  momNode.start();
-  return momNode;
+  static create(node, ctx, params, fn) {
+    const audioNode = ctx[fn]();
+    audioNode.start && audioNode.start();
+    const momNode = new MomNode(node, params, audioNode);
+    momNode.start();
+    return momNode;
+  }
 }
 
 function plotEnvelope(target, points) {
+  points = (points.body ? points.body : points);
   target.value = 0;
   let nextStart = 0;
   for (let point of points) {
@@ -119,18 +75,18 @@ function plotEnvelope(target, points) {
 
 export const InterpreterFunctions = {};
 
-InterpreterFunctions.oscillator = async (node, ctx) => await createMomOscillator(node, ctx[ctx.length - 1].webAudio);
-InterpreterFunctions.gain = (node, ctx) => createMomGain(node, ctx[ctx.length - 1].webAudio);
-InterpreterFunctions.delay = (node, ctx) => createMomDelay(node, ctx[ctx.length - 1].webAudio);
-InterpreterFunctions.filter = (node, ctx) => createMomFilter(node, ctx[ctx.length - 1].webAudio);
-InterpreterFunctions.constant = (node, ctx) => createMomConstant(node, ctx[ctx.length - 1].webAudio);
-InterpreterFunctions.convolver = async (node, ctx) => createMomConvolver(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.oscillator = async (node, ctx) => await MomNode.create(node, ctx[ctx.length - 1].webAudio, ["type", "frequency", "setPeriodicWave"], "createOscillator");
+InterpreterFunctions.gain = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["gain"], "createGain");
+InterpreterFunctions.delay = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["delayTime"], "createDelay");
+InterpreterFunctions.filter = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["type", "frequency", "q", "gain", "detune"], "createBiquadFilter");
+InterpreterFunctions.constant = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["offset"], "createConstantSource");
+InterpreterFunctions.convolver = async (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["buffer"], "createConvolver");
 
 /**
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = async (node, ctx) => createMomBufferSource(node, ctx[ctx.length - 1].webAudio);
+InterpreterFunctions.url = async (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["buffer", "loop"], "createBufferSource");
 
 //todo test Uint8Array input different types of
 
