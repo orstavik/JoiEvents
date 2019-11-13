@@ -86,7 +86,7 @@ async function createMomConvolver(node, ctx) {
 }
 
 function createMomBufferSource(node, ctx) {
-  node.body[1] = !!node.body[1];                                         //todo fix booleans?
+  // node.body[1] = !!node.body[1];                                         //todo fix booleans?
   const bufferSource = ctx.createBufferSource();
   bufferSource.start();
   const momNode = new MomNode(node, ["buffer", "loop"], bufferSource);
@@ -141,3 +141,5 @@ InterpreterFunctions.url = async (node, ctx) => createMomBufferSource(node, ctx[
 //todo Add static tests for noise and lfo and oscillator and filter!
 
 //todo In the static lib, I can also add the type checks. That can be voluntary, we can turn them off. We just run through the output early, and then we test it before it goes into MomCreation.
+
+//todo add true and false to the parser. and test them. And then add once() and loop() instead of url.

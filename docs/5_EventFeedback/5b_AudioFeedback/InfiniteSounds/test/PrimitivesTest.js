@@ -83,6 +83,10 @@ describe("Matches Java and JavaScript numbers (except Infinity and NaN)", functi
     expectToEqualWithDiff(parse("1-"), {type: "-", body: [1, undefined]});
     expectToEqualWithDiff(parse("1+"), {type: "+", body: [1, undefined]});
   });
+  it("booleans", function () {
+    expectToEqualWithDiff(parse("true"), true);
+    expectToEqualWithDiff(parse("false"), false);
+  });
   // it("possible errors", function () {
   //   expectToEqualWithDiff(parse(".")).(false);
   //   expectToEqualWithDiff(parse("9.")).(false);

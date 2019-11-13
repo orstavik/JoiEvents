@@ -182,13 +182,17 @@ function parseArray(tokens) {
 }
 
 function parseNode(tokens) {
-  if (tokens[0])
-    return parseBlock(tokens) ||
-      parseArray(tokens) ||
-      parseAbsoluteNotes(tokens) ||
-      parseFunction(tokens) ||
-      parseQuotes(tokens) ||
-      parseNumber(tokens);
+  if (!tokens[0])
+    return;
+  const bool = parseBoolean(tokens);
+  if (bool !== undefined)
+    return bool;
+  return parseBlock(tokens) ||
+    parseArray(tokens) ||
+    parseAbsoluteNotes(tokens) ||
+    parseFunction(tokens) ||
+    parseQuotes(tokens) ||
+    parseNumber(tokens);
 }
 
 function parseBlock(tokens) {
@@ -209,6 +213,12 @@ function parseAbsoluteNotes(tokens) {
   const octave = t[3] ? parseInt(t[3]) * 12 : 48;
   const num = absScale12[(t[2].toLowerCase())];
   return {type: "Note", body: [num + octave, t[4]]};
+}
+
+function parseBoolean(tokens) {
+  if (tokens[0][0] === "true") return nextToken(tokens) && true;
+  if (tokens[0][0] === "false") return nextToken(tokens) && false;
+  return undefined;
 }
 
 function parseFunction(tokens) {
@@ -238,6 +248,7 @@ function parseQuotes(tokens) {
 
 export function isPrimitive(node) {
   return node === undefined ||
+    typeof node === "boolean" ||
     typeof node === "number" ||
     typeof node === "string" ||
     node instanceof Array;
