@@ -3,15 +3,21 @@
 //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
 
 class MomNode {
-  constructor(node, params, output) {
+  constructor(node, ctx, fn, params) {
     this.body = node.body;
     this.params = params;
+    this.ctx = ctx;
+    this.fn = fn;
     this.graph = node;                           //todo remove graph?
-    this.output = output;
-    this.input = output;
+
+    this.start();
   }
 
   start() {
+    this.output = this.ctx[this.fn]();
+    this.output.start && this.output.start();
+    this.input = this.output;
+
     for (let child of this.body)
       child && child.start && child.start();
     for (let i = 0; i < this.params.length; i++) {
@@ -40,12 +46,8 @@ class MomNode {
       throw new Error("CssAudio: Illegal input to gain node: " + param);
   }
 
-  static create(node, ctx, params, fn) {
-    const audioNode = ctx[fn]();
-    audioNode.start && audioNode.start();
-    const momNode = new MomNode(node, params, audioNode);
-    momNode.start();
-    return momNode;
+  static create(node, ctx, fn, params) {
+    return new MomNode(node, ctx, fn, params);
   }
 }
 
@@ -75,18 +77,18 @@ function plotEnvelope(target, points) {
 
 export const InterpreterFunctions = {};
 
-InterpreterFunctions.oscillator = async (node, ctx) => await MomNode.create(node, ctx[ctx.length - 1].webAudio, ["type", "frequency", "setPeriodicWave"], "createOscillator");
-InterpreterFunctions.gain = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["gain"], "createGain");
-InterpreterFunctions.delay = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["delayTime"], "createDelay");
-InterpreterFunctions.filter = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["type", "frequency", "q", "gain", "detune"], "createBiquadFilter");
-InterpreterFunctions.constant = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["offset"], "createConstantSource");
-InterpreterFunctions.convolver = async (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["buffer"], "createConvolver");
+InterpreterFunctions.oscillator = async (node, ctx) => await MomNode.create(node, ctx[ctx.length - 1].webAudio, "createOscillator", ["type", "frequency", "setPeriodicWave"]);
+InterpreterFunctions.gain = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, "createGain", ["gain"]);
+InterpreterFunctions.delay = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, "createDelay", ["delayTime"]);
+InterpreterFunctions.filter = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, "createBiquadFilter", ["type", "frequency", "q", "gain", "detune"]);
+InterpreterFunctions.constant = (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, "createConstantSource", ["offset"]);
+InterpreterFunctions.convolver = async (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, "createConvolver", ["buffer"]);
 
 /**
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', 1) plays the sound file in a loop
  */
-InterpreterFunctions.url = async (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, ["buffer", "loop"], "createBufferSource");
+InterpreterFunctions.url = async (node, ctx) => MomNode.create(node, ctx[ctx.length - 1].webAudio, "createBufferSource", ["buffer", "loop"]);
 
 //todo test Uint8Array input different types of
 
@@ -95,7 +97,6 @@ InterpreterFunctions.url = async (node, ctx) => MomNode.create(node, ctx[ctx.len
 //todo Add "map" operations on arrays.
 
 //todo Add static tests for noise and lfo and oscillator and filter!
+//todo add once() and loop() instead of url.
 
 //todo In the static lib, I can also add the type checks. That can be voluntary, we can turn them off. We just run through the output early, and then we test it before it goes into MomCreation.
-
-//todo add true and false to the parser. and test them. And then add once() and loop() instead of url.
