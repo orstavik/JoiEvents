@@ -19,11 +19,10 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 0]},
-        body: [{
-          type: "relNote",
-          body: [0, 0, 4],
-        }]
+        key: {type: "relNote", body: [0, 0, 0], "original": [48, undefined]},
+        body: [
+          {type: "relNote", body: [0, 0, 4], "original": [55, undefined]}
+        ]
       }]
     };
     expectToEqualWithDiff(tst2, res2);
@@ -46,11 +45,10 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 4]},
-        body: [{
-          type: "relNote",
-          body: [0, 0, -4],
-        }]
+        key: {type: "relNote", body: [0, 0, 4], "original": [55, undefined]},
+        body: [
+          {type: "relNote", body: [0, 0, -4], "original": [48, undefined]}
+        ]
       }]
     };
     expectToEqualWithDiff(tst2, res2);
@@ -79,11 +77,10 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 0]},
-        body: [{
-          type: "relNote",
-          body: [12, 0, 4],
-        }]
+        key: {type: "relNote", body: [0, 0, 0], "original": [48, undefined]},
+        body: [
+          {type: "relNote", body: [12, 0, 4], "original": [55, undefined]}
+        ]
       }]
     };
     expectToEqualWithDiff(tst2, res2);
@@ -112,7 +109,7 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 0]},
+        key: {type: "relNote", body: [0, 0, 0], "original": [48, undefined]},
         body: [
           {type: "absNote", body: [55, "maj"]},
         ]
@@ -149,13 +146,13 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 0]},
+        key: {type: "relNote", body: [0, 0, 0], "original": [48, undefined]},
         body: [
           {
             type: "relClef",
             key: {type: "relNote", body: [0, 0, 2]},
             body: [
-              {type: "relNote", body: [0, 0, 4]},
+              {type: "relNote", body: [0, 0, 4], "original": [55, undefined]},
             ]
           }
         ]
@@ -192,13 +189,13 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 0]},
+        key: {type: "relNote", body: [0, 0, 0], "original": [48, undefined]},
         body: [
           {
             type: "absClef",
             key: {type: "absNote", body: [31, "lyd"]},
             body: [
-              {type: "relNote", body: [0, 0, 14]},
+              {type: "relNote", body: [0, 0, 14], "original": [55, undefined]},
             ]
           }
         ]
@@ -229,13 +226,13 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, -6]},
+        key: {type: "relNote", body: [0, 0, -6], "original": [38, undefined]},
         body: [
           {
             type: "relClef",
-            key: {type: "relNote", body: [0, 0, 10]},
+            key: {type: "relNote", body: [0, 0, 10], "original": [55, undefined]},
             body: [
-              {type: "relNote", body: [0, 0, -4]},
+              {type: "relNote", body: [0, 0, -4], "original": [48, undefined]},
             ]
           }
         ]
@@ -270,17 +267,17 @@ describe('absolute clef, absolute notes', function () {
       key: {type: "absNote", body: [48, "maj"]},
       body: [{
         type: "relClef",
-        key: {type: "relNote", body: [0, 0, 4]},
+        key: {type: "relNote", body: [0, 0, 4], "original": [55, undefined]},
         body: [
           {
             type: "[]", body: [
-              {type: "relNote", body: [0, 0, -4]},
-              {type: "relNote", body: [1, 0, -4]},
-              {type: "relNote", body: [1, 0, -10]},
-              {type: "relNote", body: [1, 0, -2]},
-              {type: "relNote", body: [0, 0, 0]},
-              {type: "relNote", body: [1, 0, 1]},
-              {type: "relNote", body: [0, 0, 2]}
+              {type: "relNote", body: [0, 0, -4], "original": [48, undefined]},
+              {type: "relNote", body: [1, 0, -4], "original": [49, undefined]},
+              {type: "relNote", body: [1, 0, -10], "original": [39, undefined]},
+              {type: "relNote", body: [1, 0, -2], "original": [53, undefined]},
+              {type: "relNote", body: [0, 0, 0], "original": [55, undefined]},
+              {type: "relNote", body: [1, 0, 1], "original": [58, undefined]},
+              {type: "relNote", body: [0, 0, 2], "original": [59, undefined]}
             ]
           }
         ]
