@@ -100,5 +100,25 @@ describe('math on arrays: interpret', function () {
     const tst2 = await staticInterpret('[13,27,31]+1',[]);
     expect([14, 28, 32]).toEqual(tst2.body[0]);
   });
+  it("[13,27,31]-1", async function () {
+    const tst2 = await staticInterpret('[13,27,31]-1',[]);
+    expect([12, 26, 30]).toEqual(tst2.body[0]);
+  });
+  it("[2,3,7]*2", async function () {
+    const tst2 = await staticInterpret('[2,3,7]*2',[]);
+    expect([4, 6, 14]).toEqual(tst2.body[0]);
+  });
+  it("[44,42,84]/2", async function () {
+    const tst2 = await staticInterpret('[44,42,84]/2',[]);
+    expect([22,21,42]).toEqual(tst2.body[0]);
+  });
+  it("[4,5,7]^2", async function () {
+    const tst2 = await staticInterpret('[4,5,7]^2',[]);
+    expect([16,25,49]).toEqual(tst2.body[0]);
+  });
+  it("[4,5,7]^^3", async function () {
+    const tst2 = await staticInterpret('[4,5,7]^^3',[]);
+    expect([32,40,56]).toEqual(tst2.body[0]);
+  });
 });
 

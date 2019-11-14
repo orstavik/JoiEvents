@@ -1,6 +1,7 @@
 function numArgs(l, r) {
   return typeof l === "number" && typeof r === "number";
 }
+
 const a12 = Math.pow(2, 1 / 12);
 
 export const MathOps = Object.create(null);
@@ -29,7 +30,7 @@ MathOps["/"] = function (n) {
 
 MathOps["^"] = function (n) {
   const [l, r] = n.body;
-  return numArgs(l, r) ?  Math.pow(l, r) : n;
+  return numArgs(l, r) ? Math.pow(l, r) : n;
 };
 
 MathOps["^^"] = function (n) {
@@ -61,3 +62,37 @@ MathOps["^~"] = function (n) {
   return n;
 };
 */
+export const ArrayMathOps = Object.create(null);
+
+function arrayNumber([a, b]) {
+  if (a instanceof Array && typeof b === "number")
+    return [a, b];
+  if (b instanceof Array && typeof a === "number")
+    return [b, a];
+  return [];
+}
+
+ArrayMathOps["+"] = function (node) {
+  const [array, num] = arrayNumber(node.body);
+  return array ? array.map(n => n + num) : node;
+};
+ArrayMathOps["-"] = function (node) {
+  const [array, num] = arrayNumber(node.body);
+  return array ? array.map(n => n - num) : node;
+};
+ArrayMathOps["*"] = function (node) {
+  const [array, num] = arrayNumber(node.body);
+  return array ? array.map(n => n * num) : node;
+};
+ArrayMathOps["/"] = function (node) {
+  const [array, num] = arrayNumber(node.body);
+  return array ? array.map(n => n / num) : node;
+};
+ArrayMathOps["^"] = function (node) {
+  const [array, num] = arrayNumber(node.body);
+  return array ? array.map(n => Math.pow(n, num)) : node;
+};
+ArrayMathOps["^^"] = function (node) {
+  const [array, num] = arrayNumber(node.body);
+  return array ? array.map(n => n * Math.pow(2, num)) : node;
+};
