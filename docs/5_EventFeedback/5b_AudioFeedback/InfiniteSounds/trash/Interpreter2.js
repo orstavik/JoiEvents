@@ -200,7 +200,7 @@ export class InfiniteSound extends AudioContext {
     const functions = Object.assign({}, ScaleFunctions, Notes, Random, InterpreterFunctions, BarPipe);
     // for (let table of [ScaleFunctions, Notes])
     //   result = await interpretNode(null, result, table);
-    // for (let table of [Random, InterpreterFunctions, Pipe])
+    // for (let table of [Random, MomNodes, Pipe])
     // for (let table of functions)
     result = await interpretNode(ctx, result, functions);
     // result = await interpretNode(ctx, result, Pipe);
