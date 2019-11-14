@@ -1,5 +1,5 @@
 export class MomNode {
-  constructor(body) {
+  constructor(body = []) {
     this.body = body;
   }
 
@@ -23,9 +23,8 @@ class AudioMomNode extends MomNode {
     super.start();
 
     this.input = this.output = this.fn();
-    this.output.start && this.output.start();
-
     this.updateAudioParameters(this.params, this.body);
+    this.output.start && this.output.start();
   }
 
   updateAudioParameters(names, values) {
@@ -37,20 +36,17 @@ class AudioMomNode extends MomNode {
     if (value === undefined)
       return;
     if (this.output[prop] instanceof Function)
-      this.output[prop](value);
-    else if (value instanceof AudioBuffer || this.output[prop].value === undefined)
-      this.output[prop] = value;
-    else if (value.output) {
-      value.output.connect(this.output[prop]);
-    // } else if () {
-    //   this.output[prop] = value;
-    } else if (typeof value === "number") {
-      this.output[prop].value = value;
+      return this.output[prop](value);
+    if (!this.output[prop] || !(this.output[prop] instanceof AudioParam))
+      return this.output[prop] = value;
+    if (value.output)
+      return value.output.connect(this.output[prop]);
+    if (typeof value === "number")
+      return this.output[prop].value = value;
+    if (value instanceof Array || value.type === "[]")
+      return plotEnvelope(this.output[prop], value);
     //todo Make audioparam accept array of audio nodes??
-    } else if (value instanceof Array || value.type === "[]") {
-      plotEnvelope(this.output[prop], value);
-    } else
-      throw new Error("CssAudio: Illegal input to gain node: " + value);
+    throw new Error("CssAudio: Illegal input to gain node: " + value);
   }
 
   //todo remove this and make it into a constructor
@@ -58,7 +54,7 @@ class AudioMomNode extends MomNode {
     ctx = ctx[ctx.length - 1].webAudio;
     const init = ctx[fn].bind(ctx);
     const res = new AudioMomNode(node, ctx, init, params);
-    res.start();
+    // res.start();
     return res;
   }
 }

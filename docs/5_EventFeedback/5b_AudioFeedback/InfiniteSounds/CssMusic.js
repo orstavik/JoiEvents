@@ -14,18 +14,22 @@ export class CssMusic extends AudioContext {
      * todo max. can we use offlineAudioCtx to make an ArrayBuffer of a sound, to make it faster to play back?
      */
     const ctx = new CssMusic();
-    ctx.rootClef = ctx.createConstantSource();
-    ctx.rootClef.start();
-    const result = (await interpret(sound, ctx)).body[0];
-
-    if (result.type === "bpm") {
-      let [bpm, heavy, bars] = result.body;
-      ctx.msPerBeat = 60 / bpm * 1000;
-      ctx.heavy = heavy;
-      ctx.bars = bars;
-    } else {
-      ctx.bars = [result];
+    // ctx.rootClef = ctx.createConstantSource();
+    // ctx.rootClef.start();
+    ctx.result = (await interpret(sound, ctx)).body[0];
+    if (ctx.result && ctx.result.start){
+      ctx.result.start();
+      ctx.result.output.connect(ctx.destination);
     }
+    // debugger;
+    // if (result.type === "bpm") {
+    //   let [bpm, heavy, bars] = result.body;
+    //   ctx.msPerBeat = 60 / bpm * 1000;
+    //   ctx.heavy = heavy;
+    //   ctx.bars = bars;
+    // } else {
+    //   ctx.bars = [result];
+    // }
     return ctx;
   }
 
@@ -34,47 +38,47 @@ export class CssMusic extends AudioContext {
     this.specialGain = this.createGain();
     this.specialGain.gain.value = 1;
     this.specialGain.connect(this.destination);
-    this.suspend();
-    this.bars = [];
-    this.msPerBeat = 60 / 84 * 1000;
-    this.heavy = 4;
-    this.i = 0;
+    // this.suspend();
+    // this.bars = [];
+    // this.msPerBeat = 60 / 84 * 1000;
+    // this.heavy = 4;
+    // this.i = 0;
   }
 
-  start(startTime) {
-    this.playBar();
-    this.resume();
-    if (this.i >= this.bars.length)
-      return;
-    const realTimeDelay = this.msPerBeat - (performance.now() - startTime);
-    setTimeout(() => this.start(startTime + this.msPerBeat), realTimeDelay);
-
-  }
-
-  playBar() {
-    if (this.i % this.heavy === 0) console.log("Heavy beat");
-    let result = this.bars[this.i++];
-    if (result.output instanceof Array) {
-      for (let audioNode of result.output)
-        audioNode.connect(this.specialGain);
-    } else
-      result.output.connect(this.specialGain);
-  }
-
-  stop() {
-    console.log("boo");
-    if (location.hash === "linear") {
-      this.specialGain.gain.linearRampToValueAtTime(0.0001, this.currentTime + 0.03);
-    } else if (location.hash === "exponential") {
-      this.specialGain.gain.exponentialRampToValueAtTime(0.0001, this.currentTime + 0.03);
-    } else if (location.hash === "absolute") {
-      this.specialGain.gain.value = 0;
-    } else {
-      this.specialGain.gain.setTargetAtTime(0, this.currentTime, 0.015);
-    }
-    setTimeout(() =>
-      super.suspend(), 100);
-  }
+  // start(startTime) {
+  //   this.playBar();
+  //   this.resume();
+  //   if (this.i >= this.bars.length)
+  //     return;
+  //   const realTimeDelay = this.msPerBeat - (performance.now() - startTime);
+  //   setTimeout(() => this.start(startTime + this.msPerBeat), realTimeDelay);
+  //
+  // }
+  //
+  // playBar() {
+  //   if (this.i % this.heavy === 0) console.log("Heavy beat");
+  //   let result = this.bars[this.i++];
+  //   if (result.output instanceof Array) {
+  //     for (let audioNode of result.output)
+  //       audioNode.connect(this.specialGain);
+  //   } else
+  //     result.output.connect(this.specialGain);
+  // }
+  //
+  // stop() {
+  //   console.log("boo");
+  //   if (location.hash === "linear") {
+  //     this.specialGain.gain.linearRampToValueAtTime(0.0001, this.currentTime + 0.03);
+  //   } else if (location.hash === "exponential") {
+  //     this.specialGain.gain.exponentialRampToValueAtTime(0.0001, this.currentTime + 0.03);
+  //   } else if (location.hash === "absolute") {
+  //     this.specialGain.gain.value = 0;
+  //   } else {
+  //     this.specialGain.gain.setTargetAtTime(0, this.currentTime, 0.015);
+  //   }
+  //   setTimeout(() =>
+  //     super.suspend(), 100);
+  // }
 
   //http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
   /**
@@ -85,17 +89,17 @@ export class CssMusic extends AudioContext {
    * todo notified of.
    * @param ctx
    */
-  replace(ctx) {
-    ctx.stop();
-    if (location.hash === "linear") {
-      this.specialGain.gain.linearRampToValueAtTime(1, this.currentTime + 0.03);
-    } else if (location.hash === "exponential") {
-      this.specialGain.gain.exponentialRampToValueAtTime(1, this.currentTime + 0.03);
-    } else if (location.hash === "absolute") {
-      this.specialGain.gain.value = 1;
-    } else {
-      this.specialGain.gain.setTargetAtTime(1, this.currentTime, 0.015);
-    }
-    this.resume();
-  }
+  // replace(ctx) {
+  //   ctx.stop();
+  //   if (location.hash === "linear") {
+  //     this.specialGain.gain.linearRampToValueAtTime(1, this.currentTime + 0.03);
+  //   } else if (location.hash === "exponential") {
+  //     this.specialGain.gain.exponentialRampToValueAtTime(1, this.currentTime + 0.03);
+  //   } else if (location.hash === "absolute") {
+  //     this.specialGain.gain.value = 1;
+  //   } else {
+  //     this.specialGain.gain.setTargetAtTime(1, this.currentTime, 0.015);
+  //   }
+  //   this.resume();
+  // }
 }

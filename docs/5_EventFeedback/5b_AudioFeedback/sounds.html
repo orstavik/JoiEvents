@@ -118,30 +118,30 @@ y. make atob function? or should this be implied? I think it is better if it is 
     }
 
     async start() {
-      this.stop();
+      // this.stop();
       const x = this.shadowRoot.children[0].value;
       this.ctx = await CssMusic.load(x);
-      this.ctx.start(performance.now());
-      if (!this.hasAttribute("dont-stop"))
-        this.timer = setTimeout(() => this.stop(), 5000);
+      // this.ctx.start(performance.now());
+      // if (!this.hasAttribute("dont-stop"))
+      //   this.timer = setTimeout(() => this.stop(), 5000);
     }
 
     async startTwo() {
       const x = this.shadowRoot.children[1].value;
-      if (x === "")
-        return this.stop();
+      // if (x === "")
+      //   return this.stop();
       const nextCtx = await CssMusic.load(x);
 
-      nextCtx.replace(this.ctx);
-      this.stop();
-      this.ctx = nextCtx;
-      if (!this.hasAttribute("dont-stop"))
-        this.timer = setTimeout(() => this.stop(), 1000);
+      // nextCtx.replace(this.ctx);
+      // this.stop();
+      // this.ctx = nextCtx;
+      // if (!this.hasAttribute("dont-stop"))
+      //   this.timer = setTimeout(() => this.stop(), 1000);
     }
 
     stop() {
-      this.ctx && this.ctx.stop();
-      clearTimeout(this.timer);
+      // this.ctx && this.ctx.stop();
+      // clearTimeout(this.timer);
     }
   }
   customElements.define("sound-strip", SoundStrip);

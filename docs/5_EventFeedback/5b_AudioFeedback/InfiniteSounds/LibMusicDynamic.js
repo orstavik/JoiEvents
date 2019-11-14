@@ -1,66 +1,84 @@
 import {MusicModes} from "./MusicModes.js";
+import {MomNode} from "./LibAudio.js";
 
-class Clef {
+class Clef extends MomNode {
   constructor(clef) {
-    this.type = "start";            //this makes the interpreter able to run it
-    this.key = clef.key;
-    this.body = clef.body;
-    this.children = clef.children || [];
-    // delete clef.children; // todo very unsure about this mutation. Because of the setup, the clef object will simply be discarded
-    this.start();                        //todo don't need to start it.
+    super(clef.body);
+    this.key = clef.key.body;
+    for (let child of clef.children || [])
+      child.setParent(this);
   }
 
-  start() {
-    const [key, mode] = this.key.body;
-    for (let child of this.children)
-      child.start(key, mode);
+  getKey() {
+    return this.key;
+  }
+
+  setParent(parent) {
+    this.parent = parent;
   }
 }
 
 class RelativeClef extends Clef {
+  constructor(clef) {
+    super(clef);
+    this.relative = clef.key;
+    this.key = undefined;
+  }
 
-  start(key, mode) {
-    if (key === undefined/*&&mode=== undefined*/)
-      return;
-    const [twelve, myMode, seven] = this.key.body;
+  getKey() {
+    if (this.key)
+      return this.key;
+    let [key, mode] = this.parent.getKey();
+    const [twelve, myMode, seven] = this.relative.body;
     key += twelve;
     key += MusicModes.toTwelve(mode, seven);
-    mode = MusicModes.switchMode(mode, myMode);
-    for (let child of this.children)
-      child.start(key, mode);
+    const [newMode, hashes] = MusicModes.switchMode(mode, myMode);
+    key += hashes;
+    return [key, newMode];
   }
 }
 
-class RelativeNote {
+class MomNote extends MomNode {
   constructor(relNote, audioCtx) {
-    this.type = "start";            //this makes the interpreter able to run it
-    this.body = relNote.body;
-    this.output = makeFrequencyGain(audioCtx);
+    super();
+    this.output = MomNote.makeFrequencyGain(audioCtx);
+    this.key = relNote.body;
   }
 
-  start(key, mode) {
-    if (key === undefined/*&&mode=== undefined*/)
-      return;
-    const [twelve, myMode, seven] = this.body;
-    key += twelve;
-    key += MusicModes.toTwelve(mode, seven);
-    // mode = MusicModes.switchMode(mode, myMode);  todo don't need this for leaf notes.
-    this.output.gain.value = Notes[key];
-  }
-}
-
-//todo untested
-class AbsoluteNote {
-  constructor(absNote, audioCtx) {
-    this.type = "start";            //this makes the interpreter able to run it
-    this.body = absNote.body;
-    this.output = makeFrequencyGain(audioCtx);
-    this.start();
+  static makeFrequencyGain(ctx) {
+    const constant = ctx.createConstantSource();
+    const toneGain = ctx.createGain();
+    constant.connect(toneGain);
+    constant.start();
+    return toneGain;
   }
 
   start() {
-    const [twelve, mode] = this.body;
-    this.output.gain.value = Notes[twelve];
+    this.output.gain.value = Notes[this.key[0]];
+  }
+}
+
+class RelativeNote extends MomNote {
+  constructor(relNote, audioCtx) {
+    super(relNote, audioCtx);
+    this.relative = relNote;
+    this.key = undefined;
+  }
+
+  start() {
+    if (this.key)
+      return this.key;
+    let [key, mode] = this.parent.getKey();
+    const [twelve, myMode, seven] = this.relative.body;
+    key += twelve;
+    key += MusicModes.toTwelve(mode, seven);
+    const [newMode, hashes] = MusicModes.switchMode(mode, myMode);
+    key += hashes;
+    this.output.gain.value = Notes[key];
+  }
+
+  setParent(parent) {
+    this.parent = parent;
   }
 }
 
@@ -70,14 +88,6 @@ function getParentClef(ctx) {
       return scope;
   }
   throw Error("OMG! There should always be a Document root in the Mom.");
-}
-
-function makeFrequencyGain(audioCtx) {
-  const constant = audioCtx.createConstantSource();
-  constant.start();
-  const toneGain = audioCtx.createGain();
-  constant.connect(toneGain);
-  return toneGain;
 }
 
 export const MusicDynamic = Object.create(null);
