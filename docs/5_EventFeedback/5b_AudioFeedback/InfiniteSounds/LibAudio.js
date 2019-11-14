@@ -1,50 +1,63 @@
+export class MomNode {
+  constructor(body) {
+    this.body = body;
+  }
+
+  start() {
+    for (let child of this.body)
+      child && child.start && child.start();
+  }
+}
+
 //todo convert the factory methods to constructors as specified by MDN?
 //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
 //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
-
-class MomNode {
+class AudioMomNode extends MomNode {
   constructor(node, ctx, fn, params) {
-    this.body = node.body;
+    super(node.body);
     this.params = params;
     this.fn = fn;
   }
 
   start() {
+    super.start();
+
     this.input = this.output = this.fn();
     this.output.start && this.output.start();
 
-    for (let child of this.body)
-      child && child.start && child.start();
-    for (let i = 0; i < this.params.length; i++) {
-      let param = this.params[i];
-      this.setAudioParameter(this.output[param], this.body[i], this.output, param);
-    }
+    this.updateAudioParameters(this.params, this.body);
   }
 
-//todo Make audioparam accept array of audio nodes??
-  setAudioParameter(target, param, output, paramName) {
-    if (param === undefined)
+  updateAudioParameters(names, values) {
+    for (let i = 0; i < names.length; i++)
+      this.setAudioParameter(names[i], values[i]);
+  }
+
+  setAudioParameter(prop, value) {
+    if (value === undefined)
       return;
-    if (target instanceof Function)
-      output[paramName](param);
-    else if (param instanceof AudioBuffer)
-      output[paramName] = param;
-    else if (param.output) {
-      param.output.connect(target);
-    } else if (target.value === undefined) {
-      output[paramName] = param;
-    } else if (typeof param === "number") {
-      target.value = param;
-    } else if (param instanceof Array || param.type === "[]") {
-      plotEnvelope(target, param);
+    if (this.output[prop] instanceof Function)
+      this.output[prop](value);
+    else if (value instanceof AudioBuffer || this.output[prop].value === undefined)
+      this.output[prop] = value;
+    else if (value.output) {
+      value.output.connect(this.output[prop]);
+    // } else if () {
+    //   this.output[prop] = value;
+    } else if (typeof value === "number") {
+      this.output[prop].value = value;
+    //todo Make audioparam accept array of audio nodes??
+    } else if (value instanceof Array || value.type === "[]") {
+      plotEnvelope(this.output[prop], value);
     } else
-      throw new Error("CssAudio: Illegal input to gain node: " + param);
+      throw new Error("CssAudio: Illegal input to gain node: " + value);
   }
 
+  //todo remove this and make it into a constructor
   static create(node, ctx, fn, params) {
     ctx = ctx[ctx.length - 1].webAudio;
     const init = ctx[fn].bind(ctx);
-    const res = new MomNode(node, ctx, init, params);
+    const res = new AudioMomNode(node, ctx, init, params);
     res.start();
     return res;
   }
@@ -67,18 +80,18 @@ function plotEnvelope(target, points) {
 
 export const MomNodes = {};
 
-MomNodes.oscillator = (node, ctx) => MomNode.create(node, ctx, "createOscillator", ["type", "frequency", "setPeriodicWave"]);
-MomNodes.gain = (node, ctx) => MomNode.create(node, ctx, "createGain", ["gain"]);
-MomNodes.delay = (node, ctx) => MomNode.create(node, ctx, "createDelay", ["delayTime"]);
-MomNodes.filter = (node, ctx) => MomNode.create(node, ctx, "createBiquadFilter", ["type", "frequency", "q", "gain", "detune"]);
-MomNodes.constant = (node, ctx) => MomNode.create(node, ctx, "createConstantSource", ["offset"]);
-MomNodes.convolver = (node, ctx) => MomNode.create(node, ctx, "createConvolver", ["buffer"]);
+MomNodes.oscillator = (node, ctx) => AudioMomNode.create(node, ctx, "createOscillator", ["type", "frequency", "setPeriodicWave"]);
+MomNodes.gain = (node, ctx) => AudioMomNode.create(node, ctx, "createGain", ["gain"]);
+MomNodes.delay = (node, ctx) => AudioMomNode.create(node, ctx, "createDelay", ["delayTime"]);
+MomNodes.filter = (node, ctx) => AudioMomNode.create(node, ctx, "createBiquadFilter", ["type", "frequency", "q", "gain", "detune"]);
+MomNodes.constant = (node, ctx) => AudioMomNode.create(node, ctx, "createConstantSource", ["offset"]);
+MomNodes.convolver = (node, ctx) => AudioMomNode.create(node, ctx, "createConvolver", ["buffer"]);
 
 /**
  * url('https://some.com/sound.file') plays the sound file once
  * url('https://some.com/sound.file', true) plays the sound file in a loop
  */
-MomNodes.url = (node, ctx) => MomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
+MomNodes.url = (node, ctx) => AudioMomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
 
 //todo test Uint8Array input different types of
 
