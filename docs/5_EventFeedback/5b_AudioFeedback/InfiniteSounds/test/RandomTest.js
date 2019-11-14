@@ -64,7 +64,7 @@ describe('LFO - staticInterpreted', function () {
             {
               type: ">",
               body: [
-                {type: "square", body: [1]},
+                {type: "oscillator", body: ["square", 1]},
                 {type: "gain", body: [0.4]}
               ]
             }
