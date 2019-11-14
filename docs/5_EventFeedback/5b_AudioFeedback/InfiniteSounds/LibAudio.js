@@ -6,15 +6,12 @@ class MomNode {
   constructor(node, ctx, fn, params) {
     this.body = node.body;
     this.params = params;
-    // this.ctx = ctx;
     this.fn = fn;
-    this.graph = node;                           //todo remove graph?
   }
 
   start() {
-    this.output = this.fn();
+    this.input = this.output = this.fn();
     this.output.start && this.output.start();
-    this.input = this.output;
 
     for (let child of this.body)
       child && child.start && child.start();
@@ -84,8 +81,6 @@ MomNodes.convolver = (node, ctx) => MomNode.create(node, ctx, "createConvolver",
 MomNodes.url = (node, ctx) => MomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
 
 //todo test Uint8Array input different types of
-
-//todo Fix the bug for the original property on notes
 
 //todo Add "map" operations on arrays.
 

@@ -3,12 +3,10 @@ import {MusicModes} from "./MusicModes.js";
 class Clef {
   constructor(clef) {
     this.type = "start";            //this makes the interpreter able to run it
-    this.graph = clef;
     this.key = clef.key;
     this.body = clef.body;
     this.children = clef.children || [];
-    // delete clef.children;
-    // todo very unsure about this mutation. Because of the setup, the clef object will simply be discarded
+    // delete clef.children; // todo very unsure about this mutation. Because of the setup, the clef object will simply be discarded
     this.start();                        //todo don't need to start it.
   }
 
@@ -36,14 +34,14 @@ class RelativeClef extends Clef {
 class RelativeNote {
   constructor(relNote, audioCtx) {
     this.type = "start";            //this makes the interpreter able to run it
-    this.graph = relNote;
+    this.body = relNote.body;
     this.output = makeFrequencyGain(audioCtx);
   }
 
   start(key, mode) {
     if (key === undefined/*&&mode=== undefined*/)
       return;
-    const [twelve, myMode, seven] = this.graph.body;
+    const [twelve, myMode, seven] = this.body;
     key += twelve;
     key += MusicModes.toTwelve(mode, seven);
     // mode = MusicModes.switchMode(mode, myMode);  todo don't need this for leaf notes.
@@ -55,13 +53,13 @@ class RelativeNote {
 class AbsoluteNote {
   constructor(absNote, audioCtx) {
     this.type = "start";            //this makes the interpreter able to run it
-    this.graph = absNote;
+    this.body = absNote.body;
     this.output = makeFrequencyGain(audioCtx);
     this.start();
   }
 
   start() {
-    const [twelve, mode] = this.graph.body;
+    const [twelve, mode] = this.body;
     this.output.gain.value = Notes[twelve];
   }
 }
@@ -81,9 +79,6 @@ function makeFrequencyGain(audioCtx) {
   constant.connect(toneGain);
   return toneGain;
 }
-
-//https://pages.mtu.edu/~suits/NoteFreqCalcs.html
-const a12th = Math.pow(2, 1 / 12);
 
 export const MusicDynamic = Object.create(null);
 
@@ -115,6 +110,9 @@ MusicDynamic["DOCUMENT"] = function (node, ctx) {
   return new Clef(node);
 };
 
+//https://pages.mtu.edu/~suits/NoteFreqCalcs.html
+const a12th = Math.pow(2, 1 / 12);
+//https://pages.mtu.edu/~suits/notefreqs.html
 export const Notes = [
   16.35,
   17.32,

@@ -1,6 +1,6 @@
 import {isPrimitive, parse} from "./Parser.js";
 import {Random, Translations} from "./LibRandom.js";
-import {MathOps} from "./LibMath.js";
+import {MathOps, ArrayMathOps} from "./LibMath.js";
 import {AudioPiping, ListOps} from "./LibSyntax.js";
 import {MomNodes} from "./LibAudio.js";
 import {MusicDynamic} from "./LibMusicDynamic.js";
@@ -28,7 +28,7 @@ function mergeTables(...tables) {
 }
 
 //todo process units such as "b" (beats) dynamically, and tones needs the context to create their gain node. what to do with dB?
-const staticTable = mergeTables(ListOps, Units, MathOps, MusicMath, Translations);
+const staticTable = mergeTables(ListOps, Units, MathOps, ArrayMathOps, MusicMath, Translations);
 //todo the static table produce a JSONable, pure data object.
 //todo the dynamic table produce an object graph with particular classes.
 //todo both lists children as body, as it enables the running of all in the same machines.

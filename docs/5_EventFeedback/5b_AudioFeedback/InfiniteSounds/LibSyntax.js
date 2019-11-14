@@ -36,6 +36,7 @@ ListOps["[]"] = function (node, ctx) {
   return node.body;
 };
 
+//todo do I need to mark which nodes are connected to what other nodes?
 function connectMtoN(a, b) {
   if (a instanceof Array) {
     for (let x of a)
@@ -52,9 +53,13 @@ function connectMtoN(a, b) {
 
 export const AudioPiping = Object.create(null);
 
+function isSolved(node) {
+  return isPrimitive(node) || node.output;
+}
+
 AudioPiping["[]"] = function (node, ctx) {
   for (let item of node.body) {
-    if (!item.graph)          //todo I might need to allow for primitivies here as well just add isPrimitive(item)
+    if (!isSolved(item))
       return node;
   }
   return node.body;

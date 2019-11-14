@@ -23,6 +23,7 @@ const cachedFiles = Object.create(null);
 
 class AudioBufferRegister {
 
+  //todo make the noise function produce a Uint8Array instead, and then make the fetchAudioBuffer use that one?
   static async fetchAudioBufferUrl(url, ctx) {
     if (url.startsWith("noise:")) {
       const [dur, sample] = url.substr(6).split(":").map(n => parseInt(n));
@@ -81,3 +82,11 @@ AudioBufferFunctions["##"] = async function (node, ctx) {
 // if (!node.body[0])                           //todo this will be fixed if the AudioBuffer is its own data type
 //   throw new Error("Cannot create convolver without a valid description.");
 
+//todo function for making wave from int array
+//todo this can be used instead of OfflineAudioContext to produce noise f.ex.
+
+//1. https://gist.github.com/asanoboy/3979747
+//2. http://soundfile.sapp.org/doc/WaveFormat/
+
+//3. https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js
+//see the function encodeWav
