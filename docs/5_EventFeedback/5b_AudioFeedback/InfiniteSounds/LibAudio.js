@@ -3,6 +3,24 @@ import {isPrimitive} from "./Parser.js";
 export class MomNode {
   constructor(body = []) {
     this.body = body;
+    this._output;
+    this._input;
+  }
+
+  set output(obj) {
+    this._output = obj;
+  }
+
+  set input(obj) {
+    this._input = obj;
+  }
+
+  get output() {
+    return this._output || this.body.map(node => node.output);
+  }
+
+  get input() {
+    return this._input || this.body.map(node => node.input);
   }
 
   start() {
@@ -10,23 +28,6 @@ export class MomNode {
       child && child.start && child.start();
   }
 }
-
-// class StreamMomNode extends MomNode {
-//
-//   constructor(body, audioNode){
-//     super(body);
-//     this.audioNode = audioNode;
-//     this.output;
-//     this.input;
-//   }
-//
-//   get output() {
-//     return this.output || this.audioNode || this.body.map(node => node.output);
-//   }
-//   get input() {
-//     return this.input || this.audioNode || this.body.map(node => node.input);
-//   }
-// }
 
 //todo convert the factory methods to constructors as specified by MDN?
 //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
@@ -36,12 +37,11 @@ class AudioMomNode extends MomNode {
     super(body);
     this.fn = fn;
     this.params = params;
-    this.input = this.output = this.fn();
   }
 
   start() {
     super.start();
-
+    this.input = this.output = this.fn();
     this.updateAudioParameters(this.params, this.body);
     this.output.start && this.output.start();
   }
@@ -72,9 +72,7 @@ class AudioMomNode extends MomNode {
   static create(node, ctx, fn, params) {
     ctx = ctx[ctx.length - 1].webAudio;
     const init = ctx[fn].bind(ctx);
-    const res = new AudioMomNode(node.body, init, params);
-    // res.start();
-    return res;
+    return new AudioMomNode(node.body, init, params);
   }
 }
 
@@ -92,21 +90,6 @@ function plotEnvelope(target, points) {
     nextStart += time;
   }
 }
-
-export const MomNodes = Object.create(null);
-
-MomNodes.oscillator = (node, ctx) => AudioMomNode.create(node, ctx, "createOscillator", ["type", "frequency", "setPeriodicWave"]);
-MomNodes.gain = (node, ctx) => AudioMomNode.create(node, ctx, "createGain", ["gain"]);
-MomNodes.delay = (node, ctx) => AudioMomNode.create(node, ctx, "createDelay", ["delayTime"]);
-MomNodes.filter = (node, ctx) => AudioMomNode.create(node, ctx, "createBiquadFilter", ["type", "frequency", "q", "gain", "detune"]);
-MomNodes.constant = (node, ctx) => AudioMomNode.create(node, ctx, "createConstantSource", ["offset"]);
-MomNodes.convolver = (node, ctx) => AudioMomNode.create(node, ctx, "createConvolver", ["buffer"]);
-
-/**
- * url('https://some.com/sound.file') plays the sound file once
- * url('https://some.com/sound.file', true) plays the sound file in a loop
- */
-MomNodes.url = (node, ctx) => AudioMomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
 
 //todo do I need to mark which nodes are connected to what other nodes?
 export function connectMtoN(a, b) {
@@ -127,14 +110,6 @@ function isSolved(node) {
   return isPrimitive(node) || node.output;
 }
 
-MomNodes["[]"] = function (node, ctx) {
-  for (let item of node.body) {
-    if (!isSolved(item))
-      return node;
-  }
-  return node.body;
-};
-
 function flattenAudioArray(node, outputInput) {
   if (!(node instanceof Array))
     return node[outputInput];
@@ -145,23 +120,49 @@ function flattenAudioArray(node, outputInput) {
   });
 }
 
+class MomPipeNode extends MomNode {
+  start() {
+    super.start();
+    let [left, right] = this.body;
+    if (!left || !right)
+      throw new SyntaxError("'>' pipe must have an input and output: " + node);
+    const leftOut = flattenAudioArray(left, "output");
+    const rightIn = flattenAudioArray(right, "input");
+    connectMtoN(leftOut, rightIn);
+    this.output = right.output;
+    this.ogInput = left.ogInput || left.input;
+  }
+}
+
+export const MomNodes = Object.create(null);
+
+MomNodes.oscillator = (node, ctx) => AudioMomNode.create(node, ctx, "createOscillator", ["type", "frequency", "setPeriodicWave"]);
+MomNodes.gain = (node, ctx) => AudioMomNode.create(node, ctx, "createGain", ["gain"]);
+MomNodes.delay = (node, ctx) => AudioMomNode.create(node, ctx, "createDelay", ["delayTime"]);
+MomNodes.filter = (node, ctx) => AudioMomNode.create(node, ctx, "createBiquadFilter", ["type", "frequency", "q", "gain", "detune"]);
+MomNodes.constant = (node, ctx) => AudioMomNode.create(node, ctx, "createConstantSource", ["offset"]);
+MomNodes.convolver = (node, ctx) => AudioMomNode.create(node, ctx, "createConvolver", ["buffer"]);
+
+/**
+ * url('https://some.com/sound.file') plays the sound file once
+ * url('https://some.com/sound.file', true) plays the sound file in a loop
+ */
+MomNodes.url = (node, ctx) => AudioMomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
+
+MomNodes["[]"] = function (node, ctx) {
+  for (let item of node.body) {
+    if (!isSolved(item))
+      return node;
+  }
+  return node.body;
+};
+
 //Arrays are flattened
 //   [[a,b],c] > d
 //   equals
 //   [a,b,c] > d
-//todo make this into a MomNode subclass
-// move into AudioLib
 MomNodes[">"] = function (node, ctx) {
-  let [left, right] = node.body;
-  if (!left || !right)
-    throw new SyntaxError("'>' pipe must have an input and output: " + node);
-  const leftOut = flattenAudioArray(left, "output");
-  const rightIn = flattenAudioArray(right, "input");
-  connectMtoN(leftOut, rightIn);
-  const res = new MomNode(node.body);
-  res.ogInput = left.ogInput || leftOut;
-  res.output = rightIn;
-  return res;
+  return new MomPipeNode(node.body);
 };
 //todo test Uint8Array input different types of
 

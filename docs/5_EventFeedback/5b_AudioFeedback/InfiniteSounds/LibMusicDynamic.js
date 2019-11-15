@@ -16,10 +16,6 @@ class Clef extends MomNode {
   setParent(parent) {
     this.parent = parent;
   }
-
-  get output(){
-    return this.body.map(node => node.output);
-  }
 }
 
 class RelativeClef extends Clef {
@@ -42,7 +38,12 @@ class MomNote extends MomNode {
   constructor(relNote, audioCtx) {
     super();
     this.key = relNote.body;
-    this.output = MomNote.makeFrequencyGain(audioCtx);
+    this.ctx = audioCtx;
+  }
+
+  start() {
+    this.output = MomNote.makeFrequencyGain(this.ctx);
+    this.output.gain.value = Notes[this.key[0]];
   }
 
   static makeFrequencyGain(ctx) {
@@ -51,10 +52,6 @@ class MomNote extends MomNode {
     constant.connect(toneGain);
     constant.start();
     return toneGain;
-  }
-
-  start() {
-    this.output.gain.value = Notes[this.key[0]];
   }
 }
 
@@ -66,15 +63,15 @@ class RelativeNote extends MomNote {
   }
 
   start() {
-    if (this.key)
-      return this.key;
-    let [key, mode] = this.parent.getKey();
-    const [twelve, myMode, seven] = this.relative.body;
-    key += twelve;
-    key += MusicModes.toTwelve(mode, seven);
-    const [newMode, hashes] = MusicModes.switchMode(mode, myMode);
-    key += hashes;
-    this.output.gain.value = Notes[key];
+    if (!this.key) {
+      let [key, mode] = this.parent.getKey();
+      const [twelve, myMode, seven] = this.relative.body;
+      key += twelve;
+      key += MusicModes.toTwelve(mode, seven);
+      const [newMode, hashes] = MusicModes.switchMode(mode, myMode);
+      this.key = [key + hashes, newMode];
+    }
+    super.start();
   }
 
   setParent(parent) {
