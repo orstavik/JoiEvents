@@ -1,5 +1,5 @@
 import {interpret} from "./Interpreter.js";
-import {connectMtoN} from "./LibAudio.js";
+import {MomPipeNode} from "./LibAudio.js";
 
 export class CssMusic extends AudioContext {
 
@@ -18,9 +18,15 @@ export class CssMusic extends AudioContext {
     // ctx.rootClef = ctx.createConstantSource();
     // ctx.rootClef.start();
     ctx.result = (await interpret(sound, ctx));
-    if (ctx.result && ctx.result.start){
-      ctx.result.start();
-      connectMtoN(ctx.result.output, ctx.destination);
+    if (ctx.result && ctx.result.start) {
+      // ctx.result.start();                                  //todo this is the method that starts and attaches the nodes to the ctx
+      // connectMtoN(ctx.result.output, ctx.destination);
+      //todo instead do this
+      const groundedRoot = new MomPipeNode([ctx.result, {output: ctx.destination, input: ctx.destination}]);
+      groundedRoot.start();
+      setTimeout(() => {
+        groundedRoot.stop()
+      }, 500);
     }
     // debugger;
     // if (result.type === "bpm") {

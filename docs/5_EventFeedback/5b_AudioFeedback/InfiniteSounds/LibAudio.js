@@ -24,9 +24,25 @@ export class MomNode {
   }
 
   start() {
+    //todo,
+    if (this.isStarted)
+      this.stop();
+    this.isStarted = true;
     for (let child of this.body)
       child && child.start && child.start();
   }
+
+  //todo I need a
+  stop() {
+    for (let child of this.body)
+      child && child.stop && child.stop();
+    this.isStarted = false;
+  }
+
+  //todo
+  // clone(){
+  //   return new MomNode(this.body);
+  // }
 }
 
 //todo convert the factory methods to constructors as specified by MDN?
@@ -45,6 +61,17 @@ class AudioMomNode extends MomNode {
     this.updateAudioParameters(this.params, this.body);
     this.output.start && this.output.start();
   }
+
+  //todo
+  stop() {
+    super.stop();
+    this.output.stop && this.output.stop();
+  }
+
+  //todo
+  // clone(){
+  //   return new AudioMomNode(this.body, this.fn, this.params);
+  // }
 
   updateAudioParameters(names, values) {
     for (let i = 0; i < names.length; i++)
@@ -92,7 +119,7 @@ function plotEnvelope(target, points) {
 }
 
 //todo do I need to mark which nodes are connected to what other nodes?
-export function connectMtoN(a, b) {
+function connectMtoN(a, b) {
   if (a instanceof Array) {
     for (let x of a)
       connectMtoN(x, b);
@@ -104,6 +131,20 @@ export function connectMtoN(a, b) {
     return;
   }
   a.connect(b);
+}
+
+function disconnectMtoN(a, b) {
+  if (a instanceof Array) {
+    for (let x of a)
+      disconnectMtoN(x, b);
+    return;
+  }
+  if (b instanceof Array) {
+    for (let y of b)
+      disconnectMtoN(a, y);
+    return;
+  }
+  a.disconnect(b);
 }
 
 function isSolved(node) {
@@ -120,18 +161,28 @@ function flattenAudioArray(node, outputInput) {
   });
 }
 
-class MomPipeNode extends MomNode {
+export class MomPipeNode extends MomNode {
   start() {
     super.start();
     let [left, right] = this.body;
-    if (!left || !right)
+    if (!left || !right)                                                       //todo, I don't want this here..
       throw new SyntaxError("'>' pipe must have an input and output: " + node);
-    const leftOut = flattenAudioArray(left, "output");
-    const rightIn = flattenAudioArray(right, "input");
-    connectMtoN(leftOut, rightIn);
-    this.output = right.output;
+    this.leftOut = flattenAudioArray(left, "output");
+    this.rightIn = flattenAudioArray(right, "input");
+    connectMtoN(this.leftOut, this.rightIn);
+    this.output = flattenAudioArray(right, "output");
     this.ogInput = left.ogInput || left.input;
   }
+
+  //todo
+  stop() {
+    disconnectMtoN(this.leftOut, this.rightIn)
+  }
+
+  //todo
+  // clone(){
+  //   return super.clone();  needs to do nothing?, I don't need to implement this?
+  // }
 }
 
 export const MomNodes = Object.create(null);
