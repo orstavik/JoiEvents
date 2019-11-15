@@ -11,14 +11,31 @@ export class MomNode {
   }
 }
 
+// class StreamMomNode extends MomNode {
+//
+//   constructor(body, audioNode){
+//     super(body);
+//     this.audioNode = audioNode;
+//     this.output;
+//     this.input;
+//   }
+//
+//   get output() {
+//     return this.output || this.audioNode || this.body.map(node => node.output);
+//   }
+//   get input() {
+//     return this.input || this.audioNode || this.body.map(node => node.input);
+//   }
+// }
+
 //todo convert the factory methods to constructors as specified by MDN?
 //todo factory vs constructor: https://developer.mozilla.org/en-US/docs/Web/API/AudioNode#Creating_an_AudioNode
 //todo the problem is that this is difficult to do if the parameter is an audio envelope represented as an array.
 class AudioMomNode extends MomNode {
-  constructor(node, ctx, fn, params) {
-    super(node.body);
-    this.params = params;
+  constructor(body, fn, params) {
+    super(body);
     this.fn = fn;
+    this.params = params;
     this.input = this.output = this.fn();
   }
 
@@ -55,7 +72,7 @@ class AudioMomNode extends MomNode {
   static create(node, ctx, fn, params) {
     ctx = ctx[ctx.length - 1].webAudio;
     const init = ctx[fn].bind(ctx);
-    const res = new AudioMomNode(node, ctx, init, params);
+    const res = new AudioMomNode(node.body, init, params);
     // res.start();
     return res;
   }
@@ -92,7 +109,7 @@ MomNodes.convolver = (node, ctx) => AudioMomNode.create(node, ctx, "createConvol
 MomNodes.url = (node, ctx) => AudioMomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
 
 //todo do I need to mark which nodes are connected to what other nodes?
-function connectMtoN(a, b) {
+export function connectMtoN(a, b) {
   if (a instanceof Array) {
     for (let x of a)
       connectMtoN(x, b);

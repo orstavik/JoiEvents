@@ -16,6 +16,10 @@ class Clef extends MomNode {
   setParent(parent) {
     this.parent = parent;
   }
+
+  get output(){
+    return this.body.map(node => node.output);
+  }
 }
 
 class RelativeClef extends Clef {
