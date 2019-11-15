@@ -93,4 +93,27 @@ export class MusicModes {
     const newName = MusicModes.getName(number % 7);
     return [newName, hashes];
   }
+
+  static mergeNotes(absNote, relNote) {
+    let [originalKey, originalMode] = absNote;
+    const [twelve, relativeMode, seven] = relNote;
+    let key = originalKey + twelve;
+    key += MusicModes.toTwelve(originalMode, seven);
+    //todo the plan.
+    // a) The static, absolute clefs are mainly for a1) writing notes with letters and a2) importing melodies that are written in another key correctly.
+    // but, you do not want the keys in the dynaMom. So, when the translation of absolute notes into absolute keys are completed, then the absolute clef is turned into a null clef, a ~0(...), or removed completely.
+    // b) if we want the ability to make a clef that is in another key, then we need to have the C4(~G4(~0,~2,~4)). and C4lyd(%maj(~0,~2,~4)).
+    // This is a bit more work. And it is really a convenience feature, not a music feature.
+
+    //todo, here I could skew the mode according to the piano mode table?? No, its not the pianoScale, as that would be in the 7 scale.
+    //todo it is also a question, should I invert this scale, or should I keep it fixed??
+    //todo const extraRelativeMode = key-originalKey%7;
+    //todo relativeMode += extraRelativeMode;
+    //todo, here I could skew the mode according to the piano mode table??
+    //todo this would be mathematically correct, but it will provide a very difficult readable output..
+    //todo, at the same time, it would give some idea about why certain steps mix better/worse than others.
+    const [newMode, hashes] = MusicModes.switchMode(originalMode, relativeMode);
+    key += hashes;
+    return [key, newMode];
+  }
 }

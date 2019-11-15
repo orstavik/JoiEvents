@@ -25,24 +25,20 @@ class RelativeClef extends Clef {
     this.key = undefined;
   }
 
+  //todo I am forgetting the root key for the scale. Thus, the calculation of relative seven become skewed.
+  //todo I can fix this by modifying the mode. Switching the mode a given number of steps to the right Turning the mode into a
   getKey() {
     if (this.key)
       return this.key;
-    let [key, mode] = this.parent.getKey();
-    const [twelve, myMode, seven] = this.relative.body;
-    key += twelve;
-    key += MusicModes.toTwelve(mode, seven);
-    const [newMode, hashes] = MusicModes.switchMode(mode, myMode);
-    key += hashes;
-    return [key, newMode];
+    return MusicModes.mergeNotes(this.parent.getKey(), this.relative.body);
   }
 }
 
 class MomNote extends MomNode {
   constructor(relNote, audioCtx) {
     super();
-    this.output = MomNote.makeFrequencyGain(audioCtx);
     this.key = relNote.body;
+    this.output = MomNote.makeFrequencyGain(audioCtx);
   }
 
   static makeFrequencyGain(ctx) {

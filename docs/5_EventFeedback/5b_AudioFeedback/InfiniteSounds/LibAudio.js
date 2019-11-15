@@ -17,12 +17,12 @@ class AudioMomNode extends MomNode {
     super(node.body);
     this.params = params;
     this.fn = fn;
+    this.input = this.output = this.fn();
   }
 
   start() {
     super.start();
 
-    this.input = this.output = this.fn();
     this.updateAudioParameters(this.params, this.body);
     this.output.start && this.output.start();
   }

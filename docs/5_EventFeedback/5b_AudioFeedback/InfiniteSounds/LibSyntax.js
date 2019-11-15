@@ -1,4 +1,5 @@
 import {isPrimitive} from "./Parser.js";
+import {MomNode} from "./LibAudio.js";
 
 export const ListOps = Object.create(null);
 
@@ -65,7 +66,9 @@ AudioPiping["[]"] = function (node, ctx) {
   return node.body;
 };
 
-function extractAudioArray(node, outputInput) {
+function flattenAudioArray(node, outputInput) {
+  if (!(node instanceof Array))
+    return node[outputInput];
   return node.flat(Infinity).map(node => {
     if (node[outputInput])
       return node[outputInput];
@@ -78,15 +81,16 @@ function extractAudioArray(node, outputInput) {
 //   equals
 //   [a,b,c] > d
 AudioPiping[">"] = function (node, ctx) {
-  if (!node.body[0])
-    throw new SyntaxError("'>' pipe must have an input. ", node);
-  if (!node.body[1])
-    throw new SyntaxError("'>' pipe must have an input. ", node);
-  const left = (node.body[0] instanceof Array) ? extractAudioArray(node.body[0], "output") : node.body[0].output;
-  const right = (node.body[1] instanceof Array) ? extractAudioArray(node.body[1], "input") : node.body[1].input;
-  connectMtoN(left, right);
-  const ogInput = node.body[0].ogInput || left;
-  return {graph: node, input: left, output: right, ogInput};
+  let [left, right] = node.body;
+  if (!left || !right)
+    throw new SyntaxError("'>' pipe must have an input and output: " + node);
+  const leftOut = flattenAudioArray(left, "output");
+  const rightIn = flattenAudioArray(right, "input");
+  connectMtoN(leftOut, rightIn);
+  const res = new MomNode(node.body);
+  res.ogInput = left.ogInput || leftOut;
+  res.output = rightIn;
+  return res;
 };
 
 //this doesn't really mean anything special, as the > is normally processed ltr
