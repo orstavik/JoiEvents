@@ -1,7 +1,7 @@
 import {isPrimitive, parse} from "./Parser.js";
 import {Random, Translations} from "./LibRandom.js";
 import {MathOps, ArrayMathOps} from "./LibMath.js";
-import {AudioPiping, ListOps} from "./LibSyntax.js";
+import {ListOps} from "./LibSyntax.js";
 import {MomNodes} from "./LibAudio.js";
 import {MusicDynamic} from "./LibMusicDynamic.js";
 import {MusicMath} from "./LibMusic.js";
@@ -32,8 +32,7 @@ const staticTable = mergeTables(ListOps, Units, MathOps, ArrayMathOps, MusicMath
 //todo the static table produce a JSONable, pure data object.
 //todo the dynamic table produce an object graph with particular classes.
 //todo both lists children as body, as it enables the running of all in the same machines.
-const dynamicTable = mergeTables(Random, MathOps, MusicMath, MusicDynamic, MomNodes, AudioBufferFunctions,
-AudioPiping);
+const dynamicTable = mergeTables(Random, MathOps, MusicMath, MusicDynamic, MomNodes, AudioBufferFunctions);
 
 export async function interpretNode(node, table, ctx) {
   if (isPrimitive(node))

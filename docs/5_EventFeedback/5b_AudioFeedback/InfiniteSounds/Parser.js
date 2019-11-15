@@ -261,3 +261,12 @@ export function parse(str) {
     throw new SyntaxError("the main css audio pipe is broken");
   return args;
 }
+
+//this doesn't really mean anything special, as the > is normally processed ltr
+// a > (b > c > d).
+//You can write it, no problem, but it will just run the same as if you wrote
+// a > b > c > d.
+//this doesn't really mean anything either.
+// (a > b ) > c.
+//You can write it, no problem, but it will just produce the same output as if you wrote
+// a > b > c.

@@ -1,5 +1,4 @@
 import {isPrimitive} from "./Parser.js";
-import {MomNode} from "./LibAudio.js";
 
 export const ListOps = Object.create(null);
 
@@ -37,92 +36,6 @@ ListOps["[]"] = function (node, ctx) {
   return node.body;
 };
 
-//todo do I need to mark which nodes are connected to what other nodes?
-function connectMtoN(a, b) {
-  if (a instanceof Array) {
-    for (let x of a)
-      connectMtoN(x, b);
-    return;
-  }
-  if (b instanceof Array) {
-    for (let y of b)
-      connectMtoN(a, y);
-    return;
-  }
-  a.connect(b);
-}
-
-export const AudioPiping = Object.create(null);
-
-function isSolved(node) {
-  return isPrimitive(node) || node.output;
-}
-
-AudioPiping["[]"] = function (node, ctx) {
-  for (let item of node.body) {
-    if (!isSolved(item))
-      return node;
-  }
-  return node.body;
-};
-
-function flattenAudioArray(node, outputInput) {
-  if (!(node instanceof Array))
-    return node[outputInput];
-  return node.flat(Infinity).map(node => {
-    if (node[outputInput])
-      return node[outputInput];
-    throw new SyntaxError(`Cannot > pipe from something that doesn't have an audio ${outputInput} stream.`, node);
-  });
-}
-
-//Arrays are flattened
-//   [[a,b],c] > d
-//   equals
-//   [a,b,c] > d
-AudioPiping[">"] = function (node, ctx) {
-  let [left, right] = node.body;
-  if (!left || !right)
-    throw new SyntaxError("'>' pipe must have an input and output: " + node);
-  const leftOut = flattenAudioArray(left, "output");
-  const rightIn = flattenAudioArray(right, "input");
-  connectMtoN(leftOut, rightIn);
-  const res = new MomNode(node.body);
-  res.ogInput = left.ogInput || leftOut;
-  res.output = rightIn;
-  return res;
-};
-
-//this doesn't really mean anything special, as the > is normally processed ltr
-// a > (b > c > d).
-//You can write it, no problem, but it will just run the same as if you wrote
-// a > b > c > d.
-
-//this doesn't really mean anything either.
-// (a > b ) > c.
-//You can write it, no problem, but it will just produce the same output as if you wrote
-// a > b > c.
-
-//If you try to "x >(y, z)" or "(x, y) > z", the piping function will throw an error.
-//todo should this error be moved to the Parser? Likely yes..
-//AudioPiping["()"] = function (node, ctx) {
-//   if (node.body.length !== 1)
-//     throw new SyntaxError("Cannot pipe audio into a ()-block with commas.");
-//   return {graph: node, input: node.body[0].input, output: node.body[0].output};
-// };
-
-//todo parse body here..
-//todo fix handle ()-blocks
-
-//todo untested
-// function addDelay(ctx, count, beat, left) {
-//   if (count === 0)
-//     return left;
-//   const delay = ctx.createDelay(count * beat);
-//   connectMtoN(left, delay);
-//   return delay;
-// }
-
 //todo untested
 // AudioPiping["bpm"] = function (ctx, bpm, heavy, barTree) {
 //   if (barTree.type !== "|")
@@ -135,7 +48,7 @@ AudioPiping[">"] = function (node, ctx) {
 // return bars;
 // };
 //
-
+export const AudioPiping = Object.create(null);
 //todo mutates the node..
 AudioPiping["bpm"] = function (node, ctx) {
   let [bpm, heavy, bars] = node.body;

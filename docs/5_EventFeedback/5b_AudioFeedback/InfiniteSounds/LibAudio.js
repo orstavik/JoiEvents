@@ -1,3 +1,5 @@
+import {isPrimitive} from "./Parser.js";
+
 export class MomNode {
   constructor(body = []) {
     this.body = body;
@@ -74,7 +76,7 @@ function plotEnvelope(target, points) {
   }
 }
 
-export const MomNodes = {};
+export const MomNodes = Object.create(null);
 
 MomNodes.oscillator = (node, ctx) => AudioMomNode.create(node, ctx, "createOscillator", ["type", "frequency", "setPeriodicWave"]);
 MomNodes.gain = (node, ctx) => AudioMomNode.create(node, ctx, "createGain", ["gain"]);
@@ -89,6 +91,61 @@ MomNodes.convolver = (node, ctx) => AudioMomNode.create(node, ctx, "createConvol
  */
 MomNodes.url = (node, ctx) => AudioMomNode.create(node, ctx, "createBufferSource", ["buffer", "loop"]);
 
+//todo do I need to mark which nodes are connected to what other nodes?
+function connectMtoN(a, b) {
+  if (a instanceof Array) {
+    for (let x of a)
+      connectMtoN(x, b);
+    return;
+  }
+  if (b instanceof Array) {
+    for (let y of b)
+      connectMtoN(a, y);
+    return;
+  }
+  a.connect(b);
+}
+
+function isSolved(node) {
+  return isPrimitive(node) || node.output;
+}
+
+MomNodes["[]"] = function (node, ctx) {
+  for (let item of node.body) {
+    if (!isSolved(item))
+      return node;
+  }
+  return node.body;
+};
+
+function flattenAudioArray(node, outputInput) {
+  if (!(node instanceof Array))
+    return node[outputInput];
+  return node.flat(Infinity).map(node => {
+    if (node[outputInput])
+      return node[outputInput];
+    throw new SyntaxError(`Cannot > pipe from something that doesn't have an audio ${outputInput} stream.`, node);
+  });
+}
+
+//Arrays are flattened
+//   [[a,b],c] > d
+//   equals
+//   [a,b,c] > d
+//todo make this into a MomNode subclass
+// move into AudioLib
+MomNodes[">"] = function (node, ctx) {
+  let [left, right] = node.body;
+  if (!left || !right)
+    throw new SyntaxError("'>' pipe must have an input and output: " + node);
+  const leftOut = flattenAudioArray(left, "output");
+  const rightIn = flattenAudioArray(right, "input");
+  connectMtoN(leftOut, rightIn);
+  const res = new MomNode(node.body);
+  res.ogInput = left.ogInput || leftOut;
+  res.output = rightIn;
+  return res;
+};
 //todo test Uint8Array input different types of
 
 //todo Add "map" operations on arrays.
