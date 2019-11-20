@@ -86,6 +86,14 @@ To solve this dilemma, we will echo the `submit` event as another custom event w
 })();
 ```
 
+## Where to store event data
+
+If a) the data concerning the event is primitive and b) the data is not associated with any one particular html element and c) read only (should remain fixed throughout event propagation, then this data should be in the event. Try to freeze the getter setter on the event for this data/these details.
+
+If the data a) might be changed during the event propagation (such as a link reference during a click), b) is not a primitive, or c) is tightly associated with the target element, then it should be a property on the target element.
+
+Global Composed events, as described in this book, provide a clear benefit over composing events from within custom elements, as they clearly embrace their universal and global purpose. Controlling global, universal from element types can likely cause conflicts as a parent and child might both implement some variant of the same global event (such as `pull`).
+
 ## References
 
  * 
