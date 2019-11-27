@@ -16,7 +16,7 @@ The browser produce many native composed events. `dblclick` is made when two `cl
   
   * etc.
 
-Stopping such native composed events is *sometimes* done by calling `.preventDefault()` on one of the preceding trigger events. If you call `.preventDefault()` on a `touchstart` event, then no `mousedown`, `contextmenu`, `selectionstart`, `click` nor other event will occur.
+Stopping such native composed events is *sometimes* done by calling `.preventDefault()` on one of the preceding trigger events. If you call `.preventDefault()` on a `touchstart` event, then no `mousedown`, `contextmenu` (WRONG!!), `selectionstart`, `click` nor other event will occur.
 
 Another means to block native, composed events is setting specific CSS properties. If you  for example set `user-select: none` on a target element from within a `touchstart` event listener, then no subsequent `selectstart` event and its subsequent text selection default action will occur. 
 
@@ -97,6 +97,26 @@ The function above is slightly naive. Yes, it will abort a single `dblclick` tha
 ## Example 1: CancelClickOnce
 
 <code-demo src="demo/PreventDefaultDblClick.html"></code-demo>
+
+## Table 1: overview of preventable and unstoppable composed event cascation
+
+trigger -> | intermediate -> | composed | stop via css | stop via preventDefault | unstoppable
+---        | ---             | ---      | ---          | ---                     | ---        
+touchstart | touchend   | click    |              | maybe?                  | maybe?
+touchend   |            | click    |              | maybe?                  | maybe?
+mouseup    |            | click    |              |                         | X
+wheel      |            | scroll   | no?          | yes?                    | no?
+click      |            | contextmenu | no?       | NO!                     | X
+mouseup    |            | contextmenu | no?       | NO!                     | X
+mousedown  |            | contextmenu | no?       | NO!                     | X
+
+
+## Table 2: overview of duplicatable defaultActions
+
+ native event       | defaultAction     | duplicatable 
+---                 | ---               | ---              
+contextmenu         | show context menu | NO
+click on <a href>   | navigate to page  | YES: location = new URL(nativeEvent.target.href).href;
 
 ## References
 

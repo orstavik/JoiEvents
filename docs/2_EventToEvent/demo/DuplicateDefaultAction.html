@@ -1,0 +1,30 @@
+<ul>
+  <li><a href="#one" id="a">No navigation</a></li>
+  <li><a href="#two" id="b">Normal navigation</a> (see # in address bar)</li>
+  <li><a href="#three" id="c">Alert BEFORE navigation</a> (check address bar before and after alert)</li>
+</ul>
+
+<script>
+
+  function a(e) {
+    console.log("a");
+    e.preventDefault();
+  }
+
+  function b(e) {
+    console.log("b");
+  }
+
+  function c(e) {
+    console.log("c");
+    e.preventDefault();
+    setTimeout(function () {
+      alert("alert message replace contextmenu.");
+      location.href = new URL(e.target.href).href;
+    }, 0);
+  }
+
+  document.querySelector("#a").addEventListener("click", a);
+  document.querySelector("#b").addEventListener("click", b);
+  document.querySelector("#c").addEventListener("click", c);
+</script>

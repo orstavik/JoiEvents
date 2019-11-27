@@ -1,0 +1,27 @@
+<h1 id="a">No context menu</h1>
+<h1 id="b">Normal context menu</h1>
+<h3 id="c">Alert replaces context menu</h3>
+
+<script>
+
+  function a(e){
+    console.log("a");
+    e.preventDefault();
+  }
+
+  function b(e){
+    console.log("b");
+  }
+
+  function c(e){
+    console.log("c");
+    e.preventDefault();
+    setTimeout(function(){
+      alert("alert message replace contextmenu.");
+    }, 0);
+  }
+
+  document.querySelector("#a").addEventListener("contextmenu", a);
+  document.querySelector("#b").addEventListener("contextmenu", b);
+  document.querySelector("#c").addEventListener("contextmenu", c);
+</script>
