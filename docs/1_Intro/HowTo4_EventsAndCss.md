@@ -1,5 +1,7 @@
 ## HowTo: compose with DOM Events and CSS
 
+> Events and CSS are more than just a friend of a friend. Mostly, they play together via their shared friends HTML and JS, but sometimes events and CSS also play directly and only with each other. 
+
 At first sight, it seems strange to direct DOM Events from CSS, or direct CSS from DOM Events. 
 Why add that complexity? Why not stick with just controlling DOM Events using HTML attributes? Or JS?
 Surely, to mix CSS with DOM Events just seems like asking for trouble (complexity) for no good reason.

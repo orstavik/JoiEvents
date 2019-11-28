@@ -14,39 +14,57 @@ But, nowadays most web pages are small web apps. The web page include both JS an
 
 So, when you hear someone talk about "composing" something on the web today, think of it as the act of "combining HTML with CSS, JS, and/or DOM Events" to make something. Try to avoid to use the term "compose" about simply writing something in HTML, CSS or JS when you think of this text in isolation. Use "compose" when you want to highlight that your HTML template, CSS rules or JS code is oriented towards each other.
 
-## DOM Events: the fourth power
+> to "compose": "put together". For more, google "etymology position" and "etymologi compose".
 
-Exactly what role does DOM Events such as `click`, `offline`, and `mousemove` play in a web app? Are they part of the DOM, like neurons that communicate messages between DOM elements? Are they part of JS, a simple subdivision of the web programming language? And which role does CSS and DOM Events have for each other? Are they just friend of a friend? Bound together only through their shared friends HTML and JS, but themselves never in direct contact?
+## Events: the fourth power
 
-The answer to this question is that DOM Events is *independent of* and *directly bound to* both HTML, JS, and CSS. DOM Events does not exist in isolation, as does neither HTML, JS, nor CSS. DOM Events exists on par with the other three and should be viewed as the fourth power in a web app.
+Exactly what role does events such as `click`, `offline`, and `mousemove` play in a web app? Are they part of the DOM, like neurons that communicate messages between DOM elements? Are they part of JS, a simple module in a programming language? And what about CSS and events, are they related, or are they just a friend of a friend?
 
-At first, this perspective is a bit confusing. Why, DOM Events are not independent?! You have to have HTML elements to have a DOM, so no DOM Events without HTML elements. Right?! Also, as developers, DOM Events are only useful if we listen and react to them with a JS functions. After all, if a three falls in the forrest, and no one is there to try to catch it, it makes no squashing sound, right?! And, come on, CSS and DOM Events are not directly connected. They are friends of friends. Nah. This is bogus.
+These questions has an answer. Events are not subjugated neither HTML nor JS; they are *independent of* both HTML, JS, and CSS. But. Events does not live in isolation. Events occur in a world co-inhabited by HTML, JS, and CSS. It is the fourth power of the web run-time universe.
 
-But. It's not. If we look closer at these ideas about DOM Events as being subjugated to HTML and JS, and only indirectly connected to CSS, several issues pop up.
+This perspective might confuse you. How can we have events if there are no HTML elements for them to associate, or no JS functions to react to them? How can there be a sound of a tree falling in the forrest, if there are no trees (of HTML elements) and no one there to her it (JS event listeners)?
 
-First, DOM Events do make a sound in the forrest, even if no event listener is there to catch it. Link navigation, drop-down-selects, and swipe-to-scroll are very important DOM Events for our web apps even though we might never touch them with JS. For many, many years, developers proudly presented "interactive web sites" that contained no JS, only HTML elements and DOM events. `<a href="...">` and `<select><option>` were oh-so-powerful indeed. 
+Because. There is a difference between "an underlying event" and its "mediation in the browser". For example:
 
-Second, DOM Events originate on the platform independently of both JS functions and HTML elements. The user moves his finger, and something deep down in the OS and browser is then responsible for finding both the HTML target element and que JS event listener callbacks and defaultActions in the browser's event loop. DOM Events are born separate. And they are not only JS functions, they can be defaultActions too, which are not JS at all.
+* If we create an empty DOM, with only a `window` and `document` elements, then we can still have lots of `mousemove` and `click` events. Even if we took away the DOM completely, the `click` would still occur in the OS. And when a user tries to `tap` on his smartphone in the mid of winter, not registered by the frozen hardware at all, somewhere in the mind of the user and IRL, a `click` still occured.
 
-Third, we don't *always* mix HTML elements with DOM Events. `window.addEventListener("offline", alert("Panic attack!"));` does not rely on any DOM elements to work (if you can get over yourself and your profound insight into HTML and accept that I don't include the `<script>` tag that holds the JS function in this equation). 
+* Events have consequences, even when no JS functions perceive them. The `defaultAction` of link-click-navigation, drop-down-select, swipe-to-scroll works fine without JS.   
 
-Fourth, DOM Events are actually controlled from CSS. The CSS properties such as `touch-action` and `user-select` are events controlling directives from CSS. And. CSS can be controlled from DOM Events. `:hover` is a CSS selector that is directly directed from DOM Events (cf. `mouseover`). Sure, there is a shared HTML element friend in the mix here, but CSS and DOM Events are definitively also in direct contact.
+* Some events (an JS functions) works *outside* the DOM. `window.addEventListener("offline", alert("Panic attack!"));` does not rely on any DOM elements to work (if you can accept that I don't include the `<script>` tag that holds the JS function in this equation). 
 
-The conclusion is: DOM Events are both *independent of* and *directly bound to* both HTML, JS, and CSS. When we "compose" our web apps, we are mixing four main ingredients: HTML, JS, CSS, and DOM Events. The web is a chair with four legs.
+And. Events also have a separate, direct, two-way relationship with CSS:
 
-## HowTo: compose with DOM Events?
+* Some events are directly controlled from CSS. The CSS properties such as `touch-action` and `user-select` are events controlling directives from CSS. 
 
-There are seven ways to "compose" with DOM Events:
+* Some events can directly control CSS. The `mouseover` event turns on/off the CSS selector `:hover` on DOM elements.
 
-1. JsToEventComposition: JS functions are used to create, direct or stop DOM Events.
-2. EventToJsComposition: DOM Events are used to direct JS functions.
-3. HtmlToEventComposition: HTML elements are used to create, direct or stop DOM Events.
-4. EventToHtmlComposition: DOM Events are used to alter HTML elements.
-5. CssToEventComposition: CSS rules are used to direct or stop DOM Events.
-6. EventToCssComposition: DOM Events are used to activate CSS rules.
-7. EventToEventComposition: DOM Events are used to compose other custom DOM Events.
+Sure, most of the time, events makes a lot more sense (and sound) when there is a rich DOM with JS functions listening to them. And sure, mostly events and CSS are just friends of friends, interacting indirectly via HTML or JS. But. Events are still its own master, neither subjugated HTML nor JS, nor cut-off from CSS.
 
-This chapter will discuss how we can combine with DOM Events with JS, HTML, and/or CSS. In the next chapters, we will dive deep into EventToEventComposition. The patterns described in EventComposition are the true value of this project. However, in order to understand *how* a custom DOM Event should behave, we need also to understand *how* and *why* DOM Events can and do interact with HTML, JS, and CSS in certain ways.
+## HowTo: compose with events?
+
+When we "compose" a web app, we mix four main ingredients: HTML, JS, CSS, and events. But, to add some *precision* to this cookbook, we can break down the exactly *seven* ways to "compose" with events:
+
+1. JsToEventComposition: JS functions create, alter or destroy events.
+2. EventToJsComposition: events direct JS functions.
+3. HtmlToEventComposition: HTML elements create, alter or stop events.
+4. EventToHtmlComposition: events alter the state of HTML elements.
+5. CssToEventComposition: CSS rules direct or block events.
+6. EventToCssComposition: events activate CSS rules.
+7. EventToEventComposition: events create, alter or stop other custom events.
+
+In the first chapter of this book we briefly discuss composition method 1-6: how events can be put together with JS, HTML, and/or CSS. Chapters 2-8 of this book, we devote to EventToEventComposition(7).
+
+## Special price for you my friend! ;)
+
+EventToEventComposition is a truly powerful strategy for web architecture. In web apps today, both a) problems of code bloat and complexity and b) cognitive barriers to advanced functionality actually arise from poor archicture for EventToEventComposition. 
+
+In fact, I believe that EventToEventComposition holds more promise of making web app modules a) simpler and b) reusable than *any other technique*, including TypeScript, web components, and functional programming/immutable state management.
+ 
+In this book, I aim to prove this statement. And convince you. I aim to show you problems you *know* very well, but havn't really *seen* before. I aim to *share* an architecture strategy that feels both familiar and eye-opening that truly simplifies your code. And I aim to present patterns you can apply directly to *consume* (and produce) new *reusable* modules of code, today. 
+
+The end result I hope will be that you can cognitively envision and maintain more powerful and complex systems. I hope that simplicity of code will produce beautiful code. And richer web apps. I hope that open, thorough discussion about modularization strategies and techniques will yield a better shared understanding when developers share and consume each others code, a more trustworthy open-source environment. And I hope that all this will promote the open web, enable it to thrive not only among expert developers, but also ordinary users. Yes. [Panacea!](https://en.wikipedia.org/wiki/Single-payer_healthcare)
+
+But first, let's look at *how* and *why* events interact with HTML, JS, and CSS.
 
 ## References
 
