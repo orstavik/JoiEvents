@@ -1,30 +1,98 @@
+<h3>A) Normal navigation with click event</h3>
 <ul>
-  <li><a href="#one" id="a">No navigation</a></li>
-  <li><a href="#two" id="b">Normal navigation</a> (see # in address bar)</li>
-  <li><a href="#three" id="c">Alert BEFORE navigation</a> (check address bar before and after alert)</li>
+  <li><a href="#a1" id="a1">Normal navigation</a> (see # in address bar)</li>
+  <li><a href="#a2" id="a2">click listener .preventDefault()</a></li>
+  <li><a href="#a3" id="a3">click listener link.href+"world"</a></li>
+  <li><a href="#a4" id="a4">click listener link.remove(), but no .preventDefault()</a></li>
+  <li><a href="#a5" id="a5">click listener link.href+"world", link.remove(), but no .preventDefault()</a></li>
 </ul>
+<h3>B) Insert a composed event "after-click" between "click" and "navigation defaultAction"</h3>
+<ul>
+  <li><a href="#b1" id="b1">Insert a composed event "after-click"</a></li>
+  <li><a href="#b2" id="b2">"after-click" listener .preventDefault()</a></li>
+  <li><a href="#b3" id="b3">"after-click" listener link.href+"world"</a></li>
+  <li><a href="#b4" id="b4">"after-click" listener link.remove(), but no .preventDefault()</a></li>
+  <li><a href="#b5" id="b5">"after-click" listener link.href+"world", link.remove(), but no .preventDefault()</a></li>
+</ul>
+<h3>C) Insert a defaultAction between "click" and "navigation defaultAction"</h3>
+<li><a href="#c1" id="c1">Alert BEFORE navigation</a> (check address bar before and after alert)</li>
 
 <script>
 
-  function a(e) {
-    console.log("a");
+  function a2(e) {
     e.preventDefault();
   }
 
-  function b(e) {
-    console.log("b");
+  function a3(e) {
+    e.target.href += "world";
   }
 
-  function c(e) {
-    console.log("c");
+  function a4(e) {
+    e.target.remove();
+  }
+
+  function a5(e) {
+    e.target.href += "world";
+    e.target.remove();
+  }
+
+  function c1(e) {
     e.preventDefault();
-    setTimeout(function () {
-      alert("alert message replace contextmenu.");
-      location.href = new URL(e.target.href).href;
-    }, 0);
+    setTimeout(() => alert("This alert comes AFTER click BEFORE navigation."), 0);
+    setTimeout(() => location.href = new URL(e.target.href).href, 0);
   }
 
-  document.querySelector("#a").addEventListener("click", a);
-  document.querySelector("#b").addEventListener("click", b);
-  document.querySelector("#c").addEventListener("click", c);
+  class AfterClick extends Event {
+    constructor(originalClickEvent, options = {bubbles: true, composed: true}) {
+      super("after-click", options);
+      this._defaultAction = setTimeout(() => location.href = new URL(originalClickEvent.target.href).href, 0);
+    }
+
+    preventDefault() {
+      clearTimeout(this._defaultAction);
+    }
+  }
+
+  function b1(e) {
+    e.preventDefault();
+    setTimeout(() => e.target.dispatchEvent(new AfterClick(e)), 0);
+  }
+
+  function b2after(e) {
+    e.preventDefault();
+  }
+
+  function b3after(e) {
+    e.target.href += "sunshine";
+  }
+
+  function b4after(e) {
+    e.target.remove();
+  }
+
+  function b5after(e) {
+    e.target.href += "sunshine";
+    e.target.remove();
+  }
+
+  // document.querySelector("#a1").addEventListener("click", a1);
+  document.querySelector("#a2").addEventListener("click", a2);
+  document.querySelector("#a3").addEventListener("click", a3);
+  document.querySelector("#a4").addEventListener("click", a4);
+  document.querySelector("#a5").addEventListener("click", a5);
+  document.querySelector("#b1").addEventListener("click", b1);
+  document.querySelector("#b2").addEventListener("click", b1);
+  document.querySelector("#b3").addEventListener("click", b1);
+  document.querySelector("#b4").addEventListener("click", b1);
+  document.querySelector("#b5").addEventListener("click", b1);
+
+  document.querySelector("#b2").addEventListener("after-click", b2after);
+  document.querySelector("#b3").addEventListener("after-click", b3after);
+  document.querySelector("#b4").addEventListener("after-click", b4after);
+  document.querySelector("#b5").addEventListener("after-click", b5after);
+
+  document.querySelector("#c1").addEventListener("click", c1);
+
+  document.addEventListener("after-click", (e) => console.log(e.type));
+  document.addEventListener("click", (e) => console.log(e.type));
 </script>
