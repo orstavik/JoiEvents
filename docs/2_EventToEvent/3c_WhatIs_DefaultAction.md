@@ -38,17 +38,11 @@ There are however some native CascadingEvents that are **unstoppable**. Unstoppa
 Examples of native UnstoppableCascadingEvents are:
  *  `mouseup` or `touchend` event *must* trigger `click` and `contextmenu` events. Calling `.preventDefault()` on `mouseup` or `touchend` will *not* stop the `click` event from being triggered.
  *  todo make a list of all Unstoppable CascadingEvents.
+ 
+A likely rational for making some CascadingEvents Unstoppable is that the developer cannot remake them from script. For example, user input event such as `click` might need to be marked as `isTrusted` to enable the browser to identify if the browser should or should not allow the event to trigger a BrowserAction of some kind. As these other events would be hard to resurrect if needed later, the browser does not enable the trigger event to cancel them.
 
-## List of native DefaultActions
-
-Below are *three* lists of native defaultActions. The list describes three types of  
-
-trigger event | context premise | defaultAction | reproducable
----|---|---|---
-click | on a link | navigation | location = "bbc.com"
-click | on a submit button | submit event | formElement.dispatchEvent(new SubmitEvent());??
-click | right button | dispatch contextmenu event | irreplicable?
-contextmenu | user generated / isTrusted = true | show the context menu | irreplicable!
+Thus, the rule of thumb is: If the cascading event can be `isTrusted`, you cannot `preventDefault()` it.
+Todo. Verify this hypothesis??
 
 ## `.preventDefault()`
 

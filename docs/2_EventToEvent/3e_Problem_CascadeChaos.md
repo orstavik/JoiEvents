@@ -25,8 +25,6 @@ So, here is my list of healthy grievances for event cascades in the browser:
 2. Why are not the sequence capture frist, then bubble maintained on the target element during propagation. Why are the order of all event listeners FIFO on the target? Why? Why can someone please give me a rational, and not political reason why?
 3. DefaultActions are really invisible CascadingEvents. They only propagate off the DOM, amongst native functions, not in the DOM, amongst JS event listeners. And vice versa, cascading events are all in principle a defaultAction of another trigger event. They are all part of the same event cascade, the event-driven framework of the web.
 5. Redrum: TouchSimulateMouse. The chaos that is mouse events generated from touch events is so bad Im at a loss for words. And the biggest bomb herein is that it is somehow ok for the browser to have individual preferences for the order in which events cascade. For some reason, it is less important to keep event cascades universal than other stuff. The appropriate approach for you as a web developer facing that wisdom is to say: "yeah, that is really smart". And walk away.
-6. It is unpreventable that you will forget which events are preventable, and which are not. Be proud if you remember that `click` is unstoppable.
-7. It would be nice if we could trigger the default context menu from JS. But we can't. I'm sure its because some guy can hack me using only the contextmenu. Hm... When you have those hacking skills, I kinda feel he should be allowed to do it. 
 
 ## References
 
