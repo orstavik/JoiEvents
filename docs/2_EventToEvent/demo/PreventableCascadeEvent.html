@@ -1,0 +1,26 @@
+<form id="one" action="?#helloworld" type="GET">
+  <input type="submit" value="click to #helloworld">
+</form>
+<form id="two" action="?#hellosunshine" type="GET">
+  <input type="submit" value="click to #hellosunshine">
+</form>
+
+<script>
+
+  function doNothing(e) {
+    console.log("do nothing");
+  }
+
+  function preventSubmitEvent(e) {
+    console.log("preventDefault");
+    e.preventDefault();
+  }
+
+  document.addEventListener("mousedown", (e) => console.log(e.type));
+  document.addEventListener("mouseup", (e) => console.log(e.type));
+  document.addEventListener("click", (e) => console.log(e.type));
+  document.addEventListener("submit", (e) => console.log(e.type));
+
+  document.querySelector("#one").addEventListener("click", doNothing);
+  document.querySelector("#two").addEventListener("click", preventSubmitEvent);
+</script>
