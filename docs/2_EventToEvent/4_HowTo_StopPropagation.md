@@ -6,18 +6,13 @@ In the previous chapter we saw how events propagate from:
 2. from element to element, first going down in the capture phase and then up in the bubble phase, and
 3. from event type to event type.
 
-If you lift your finger from a `<input type="submit">` button in a browser on a touch-device, 
-then this can trigger a domino-effect going from:
+If you lift your finger from a `<input type="submit">` button in a browser on a touch-device, then this can trigger a domino-effect going from:
 `touchend` -> `mouseup` -> `click` -> `submit`
 
-In the previous chapter we also saw how native and custom events that trigger each other might
-propagate differently in the third, macro step:
-1. Native events propagate one-after-the-other: if one native event such as `mouseup` triggers another 
-   native event such as `click`, then `mouseup` will complete its propagation before `click` begins its 
-   propagation.
+In the previous chapter we also saw how native and custom events that trigger each other might propagate differently in the third, macro step:
+1. Native events propagate one-after-the-other: if one native event such as `mouseup` triggers another native event such as `click`, then `mouseup` will complete its propagation before `click` begins its propagation.
 
-2. Custom events that are dispatched from an event listener on another event will be executed immeditely.
-   That means that their propagation most often will be nested, one-inside-the-other:
+2. Custom events that are dispatched from an event listener on another event will be executed immeditely. That means that their propagation most often will be nested, one-inside-the-other:
    1. the inner, secondary event will *temporarily* stop the preceding, triggering event;
    2. the inner event will be completed first; and
    3. then the outer events will *continue* their propagation.
@@ -33,13 +28,9 @@ propagate differently in the third, macro step:
    It will stop the event from going to the next DOM element, but it will run all the event listeners
    associated with the same DOM element in the same propagation phase (capture, target, or bubble).
    
-But, neither `stopPropagation()` nor `stopImmediatePropagation()` works on the *macro* propagation 
-level. If the native event is to trigger the propagation of another native event type after it has
-concluded, it will still do so after `stopPropagation()` or `stopImmediatePropagation()` has been
-called.
+But, neither `stopPropagation()` nor `stopImmediatePropagation()` works on the *macro* propagation level. If the native event is to trigger the propagation of another native event type after it has concluded, it will still do so after `stopPropagation()` or `stopImmediatePropagation()` has been called.
 
-To stop *macro* level propagation of an event, use `preventDefault()`.
-`preventDefault()` does *not* work on neither the *micro* nor the *medium* level. 
+To stop *macro* level propagation of an event, use `preventDefault()`. `preventDefault()` does *not* work on neither the *micro* nor the *medium* level. 
 It *only* blocks other domino events that might be preceded and triggered by another event.
 
 Att! `preventDefault()` is idiomatic. For example, calling `.preventDefault()` on `mouseup` event will 
