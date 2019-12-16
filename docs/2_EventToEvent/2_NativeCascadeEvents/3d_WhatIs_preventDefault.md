@@ -23,10 +23,13 @@ Some native CascadeEvents can be stopped by calling `.preventDefault()` on their
 ### Unstoppable CascadeEvents
 
 Some native CascadeEvents are **unstoppable**. Examples are:
+
  *  `mouseup` event *must* trigger `click`, `contextmenu`, or `auxclick` events. Calling `.preventDefault()` on `mouseup` will *not* stop the `click` event from being triggered.
+
+ *  `dblclick` cannot be prevented from `click`, i think.
+
  * todo make a list of all Unstoppable CascadeEvents.
  * todo, does all the Unstoppable native CascadeEvents have potential to be `isTrusted`?
-
 
 But, why make some CascadeEvents unstoppable in the first place?  
 
