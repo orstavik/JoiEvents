@@ -12,7 +12,7 @@ If you lift your finger from a `<input type="submit">` button in a browser on a 
 In the previous chapter we also saw how native and custom events that trigger each other might propagate differently in the third, macro step:
 1. Native events propagate one-after-the-other: if one native event such as `mouseup` triggers another native event such as `click`, then `mouseup` will complete its propagation before `click` begins its propagation.
 
-2. Custom events that are dispatched from an event listener on another event will be executed immeditely. That means that their propagation most often will be nested, one-inside-the-other:
+2. Custom events that are dispatched from an event listener on another event will be executed immediately. That means that their propagation most often will be nested, one-inside-the-other:
    1. the inner, secondary event will *temporarily* stop the preceding, triggering event;
    2. the inner event will be completed first; and
    3. then the outer events will *continue* their propagation.

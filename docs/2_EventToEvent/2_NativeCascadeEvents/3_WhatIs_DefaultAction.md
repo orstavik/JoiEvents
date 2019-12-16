@@ -25,10 +25,6 @@ Other DefaultActions are impossible to recreate from JS. For example, it is impo
     
  (todo verify this for all browser actions when we have a more complete list??)
 
-
-> If you think the defaultAction of events are a bit messy, you're not alone. This is how the spec itself describes them: 
-> > "\[Activation behavior\] exists because user agents perform certain actions for certain EventTarget objects, e.g., the area element, in response to synthetic MouseEvent events whose type attribute is click. Web compatibility prevented it from being removed and it is now the enshrined way of defining an activation of something. " [Whatwg.org](https://dom.spec.whatwg.org/#eventtarget-activation-behavior)
-
 ## References
 
  * 

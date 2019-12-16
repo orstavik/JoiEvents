@@ -37,6 +37,8 @@ But, why make some CascadeEvents unstoppable in the first place?
 
 2. To provide security for users and web sites, the browser mark user- initiated events as `isTrusted`. Such `isTrusted` events cannot be reproduced by a script in retrospect, and the idea might therefore be that it is better to never block `isTrusted` events, than having thousands of developers trying in vain to recreate them. It is the classic dilemma of "the web browser nanny state" vs "Don't tempt developers with solutions that only lead to chaos and confusion".
 
+In the next chapter, we will describe a method for blocking Unstoppable native CascadeEvents called StopTheUnstoppable.  
+
 ## References
 
  * [Smashing: EventCascade](https://www.smashingmagazine.com/2015/03/better-browser-input-events/)

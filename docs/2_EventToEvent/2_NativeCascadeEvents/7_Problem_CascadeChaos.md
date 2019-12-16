@@ -28,4 +28,5 @@ So, here is my list of healthy grievances for event cascades in the browser:
 
 ## References
 
+ * [MDN: TouchEvent.preventDefault() stops mouse events](https://developer.mozilla.org/en-US/docs/Web/API/Touch_events#Setting_up_the_event_handlers)
  * [Lauke: event order table](https://patrickhlauke.github.io/touch/tests/results/)

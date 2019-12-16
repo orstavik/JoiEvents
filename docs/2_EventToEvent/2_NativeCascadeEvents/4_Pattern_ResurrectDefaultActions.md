@@ -1,8 +1,13 @@
 # Pattern: ResurrectDefaultAction
 
-In this chapter we will create a list of all know DefaultActions. We will then try to reproduce them from JS.
+The ResurrectDefaultAction pattern works by first calling `.preventDefault()` on the preceding trigger event, and then later *reproduce* the same task from JS script. This first kills the original default action task, only to manually reproduce it later.
+
+The purpose of ResurrectDefaultAction is to control with more precision how the browser should evaluate the context of certain events. This pattern is a core building 's the situation in which with more precision which instances 
+
 
 ## BrowserActions
+
+In this chapter we will create a list of all know DefaultActions. We will then try to reproduce them from JS.
 
 defaultAction | trigger event | context premise | can be preventDefault()? | JS reproduction 
 ---|---|---|---|---
