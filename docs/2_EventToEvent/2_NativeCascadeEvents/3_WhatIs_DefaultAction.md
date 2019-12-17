@@ -1,35 +1,66 @@
 # WhatIs: DefaultAction
 
-A `defaultAction` is a task performed by the browser. `defaultAction`s are **queued in the event loop**, and they are always **preceded by a native trigger event**. In this respect, DefaultActions very much resemble native cascade events.
+A DefaultAction is a task performed by the browser. DefaultActions are **queued in the event loop**, and they are always **preceded by a native trigger event**. In this respect, DefaultActions very much resemble native CascadeEvents.
 
-DefaultActions are also **preventable**. If you call `preventDefault()` on the preceding trigger event, then the browser will not perform the browserAction (more on this in the next chapter). There are some rare exceptions to this rule, such as passive eventListeners that cannot prevent the default action of scrolling based on touch. We will discuss this in depth in the chapter on touch.
+DefaultActions are *cancelable*. If you call `.preventDefault()` on the preceding trigger event, then the browser will not perform the DefaultAction. There are some rare exceptions to this rule: in Chrome, calling `.preventDefault()` from a passive eventListeners for `touchstart` will not stop the native `Scrolling` DefaultAction (for more, see Chapter7: TouchGestures).
 
 DefaultActions interact superficially with the DOM. DefaultActions can *read* data from the DOM associated with their triggering event, but they will not *alter* data in the DOM during their processing. Instead, DefaultActions use the data from the triggering event to perform some action in the underlying browser app. This makes them universal: they will invoke the same response on any web page. 
 
-## Reproducable and irreplicable DefaultActions
+## HowTo: re-enable DefaultActions
 
-Some DefaultActions can be reproduced from JS. For example, you can simulate a link `click` navigation from JS by giving the `location.href` property a new value. We call such DefaultActions **reproducable**.
+When we call `.preventDefault()` on the event preceding a DefaultAction, we stop that DefaultAction from running. But, what if we change our mind? Can we restart a DefaultAction once `.preventDefault()` has been called?
 
-Other DefaultActions are impossible to recreate from JS. For example, it is impossible to show the native context menu from script. The browser will *only* display the native context menu when the user initiates the request via a right-click, an touch-long-press, or another `isTrusted` user input event. We call such DefaultActions **irreplicable**.
+The simple answer is "no". `.preventDefault()` is a one-way street. There is no method `event.reEnableDefault()`, and it's not possible to set `event.defaultPrevented = false;`.  But, even though we cannot re-enable or resurrect a DefaultAction from an event, we might be able to imitate it.
 
-## List of DefaultActions 
+To imitate a DefaultAction simply means to manually reproduce, from scratch, the same effect. But, not all DefaultActions can be imitated, or imitated well. Below we will list all DefaultActions, viewed from the point of view of imitability. 
 
- * (click-link-to-)navigate,
- * (submit-to-)navigate, 
- * (wheel-to-scrollevent-that-eventually-will-)scroll, 
- * (pull-to-)refresh, 
- * (right-click-)contextmenu,
- * todo more??
- * `click => navigate`
-   * the target of the `click` is a link.
-    
- (todo verify this for all browser actions when we have a more complete list??)
+## List of DefaultActions
+
+* **Imitable**: Imitable DefaultActions can be imitated successfully.
+
+   1. `click => Navigation`
+      
+      The DefaultAction when a user `click`s on a link, is for the browser to navigate to the url described by the link. We call this DefaultAction `Navigation`.
+      
+      To imitate `Navigation`, simply set `location = clickEvent.target.href;`. For more, see ImitateNavigation in Chapter 8: Routing.   
+
+   2. `submit => Navigation`
+
+   3. `pull => Refresh`
+
+   3. `keypress => Refresh`
+      
+      All the keypress events should be listed under their mouse/touch version??
+
+
+* **Shimmable**: Shimmable DefaultActions can be imitated, but the imitations does not perform as good as the native DefaultAction would. `Scrolling` is an example of a shimmable DefaultAction.
+
+   1. `scroll => Scrolling`  ( * (wheel-to-scrollevent-that-eventually-will-)scroll)
+   2. `touchmove => Scrolling`
+   
+
+* **Irreplicable**: Irreplicable DefaultActions cannot be reproduced from JS.
+
+   1. `contextmenu => ShowDefaultContextMenu`
+      
+      The DefaultAction when a user right `click` on an element in the DOM, is for the browser to show the native, default context menu relevant for the element. The content of the native, default context menu varies slightly depending on what type of element is right clicked: for example, if you right click on an image, you can open the image itself in a new tab, if you right click on a link, you can for example choose to download the target url or open the target url in a new tab. We call this DefaultAction `ShowDefaultContextMenu`.
+      
+      `ShowDefaultContextMenu` *cannot* be imitated. The browser *only* shows the default context menu when prompted by a user generated, `isTrusted` mouse or touch event (ie. mouse long-press on Mac, touch long-press in mobile browsers, or right-click on other PCs).
+
+   2. `mousedown => TextSelection`
+   3. `touchstart => TextSelection`
 
 ## References
 
  * 
-  
- ## Todo Research the Preventable/unstoppable nature of scroll events.
 
+## old
+  
 However, the default action of browsers is often associated with their own specialized event. Before the browser actually will scroll, it will dispatch a native, composed `scroll` event *after* the `touchmove` event and *before* the task of actually scrolling the viewport. The event order is touchmove (event) -> scroll (event) -> scroll (task). To call `preventDefault()` on the `scroll` event will cancel the scroll task. To call `preventDefault()` on the `touchmove` event will cancel the `scroll` event which in turn will cancel the scroll task.
  
+## the table is not easy to make look good on a phone
+
+defaultAction | trigger event | context premise | can be preventDefault()? | JS reproduction 
+---|---|---|---|---
+ navigation | click | on a link | yes | location = "bbc.com"
+ show context menu | contextmenu | generated by an `isTrusted` right button mouse or touch long-press event or keydown context menu key) | show the context menu | NO 
