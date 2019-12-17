@@ -93,34 +93,6 @@ d1
 
 In the next chapter we look more at event propagation.
 
-## List of native trigger => cascade event pairs
-
-The browser provides many native CascadeEvents: 
-
- * `(mousedown + mouseup) => click`
-    * primary (left) mouse button
-    * target is the target of both `mousedown` and `mouseup`, or their nearest common ancestor in the DOM
- * `(mousedown + mouseup) => contextmenu`
-    * secondary (right) mouse button
-    * target is the target of both `mousedown` and `mouseup`, or their nearest common ancestor in the DOM
- * `(mousedown + mouseup) => auxclick`
-    * any mouse button but the primary (left)
-    * target is the target of both `mousedown` and `mouseup`, or their nearest common ancestor in the DOM
- * `click => submit`
-    * the `click` event's target is an `<input type="submit">` in a `<form>`.
- * `keypress => submit`
-    * `keypress` event has a key value of `enter` 
-    * an `<input type="submit">` in a `<form>` has `focus`
- * `(click + click) => dlbclick`
-    * the two click happen within 300ms,
-    * the target of both `click` events is the same, or their nearest common ancestor in the DOM
- * `wheel => scroll`
-    * todo
- 
- * todo, add more examples.
- 
- * todo, add references to the spec. for each list item
-
 ## References
 
  * [Smashing: EventCascade](https://www.smashingmagazine.com/2015/03/better-browser-input-events/)

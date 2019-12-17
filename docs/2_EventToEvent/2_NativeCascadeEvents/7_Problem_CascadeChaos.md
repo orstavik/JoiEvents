@@ -1,5 +1,7 @@
 # Problem: CascadeChaos
 
+> todo here we also have the problem of page lifecycle events and unload
+
 To support legacy web pages that only implement support for mouse events, mobile browsers automatically spawns `mousedown`/`mouseup` events from `touchstart`/`touchend` events.
 
 ## Example 2: Native composed events (touchend -> mouseup -> click)

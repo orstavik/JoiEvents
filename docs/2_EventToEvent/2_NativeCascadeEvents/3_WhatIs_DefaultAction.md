@@ -6,49 +6,47 @@ DefaultActions are *cancelable*. If you call `.preventDefault()` on the precedin
 
 DefaultActions interact superficially with the DOM. DefaultActions can *read* data from the DOM associated with their triggering event, but they will not *alter* data in the DOM during their processing. Instead, DefaultActions use the data from the triggering event to perform some action in the underlying browser app. This makes them universal: they will invoke the same response on any web page. 
 
-## HowTo: re-enable DefaultActions
+## HowTo: Imitate DefaultActions?
 
 When we call `.preventDefault()` on the event preceding a DefaultAction, we stop that DefaultAction from running. But, what if we change our mind? Can we restart a DefaultAction once `.preventDefault()` has been called?
 
-The simple answer is "no". `.preventDefault()` is a one-way street. There is no method `event.reEnableDefault()`, and it's not possible to set `event.defaultPrevented = false;`.  But, even though we cannot re-enable or resurrect a DefaultAction from an event, we might be able to imitate it.
+The simple answer is "no". `.preventDefault()` is a one-way street. There is no method `event.reEnableDefault()`, and it's not possible to set `event.defaultPrevented = false;`.  But, even though we cannot re-enable DefaultActions, we might be able to imitate them.
 
-To imitate a DefaultAction simply means to manually reproduce, from scratch, the same effect. But, not all DefaultActions can be imitated, or imitated well. Below we will list all DefaultActions, viewed from the point of view of imitability. 
+To imitate a DefaultAction simply means to manually reproduce, from scratch in JS, the same functionality as the DefaultAction. But, not all DefaultActions can be imitated, or imitated well. Therefore, we can split DefaultActions into three subgroups: 
 
-## List of DefaultActions
+1. **Imitable**: Imitable DefaultActions, such as `Navigation`, can be imitated successfully.
+2. **Shimmable**: Shimmable DefaultActions, such as `Scrolling`, can be imitated, but the imitations does not perform as good as the native DefaultAction would.
+3. **Irreplicable**: Irreplicable DefaultActions, such as `NativeContextMenu`, cannot be reproduced from JS.
 
-* **Imitable**: Imitable DefaultActions can be imitated successfully.
+## List of all DefaultActions
 
-   1. `click => Navigation`
-      
-      The DefaultAction when a user `click`s on a link, is for the browser to navigate to the url described by the link. We call this DefaultAction `Navigation`.
-      
-      To imitate `Navigation`, simply set `location = clickEvent.target.href;`. For more, see ImitateNavigation in Chapter 8: Routing.   
-
-   2. `submit => Navigation`
-
-   3. `pull => Refresh`
-
-   3. `keypress => Refresh`
-      
-      All the keypress events should be listed under their mouse/touch version??
-
-
-* **Shimmable**: Shimmable DefaultActions can be imitated, but the imitations does not perform as good as the native DefaultAction would. `Scrolling` is an example of a shimmable DefaultAction.
-
-   1. `scroll => Scrolling`  ( * (wheel-to-scrollevent-that-eventually-will-)scroll)
-   2. `touchmove => Scrolling`
+1. `click => Navigation` (Imitable)
    
+   The DefaultAction when a user `click`s on a link, is for the browser to navigate to the url described by the link. We call this DefaultAction `Navigation`.
+   
+   To imitate `Navigation`, simply set `location = clickEvent.target.href;`. For more, see ImitateNavigation in Chapter 8: Routing.   
 
-* **Irreplicable**: Irreplicable DefaultActions cannot be reproduced from JS.
+2. `submit => Navigation` (Imitable)
 
-   1. `contextmenu => ShowDefaultContextMenu`
-      
-      The DefaultAction when a user right `click` on an element in the DOM, is for the browser to show the native, default context menu relevant for the element. The content of the native, default context menu varies slightly depending on what type of element is right clicked: for example, if you right click on an image, you can open the image itself in a new tab, if you right click on a link, you can for example choose to download the target url or open the target url in a new tab. We call this DefaultAction `ShowDefaultContextMenu`.
-      
-      `ShowDefaultContextMenu` *cannot* be imitated. The browser *only* shows the default context menu when prompted by a user generated, `isTrusted` mouse or touch event (ie. mouse long-press on Mac, touch long-press in mobile browsers, or right-click on other PCs).
+3. `pull => Refresh` (Imitable)
 
-   2. `mousedown => TextSelection`
-   3. `touchstart => TextSelection`
+3. `keypress => Refresh` (Imitable)
+   
+   All the keypress events should be listed under their mouse/touch version??
+
+1. `scroll => Scrolling`  ( * (wheel-to-scrollevent-that-eventually-will-)scroll)
+
+2. `touchmove => Scrolling`
+
+1. `contextmenu => ShowDefaultContextMenu`
+   
+   The DefaultAction when a user right `click` on an element in the DOM, is for the browser to show the native, default context menu relevant for the element. The content of the native, default context menu varies slightly depending on what type of element is right clicked: for example, if you right click on an image, you can open the image itself in a new tab, if you right click on a link, you can for example choose to download the target url or open the target url in a new tab. We call this DefaultAction `ShowDefaultContextMenu`.
+   
+   `ShowDefaultContextMenu` *cannot* be imitated. The browser *only* shows the default context menu when prompted by a user generated, `isTrusted` mouse or touch event (ie. mouse long-press on Mac, touch long-press in mobile browsers, or right-click on other PCs).
+
+2. `mousedown => TextSelection`
+
+3. `touchstart => TextSelection`
 
 ## References
 
