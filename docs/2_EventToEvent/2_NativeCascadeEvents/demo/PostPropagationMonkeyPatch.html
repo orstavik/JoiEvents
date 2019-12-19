@@ -1,0 +1,47 @@
+<script>
+  (function(){
+    const ogAddEventListener = HTMLElement.prototype.addEventListener;
+    HTMLElement.prototype.addEventListener = function(type, cb, options){
+      const wrappedCb = function(...args){
+        cb(...args);
+        const event = args[0];
+        if (event.cancelBubble && event._postPropagationCB)
+          event._postPropagationCB(...args);
+      };
+      ogAddEventListener.apply(this, [type, wrappedCb, options]);
+    };
+
+    Event.prototype.setPostPropagationCallback = function(cb){
+      this._postPropagationCB = cb;
+    }
+  })();
+</script>
+
+<div>
+  <a href="#sunshine">Hello sunshine!</a>
+</div>
+
+<script>
+
+  function log(e){
+    console.log(e.type, e.currentTarget.tagName);
+  }
+
+  function torpedo(e){
+    console.log("here comes the torpedo again!");
+    e.stopImmediatePropagation();
+  }
+
+  const div = document.querySelector("div");
+  const link = document.querySelector("a");
+  div.addEventListener("click", function(e){
+    e.setPostPropagationCallback(function(){
+      console.log("a postPropagation callback!");
+    });
+  }, true);
+  div.addEventListener("click", log, true);
+  link.addEventListener("click", log, true);
+  link.addEventListener("click", torpedo);
+  link.addEventListener("click", log);
+  div.addEventListener("click", log);
+</script>

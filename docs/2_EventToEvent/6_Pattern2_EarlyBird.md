@@ -2,24 +2,25 @@
 
 > gets the worm!
 
-To compose an event, we need one or more original, *trigger events* from which to compose the new event. And to get hold of these trigger events, we *must* listen for them.
+To create a CascadeEvent we must have a TriggerEvent. And to get a TriggerEvent, we *must* listen for it. Ie. to create a CascadeEvent, we must add an event listener for its TriggerEvent.
 
 But, what if:
 1. some other event listener function in your app
-2. listens for the same event, 
-3. receives and processes the event *before* your trigger function, and
-4. calls `.stopPropagation()` on it?
+2. listens for the same trigger event, 
+3. calls `.stopImmediatePropagation()` on it,
+4. *before* your CascadeEvent's event listener has had a chance to be called?
 
-As we saw in the last example in [HowTo: StopPropagation](4_HowTo_StopPropagation), this will mute your trigger function. So, to avoid being blocked like this, we want to add our event listener as early as possible. We want an EarlyBird event listener.
+Well, that would cancel out your CascadeEvent. So, to avoid being blocked like this, we want to add our event listeners as early as possible. We want an EarlyBird event listener.
 
-## WhatIs: an EarlyBird
+## Implementation: EarlyBird
 
-EarlyBird event listeners can control and direct events that `bubbles`. An EarlyBird is:
-
+An EarlyBird is:
 1. is added in the `capture` phase of the event propagation on
-2. a top level DOM node, either the `window` or the `document`.
+2. a top level DOM node, on the `document`.
 
-When we make custom composed events, we have no control of the loading of scripts in the DOM. This means that when:
+The EarlyBird pattern concern events that `bubbles`. For non-bubbling events, see we cannot 
+
+When we make custom, reusable CascadeEvents, we have no control of the order in which scripts are loaded, and thus no control of which event listeners are added first and last. This means that when:
 1. events are added to the same target and in the same propagation phase, then
 2. we have no control over the sequence in which these event listeners run. 
 
