@@ -21,6 +21,7 @@ calling `click.preventDefault()` will cancel the subsequent state change and tog
     Sunshine!!
   </details>
 </div>
+
 <script>
 
   const div = document.querySelector("div");
