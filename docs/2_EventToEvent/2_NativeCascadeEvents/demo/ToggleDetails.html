@@ -1,0 +1,33 @@
+<div>
+  <details>
+    <summary>Hello</summary>
+    Sunshine!!
+  </details>
+</div>
+<script>
+
+  const div = document.querySelector("div");
+  const details = document.querySelector("details");
+  const summary = document.querySelector("summary");
+
+  function log(e) {
+    console.log(e.type, e.currentTarget.tagName, e.eventPhase, "details is " + (details.open ? "open" : "closed"));
+  }
+
+  function preventD(e) {
+    console.log("calling: " + e.type + ".preventDefault()");
+    e.preventDefault();
+  }
+
+  div.addEventListener("click", log, true);
+  details.addEventListener("click", log, true);
+  summary.addEventListener("click", log);
+  details.addEventListener("click", log);
+  div.addEventListener("click", log);
+  // div.addEventListener("click", preventD);
+
+  div.addEventListener("toggle", log, true);
+  details.addEventListener("toggle", log, true);
+  summary.addEventListener("toggle", log);    //doesn't work, because the toggle is dispatched on the details as target
+</script>
+

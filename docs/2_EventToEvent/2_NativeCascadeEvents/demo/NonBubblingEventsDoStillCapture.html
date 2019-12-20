@@ -1,0 +1,38 @@
+<h1>Example of how non-bubbling events still propagate in the capture phase!</h1>
+Both the `toggle` and the `focus` events are non-bubbling events.
+This means that they do not bubble, ie. call event listeners in phase 3 of their event propagation.
+But, do they only hit event listeners in the target phase (1), or do they also hit event listeners in the capture phase
+(1) in event propagation?
+<br><br>
+The answer is that they DO propagate in both the capture and target phases(!). Thus you get the following weird result:
+<div>
+  <details>
+    <summary>Hello</summary>
+    Sunshine!!
+  </details>
+  <input type="checkbox">
+</div>
+<script>
+
+  const div = document.querySelector("div");
+  const details = document.querySelector("details");
+  const input = document.querySelector("input");
+
+  function log(e) {
+    console.log(e.type, e.currentTarget.tagName, e.eventPhase);
+  }
+
+  div.addEventListener("click", log, true);  //yes
+  details.addEventListener("click", log);    //yes
+  input.addEventListener("click", log);      //yes
+  div.addEventListener("click", log);        //yes
+
+  div.addEventListener("toggle", log, true); //yes, capture phase
+  details.addEventListener("toggle", log);   //yes, target phase
+  div.addEventListener("toggle", log);       //no, toggle doesn't bubble
+
+  div.addEventListener("focus", log, true);  //yes, capture phase
+  input.addEventListener("focus", log);      //yes, target phase
+  div.addEventListener("focus", log);        //no, focus doesn't bubble
+</script>
+
