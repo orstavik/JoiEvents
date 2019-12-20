@@ -1,0 +1,69 @@
+<script>
+  class CorrectedCheckbox extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `<div style="border: 2px solid grey; width: 1em; height: 1em;"></div>`;
+
+      this.checked = false;
+      this.addEventListener("click", this.onClick.bind(this));
+    }
+
+    onClick(e) {
+      if (e.defaultPrevented)
+        return;
+      e.preventDefault(); //cancel any other side-effect from click
+      const taskId = setTimeout(this.doChangeAndDispatchHasChangedEvent.bind(this), 0);
+      e.preventDefault = function () {
+        clearTimeout(taskId);
+      }
+    }
+
+    doChangeAndDispatchHasChangedEvent() {
+      this.checked = !this.checked;
+      this.shadowRoot.children[0].innerText = this.checked ? "v" : "";
+      this.dispatchEvent(new CustomEvent("has-changed", {composed: true, bubbles: true}));
+    }
+  }
+
+  customElements.define("corrected-checkbox", CorrectedCheckbox);
+</script>
+
+
+<div>
+  <corrected-checkbox></corrected-checkbox>
+</div>
+
+<script>
+  const div = document.querySelector("div");
+  const check = document.querySelector("corrected-checkbox");
+
+  function log(e) {
+    console.log(e.type, e.currentTarget.tagName, e.eventPhase, "checkbox is " + (check.checked ? "filled" : "empty"));
+  }
+
+  div.addEventListener("mouseup", log, true);
+  check.addEventListener("mouseup", log);
+  div.addEventListener("mouseup", log);
+
+  div.addEventListener("click", log, true);
+  check.addEventListener("click", log);
+  div.addEventListener("click", log);
+
+  div.addEventListener("has-changed", log, true);
+  check.addEventListener("has-changed", log);
+  div.addEventListener("has-changed", log);
+
+  function preventD(e) {
+    console.log("calling: click.preventDefault()");
+    e.preventDefault();
+  }
+  /*
+   * Call click.preventDefault() by uncommenting on of the lines below.
+   * It makes no difference if you call .preventDefault() at
+   * the beginning, middle or end of the event propagation cycle.
+   */
+  // window.addEventListener("click", preventD, true);    //the beginning of the capture phase of propagation
+  // check.addEventListener("click", preventD);           //the target phase of propagation
+  // window.addEventListener("click", preventD);          //the end of the bubble phase of propagation
+</script>

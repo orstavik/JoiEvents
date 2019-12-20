@@ -1,0 +1,32 @@
+<div>
+  <input type="checkbox">
+</div>
+
+<script>
+  const div = document.querySelector("div");
+  const check = document.querySelector("input");
+
+  function log(e) {
+    console.log(e.type, e.currentTarget.tagName, e.eventPhase, "checkbox is " + (check.checked ? "filled" : "empty"));
+  }
+
+  function preventD(e) {
+    console.log("calling: " + e.type + ".preventDefault()");
+    e.preventDefault();
+  }
+
+  div.addEventListener("mouseup", log, true);
+  check.addEventListener("mouseup", log);
+  div.addEventListener("mouseup", log);
+
+  window.addEventListener("click", preventD, true);  //preventDefault() called first on the click event
+
+  div.addEventListener("click", log, true);
+  check.addEventListener("click", log);
+  div.addEventListener("click", log);
+
+  div.addEventListener("change", log, true);
+  check.addEventListener("change", log);
+  div.addEventListener("change", log);
+
+</script>

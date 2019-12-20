@@ -1,33 +1,28 @@
 # DefaultAction: Checkbox
 
-The defaultAction of click on a checkbox is to flip the value of the checkbox: if the checkbox is empty when you click on it, it becomes checked; if it is checked, it becomes empty.
+The defaultAction of `click` on an `<input type="checkbox">` (hereafter: checkbox) is to flip the value of the checkbox: if the checkbox is empty when you click on it, it becomes checked; if it is checked, it becomes empty.
 
-## Problem: Errors in the EventCascade of native `<input type="checkbox">`
+## Anti-pattern: `.preventDefault()` as "ctrl+z"
 
-There are some issues with the EventCascade related to native checkboxes:
+There is a big issue with the EventCascade and use of `.preventDefault()` of native checkboxes.
 
-1. If you call `.preventDefault()` on the `click` event that causes the `<input type="checkbox">` to change its value, you will cancel the change.
-2. But! The task of *changing* the value of the `.checked` property and thus the visual expression of the checkbox in the DOM, is scheduled *before(!)* the `click` event is dispatched.
-3. Thus, if you `click` on an empty checkbox and a script calls `.preventDefault()` on the `click` event, the browser will:
-   1. perform a *first* task to change the state of the checkbox to `checked` *before* the click event is dispatched,
-   2. show the checkbox as `checked` during the entire propagation cycle of the `click` event, including *after* the `click.preventDefault()` method has been called, and
-   3. perform a *second* task that *reverts* the state of the checkbox that was performed in the first task.
+Imagine the following situation:
+1. The user `click`s on a checkbox.
+2. This action will change the value of the checkbox (if not prevented).
+3. But, a script needs to prevent this change in some circumstances. The script therefore adds an event listener on the checkbox for `click` events, and then calls `.preventDefault()` on this `click` event.
+ * This idea is fine. You can `click` on a checkbox to change its value. If you need to prevent this change, you simply call `.preventDefault()` on the `click` event. 
+
+But. There is a problem: **the browser changes the value of the checkbox *before* the `click` event is dispatched**. The checkbox you see on screen and the value of its `.checked` property you read from JS has *already changed* when the `click` event is dispatched.
 
 ![EventCascade for native checkbox preventDefault](sketches/native_checkbox_eventcascade.jpg)
 
-## `change` means "has changed"
+To get the `click.preventDefault()` to produce the expected result, the `click.preventDefault()` method cannot simply *cancel* a queued action not yet done. Instead, `click.preventDefault()` must when applied to a checkbox *add* a *second* task that will *undo the changes of the checkbox that has already been implemented*. Ie. `click.preventDefault()` adds an "additional ctrl+z task" when checkboxes are clicked. 
 
-The `change` event is always executed *after* the state-altering task has been performed. This means that the `change` event should be read as **"has-changed" event**, NOT as a "will-change". You should NOT expect that calling `.preventDefault()` on the `change` event should stop/revert the state-change that has already happened. But why?
+Furthermore, the state of a checkbox should be considered unsafe during *any* `click` event listener that might be triggered when a checkbox is clicked:
+1. As `.preventDefault()` might be called at any time during a `click` event propagation,  the state of the checkbox after the `click` event might not be known. Fortunately, this is a solved problem. The `change` event is dispatched *after* the `click` event has propagated (ie. when `.preventDefault()` is not called). The `change` event thus gives the developer easy access to situations when checkbox values "has-changed".
+2. To read the state of the checkbox *before* the EventCascade began, a `click` event listener on a parent element above a checkbox *must* first a) check to see if the checkbox is the target element of the `click` event, and then b) use the inverse value of the `checked` property as the *before* value for the checkbox. Not pretty.
 
-The reason is that the `click` event functions as the "will change" event. The `<input type="checkbox">` cannot have any children element, and therefore if you place a `click` event listener on the checkbox element, you can be sure that every time this event listener is triggered, it is the checkbox that has been clicked. Ie. you can be sure that this click signifies a "will change" of the checkbox.
-
-If the `<input type="checkbox">` could contain child elements that
-  
-it is simple enough to add an eventListener for click on the input element, and call preventDefault from it. There is thus no need for a (before)change event.
-If the input element could be a) parent element, whose b) children also could react to click events, then there would be more of a need to distinguish a before-change event for the checkbox, as a convenience to the user developers. But, as this is not the case, and a click hitting a checkbox can only mean one thing: a prelude to a checkbox change, we don't need the extra (before)change event.
-
-   
-## Demo: EventCascade problems with native `<input type="checkbox">`
+## Demo: CheckboxCtrlZ
 
 ```html 
 <div>
@@ -66,23 +61,25 @@ If the input element could be a) parent element, whose b) children also could re
 
 ## How *should* the EventCascade for checkboxes be?
 
-The problem with the EventCascade for the defaultAction of altering a checkbox' value, is the cart-before-the-horse timing of:
- 1. executing the task that alters the state and shadowDOM of the native `<input type="checkbox">` *before*
- 2. the dispatch of the `click` event, whose `.preventDefault()` method should block/control the state-altering task.   
+The CheckboxCtrlZ problem is caused by a simple error of sequence in the EventCascade:
+ 1. the task that alters the state and shadowDOM of the checkbox is executed *before*
+ 2. the `click` event propagation, while the `click.preventDefault()` method is the designated controller of the state-altering task.   
 
 There are two ways to fix this:
-1. move the state-altering task *after* the dispatch of the `click` event, and
-2. move the control of the state-altering task *ahead in time* to the `preventDefault()` of the `mouseup` event.
+1. move the state-altering task *after* the dispatch of the `click` event, or
+2. move the control of the state-altering task to the `.preventDefault()` of an *earlier* event, such as `mouseup`.
 
-The first alternative is better because:
-1. the `click` is the "intuitive" place from where to control the state-altering task of the changing a checkbox' value. The `mouseup` is lower level, developers would not expect `preventDefault()` on `mouseup` to block anything.
-2. To move the update of the state one position in the EventCascade (from immediately before the `click` event to immediately after) is a minimal alterations of existing structure.     
+Alternative 1 is better. In most other situations, the browser changes state *after* the `click` event has propagated. For example, the browser doesn't navigate to a new page *before*  the `click` on a link has propagated. Moving the state-altering task for checkboxes post `click` propagation thus would fit with other EventCascades that involve `click`. Furthermore, `click.preventDefault()` is an intuitive control for checkbox `click`s. It is the `click` action that alters the checkbox, not a `mouseup` for example.
  
-This would produce the following "corrected" EventCascade:
+A "corrected" EventCascade for checkbox `click`s would therefore be:
+
+    mouseup => click => "state-change" => change
+
+where calling `click.preventDefault()` would essentially cancel the two ensuing tasks: the "state-change" task and the `change` event propagation task. 
 
 ![EventCascade for "corrected" checkbox preventDefault](sketches/native_checkbox_eventcascade.jpg)
- For input checkbox, the correct order should be
-Mouseup, click, alterShadowDom, (has)changed
+
+## Demo: CheckboxChangeCorrected
 
 ```html 
 <script>
@@ -156,7 +153,15 @@ Mouseup, click, alterShadowDom, (has)changed
 </script>
 ```
 
-## Conclusion??
+## Why `change` is "after-change" for checkboxes?
+
+The `change` event is always executed *after* a) the state-altering task has been performed and b) can no longer be prevented. This means that the `change` event should be read as "has-changed" event, NOT as a "will-change". Furthermore, as the state change "has-changed", you should NOT expect `change.preventDefault()` to be able to prevent state change neither. But why? Why make `change` a "has-changed" event and not a "will-change" event?
+
+The reason is that the `click` event is the "will-change" event for checkboxes. Checkboxes cannot have any children element. Therefore, if a `click` event propagates to/through a checkbox, then it is a 100% certain that it was the checkbox that was `click`ed. So, if you listen for `click` events on a checkbox, you can be sure that this event listener and this `click` event is a "will-change" reaction.
+
+However, if checkboxes could contain child elements that also reacted to `click`s, the situation would be different. In such a scenario, adding a `click` event listener on a checkbox would not be enough to exclusively identify "will-change" events for the checkboxes, but the event listener would also be required to verify that the target of the `click` was the checkbox itself or one of its "unclickable children", and not one of its "clickable children". Such boilerplate checks for (is this my `click` or a `click` meant for one of my children?) are both a) easy to get wrong, b) forget, and c) universal, and therefore in such instances it is better that the platform adds another "beforechange" type of event that will propagate *after* the `click` and *before* the state-change is done.
+
+So, for elements that cannot have interactive child elements, adding event listeners directly to the element is enough to distinguish between different exclusive use-cases. Events on such elements can cope with a much simpler EventCascade (ie. `click` => stateChange => `change` suffices). But. For elements that can house interactive child elements, the a more detailed EventCascade is helpful as it avoids misunderstanding and event listener boilerplate (ie. `click` => `before-change` => stateChange => `after-change` is preferable).
 
 ## References:
 
