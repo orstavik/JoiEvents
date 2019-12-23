@@ -1,0 +1,130 @@
+<script>
+  (function () {
+    //1. polyfillish check of third argument for addEventListener
+    let supportsPassive = false;
+    try {
+      const opts = Object.defineProperty({}, "passive", {
+        get: function () {
+          supportsPassive = true;
+        }
+      });
+      window.addEventListener("test", null, opts);
+      window.removeEventListener("test", null, opts);
+    } catch (e) {
+    }
+    const thirdArg = supportsPassive ? {capture: true, passive: false} : true;
+
+    //2. registry map for CustomEvent
+    const eventToClass = {};
+
+    //3. loop for evaluating CascadeEvents and defaultActions
+    function processTriggerEvent(event) {
+      const composedPath = event.composedPath();
+      const ComposedEventClasses = new Set(eventToClass[event.type]);
+
+      //3a. we loop first up the target chain, and then we check each of the ComposedEventClasses match functions ONCE
+      for (let el of composedPath) {
+        for (let ComposedEventClass of ComposedEventClasses) {
+          if (!ComposedEventClass.matches(event, el))
+            continue;
+          ComposedEventClasses.delete(ComposedEventClass);
+
+          for (let task of ComposedEventClass.triggerEvent(event) || [])
+            setTimeout(task, 0);
+
+          if (event.defaultPrevented)
+            ;//todo something like switching from matches to matchesGrabbed
+             //todo or more likely, that it will call a method for all other ComposedEventClass when they have added their
+        }
+      }
+    }
+
+    //4. the customEvents.define(...)
+    window.customEvents = {};
+    customEvents.define = function (CustomEventClass) {
+      const observedEvents = CustomEventClass.observedEvents;
+      for (let eventType of observedEvents) {
+        if (!eventToClass[eventType]) {
+          eventToClass[eventType] = new Set();
+          window.addEventListener(eventType, processTriggerEvent, thirdArg);
+        }
+        eventToClass[eventType].add(CustomEventClass);
+      }
+    };
+
+    customEvents.undefine = function (CustomEventClass) {
+      const observedEvents = CustomEventClass.observedEvents();
+      for (let eventType of observedEvents) {
+        eventToClass[eventType].delete(CustomEventClass);
+        if (eventToClass[eventType].size === 0) {
+          eventToClass[eventType] = undefined;
+          window.removeEventListener(eventType, processTriggerEvent, thirdArg);
+        }
+      }
+    };
+  })();
+</script>
+
+<script>
+  (function () {
+
+    function lowestIdenticalPathElement(path0, path1, path2) {
+      path0 = path0.reverse();
+      path1 = path1.reverse();
+      path2 = path2.reverse();
+      for (let i = 0; i < Math.min(path0.length, path1.length, path2.length); i++) {
+        let n = i + 1;
+        if (path0[n] === undefined || path0[n] !== path1[n] || path1[n] !== path2[n])
+          return path0[i];
+      }
+    }
+
+    let state = [];
+
+    class TrippleClick extends Event {
+
+      constructor(name = "tripple-click", props = {bubbles: true, composed: true}) {
+        super(name, props);
+      }
+
+      static get observedEvents() {
+        return ["click"];
+      }
+
+      static triggerEvent(event) {
+        state.push({event, path: event.composedPath()});
+        if (state.length < 3)
+          return;
+        const duration = state[2].event.timeStamp - state[0].event.timeStamp;
+        if (duration > 6000) {
+          state.shift();
+          return;
+        }
+        const target = lowestIdenticalPathElement(state[0].path, state[1].path, state[2].path);
+        state = [];
+        return [target.dispatchEvent.bind(target, new TrippleClick())];
+      }
+
+      static matches(event, el) {
+        if (event.type === "click")
+          return true;
+        throw new Error("omg!");
+      }
+    }
+
+    customEvents.define(TrippleClick);
+  })();
+</script>
+
+<div>
+  <h1 style="border: 1px solid grey">Hello</h1>
+  Sunshine :)
+</div>
+
+<script>
+  const div = document.querySelector("div");
+  const h1 = document.querySelector("h1");
+
+  window.addEventListener("click", e => console.log(e.type, "window", e.composedPath()));
+  window.addEventListener("tripple-click", e => console.log(e.type, "window", e.composedPath()));
+</script>
