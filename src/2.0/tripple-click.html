@@ -1,0 +1,20 @@
+<script src="customElements.js"></script>
+
+<script type="module">
+  import {TrippleClick} from "./TrippleClick.js";
+
+  customEvents.define(TrippleClick);
+</script>
+
+<div>
+  <h1 style="border: 1px solid grey">Hello</h1>
+  Sunshine :)
+</div>
+
+<script>
+  const div = document.querySelector("div");
+  const h1 = document.querySelector("h1");
+
+  window.addEventListener("click", e => console.log(e.type, "window", e.composedPath()));
+  window.addEventListener("tripple-click", e => console.log(e.type, "window", e.composedPath()));
+</script>
