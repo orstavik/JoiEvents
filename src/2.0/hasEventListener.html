@@ -2,27 +2,34 @@
   (function () {
     const reg = Symbol("eventListenerRegister");
 
+    function lastIndexOf(list, cb, capture){
+      if (!list)
+        return -1;
+      for (let i = list.length - 1; i >= 0; i--) {
+        const cbCapture = list[i];
+        if (cbCapture.cb === cb && cbCapture.capture === capture)
+          return i;
+      }
+      return -1;
+    }
+
     const ogAdd = HTMLElement.prototype.addEventListener;
     HTMLElement.prototype.addEventListener = function (name, cb, options) {
       this[reg] || (this[reg] = {}); 
       ogAdd(name, cb, options);
-      //todo don't add to the register if there is already one such listener in the registry
       this[reg][name] || (this[reg][name] = []);
       const capture = !!(options === true || (options && options.capture));
-      this[reg][name].push({cb, capture});
+      if (lastIndexOf(this[reg][name], cb, capture) === -1)
+        this[reg][name].push({cb, capture});
     };
 
     const ogRemove = HTMLElement.prototype.removeEventListener;
     HTMLElement.prototype.removeEventListener = function (name, cb, options) {
       ogRemove(name, cb, options);
       const capture = !!(options === true || (options && options.capture));
-      for (let i = this[reg][name].length - 1; i >= 0; i--) {
-        const cbCapture = this[reg][name][i];
-        if (cbCapture.cb === cb && cbCapture.capture === capture){
-          this[reg][name].splice(i, 1);
-          return;
-        }
-      }
+      const index = lastIndexOf(this[reg][name], cb, capture);
+      if (index >= 0)
+        this[reg][name].splice(index, 1);
     };
 
     HTMLElement.prototype.hasEventListener = function (name, options) {
@@ -43,49 +50,35 @@
   })();
 </script>
 
-<div>
-  <h1 style="border: 1px solid grey">Hello</h1>
-  Sunshine :)
-</div>
+<h1 style="border: 1px solid grey">I print "A, 1" to the console when you click me</h1>
 
 <script>
   function logA(e){
     console.log("A", e.eventPhase);
   }
-  function logB(e){
-    console.log("B");
-  }
 
-  const div = document.querySelector("div");
   const h1 = document.querySelector("h1");
 
-  //0. test of adding multiple eventListener for the same function
+  //0. test of adding removing multiple eventListener for the same function
   h1.addEventListener("click", logA);
-  h1.addEventListener("click", logA);
-  h1.addEventListener("click", logA);
+  h1.addEventListener("click", logA);             //not added
+  h1.addEventListener("click", logA);             //not added
   h1.addEventListener("click", logA, true);
-  h1.addEventListener("click", logA, true);
-  h1.addEventListener("click", logA, true);
-  //only prints out two "A", one for the capture = false, one for capture = true
+  h1.addEventListener("click", logA, true);       //not added
+  h1.addEventListener("click", logA, true);       //not added
 
-  //1. test of removing multiple eventListener for the same function
   h1.removeEventListener("click", logA);
-  h1.removeEventListener("click", logA);
+  h1.removeEventListener("click", logA);          //not removed, because the second click listener has capture: true
+  //only prints out one "A" when you click on h1
 
   //1. test of hasEventListener
-  const addedListener = e => console.log(e.type, "div", e.composedPath());
-  div.addEventListener("click", addedListener);
-
-  console.log("true tests");
-  console.log(div.hasEventListener("click"));
-  console.log(div.hasEventListener("click", false));
-  console.log(div.hasEventListener("click", {capture: false}));
-  console.log(div.hasEventListener("click", {passive: false}));
-  console.log("false tests");
-  console.log(div.hasEventListener("click", true));
-  console.log(div.hasEventListener("click", {capture: true}));
-  console.log(div.hasEventListener("click", {capture: true, passive: false}));
-
-
-
+  console.log("4 false tests");
+  console.log(h1.hasEventListener("click"));
+  console.log(h1.hasEventListener("click", false));
+  console.log(h1.hasEventListener("click", {capture: false}));
+  console.log(h1.hasEventListener("click", {passive: false}));
+  console.log("3 true tests");
+  console.log(h1.hasEventListener("click", true));
+  console.log(h1.hasEventListener("click", {capture: true}));
+  console.log(h1.hasEventListener("click", {capture: true, passive: false}));
 </script>
