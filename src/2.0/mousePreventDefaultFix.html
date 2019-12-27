@@ -1,0 +1,59 @@
+<script src="mousePreventDefaultFix.js"></script>
+<h3 id="one">#one: mousedown.preventDefault() blocks contextmenu</h3>
+<h3 id="two">#two: mouseup.preventDefault() blocks click, auxclick, dblclick</h3>
+<h3 id="three">#three: click.preventDefault() blocks dblclick</h3>
+<h3 id="four">#four: contextmenu.preventDefault() blocks contextmenu</h3>
+<h3 id="five">#five: no .preventDefault() called</h3>
+<p>
+  The native "drag" event will prevent click and dblclick.
+  In order to make custom mousebased CascadeEvents on the level of drag and click events,
+  ie. based on mousedown, mousemove and mouseup, we need to fix the preventDefault() on
+  mousedown, mouseup, and click.
+</p>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+  const four = document.querySelector("#four");
+
+  function log(e) {
+    console.log(e.type, e.currentTarget.nodeName, e.eventPhase);
+  }
+
+  function preventD(e) {
+    console.log("calling: " + e.type + ".preventDefault() on: #" + e.target.id);
+    e.preventDefault();
+  }
+
+  one.addEventListener("mousedown", preventD);
+  two.addEventListener("mouseup", preventD);
+  three.addEventListener("click", preventD);
+  four.addEventListener("contextmenu", preventD);
+
+  one.addEventListener("mousedown", log, true);
+  two.addEventListener("mousedown", log, true);
+  three.addEventListener("mousedown", log, true);
+  window.addEventListener("mousedown", log, true);
+
+  one.addEventListener("mouseup", log, true);
+  two.addEventListener("mouseup", log, true);
+  three.addEventListener("mouseup", log, true);
+  window.addEventListener("mouseup", log, true);
+
+  one.addEventListener("click", log, true);
+  two.addEventListener("click", log, true);
+  three.addEventListener("click", log, true);
+  window.addEventListener("click", log, true);
+
+  one.addEventListener("auxclick", log, true);
+  two.addEventListener("auxclick", log, true);
+  three.addEventListener("auxclick", log, true);
+  window.addEventListener("auxclick", log, true);
+
+  one.addEventListener("dblclick", log, true);
+  two.addEventListener("dblclick", log, true);
+  three.addEventListener("dblclick", log, true);
+  window.addEventListener("dblclick", log, true);
+
+</script>

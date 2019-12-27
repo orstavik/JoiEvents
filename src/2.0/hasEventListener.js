@@ -15,7 +15,7 @@
   const ogAdd = HTMLElement.prototype.addEventListener;
   HTMLElement.prototype.addEventListener = function (name, cb, options) {
     this[reg] || (this[reg] = {});
-    ogAdd(name, cb, options);
+    ogAdd.call(this, name, cb, options);
     this[reg][name] || (this[reg][name] = []);
     const capture = !!(options === true || (options && options.capture));
     if (lastIndexOf(this[reg][name], cb, capture) === -1)
@@ -24,7 +24,7 @@
 
   const ogRemove = HTMLElement.prototype.removeEventListener;
   HTMLElement.prototype.removeEventListener = function (name, cb, options) {
-    ogRemove(name, cb, options);
+    ogRemove.call(this, name, cb, options);
     const capture = !!(options === true || (options && options.capture));
     const index = lastIndexOf(this[reg][name], cb, capture);
     if (index >= 0)
