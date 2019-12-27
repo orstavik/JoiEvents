@@ -36,7 +36,7 @@ export class CancellableClick extends Event {
       ;
   }
 
-  static matches(event, el, weakSetOfElementsForThisEventType) {
-    return el.hasAttribute("clickable") || weakSetOfElementsForThisEventType.has(el);
+  static matches(event, el) {
+    return el.hasAttribute("clickable") || el.hasEventListener("click");
   }
 }

@@ -66,6 +66,9 @@
     for (let eventType of observedEvents) {
       if (!eventToClass[eventType]) {
         eventToClass[eventType] = new Set();
+        // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
+        //   document.addEventListener(eventType, processTriggerEvent, thirdArg):
+        //todo, do I need to go via document? I can ensure that the window.addEventListener is added later in many other ways.
         window.addEventListener(eventType, processTriggerEvent, thirdArg);
       }
       eventToClass[eventType].add(CustomEventClass);
@@ -78,6 +81,8 @@
       eventToClass[eventType].delete(CustomEventClass);
       if (eventToClass[eventType].size === 0) {
         eventToClass[eventType] = undefined;
+        // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
+        //   document.removeEventListener(eventType, processTriggerEvent, thirdArg):
         window.removeEventListener(eventType, processTriggerEvent, thirdArg);
       }
     }
