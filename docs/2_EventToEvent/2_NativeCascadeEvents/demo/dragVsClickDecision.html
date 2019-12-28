@@ -1,0 +1,48 @@
+<a href="#link">#link</a>
+
+<p>
+  Try both clicking and dragging the link above using the mouse.
+  It doesn't matter how slow you drag or move the mouse while you either click or drag.
+  It doesn't matter how many times you move the mouse back and forth.
+  It is only if the diagonal distance between the initial mouse position and a subsequent mousemove exceeds
+  4px that the native DragEventCascade function will intervene.
+  Once the native DragEventCascade function is activated, it will consume all subsequent mousemove events and
+  mouseup event and click events. Ie. NO mousemove, mouseup, nor click events will be fired during a
+  native DragEventSequence
+</p>
+
+<script>
+  let mousemoveEvent = [];
+  window.addEventListener("mousemove", function (e) {
+    if (e.buttons !== 0) mousemoveEvent.push(e)
+  });
+
+  function logDecision(e) {
+    const a = mousemoveEvent[0];
+    const b = mousemoveEvent[mousemoveEvent.length - 1];
+    if (!a || !b)
+      return console.log("Click with ZERO or ONE mousemoves");
+    const distX = b.screenX - a.screenX;
+    const distY = b.screenY - a.screenY;
+    const dist = Math.sqrt(distX * distX + distY * distY).toFixed(1);
+    console.log("---", e.type, "---");
+    console.log("Number of mousemoves before clickOrDrag decision: ", mousemoveEvent.length);
+    console.log("Duration of mousemoves before clickOrDrag decision: ", b.timeStamp - a.timeStamp);
+    console.log("Distance of mousemoves before clickOrDrag decision: ", dist);
+    mousemoveEvent = [];
+  }
+
+  window.addEventListener("dragstart", logDecision);
+  window.addEventListener("click", logDecision);
+
+  function simpleLog(e){
+    console.log(e.type);
+  }
+  window.addEventListener("mousemove", simpleLog);
+  window.addEventListener("mousedown", simpleLog);
+  window.addEventListener("mouseup", simpleLog);
+  window.addEventListener("drag", simpleLog);
+  window.addEventListener("dragend", simpleLog);
+  window.addEventListener("dragstart", simpleLog);
+  window.addEventListener("click", simpleLog);
+</script>
