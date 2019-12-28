@@ -42,27 +42,30 @@ The example above has a small DOM with a couple of elements. To these elements, 
 
 ## Non-bubbling events?
 
-Almost all events bubble. There are only a few exceptions:
+Some events do not bubble. But. And hold on to your hat! Non-bubbling events still propagate *down* in the *capture phase*. It is *only phase 3, the upward propagation from the `target`'s parent to the `window` that is stopped*. Non-bubbling events operate exactly like bubbling events that has an event listener that calls `.stopPropagation()` on its target element. 
+                           
+<code-demo src="demo/NonBubblingEventsDoStillCapture.html"></code-demo>
 
-1. `window` events (`load`, `error`, `resize`). But. `window` events doesn't really need to bubble. Although they very well could have, since it wouldn't matter.
+Examples of non-bubbling events are:
 
-2. Legacy UIX events
-    * `focus`/`blur` 
-    * `mouseenter`/`mouseleave`
+1. Resource life-cycle events: `load`, `error`, `abort`, `beforeunload`, `unload`.
+2. Legacy UI events: `focus`/`blur`, `mouseenter`/`mouseleave`. These non-bubbling event pairs has been given a bubbling cousin pair: `focusin`/`focusout` and `mouseover`/`mouseout`.
+3. Legacy DOM mutation events: `DOMNodeRemovedFromDocument`/`DOMNodeInsertedIntoDocument`. These DOM mutation events have been replaced by `MutationObserver`.
+4. The `resize`, `online`, `offline` events.
+5. The `toggle` event.
+
+When you make your own custom events, the **the default option is `bubble: true`**. The real question is: would you ever make a non-bubbling event, and if so, why?
+1. You would not make a custom event `bubble: false` for performance reasons. For non-bubbling events, the browser still needs to compute a list of event listeners for both the capture and target phases. Thus, no underlying computation is really avoided by listing functions from only two, instead of three propagation phases.
+2. If the custom event always targets the `window`, the custom event will never do anything but propagation phase, so it doesn't matter if the `bubble` is `true` or `false` or `Schrodinger's cat`.  
+3. Two facts:
+   * To check if the `eventListener` is added to the `target` element, you can choose from two simple checks: `event.currentTarget === event.target` or `event.phase === 2`. 
+   * To listen for an event that does not bubble, you either need to know its non-bubbling target (in the target phase) or step into the capture phase that in a sense bypasses the non-bubbling property.
    
-   But. These legacy, non-bubbling events have been replaced by either equivalent events that *do* bubble:
-     * `focusin`/`focusout` 
-     * `mouseover`/`mouseout`
+   This means that you can make all eventListeners `non-bubbly` by either adding `if(event.phase > 2) return;` to them, and/or by adding `if(event.phase === 2) event.stopPropagation();` to the event listener added to the `target`. 
 
-3. Legacy DOM mutation events:
-    * `DOMNodeRemovedFromDocument`/`DOMNodeInsertedIntoDocument`     
-
-   But. These DOM mutation events have been replaced by `MutationObserver`.
-
-4. The `load` event on `<script>`, `<img>`, and `<svg>` elements.
-
-Put simply, if you make your own events, make them bubble. If the browsers was made new today, all native events would probably be `bubble: true` (and we wouldn't bother with the `bubble` property).
+In my opinion, there rarely would be any benefit of using `bubble: false` in a customEvent. Some use-cases for your custom event might benefit from bubbling, and to make it more reusable, it should likely `bubble: true`. From my current position, I do not see any use-case for reusable custom events where the benefits of `bubble: false` would likely outweigh the benefits of `bubble: true`.
 
 ## References
 
  * [MDN: Event bubbling and capture](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Event_bubbling_and_capture)
+ * [Google: Page lifecycle api](https://developers.google.com/web/updates/2018/07/page-lifecycle-api)
