@@ -1,0 +1,31 @@
+<script src="mousePreventDefaultFix.js"></script>
+<script src="customEventsWithGrabEventTypes.js"></script>
+
+<script type="module">
+  import {DragImitation} from "./DragImitation.js";
+
+  customEvents.define(DragImitation);
+</script>
+
+<div draggable-imitation>
+  Hello sunshine :)
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type, e.target);
+  }
+
+  const div = document.querySelector("div");
+
+  window.addEventListener("mousedown", log);
+  // window.addEventListener("mousemove", log);
+  window.addEventListener("mouseup", log);
+
+  window.addEventListener("drag-imitation-start", log);
+  window.addEventListener("drag-imitation", log);
+  window.addEventListener("drag-imitation-end", log);
+  window.addEventListener("drag-imitation-cancel", log);
+
+  window.addEventListener("click", log);
+</script>

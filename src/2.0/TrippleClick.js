@@ -31,8 +31,16 @@ export class TrippleClick extends Event {
       return;
     }
     const target = lowestIdenticalPathElement(state[0].path, state[1].path, state[2].path);
+    //todo here I could recheck the matches to see if any ancestor element.hasEventListener("tripple-click");
+    //todo if it doesn't, why both with dispatching the event?
+    //todo but it is likely that the browser does this check natively.
     state = [];
     return [target.dispatchEvent.bind(target, new TrippleClick())];
+  }
+
+  static capturedEvent(eventType){
+    if (eventType === "click")
+      state = [];
   }
 
   static matches(event, el) {

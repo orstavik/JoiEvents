@@ -1,7 +1,7 @@
 (function () {
   const reg = Symbol("eventListenerRegister");
 
-  function lastIndexOf(list, cb, capture){
+  function lastIndexOf(list, cb, capture) {
     if (!list)
       return -1;
     for (let i = list.length - 1; i >= 0; i--) {
@@ -56,6 +56,7 @@
   }
 })();
 
+
 (function () {
   //1. polyfillish check of third argument for addEventListener
   let supportsPassive = false;
@@ -73,9 +74,18 @@
 
   //2. registry map for CustomEvent
   const eventToClass = {};
+  const eventToCaptureClass = {};
+  const eventToListener = {};
 
   //3. loop for evaluating CascadeEvents and defaultActions
   function processTriggerEvent(event) {
+    //todo new
+    if (eventToCaptureClass[event.type]){
+      for (let task of eventToCaptureClass[event.type].triggerEvent(event, true) || [])
+        setTimeout(task, 0);
+      return;
+    }
+    //todo new
     const composedPath = event.composedPath();
     const ComposedEventClasses = new Set(eventToClass[event.type]);
 
@@ -96,18 +106,34 @@
     }
   }
 
+  function addEventListenerIfNeeded(eventType) {
+
+    if (eventToListener[eventType])
+      return;
+    // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
+    //   document.addEventListener(eventType, processTriggerEvent, thirdArg):
+    //todo, do I need to go via document? I can ensure that the window.addEventListener is added later in many other ways.
+    window.addEventListener(eventType, processTriggerEvent, thirdArg);
+    eventToListener[eventType] = processTriggerEvent;
+  }
+
+  function removeEventListenerIfNeeded(eventType) {
+    if (eventToCaptureClass[eventType] || eventToClass[eventType])
+      return;
+    // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
+    //   document.removeEventListener(eventType, processTriggerEvent, thirdArg):
+    window.removeEventListener(eventType, processTriggerEvent, thirdArg);
+    delete eventToListener[eventType];
+  }
+
   //4. the customEvents.define(...)
   window.customEvents = {};
   customEvents.define = function (CustomEventClass, types) {
     const observedEvents = types || CustomEventClass.observedEvents;
     for (let eventType of observedEvents) {
-      if (!eventToClass[eventType]) {
+      if (!eventToClass[eventType])
         eventToClass[eventType] = new Set();
-        // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
-        //   document.addEventListener(eventType, processTriggerEvent, thirdArg):
-        //todo, do I need to go via document? I can ensure that the window.addEventListener is added later in many other ways.
-        window.addEventListener(eventType, processTriggerEvent, thirdArg);
-      }
+      addEventListenerIfNeeded(eventType);
       eventToClass[eventType].add(CustomEventClass);
     }
   };
@@ -117,11 +143,34 @@
     for (let eventType of observedEvents) {
       eventToClass[eventType].delete(CustomEventClass);
       if (eventToClass[eventType].size === 0) {
-        eventToClass[eventType] = undefined;
-        // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
-        //   document.removeEventListener(eventType, processTriggerEvent, thirdArg):
-        window.removeEventListener(eventType, processTriggerEvent, thirdArg);
+        delete eventToClass[eventType];
+        removeEventListenerIfNeeded(eventType);
       }
     }
   };
+  //todo new below
+  customEvents.setEventTypeCapture = function (CaptureClass, arrayOfEventNames) {
+    for (let i = 0; i < arrayOfEventNames.length; i++) {
+      let eventType = arrayOfEventNames[i];
+      if (eventToCaptureClass[eventType] && eventToCaptureClass[eventType] !== CaptureClass) {
+        if (i > 0)
+          customEvents.releaseEventTypeCapture(arrayOfEventNames.slice(0, i - 1));
+        throw new Error("Event: " + eventType + " is already captured.");
+      }
+      eventToCaptureClass[eventType] = CaptureClass;
+      addEventListenerIfNeeded(eventType);
+      if (eventToClass[eventType]) {
+        for (let CustomEventClass of eventToClass[eventType]) {
+          if (CaptureClass !== CustomEventClass)
+            CustomEventClass.capturedEvent(eventType)
+        }
+      }
+    }
+  };
+  customEvents.releaseEventTypeCapture = function (arrayOfEventNames) {
+    for (let eventType of arrayOfEventNames) {
+      delete eventToCaptureClass[eventType];
+      removeEventListenerIfNeeded(eventType);
+    }
+  }
 })();

@@ -91,7 +91,7 @@
         return ["click"];
       }
 
-      static triggerEvent(event) {
+      static triggerEvent(event, captured) {
         state.push({event, path: event.composedPath()});
         if (state.length < 3)
           return;
