@@ -1,0 +1,43 @@
+<script src="hasEventListener_suspendEventListeners.js"></script>
+
+<div>
+  <h1 style="border: 1px solid grey">click <span>->"A, 1"<-</span> = , or ->"A, 2"<-</h1>
+</div>
+<script>
+  function logA(e) {
+    console.log("A", e.eventPhase);
+  }
+
+  function logB(e) {
+    console.log("B", e.eventPhase);
+  }
+
+  function logC(e) {
+    console.log("C", e.eventPhase);
+  }
+
+  const h1 = document.querySelector("h1");
+  const div = document.querySelector("div");
+
+  //0. test of adding removing multiple eventListener for the same function
+  div.addEventListener("click", logA, false);
+  div.addEventListener("click", logB, false);
+  div.addEventListener("click", logA, true);
+  div.addEventListener("click", logB, true);
+
+  //1. test of suspendEventListener
+  console.log("no suspend: ");
+  h1.click();
+  console.log("suspend: ");
+  div.suspendEventListeners("click", true, logC, true);
+  h1.click();
+  console.log("resume: ");
+  div.resumeEventListeners("click", true);
+  h1.click();
+  console.log("suspend: ");
+  div.suspendEventListeners("click", true, logC, true);
+  h1.click();
+  console.log("resume: ");
+  div.resumeEventListeners("click", true);
+  h1.click();
+</script>
