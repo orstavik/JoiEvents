@@ -8,7 +8,7 @@ Is it a polyfill??
 
 [`drag-and-drop`](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API) is a 
 This is a native gesture/native DOM Event.
-To activate it, one must add an HTML attribute `draggableSection="true"`.
+To activate it, one must add an HTML attribute `draggable="true"`.
 It is a good native event, but it is hard to control the visuals of this event.
 
 tomax find some good reviews/critiques of this native gesture
