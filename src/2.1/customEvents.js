@@ -182,6 +182,19 @@ class CustomEventsController {
     this.queueEventLoopTask(window.dispatchEvent.bind(window, eventsGrabbedEvent));
   }
 
+  silenceEventOnce(name) {
+    //check that none has been grabbed before
+    if (window.isSuspendedEventListeners(name))
+      debugger; //i have a problem
+    window.suspendEventListeners(name, undefined, function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }, thirdArg);
+    this.queueEventLoopTask(function () {
+      window.resumeEventListeners(name, undefined);
+    });
+  }
+
   releaseEvents(listOfEventNames) {
     for (let name of listOfEventNames)
       window.resumeEventListeners(name, undefined);
@@ -191,3 +204,20 @@ class CustomEventsController {
 }
 
 customEvents || (customEvents = new CustomEventsController());
+
+const ogPreventDefault = MouseEvent.prototype.preventDefault;
+MouseEvent.prototype.preventDefault = function () {
+  if (this.defaultPrevented)
+    return;
+  ogPreventDefault.call(this);
+  if (this.type === "mouseup") {
+    if (this.button === 0)
+      customEvents.silenceEventOnce("click");
+    else
+      customEvents.silenceEventOnce("auxclick");
+  } else if(this.type === "mousedown" && this.button === 2) {
+    customEvents.silenceEventOnce("contextmenu");
+  } else if(this.type === "click"){
+    customEvents.silenceEventOnce("dblclick");
+  }
+};
