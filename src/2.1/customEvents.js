@@ -2,96 +2,113 @@
  * hasEventListener()
  */
 const reg = Symbol("eventListenerRegister");
-const suspended = Symbol("suspendedEventTypes");
+const grabbed = Symbol("grabbedEventTypes");
 
-function nameCapture(name, options) {
-  return name + " " + !!(options === true || (options && options.capture));
-}
-
-function lastIndexOf(list, cb) {
-  if (!list)
-    return -1;
-  for (let i = list.length - 1; i >= 0; i--) {
-    const cbOptions = list[i];
-    if (cbOptions.cb === cb)
-      return i;
-  }
-  return -1;
+function equivListener(list, cb, options) {
+  return list.findIndex(function (cbOptions) {
+    if (!(cb === undefined || cbOptions.cb === cb))
+      return false;
+    if (options === undefined)
+      return true;
+    const a = cbOptions.options, b = options;
+    const aBool = !!(a === true || (a instanceof Object && a.capture));
+    const bBool = !!(b === true || (b instanceof Object && b.capture));
+    return aBool === bBool;
+  });
 }
 
 const ogAdd = EventTarget.prototype.addEventListener;
 EventTarget.prototype.addEventListener = function (name, cb, options) {
   this[reg] || (this[reg] = {});
-  const nc = nameCapture(name, options);
-  this[reg][nc] || (this[reg][nc] = []);
-  if (lastIndexOf(this[reg][nc], cb) === -1) {
-    this[reg][nc].push({cb, options});
-    if (!this.isSuspendedEventListeners(name, options))
-      ogAdd.call(this, name, cb, options);
-  }
+  this[reg][name] || (this[reg][name] = []);
+  if (equivListener(this[reg][name], cb, options) >= 0)
+    return;
+  this[reg][name].push({cb, options});
+  if (!this[grabbed] || !this[grabbed][name])
+    ogAdd.call(this, name, cb, options);
 };
 
 const ogRemove = EventTarget.prototype.removeEventListener;
 EventTarget.prototype.removeEventListener = function (name, cb, options) {
-  const nc = nameCapture(name, options);
-  if (!this.isSuspendedEventListeners(name, options))
-    ogRemove.call(this, name, cb, options);              //this would probably only return empty anyways?
-  const index = lastIndexOf(this[reg][nc], cb);
+  if (!this[reg] || !this[reg][name])
+    return;
+  if (!this[grabbed] || !this[grabbed][name])
+    ogRemove.call(this, name, cb, options);
+  const index = equivListener(this[reg][name], cb, options);
   if (index >= 0)
-    this[reg][nc].splice(index, 1);
+    this[reg][name].splice(index, 1);
+};
+
+/**
+ * @param name
+ * @param cb function object, if undefined, all listeners are accepted.
+ * @param options true/false || {capture: true/false}.
+ *                if undefined, then both all options are accepted.
+ * @returns {boolean}
+ */
+EventTarget.prototype.hasEventListener = function (name, cb, options) {
+  return this[reg] && this[reg][name] && equivListener(this[reg][name], cb, options) >= 0;
+};
+
+/**
+ * When an event is grabbed, the new cb is added in the capture phase and is ALWAYS ACTIVE.
+ * Grabbing events is intended to always override the default action too.
+ * By setting the grab event listener to be active, scrolling from touchstart (and wheel) will always be turned off
+ * (in Safari), delayed in Chrome.
+ *
+ * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
+ *
+ * @param names
+ * @param cb
+ */
+Window.prototype.grabEvents = function (names, cb) {
+  if (this[grabbed]) {
+    for (let name of names) {
+      if (this[grabbed][name])
+        throw new Error("Event type '" + name + "' has already been grabbed!");
+    }
+  } else {
+    this[grabbed] = {};
+  }
+
+  for (let name of names) {
+    for (let listener of this[reg][name] || [])
+      ogRemove.call(this, name, listener.cb, listener.options);
+    ogAdd.call(this, name, cb, captureActive);
+    this[grabbed][name] = cb;
+  }
+
+  const eventsGrabbedEvent = new CustomEvent("events-grabbed", {details: names});
+  CustomEvents.queueEventLoopTask(window.dispatchEvent.bind(window, eventsGrabbedEvent));
 };
 
 /**
  *
- * @param name
- * @param options true/false || {capture: true/false}.
- *                if undefined, then both are accepted.
- *                //todo give this method the same argument signature as add/RemoveEventListener(eventName, ?cb, ?option)
- *                //todo should I change ?option === undefined to mean bubble phase? as is done with add/remove? probably yes.
- * @returns {boolean}
+ * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
  */
-EventTarget.prototype.hasEventListener = function (name, options) {
-  if (!this[reg])
-    return false;
-  if (options === undefined)
-    return !!(this[reg][nameCapture(name, false)] || this[reg][nameCapture(name, true)]);
-  return !!this[reg][nameCapture(name, options)];
-};
+Window.prototype.freeEvents = function (names) {
+  if (!this[grabbed])
+    throw new Error("Cannot resume event '" + name + "' because it has not been grabbed.");
+  for (let name of names) {
+    if (!this[grabbed][name])
+      throw new Error("Event type '" + name + "' has already been grabbed!");
+  }
 
-EventTarget.prototype.isSuspendedEventListeners = function (name, options) {
-  return this[suspended] && this[suspended][nameCapture(name, options)];
-};
+  for (let name of names) {
+    ogRemove.call(this, name, this[grabbed][name], captureActive);
+    delete this[grabbed][name];
+    for (let listener of this[reg][name] || [])
+      ogAdd.call(this, name, listener.cb, listener.options);
+  }
 
-/**
- */
-EventTarget.prototype.suspendEventListeners = function (name, options, alternativeCB, alternativeOptions) {
-  this[suspended] || (this[suspended] = {});
-  const nc = nameCapture(name, options);
-  if (this[suspended][nc])      //calling suspend twice in a row
-    return;
-  //you can suspend when no listeners are added empty listeners, as it will influence how the events react once added.
-  for (let listener of this[reg][nc] || [])
-    ogRemove.call(this, name, listener.cb, listener.options);
-  ogAdd.call(this, name, alternativeCB, alternativeOptions);
-  this[suspended][nc] = {alternativeCB, alternativeOptions};
+  const eventsGrabbedEvent = new CustomEvent("events-released", {details: names});
+  CustomEvents.queueEventLoopTask(window.dispatchEvent.bind(window, eventsGrabbedEvent));
 };
-
-/**
- */
-EventTarget.prototype.resumeEventListeners = function (name, options) {
-  const nc = nameCapture(name, options);
-  if (!this[suspended] || !this[suspended][nc])      //calling resume on something that isn't suspended
-    return;
-  const alternative = this[suspended][nc];
-  ogRemove.call(this, name, alternative.alternativeCB, alternative.alternativeOptions);
-  delete this[suspended][nc];
-  for (let listener of this[reg][nc])
-    ogAdd.call(this, name, listener.cb, listener.options);
-};
-
 
 /*short and sweet toggleTick*/
 function toggleOnDetails(cb) {
+  if (!(cb instanceof Function))
+    throw new Error("Only function references can be queued in the event loop.");
   const details = document.createElement("details");
   details.style.display = "none";
   details.ontoggle = function () {
@@ -114,44 +131,23 @@ try {
   window.removeEventListener("test", null, opts);
 } catch (e) {
 }
-const thirdArg = supportsPassive ? {capture: true, passive: true} : true;
+const capturePassive = supportsPassive ? {capture: true, passive: true} : true;
+const captureActive = supportsPassive ? {capture: true, passive: false} : true;
 
 
-class CustomEventsController {
+class CustomEvents {
 
   constructor() {
     this.eventToClass = {};
-    this.processClosure = this._processTriggerEvent.bind(this);
-    this.grabbedEvents = {};
   }
 
-  queueEventLoopTask(task) {
+  static queueEventLoopTask(task) {
     toggleOnDetails(task);
   }
 
-  define(CascadeEventClass) {
-    for (let eventType of CascadeEventClass.observedEvents) {
-      if (!this.eventToClass[eventType]) {
-        this.eventToClass[eventType] = new Set();
-        window.addEventListener(eventType, this.processClosure, thirdArg);
-      }
-      this.eventToClass[eventType].add(CascadeEventClass);
-    }
-  }
-
-  undefine(CascadeEventClass) {
-    for (let eventType of CascadeEventClass.observedEvents) {
-      this.eventToClass[eventType].delete(CascadeEventClass);
-      if (this.eventToClass[eventType].size === 0) {
-        delete this.eventToClass[eventType];
-        window.removeEventListener(eventType, this.processClosure, thirdArg);
-      }
-    }
-  }
-
-  _processTriggerEvent(event) {
+  static _processTriggerEvent(event) {
     const composedPath = event.composedPath();
-    const CascadeEventFunctions = new Set(this.eventToClass[event.type]);
+    const CascadeEventFunctions = new Set(customEvents.eventToClass[event.type]);
 
     //3a. we loop first up the target chain, and then we check each of the ComposedEventClasses match functions ONCE
     for (let el of composedPath) {
@@ -164,46 +160,37 @@ class CustomEventsController {
     }
   }
 
-  /**
-   * options a
-   * @param listOfEventNames
-   * @param cb optional?
-   * @param options optional!
-   */
-  grabEvents(listOfEventNames, cb, options) {
-    //check that none has been grabbed before
-    for (let name of listOfEventNames) {
-      if (this.grabbedEvents[name])
-        throw new Error("Event name '" + name + "' has already been grabbed!");
+  define(CascadeEventClass) {
+    for (let eventType of CascadeEventClass.observedEvents) {
+      if (!this.eventToClass[eventType]) {
+        this.eventToClass[eventType] = new Set();
+        window.addEventListener(eventType, CustomEvents._processTriggerEvent, capturePassive);
+      }
+      this.eventToClass[eventType].add(CascadeEventClass);
     }
-    for (let name of listOfEventNames)
-      window.suspendEventListeners(name, undefined, cb, options || thirdArg);
-    const eventsGrabbedEvent = new CustomEvent("events-grabbed", {details: listOfEventNames});
-    this.queueEventLoopTask(window.dispatchEvent.bind(window, eventsGrabbedEvent));
   }
 
-  silenceEventOnce(name) {
-    //check that none has been grabbed before
-    if (window.isSuspendedEventListeners(name))
-      debugger; //i have a problem
-    window.suspendEventListeners(name, undefined, function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }, thirdArg);
-    this.queueEventLoopTask(function () {
-      window.resumeEventListeners(name, undefined);
-    });
-  }
-
-  releaseEvents(listOfEventNames) {
-    for (let name of listOfEventNames)
-      window.resumeEventListeners(name, undefined);
-    const eventsGrabbedEvent = new CustomEvent("events-released", {details: listOfEventNames});
-    this.queueEventLoopTask(window.dispatchEvent.bind(window, eventsGrabbedEvent));
+  undefine(CascadeEventClass) {
+    for (let eventType of CascadeEventClass.observedEvents) {
+      this.eventToClass[eventType].delete(CascadeEventClass);
+      if (this.eventToClass[eventType].size === 0) {
+        delete this.eventToClass[eventType];
+        window.removeEventListener(eventType, CustomEvents._processTriggerEvent, capturePassive);
+      }
+    }
   }
 }
 
-customEvents || (customEvents = new CustomEventsController());
+customEvents || (customEvents = new CustomEvents());
+
+function silenceEventOnce(name) {
+  try {
+    window.grabEvents([name], e => e.preventDefault() & e.stopPropagation());
+    CustomEvents.queueEventLoopTask(() => window.freeEvents([name]));
+  } catch (e) {
+    throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
+  }
+}
 
 const ogPreventDefault = MouseEvent.prototype.preventDefault;
 MouseEvent.prototype.preventDefault = function () {
@@ -212,12 +199,25 @@ MouseEvent.prototype.preventDefault = function () {
   ogPreventDefault.call(this);
   if (this.type === "mouseup") {
     if (this.button === 0)
-      customEvents.silenceEventOnce("click");
+      silenceEventOnce("click");
     else
-      customEvents.silenceEventOnce("auxclick");
-  } else if(this.type === "mousedown" && this.button === 2) {
-    customEvents.silenceEventOnce("contextmenu");
-  } else if(this.type === "click"){
-    customEvents.silenceEventOnce("dblclick");
+      silenceEventOnce("auxclick");
+  } else if (this.type === "mousedown" && this.button === 2) {
+    silenceEventOnce("contextmenu");
+  } else if (this.type === "click") {
+    silenceEventOnce("dblclick");
   }
 };
+
+// queueEventLoopTasks(tasks) {
+//   if (tasks instanceof Function)
+//     toggleOnDetails(tasks);
+//   if (!(tasks instanceof Array))
+//     throw new Error("customEvents.queueEventLoopTasks() must receive only a single function or an array of functions.");
+//   for (let task of tasks) {
+//     if (!(task instanceof Function))
+//       throw new Error("customEvents.queueEventLoopTasks() must receive only a single function or an array of functions.");
+//   }
+//   for (let task of tasks)
+//     toggleOnDetails(task);
+// }
