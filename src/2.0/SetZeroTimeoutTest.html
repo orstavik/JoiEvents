@@ -1,0 +1,180 @@
+<h1>hello sunshine and zetZeroZimeout</h1>
+
+<pre></pre>
+
+<script>
+
+  (function () {
+    /*elaborate, efficient, but a little dirtier toggleTick*/
+    let preEventLoop = [];
+
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = function () {
+      details.removeAttribute("open");
+      details.remove();
+      while (preEventLoop.length) {
+        const task = preEventLoop.shift();
+        try {
+          task();
+        } catch (e) {
+          document.body.appendChild(details);
+          details.setAttribute("open", "");
+          throw e;
+        }
+      }
+    };
+
+    function toggleOnDetailsLoop(cb) {
+      if (!details.hasAttribute("open")) {
+        document.body.appendChild(details);
+        details.setAttribute("open", "");
+      }
+      preEventLoop.push(cb);
+    }
+
+    /*short and sweet toggleTick*/
+    function toggleOnDetails(cb) {
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = function () {
+        details.remove();
+        cb();
+      };
+      document.body.appendChild(details);
+      details.open = true;
+      // details.open =! details.open;
+      // details.setAttribute("open", "");
+    }
+
+    //this doesn't work on safari ipad
+    function loadOnImg(cb) {
+      const script = document.createElement("img");
+      // script.style.display = "none"; //todo not sure if this influences the browsers loading of the base64 data.
+      script.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+      script.onload = function () {
+        script.remove();
+        cb();
+      };
+      document.body.appendChild(script);
+    }
+
+    var idOrigin = {};
+    var idCb = {};
+
+    window.zetZeroTimeout = function (cb2) {
+      const mid = "pm." + Math.random();    // IE 10 does not support location.origin
+      const origin = window.location.origin || window.location.protocol + '//' + window.location.hostname + (window.location.port ? (':' + window.location.port) : '');
+      idOrigin[mid] = origin;
+      idCb[mid] = cb2;
+      window.postMessage(mid, origin);
+    };
+
+    function onMessage(evt) {
+      if (evt.source !== window)
+        return;
+      const mid = evt.data;
+      if (!idOrigin[mid])
+        return;
+      if (idOrigin[mid] !== evt.origin)
+        throw new Error("wtf");
+      // window.removeEventListener("message", handle);
+      evt.stopPropagation();
+      const cb = idCb[mid];
+      delete idOrigin[mid];
+      delete idCb[mid];
+      cb();
+    }
+
+    window.addEventListener("message", onMessage);
+
+    // function onclick(e) {
+    //   console.log("onclick");
+    // }
+
+    // function callZetZeroZimeout(e) {
+    //   zetZeroTimeout();
+    // }
+
+    // window.addEventListener("click", onclick, true);
+    // window.addEventListener("click", callZetZeroZimeout, true);
+    // document.querySelector("h1").addEventListener("click", onclick);
+    // window.addEventListener("click", onclick);
+
+
+    const pre = document.querySelector("pre");
+    pre.innerText = "start\n";
+
+    const total = 5;
+    const counter = [0, 0, 0, 0, 0];
+    const startTimes = [0, 0, 0, 0, 0];
+    const names = ["setTimeout", "postMessage", "imgLoad", "onToggle", "onToggleEfficient"];
+    const handlerX = function (i) {
+      if (counter[i]++ === 0)
+        startTimes[i] = performance.now();
+      pre.innerText += names[i];
+      if (counter[i] === total) pre.innerText += ": " + ((performance.now() - startTimes[i]) / total);
+      pre.innerText += "\n";
+    };
+
+    for (let i = 0; i < total; i++) {
+      setTimeout(handlerX.bind(null, 0), 0);
+      zetZeroTimeout(handlerX.bind(null, 1));
+      loadOnImg(handlerX.bind(null, 2));
+      toggleOnDetails(handlerX.bind(null, 3));
+      toggleOnDetailsLoop(handlerX.bind(null, 4));
+    }
+    pre.innerText += "end\n";
+  })();
+  /**
+   * obviously doesn't work as it is based on mutationObserver = micro-task-queue
+   class ZetZero extends HTMLElement{
+      static get observedAttributes(){
+        return ["zet-zero"];
+      }
+      attributeChangedCallback(name, oldValue, newValue){
+        console.log("from web comp");
+      }
+    }
+   customElements.define("zet-zero", ZetZero);
+   const zetZero = document.createElement("zet-zero");
+
+   function zetZeroZimeoutAttChanged(cb) {
+      window.mycb1 = function () {
+        cb();
+        delete window.mycb1;
+        zetZero.setAttribute("zet-zero", 0);
+      };
+      zetZero.setAttribute("zet-zero", 1);
+    }
+   **/
+
+  /**
+   *
+   function inputOnInput(cb) {
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.oninput = function () {
+        cb();
+        input.remove();
+      };
+      document.body.appendChild(input);
+      input.click();
+    }
+
+   //zetZeroZimeoutInlineScript  doesn't work because it is sync
+   var script = document.createElement("script");
+   script.text = 'window.mycb1();';
+   script.setAttribute("async", "");
+
+   function zetZeroZimeoutInlineScript(cb) {
+      window.mycb1 = function () {
+        cb();
+        delete window.mycb1;
+        document.body.removeChild(script);
+      };
+      document.body.appendChild(script);
+    }
+
+   */
+</script>
