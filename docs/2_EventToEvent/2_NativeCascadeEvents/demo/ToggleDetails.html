@@ -6,6 +6,17 @@
 </div>
 <script>
 
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = function () {
+      details.remove();
+      cb();
+    };
+    document.body.appendChild(details);
+    details.open = true;
+  }
+
   const div = document.querySelector("div");
   const details = document.querySelector("details");
   const summary = document.querySelector("summary");
@@ -25,14 +36,22 @@
   summary.addEventListener("click", log);
   details.addEventListener("click", log);
   div.addEventListener("click", log);
-
-  //? if we add a task in the event loop here, would it come before the toggle? and would it come before the defaultAction?
-
   //1b. if we call preventDefault on click, then no change to the DOM and no toggle event
   // div.addEventListener("click", preventD);
 
+
   //2. here the defaultAction is done, and we would see the defaultAction having changed the DOM
   //   when the defaultAction is being performed, the toggle event is added to the event loop.
+
+  //2x. the change of the DOM is added to the event loop at the same time as the click propagate.
+  //    but the toggle event is not, it is only added to the event loop during the process that changes the DOM.
+  //    we see that the DOM has updated, but that no toggle event has been dispatched if we pause the execution of the toggleTick.
+  window.addEventListener("click", function () {
+    toggleTick(function () {
+      //debugger;
+      console.log("task queued from click");
+    });
+  });
 
   //3. after the DOM has changed, a toggle event is dispatched.
   div.addEventListener("toggle", log, true);
