@@ -7,7 +7,6 @@ export class LongPress2 extends Event {
 export class LongPress2Controller /*extends CascadeEvent*/ {
 
   constructor() {
-    this.state = [];
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.timer = 0;
@@ -72,7 +71,6 @@ export class LongPress2Controller /*extends CascadeEvent*/ {
     clearTimeout(this.timer);
     if (this.isGrabbing)
       window.freeEvents(["mousemove", "mouseup"], this);
-    this.state = [];
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.isGrabbing = false;
