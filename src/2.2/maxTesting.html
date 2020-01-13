@@ -1,0 +1,139 @@
+<script type="module">
+  import {LongPressController} from "./LongPress.js";
+
+  (function () {
+
+    Window.prototype.queueTaskInEventLoop = function (cb) {
+      if (!(cb instanceof Function))
+        throw new Error("Only function references can be queued in the event loop.");
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = function () {
+        details.remove();
+        cb();
+      };
+      document.body.appendChild(details);
+      details.open = true;
+    };
+
+    /*If possible a passive EventListenerOptions*/
+    let supportsPassive = false;
+    try {
+      const opts = Object.defineProperty({}, "passive", {
+        get: function () {
+          supportsPassive = true;
+        }
+      });
+      window.addEventListener("test", null, opts);
+      window.removeEventListener("test", null, opts);
+    } catch (e) {
+    }
+    const captureActive = supportsPassive ? {capture: true, passive: false} : true;
+    // const capturePassive = supportsPassive ? {capture: true, passive: true} : true;
+    const capturePassive = true;
+
+    const cascadeClasses = {};                             //todo this is not strictly necessary
+    const eventTypeToCascadeEvents = {};
+
+    function _processCascadeEvents(event) {
+      const composedPath = event.composedPath();
+      const cascadeEventFunctions = new Set(eventTypeToCascadeEvents[event.type]);
+
+      for (let cascadeEvent of cascadeEventFunctions) {
+        if (cascadeEvent.observedPrevented.indexOf(event.type) >= 0) {
+          cascadeEvent.preventedEvent();
+          cascadeEventFunctions.delete(cascadeEvent);
+        }
+      }
+      for (let el of composedPath) {
+        for (let cascadeEvent of cascadeEventFunctions) {
+          if (!cascadeEvent.matches(event, el))
+            continue;
+          if (cascadeEvent.observedTriggers.indexOf(event.type) >= 0) {
+            //todo both observed and prevented cannot hold the same event type at the same time
+            const preventeds = cascadeEvent.observedPrevented;                     //todo
+            const triggers = cascadeEvent.observedTriggers;                        //todo
+            const combined = preventeds.concat(triggers);                          //todo
+            cascadeEvent.triggerEvent(event);                                                //cb!!
+            cascadeEventFunctions.delete(cascadeEvent);                                      //cleanup
+            const preventeds2 = cascadeEvent.observedPrevented;                    //todo
+            const triggers2 = cascadeEvent.observedTriggers;                       //todo
+            const combined2 = preventeds2.concat(triggers2);                       //todo
+            for (let eventType of combined) {                                                     //todo
+              if (combined2.indexOf(eventType) === -1) {                                           //todo
+                eventTypeToCascadeEvents[eventType].delete(cascadeEvent);                         //todo
+                if (eventTypeToCascadeEvents[eventType].length === 0) {                            //todo
+                  delete eventTypeToCascadeEvents[eventType];                                     //todo
+                  window.removeEventListener(eventType, _processCascadeEvents, capturePassive);   //todo
+                }                                                                                 //todo
+              }                                                                                   //todo
+            }                                                                                     //todo
+            for (let eventType of combined2) {                                                    //todo
+              if (combined.indexOf(eventType) === -1) {                                            //todo
+                if (!eventTypeToCascadeEvents[eventType]) {                                        //todo
+                  eventTypeToCascadeEvents[eventType] = new Set();                                //todo
+                  window.addEventListener(eventType, _processCascadeEvents, capturePassive);      //todo
+                }                                                                                 //todo
+                eventTypeToCascadeEvents[eventType].add(cascadeEvent);
+              }
+            }
+            //todo check if the triggerEvent() either called preventDefault() or called grabEvents()
+          }
+        }
+      }
+      if (cascadeEventFunctions.size > 0)
+        throw new Error("omg");
+    }
+
+
+    function addCascadeClass(cascadeClass, allEventTypes) {
+      for (let eventType of allEventTypes) {
+        if (!eventTypeToCascadeEvents[eventType]) {
+          eventTypeToCascadeEvents[eventType] = new Set();
+          window.addEventListener(eventType, _processCascadeEvents, capturePassive);
+        }
+        eventTypeToCascadeEvents[eventType].add(cascadeClass);
+      }
+    }
+
+    class CustomEvents {
+
+      define(CascadeEventClass) {
+        if (cascadeClasses[CascadeEventClass.name])
+          throw new Error("EventCascadeClass: " + CascadeEventClass.name + " is already defined.");
+        const cascadeClass = new CascadeEventClass();
+        cascadeClasses[CascadeEventClass.name] = cascadeClass;
+        addCascadeClass(cascadeClass, cascadeClass.getObservedNames());
+      }
+
+      undefine(CascadeEventClass) {
+        if (!cascadeClasses[CascadeEventClass.name])
+          throw new Error("Cannot undefine EventCascadeClass: " + CascadeEventClass.name + " because it is not defined.");
+        const cascadeClass = cascadeClasses[CascadeEventClass.name];
+        const triggerEvents = cascadeClass.observedTriggers;
+        const cancelEvents = cascadeClass.observedPrevented;
+        const allEventTypes = triggerEvents.concat(cancelEvents);
+        for (let eventType of allEventTypes) {
+          eventTypeToCascadeEvents[eventType].delete(cascadeClass);
+          if (eventTypeToCascadeEvents[eventType].size === 0) {
+            delete eventTypeToCascadeEvents[eventType];
+            window.removeEventListener(eventType, _processCascadeEvents, capturePassive);
+          }
+        }
+        delete cascadeClasses[CascadeEventClass.name];
+      }
+    }
+
+    window.customEvents || (window.customEvents = new CustomEvents());
+  })();
+
+  window.customEvents.define(LongPressController);
+</script>
+<div long-press> hello sunshine</div>
+<script>
+  window.addEventListener("mousedown", console.log);
+  window.addEventListener("mouseup", console.log);
+  window.addEventListener("click", console.log);
+  window.addEventListener("long-press-activated", console.log);
+  window.addEventListener("long-press", console.log);
+</script>
