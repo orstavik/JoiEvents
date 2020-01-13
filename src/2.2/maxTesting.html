@@ -51,32 +51,14 @@
             continue;
           if (cascadeEvent.observedTriggers.indexOf(event.type) >= 0) {
             //todo both observed and prevented cannot hold the same event type at the same time
-            const preventeds = cascadeEvent.observedPrevented;                     //todo
-            const triggers = cascadeEvent.observedTriggers;                        //todo
-            const combined = preventeds.concat(triggers);                          //todo
+            const combined = cascadeEvent.getObservedNames();
             cascadeEvent.triggerEvent(event);                                                //cb!!
             cascadeEventFunctions.delete(cascadeEvent);                                      //cleanup
-            const preventeds2 = cascadeEvent.observedPrevented;                    //todo
-            const triggers2 = cascadeEvent.observedTriggers;                       //todo
-            const combined2 = preventeds2.concat(triggers2);                       //todo
-            for (let eventType of combined) {                                                     //todo
-              if (combined2.indexOf(eventType) === -1) {                                           //todo
-                eventTypeToCascadeEvents[eventType].delete(cascadeEvent);                         //todo
-                if (eventTypeToCascadeEvents[eventType].length === 0) {                            //todo
-                  delete eventTypeToCascadeEvents[eventType];                                     //todo
-                  window.removeEventListener(eventType, _processCascadeEvents, capturePassive);   //todo
-                }                                                                                 //todo
-              }                                                                                   //todo
-            }                                                                                     //todo
-            for (let eventType of combined2) {                                                    //todo
-              if (combined.indexOf(eventType) === -1) {                                            //todo
-                if (!eventTypeToCascadeEvents[eventType]) {                                        //todo
-                  eventTypeToCascadeEvents[eventType] = new Set();                                //todo
-                  window.addEventListener(eventType, _processCascadeEvents, capturePassive);      //todo
-                }                                                                                 //todo
-                eventTypeToCascadeEvents[eventType].add(cascadeEvent);
-              }
-            }
+            const combined2 = cascadeEvent.getObservedNames();
+            const added = combined2.filter(name => combined.indexOf(name) === -1);
+            addCascadeClass(cascadeEvent, added);
+            const removed = combined.filter(name => combined2.indexOf(name) === -1);
+            removeCascadeClass(cascadeEvent, removed);
             //todo check if the triggerEvent() either called preventDefault() or called grabEvents()
           }
         }
