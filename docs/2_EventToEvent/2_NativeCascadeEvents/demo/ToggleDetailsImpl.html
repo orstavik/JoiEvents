@@ -16,6 +16,13 @@
       if (name === "open")
         this.shadowRoot.children[1].style.display = (newValue === null ? "none" : "block");
     }
+
+    set open(value) {
+      value === true ? this.setAttribute("open", "") : this.removeAttribute("open");
+    }
+    get open() {
+      return this.hasAttribute("open");
+    }
   }
 
   class MySummary extends HTMLElement {
@@ -31,11 +38,13 @@
     _toggleParent() {
       if (!(this.parentNode instanceof MyDetails))
         return;
-      const open = !this.parentNode.hasAttribute("open");
+      this.parentNode.open = !this.parentNode.open;
+      this.shadowRoot.children[0].style.transform = this.parentNode.open ? "rotate(90deg)" : "";
+      // const open = !this.parentNode.hasAttribute("open");
       //1. rotate the ">" open/closed arrow in the my-summary element shadowDom
-      this.shadowRoot.children[0].style.transform = open ? "rotate(90deg)" : "";
+      // this.shadowRoot.children[0].style.transform = open ? "rotate(90deg)" : "";
       //2. show/hide the "open" attribute on the parent my-details element
-      open ? this.parentNode.setAttribute("open", "") : this.parentNode.removeAttribute("open");
+      // open ? this.parentNode.setAttribute("open", "") : this.parentNode.removeAttribute("open");
       //3. dispatch the "toggle" event after the state change has occured
       this.parentNode.dispatchEvent(new CustomEvent("toggle", {composed: true, bubbles: false}));
     }
