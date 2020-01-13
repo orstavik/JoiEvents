@@ -96,6 +96,16 @@
       }
     }
 
+    function removeCascadeClass(cascadeClass, allEventTypes) {
+      for (let eventType of allEventTypes) {
+        eventTypeToCascadeEvents[eventType].delete(cascadeClass);
+        if (eventTypeToCascadeEvents[eventType].size === 0) {
+          delete eventTypeToCascadeEvents[eventType];
+          window.removeEventListener(eventType, _processCascadeEvents, capturePassive);
+        }
+      }
+    }
+
     class CustomEvents {
 
       define(CascadeEventClass) {
@@ -110,16 +120,7 @@
         if (!cascadeClasses[CascadeEventClass.name])
           throw new Error("Cannot undefine EventCascadeClass: " + CascadeEventClass.name + " because it is not defined.");
         const cascadeClass = cascadeClasses[CascadeEventClass.name];
-        const triggerEvents = cascadeClass.observedTriggers;
-        const cancelEvents = cascadeClass.observedPrevented;
-        const allEventTypes = triggerEvents.concat(cancelEvents);
-        for (let eventType of allEventTypes) {
-          eventTypeToCascadeEvents[eventType].delete(cascadeClass);
-          if (eventTypeToCascadeEvents[eventType].size === 0) {
-            delete eventTypeToCascadeEvents[eventType];
-            window.removeEventListener(eventType, _processCascadeEvents, capturePassive);
-          }
-        }
+        removeCascadeClass(cascadeClass, cascadeClass.getObservedNames());
         delete cascadeClasses[CascadeEventClass.name];
       }
     }
