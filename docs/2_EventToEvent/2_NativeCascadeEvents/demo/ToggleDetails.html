@@ -30,6 +30,19 @@
     e.preventDefault();
   }
 
+  //event cascade 1:
+  // wheel -> 12 x change of .scrollTop
+  //event cascade 2:
+  // change of .scrollTop -> scroll event
+
+  //event cascade 1:
+  // click -> change of details DOM
+  //event cascade 2:
+  // change of details DOM -> toggle event
+  // it all looks like so:
+  // click -> change of details DOM -> toggle event,
+  // but it isn't, it is broken in two, the tasks are added in two batches in the event loop.
+
   //1. the click event propagates
   div.addEventListener("click", log, true);
   details.addEventListener("click", log, true);
