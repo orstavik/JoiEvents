@@ -1,7 +1,149 @@
-<script type="module">
-  import {LongPressController} from "./LongPress.js";
-
+<script>
   (function () {
+
+    /*If possible a passive EventListenerOptions*/
+    let supportsPassive = false;
+    try {
+      const opts = Object.defineProperty({}, "passive", {
+        get: function () {
+          supportsPassive = true;
+        }
+      });
+      window.addEventListener("test", null, opts);
+      window.removeEventListener("test", null, opts);
+    } catch (e) {
+    }
+    const captureActive = supportsPassive ? {capture: true, passive: false} : true;
+
+    /**
+     * hasEventListener()
+     */
+    const reg = Symbol("eventListenerRegister");
+    const grabbed = Symbol("grabbedEventTypes");
+
+    // const grabbedNow = Symbol("grabbedEventTypesNow");
+
+    function equivListener(list, cb, options) {
+      return list.findIndex(function (cbOptions) {
+        if (!(cb === undefined || cbOptions.cb === cb))
+          return false;
+        const a = cbOptions.options, b = options;
+        const aBool = !!(a === true || (a instanceof Object && a.capture));
+        const bBool = !!(b === true || (b instanceof Object && b.capture));
+        return aBool === bBool;
+      });
+    }
+
+    Window.prototype.addEventListener = function (name, cb, options) {
+      this[reg] || (this[reg] = {});
+      this[reg][name] || (this[reg][name] = []);
+      if (equivListener(this[reg][name], cb, options) >= 0)
+        return;
+      this[reg][name].push({cb, options});
+      if (!this[grabbed] || !this[grabbed][name])
+        EventTarget.prototype.addEventListener.call(this, name, cb, options);
+    };
+
+    Window.prototype.removeEventListener = function (name, cb, options) {
+      if (!this[reg] || !this[reg][name])
+        return;
+      const index = equivListener(this[reg][name], cb, options);
+      if (index === -1)
+        return;
+      this[reg][name].splice(index, 1);
+      if (!this[grabbed] || !this[grabbed][name])
+        EventTarget.prototype.removeEventListener.call(this, name, cb, options);
+    };
+
+    /**
+     * When an event is grabbed, the new cb is added in the capture phase and is ALWAYS ACTIVE.
+     * Grabbing events is intended to always override the default action too.
+     * By setting the grab event listener to be active, scrolling from touchstart (and wheel) will always be turned off
+     * (in Safari), delayed in Chrome.
+     *
+     * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
+     *
+     * @param names
+     * @param cb
+     */
+    Window.prototype.grabEvents = function (names, cb, owner) {
+      if (this[grabbed]) {
+        for (let name of names) {
+          if (this[grabbed][name])
+            throw new Error("Event type '" + name + "' has already been grabbed!");
+        }
+      } else {
+        this[grabbed] = {};
+      }
+      const wrapper = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cb && cb(e);
+      };
+      for (let name of names) {
+        if (this[reg][name]) {
+          for (let cbOptions of this[reg][name])
+            EventTarget.prototype.removeEventListener.call(this, name, cbOptions.cb, cbOptions.options);
+        }
+        EventTarget.prototype.addEventListener.call(this, name, wrapper, captureActive);
+        this[grabbed][name] = wrapper;
+      }
+      //todo I need to filter this callback based on the cb
+      for (let eventType of names) {                          //todo calling cancel from grabEvents
+        if (eventTypeToCascadeEvents[eventType]) {
+          for (let cascadeEventClass of eventTypeToCascadeEvents[eventType]) {
+            if (cascadeEventClass !== owner)
+              cascadeEventClass.cancelCascade(eventType);
+          }
+        }
+      }
+    };
+    /**
+     *
+     * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
+     */
+    Window.prototype.freeEvents = function (names) {
+      // window[grabbedNow] = undefined;
+      if (!this[grabbed])
+        throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+      for (let name of names) {
+        if (!this[grabbed][name])
+          throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+      }
+      for (let name of names) {
+        EventTarget.prototype.removeEventListener.call(this, name, this[grabbed][name], captureActive);
+        delete this[grabbed][name];
+        for (let cbOptions of this[reg][name] || [])
+          EventTarget.prototype.addEventListener.call(this, name, cbOptions.cb, cbOptions.options);
+      }
+    };
+
+    Window.prototype.silenceEventOnce = function (name) {
+      try {
+        window.grabEvents([name], e => e.preventDefault() & e.stopPropagation());
+        window.queueTaskInEventLoop(() => window.freeEvents([name]));
+      } catch (e) {
+        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
+      }
+    };
+
+    const ogPreventDefault = MouseEvent.prototype.preventDefault;
+    MouseEvent.prototype.preventDefault = function () {
+      if (this.defaultPrevented)
+        return;
+      ogPreventDefault.call(this);
+      if (this.type === "mouseup") {
+        if (this.button === 0)
+          window.silenceEventOnce("click");
+        else
+          window.silenceEventOnce("auxclick");
+      } else if (this.type === "mousedown" && this.button === 2) {
+        window.silenceEventOnce("contextmenu");
+      } else if (this.type === "click") {
+        window.silenceEventOnce("dblclick");
+      }
+    };
+
 
     Window.prototype.queueTaskInEventLoop = function (cb) {
       if (!(cb instanceof Function))
@@ -25,10 +167,11 @@
 
       for (let cascadeEvent of cascadeEventFunctions) {
         if (cascadeEvent.observedPrevented.indexOf(event.type) >= 0) {
-          cascadeEvent.preventedEvent();
+          cascadeEvent.cancelCascade();
           cascadeEventFunctions.delete(cascadeEvent);
         }
       }
+      const hasRunCascadeFunctions = [];
       for (let el of composedPath) {
         for (let cascadeEvent of cascadeEventFunctions) {
           if (!cascadeEvent.matches(event, el))
@@ -38,12 +181,30 @@
             const combined = cascadeEvent.getObservedNames();
             cascadeEvent.triggerEvent(event);                                                //cb!!
             cascadeEventFunctions.delete(cascadeEvent);                                      //cleanup
+            //todo check if the triggerEvent() either called preventDefault() or called grabEvents()
+            // if (window[grabbedNow]) {
+            //   for (let eventType of window[grabbedNow]) {
+            //     if (eventTypeToCascadeEvents[eventType]) {
+            //       for (let cascadeEventClass of eventTypeToCascadeEvents[eventType])
+            //         cascadeEventClass.cancelCascade(eventType);
+            //     }
+            //   }
+            //   window[grabbedNow] = undefined;
+            // }
+            if (event.defaultPrevented) {
+              for (let alreadyRunButNotPreventedFunction of hasRunCascadeFunctions)
+                alreadyRunButNotPreventedFunction.cancelCascade(event);
+              for (let notYetRunCascadeEvent of cascadeEventFunctions)
+                notYetRunCascadeEvent.cancelCascade(event);
+              return;
+            } else {
+              hasRunCascadeFunctions.push(cascadeEvent);
+            }
             const combined2 = cascadeEvent.getObservedNames();
             const added = combined2.filter(name => combined.indexOf(name) === -1);
             addCascadeClass(cascadeEvent, added);
             const removed = combined.filter(name => combined2.indexOf(name) === -1);
             removeCascadeClass(cascadeEvent, removed);
-            //todo check if the triggerEvent() either called preventDefault() or called grabEvents()
           }
         }
       }
@@ -73,7 +234,6 @@
     }
 
     class CustomEvents {
-
       define(CascadeEventClass) {
         if (cascadeClasses[CascadeEventClass.name])
           throw new Error("EventCascadeClass: " + CascadeEventClass.name + " is already defined.");
@@ -93,14 +253,26 @@
 
     window.customEvents || (window.customEvents = new CustomEvents());
   })();
+</script>
+
+<script type="module">
+  import {LongPressController} from "./LongPress.js";
+  import {LongPress2Controller} from "./LongPress2.js";
 
   window.customEvents.define(LongPressController);
+  window.customEvents.define(LongPress2Controller);
 </script>
-<div long-press> hello sunshine</div>
+
+<div long-press>
+  <div long-press-2> hello sunshine</div>
+</div>
+
 <script>
   window.addEventListener("mousedown", console.log);
   window.addEventListener("mouseup", console.log);
   window.addEventListener("click", console.log);
   window.addEventListener("long-press-activated", console.log);
   window.addEventListener("long-press", console.log);
+  window.addEventListener("long-press-2-activated", console.log);
+  window.addEventListener("long-press-2", console.log);
 </script>

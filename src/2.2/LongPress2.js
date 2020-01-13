@@ -1,10 +1,10 @@
-export class LongPress extends Event {
+export class LongPress2 extends Event {
   constructor(name) {
-    super("long-press" + name, {bubbles: true, composed: true});
+    super("long-press-2" + name, {bubbles: true, composed: true});
   }
 }
 
-export class LongPressController /*extends CascadeEvent*/ {
+export class LongPress2Controller /*extends CascadeEvent*/ {
 
   constructor() {
     this.state = [];
@@ -13,7 +13,7 @@ export class LongPressController /*extends CascadeEvent*/ {
     this.timer = 0;
   }
 
-  getObservedNames() {
+  getObservedNames(){
     return this.observedTriggers.concat(this.observedPrevented);
   }
 
@@ -22,14 +22,13 @@ export class LongPressController /*extends CascadeEvent*/ {
       return;
     this.timer = setTimeout(function () {
       // window.grabEvents(["mousemove", "mouseup"], undefined, this);      //todo here i should call grab...
-      event.target.dispatchEvent(new LongPress("-activated"));
-    }.bind(this), 500);
-    this.observedTriggers = ["long-press-activated"];
+      event.target.dispatchEvent(new LongPress2("-activated"));
+    }, 500);
+    this.observedTriggers = ["long-press-2-activated"];
     this.observedPrevented = ["mousedown", "mouseup"];
   }
 
   longPressActivatedTrigger(event) {
-    event.preventDefault();
     this.observedTriggers = ["mouseup"];
     this.observedPrevented = ["mousedown"];
   }
@@ -38,15 +37,15 @@ export class LongPressController /*extends CascadeEvent*/ {
     event.preventDefault();
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
-    queueTaskInEventLoop(function () {
-      event.target.dispatchEvent(new LongPress(""));
+    queueTaskInEventLoop(function(){
+      event.target.dispatchEvent(new LongPress2(""));
     });
   }
 
   triggerEvent(event) {
     if (event.type === "mousedown")
       return this.mousedownTrigger(event);
-    if (event.type === "long-press-activated")
+    if (event.type === "long-press-2-activated")
       return this.longPressActivatedTrigger(event);
     if (event.type === "mouseup")
       return this.mouseupTrigger(event);
@@ -74,6 +73,6 @@ export class LongPressController /*extends CascadeEvent*/ {
   }
 
   matches(event, el) {
-    return el.hasAttribute && el.hasAttribute("long-press");
+    return el.hasAttribute && el.hasAttribute("long-press-2");
   }
 }
