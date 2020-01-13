@@ -66,7 +66,7 @@
      * @param names
      * @param cb
      */
-    Window.prototype.grabEvents = function (names, cb, owner) {
+    Window.prototype.grabEvents = function (names, cb) {
       if (this[grabbed]) {
         for (let name of names) {
           if (this[grabbed][name])
@@ -78,7 +78,7 @@
       const wrapper = function (e) {
         e.preventDefault();
         e.stopPropagation();
-        cb && cb(e);
+        cb.triggerEvent(e);
       };
       for (let name of names) {
         if (this[reg][name]) {
@@ -86,13 +86,13 @@
             EventTarget.prototype.removeEventListener.call(this, name, cbOptions.cb, cbOptions.options);
         }
         EventTarget.prototype.addEventListener.call(this, name, wrapper, captureActive);
-        this[grabbed][name] = wrapper;
+        this[grabbed][name] = {cascade: cb, wrapper};
       }
       //todo I need to filter this callback based on the cb
       for (let eventType of names) {                          //todo calling cancel from grabEvents
         if (eventTypeToCascadeEvents[eventType]) {
           for (let cascadeEventClass of eventTypeToCascadeEvents[eventType]) {
-            if (cascadeEventClass !== owner)
+            if (cascadeEventClass !== cb)
               cascadeEventClass.cancelCascade(eventType);
           }
         }
@@ -102,26 +102,35 @@
      *
      * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
      */
-    Window.prototype.freeEvents = function (names) {
+    Window.prototype.freeEvents = function (names, owner) {
       // window[grabbedNow] = undefined;
       if (!this[grabbed])
         throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
       for (let name of names) {
         if (!this[grabbed][name])
           throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+        if (this[grabbed][name].cascade !== owner)
+          throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
       }
       for (let name of names) {
-        EventTarget.prototype.removeEventListener.call(this, name, this[grabbed][name], captureActive);
+        EventTarget.prototype.removeEventListener.call(this, name, this[grabbed][name].wrapper, captureActive);
         delete this[grabbed][name];
         for (let cbOptions of this[reg][name] || [])
           EventTarget.prototype.addEventListener.call(this, name, cbOptions.cb, cbOptions.options);
       }
     };
 
+    const cancelOnce = {
+      triggerEvent : function(e){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
     Window.prototype.silenceEventOnce = function (name) {
       try {
-        window.grabEvents([name], e => e.preventDefault() & e.stopPropagation());
-        window.queueTaskInEventLoop(() => window.freeEvents([name]));
+        window.queueTaskInEventLoop(() => window.freeEvents([name], cancelOnce));
+        window.grabEvents([name], cancelOnce);
       } catch (e) {
         throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
       }
@@ -208,8 +217,8 @@
           }
         }
       }
-      if (cascadeEventFunctions.size > 0)
-        throw new Error("omg");
+      // if (cascadeEventFunctions.size > 0)
+      //   throw new Error("omg");
     }
 
 
