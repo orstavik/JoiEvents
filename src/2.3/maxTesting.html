@@ -16,7 +16,7 @@
     const captureActive = supportsPassive ? {capture: true, passive: false} : true;
 
     /**
-     * hasEventListener()
+     * suspend and resume event listeners on window.
      */
     const reg = Symbol("eventListenerRegister");
     const grabbed = Symbol("grabbedEventTypes");
@@ -78,52 +78,14 @@
       delete windovv[grabbed][eventType];
     }
 
-    const stopPrevent = function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const cancelOnce = {
-      triggerEvent: stopPrevent
-    };
-
     function suspendEventListenersOnce(windovv, name, cb) {
       suspendEventListeners(windovv, name, cb);
       window.queueTaskInEventLoop(() => resumeEventListeners(windovv, name));
     }
 
-    function blabla(name) {    //todo this should be based on suspendEvent and resumeEvent
-      customEvents.grabEvents([name], cancelOnce);
-      window.queueTaskInEventLoop(() => customEvents.freeEvents([name], cancelOnce));
-    }
-
-    Window.prototype.silenceEventOnce = function (name) {
-      suspendEventListenersOnce(window, name, stopPrevent);
-      // blabla(name);
-    };
-
-    const ogPreventDefault = MouseEvent.prototype.preventDefault;
-    MouseEvent.prototype.preventDefault = function () {
-      if (this.defaultPrevented)
-        return;
-      ogPreventDefault.call(this);
-      try {
-        if (this.type === "mouseup") {
-          if (this.button === 0)
-            window.silenceEventOnce("click");
-          else
-            window.silenceEventOnce("auxclick");
-        } else if (this.type === "mousedown" && this.button === 2) {
-          window.silenceEventOnce("contextmenu");
-        } else if (this.type === "click") {
-          window.silenceEventOnce("dblclick");
-        }
-      } catch (e) {
-        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
-      }
-    };
-
-
+    /**
+     * queue task in event loop
+     */
     Window.prototype.queueTaskInEventLoop = function (cb) {
       if (!(cb instanceof Function))
         throw new Error("Only function references can be queued in the event loop.");
@@ -135,6 +97,35 @@
       };
       document.body.appendChild(details);
       details.open = true;
+    };
+
+    /**
+     * fix preventDefault on mouse events.
+     */
+    const stopPrevent = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const ogPreventDefault = MouseEvent.prototype.preventDefault;
+    MouseEvent.prototype.preventDefault = function () {
+      if (this.defaultPrevented)
+        return;
+      ogPreventDefault.call(this);
+      try {
+        if (this.type === "mouseup") {
+          if (this.button === 0)
+            suspendEventListenersOnce(window,"click", stopPrevent);
+          else
+            suspendEventListenersOnce(window,"auxclick", stopPrevent);
+        } else if (this.type === "mousedown" && this.button === 2) {
+          suspendEventListenersOnce(window,"contextmenu", stopPrevent);
+        } else if (this.type === "click") {
+          suspendEventListenersOnce(window,"dblclick", stopPrevent);
+        }
+      } catch (e) {
+        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
+      }
     };
 
     const cascadeClasses = {};                             //todo this is not strictly necessary
@@ -157,8 +148,14 @@
           if (!cascadeEvent.matches(event, el))
             continue;
           if (cascadeEvent.observedTriggers.indexOf(event.type) >= 0) {
+
             const combined = cascadeEvent.getObservedNames();
             cascadeEvent.triggerEvent(event);
+            const combined2 = cascadeEvent.getObservedNames();
+            const added = combined2.filter(name => combined.indexOf(name) === -1);
+            addCascadeClass(cascadeEvent, added);
+            const removed = combined.filter(name => combined2.indexOf(name) === -1);
+            removeCascadeClass(cascadeEvent, removed);
             cascadeEventFunctions.delete(cascadeEvent);
 
             if (event.defaultPrevented) {
@@ -170,11 +167,7 @@
             } else {
               hasRunCascadeFunctions.push(cascadeEvent);
             }
-            const combined2 = cascadeEvent.getObservedNames();
-            const added = combined2.filter(name => combined.indexOf(name) === -1);
-            addCascadeClass(cascadeEvent, added);
-            const removed = combined.filter(name => combined2.indexOf(name) === -1);
-            removeCascadeClass(cascadeEvent, removed);
+
           }
         }
       }
@@ -203,7 +196,7 @@
 
     const grabbed2 = Symbol("customEventsGrabbed");
 
-    function stopAndTrigger(e) {
+    function stopAndTrigger(e) {                //todo this should be moved into CustomEventCascade
       e.preventDefault();
       e.stopPropagation();
       this.triggerEvent(e);
