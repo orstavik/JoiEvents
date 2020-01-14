@@ -4,33 +4,33 @@ export class LongPress extends Event {
   }
 }
 
-export class LongPressController /*extends CascadeEvent*/ {
+export class LongPressController /*extends CustomCascadeEvent*/ {
 
   constructor() {
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.timer = 0;
     this.isGrabbing;
+    this.startEvent;
   }
 
-  getObservedNames() {
+  getObservedNames(){
     return this.observedTriggers.concat(this.observedPrevented);
   }
 
   mousedownTrigger(event) {
     if (event.buttons !== 1)               //not a left button press
       return;
-    this.timer = setTimeout(function () {
-      customEvents.grabEvents(["mousemove", "mouseup"], this);      //todo here i should call grab...
-      this.isGrabbing = true;
-      event.target.dispatchEvent(new LongPress("-activated"));
-    }.bind(this), 500);
-    this.observedTriggers = ["long-press-activated"];
+    this.startEvent = event;
+    this.timer = setTimeout(this.on500ms.bind(this), 500);
+    this.observedTriggers = [];
     this.observedPrevented = ["mousedown", "mouseup"];
   }
 
-  longPressActivatedTrigger(event) {
-    event.preventDefault();
+  on500ms(){
+    customEvents.grabEvents(["mousemove", "mouseup"], this);      //todo here i should call grab...
+    this.isGrabbing = true;
+    this.startEvent.target.dispatchEvent(new LongPress("-activated"));
     this.observedTriggers = ["mouseup"];
     this.observedPrevented = ["mousedown"];
   }
@@ -38,7 +38,7 @@ export class LongPressController /*extends CascadeEvent*/ {
   mouseupTrigger(event) {
     event.preventDefault();
     this.cancelCascade();
-    queueTaskInEventLoop(function () {
+    queueTaskInEventLoop(function(){
       event.target.dispatchEvent(new LongPress(""));
     });
   }
@@ -46,8 +46,6 @@ export class LongPressController /*extends CascadeEvent*/ {
   triggerEvent(event) {
     if (event.type === "mousedown")
       return this.mousedownTrigger(event);
-    if (event.type === "long-press-activated")
-      return this.longPressActivatedTrigger(event);
     if (event.type === "mouseup")
       return this.mouseupTrigger(event);
     if (event.type === "mousemove")
@@ -75,6 +73,7 @@ export class LongPressController /*extends CascadeEvent*/ {
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.isGrabbing = false;
+    this.startEvent = undefined;
   }
 
   matches(event, el) {

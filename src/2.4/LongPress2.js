@@ -10,7 +10,8 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.timer = 0;
-    this.isGrabbing
+    this.isGrabbing;
+    this.startEvent;
   }
 
   getObservedNames(){
@@ -20,16 +21,16 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
   mousedownTrigger(event) {
     if (event.buttons !== 1)               //not a left button press
       return;
-    this.timer = setTimeout(function () {
-      customEvents.grabEvents(["mousemove", "mouseup"], this);
-      this.isGrabbing = true;
-      event.target.dispatchEvent(new LongPress2("-activated"));
-    }.bind(this), 500);
-    this.observedTriggers = ["long-press-2-activated"];
+    this.startEvent = event;
+    this.timer = setTimeout(this.on500ms.bind(this), 500);
+    this.observedTriggers = [];
     this.observedPrevented = ["mousedown", "mouseup"];
   }
 
-  longPressActivatedTrigger(event) {
+  on500ms(){
+    customEvents.grabEvents(["mousemove", "mouseup"], this);      //todo here i should call grab...
+    this.isGrabbing = true;
+    this.startEvent.target.dispatchEvent(new LongPress2("-activated"));
     this.observedTriggers = ["mouseup"];
     this.observedPrevented = ["mousedown"];
   }
@@ -45,8 +46,6 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
   triggerEvent(event) {
     if (event.type === "mousedown")
       return this.mousedownTrigger(event);
-    if (event.type === "long-press-2-activated")
-      return this.longPressActivatedTrigger(event);
     if (event.type === "mouseup")
       return this.mouseupTrigger(event);
     if (event.type === "mousemove")
@@ -74,6 +73,7 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.isGrabbing = false;
+    this.startEvent = undefined;
   }
 
   matches(event, el) {
