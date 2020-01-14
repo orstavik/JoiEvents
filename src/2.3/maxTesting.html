@@ -156,26 +156,25 @@
         for (let cascadeEvent of cascadeEventFunctions) {
           if (!cascadeEvent.matches(event, el))
             continue;
-          if (cascadeEvent.observedTriggers.indexOf(event.type) >= 0) {
-            cascadeEventFunctions.delete(cascadeEvent);
+          if (cascadeEvent.observedTriggers.indexOf(event.type) === -1)
+            throw new Error("omg?!");
 
-            const {added, removed} = callTrigger(cascadeEvent, event);
-            addCascadeClass(cascadeEvent, added);
-            removeCascadeClass(cascadeEvent, removed);
+          cascadeEventFunctions.delete(cascadeEvent);
 
+          const {added, removed} = callTrigger(cascadeEvent, event);
+          addCascadeClass(cascadeEvent, added);
+          removeCascadeClass(cascadeEvent, removed);
 
-            if (event.defaultPrevented) {
-              for (let alreadyRunButNotPreventedFunction of hasRunCascadeFunctions)
-                alreadyRunButNotPreventedFunction.cancelCascade(event);
-              for (let notYetRunCascadeEvent of cascadeEventFunctions)
-                notYetRunCascadeEvent.cancelCascade(event);
-              return;
-            } else {
-              hasRunCascadeFunctions.push(cascadeEvent);
-            }
+          if (event.defaultPrevented) {
+            for (let alreadyRunButNotPreventedFunction of hasRunCascadeFunctions)
+              alreadyRunButNotPreventedFunction.cancelCascade(event);
+            for (let notYetRunCascadeEvent of cascadeEventFunctions)
+              notYetRunCascadeEvent.cancelCascade(event);
+            return;
+          } else {
+            hasRunCascadeFunctions.push(cascadeEvent);
+          }
 
-          } else
-            throw new Error("omg?!")
         }
       }
     }

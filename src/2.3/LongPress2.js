@@ -21,7 +21,7 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
     if (event.buttons !== 1)               //not a left button press
       return;
     this.timer = setTimeout(function () {
-      customEvents.grabEvents(["mousemove", "mouseup"], this);      //todo here i should call grab...
+      customEvents.grabEvents(["mousemove", "mouseup"], this);
       this.isGrabbing = true;
       event.target.dispatchEvent(new LongPress2("-activated"));
     }.bind(this), 500);
