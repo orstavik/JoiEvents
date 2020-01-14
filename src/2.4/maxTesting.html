@@ -133,7 +133,7 @@
 
     function callTrigger(cascadeEvent, event) {
       const combined = cascadeEvent.getObservedNames();
-      cascadeEvent.triggerEvent(event);
+      cascadeEvent[event.type + "Trigger"](event);
       const combined2 = cascadeEvent.getObservedNames();
       const added = combined2.filter(name => combined.indexOf(name) === -1);
       const removed = combined.filter(name => combined2.indexOf(name) === -1);
@@ -205,7 +205,7 @@
     function stopAndTrigger(e) {                //todo this should be moved into CustomEventCascade
       e.preventDefault();
       e.stopPropagation();
-      this.triggerEvent(e);
+      this[e.type + "Trigger"](e);
     }
 
     class CustomEvents {

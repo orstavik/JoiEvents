@@ -43,15 +43,18 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
     });
   }
 
-  triggerEvent(event) {
-    if (event.type === "mousedown")
-      return this.mousedownTrigger(event);
-    if (event.type === "mouseup")
-      return this.mouseupTrigger(event);
-    if (event.type === "mousemove")
-      return;
-    throw new Error("omg");
+  mousemoveTrigger(){
   }
+
+  // triggerEvent(event) {
+  //   if (event.type === "mousedown")
+  //     return this.mousedownTrigger(event);
+  //   if (event.type === "mouseup")
+  //     return this.mouseupTrigger(event);
+  //   if (event.type === "mousemove")
+  //     return;
+  //   throw new Error("omg");
+  // }
 
   /**
    * The cancelCascade callback is a method that should reset an EventCascade function.
