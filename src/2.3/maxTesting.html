@@ -20,7 +20,6 @@
      */
     const reg = Symbol("eventListenerRegister");
     const grabbed = Symbol("grabbedEventTypes");
-    const grabbed2 = Symbol("customEventsGrabbed");
 
     function equivListener(list, cb, options) {
       return list.findIndex(function (cbOptions) {
@@ -79,66 +78,6 @@
       delete windovv[grabbed][eventType];
     }
 
-    /**
-     * An event can be grabbed by an EventCascadeController.
-     * The grabbed callback is ALWAYS ACTIVE as grabbing an event also implies overriding any default action too.
-     * By setting the grab event listener to be active, scrolling from touchstart (and wheel) will always be
-     * turned off in Safari and delayed in Chrome. FF doesn't react as much to active controllers.
-     *
-     * Netscape navigator had two methods: releaseEvents and captureEvents. These methods are remnants of the browser
-     * war between netscape and MS IE. They were replaced by .stopPropagation() when Netscape's trickle down (capture)
-     * and IE's bubble up event order was merged into a unified capture+bubble propagation.
-     *
-     * @param names
-     * @param eventCascadeFunction
-     */
-    Window.prototype.grabEvents = function (names, eventCascadeFunction) {
-      if (this[grabbed2]) {
-        for (let name of names) {
-          if (this[grabbed2][name])
-            throw new Error("Event type '" + name + "' has already been grabbed!");
-        }
-      } else {
-        this[grabbed2] = {};
-      }
-      const wrapper = function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        eventCascadeFunction.triggerEvent(e);
-      };
-      for (let name of names) {
-        suspendEventListeners(this, name, wrapper);
-        // EventTarget.prototype.addEventListener.call(this, name, wrapper, captureActive);
-        this[grabbed2][name] = {cascade: eventCascadeFunction, wrapper};
-      }
-      //todo calling cancel from grabEvents
-      for (let eventType of names) {
-        const toBeCancelled = new Set(eventTypeToCascadeEvents[eventType]);
-        toBeCancelled.delete(eventCascadeFunction);
-        for (let cascadeEventClass of toBeCancelled)
-          cascadeEventClass.cancelCascade(eventType);
-      }
-    };
-    /**
-     *
-     * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
-     */
-    Window.prototype.freeEvents = function (names, owner) {
-      if (!this[grabbed2])
-        throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
-      for (let name of names) {
-        if (!this[grabbed2][name])
-          throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
-        if (this[grabbed2][name].cascade !== owner)
-          throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
-      }
-      for (let name of names) {
-        // EventTarget.prototype.removeEventListener.call(this, name, this[grabbed][name].wrapper, captureActive);
-        delete this[grabbed2][name];
-        resumeEventListeners(this, name);
-      }
-    };
-
     const cancelOnce = {
       triggerEvent: function (e) {
         e.preventDefault();
@@ -146,10 +85,16 @@
       }
     };
 
+    function suspendEventListenersOnce(windovv, name, cb){
+      suspendEventListeners(windovv, name, cb);
+      window.queueTaskInEventLoop(() => resumeEventListeners(windovv, name));
+    }
+
     Window.prototype.silenceEventOnce = function (name) {
       try {
-        window.grabEvents([name], cancelOnce);
-        window.queueTaskInEventLoop(() => window.freeEvents([name], cancelOnce));
+        //todo this should be based on suspendEvent and resumeEvent
+        customEvents.grabEvents([name], cancelOnce);
+        window.queueTaskInEventLoop(() => customEvents.freeEvents([name], cancelOnce));
       } catch (e) {
         throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
       }
@@ -250,6 +195,14 @@
       }
     }
 
+    const grabbed2 = Symbol("customEventsGrabbed");
+
+    function stopAndTrigger(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.triggerEvent(e);
+    }
+
     class CustomEvents {
       define(CascadeEventClass) {
         if (cascadeClasses[CascadeEventClass.name])
@@ -265,6 +218,57 @@
         const cascadeClass = cascadeClasses[CascadeEventClass.name];
         delete cascadeClasses[CascadeEventClass.name];
         removeCascadeClass(cascadeClass, cascadeClass.getObservedNames());
+      }
+
+      /**
+       * An event can be grabbed by an EventCascadeController.
+       * The grabbed callback is ALWAYS ACTIVE as grabbing an event also implies overriding any default action too.
+       * By setting the grab event listener to be active, scrolling from touchstart (and wheel) will always be
+       * turned off in Safari and delayed in Chrome. FF doesn't react as much to active controllers.
+       *
+       * Netscape navigator had two methods: releaseEvents and captureEvents. These methods are remnants of the browser
+       * war between netscape and MS IE. They were replaced by .stopPropagation() when Netscape's trickle down (capture)
+       * and IE's bubble up event order was merged into a unified capture+bubble propagation.
+       *
+       * @param names
+       * @param owner
+       */
+      grabEvents(names, owner) {
+        this[grabbed2] || (this[grabbed2] = {});
+        for (let name of names) {
+          if (this[grabbed2][name])
+            throw new Error("Event type '" + name + "' has already been grabbed!");
+        }
+        for (let name of names) {
+          suspendEventListeners(window, name, stopAndTrigger.bind(owner));
+          this[grabbed2][name] = owner;
+        }
+        //todo calling cancel from grabEvents
+        for (let eventType of names) {
+          const toBeCancelled = new Set(eventTypeToCascadeEvents[eventType]);
+          toBeCancelled.delete(owner);
+          for (let cascadeEventClass of toBeCancelled)
+            cascadeEventClass.cancelCascade(eventType);
+        }
+      }
+
+      /**
+       *
+       * cf. the navigator releaseEvents and captureEvents that was the reverse of the stopPropagation bubble thing of MS IE.
+       */
+      freeEvents(names, owner) {
+        if (!this[grabbed2])
+          throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+        for (let name of names) {
+          if (!this[grabbed2][name])
+            throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+          if (this[grabbed2][name] !== owner)
+            throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
+        }
+        for (let name of names) {
+          delete this[grabbed2][name];
+          resumeEventListeners(window, name);
+        }
       }
 
       _cancelCascades(eventType, skipCascadeFunctionObj, eventObjIfAny) {
