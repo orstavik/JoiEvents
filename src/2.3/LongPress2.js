@@ -4,7 +4,7 @@ export class LongPress2 extends Event {
   }
 }
 
-export class LongPress2Controller /*extends CascadeEvent*/ {
+export class LongPress2Controller /*extends CustomCascadeEvent*/ {
 
   constructor() {
     this.observedTriggers = ["mousedown"];
