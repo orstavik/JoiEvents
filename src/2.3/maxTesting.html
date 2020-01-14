@@ -78,26 +78,28 @@
       delete windovv[grabbed][eventType];
     }
 
-    const cancelOnce = {
-      triggerEvent: function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+    const stopPrevent = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
     };
 
-    function suspendEventListenersOnce(windovv, name, cb){
+    const cancelOnce = {
+      triggerEvent: stopPrevent
+    };
+
+    function suspendEventListenersOnce(windovv, name, cb) {
       suspendEventListeners(windovv, name, cb);
       window.queueTaskInEventLoop(() => resumeEventListeners(windovv, name));
     }
 
+    function blabla(name) {    //todo this should be based on suspendEvent and resumeEvent
+      customEvents.grabEvents([name], cancelOnce);
+      window.queueTaskInEventLoop(() => customEvents.freeEvents([name], cancelOnce));
+    }
+
     Window.prototype.silenceEventOnce = function (name) {
-      try {
-        //todo this should be based on suspendEvent and resumeEvent
-        customEvents.grabEvents([name], cancelOnce);
-        window.queueTaskInEventLoop(() => customEvents.freeEvents([name], cancelOnce));
-      } catch (e) {
-        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
-      }
+      suspendEventListenersOnce(window, name, stopPrevent);
+      // blabla(name);
     };
 
     const ogPreventDefault = MouseEvent.prototype.preventDefault;
@@ -105,15 +107,19 @@
       if (this.defaultPrevented)
         return;
       ogPreventDefault.call(this);
-      if (this.type === "mouseup") {
-        if (this.button === 0)
-          window.silenceEventOnce("click");
-        else
-          window.silenceEventOnce("auxclick");
-      } else if (this.type === "mousedown" && this.button === 2) {
-        window.silenceEventOnce("contextmenu");
-      } else if (this.type === "click") {
-        window.silenceEventOnce("dblclick");
+      try {
+        if (this.type === "mouseup") {
+          if (this.button === 0)
+            window.silenceEventOnce("click");
+          else
+            window.silenceEventOnce("auxclick");
+        } else if (this.type === "mousedown" && this.button === 2) {
+          window.silenceEventOnce("contextmenu");
+        } else if (this.type === "click") {
+          window.silenceEventOnce("dblclick");
+        }
+      } catch (e) {
+        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
       }
     };
 
