@@ -30,6 +30,28 @@
     e.preventDefault();
   }
 
+  //wheel : 7px  -> 100px scrollTop.
+  // .scrollTop 0 += 100px. NO!
+  //
+  // [                      NO! Because this would be jerky start, and an abrupt end, and slow scroll in the middle
+  //   .scrollTop += 12px,
+  //   .scrollTop += 12px,
+  //   .scrollTop += 12px,
+  //   .scrollTop += 12px,
+  //   .scrollTop += 12px.
+  // ]
+  // [                      YES, bezier curve! slow start, fast middle, slow end. Like an animation.
+  //   .scrollTop += 5px,   raf 1
+  //   .scrollTop += 10px,  raf 2
+  //   .scrollTop += 20px,  raf 3
+  //   .scrollTop += 30px,  ...   peak scroll speed around raf 6.
+  //   .scrollTop += 10px.  raf 11
+  //   .scrollTop += 5px.  raf 12
+  // ]
+  //
+  // how to see this in action, check scroll position every raf? Can you find 1 and 1 or 2 and 2 or 3 and 3 scroll actions for every raf?
+  //is it better to use setTimeout 1?
+
   //event cascade 1:
   // wheel -> 12 x change of .scrollTop
   //event cascade 2:
