@@ -46,15 +46,14 @@ export function addEventListenerFirst(window, name, cb, options) {
       EventTarget.prototype.removeEventListener.call(window, name, cbOptions.cb, cbOptions.options);
   }
   EventTarget.prototype.addEventListener.call(window, name, cb, options);
-  const index = equivListener(window[reg][name], cb, options);
-  if (index >= 0)
-    window[reg][name].splice(index, 1);
-  window[reg][name].unshift({cb, options});
-
   for (let cbOptions of window[reg][name]) {
     if (cbOptions.cb !== stopPrevent)     //as stopPrevent was not removed, it doesn't need to be added again
       EventTarget.prototype.addEventListener.call(window, name, cbOptions.cb, cbOptions.options);
   }
+  const index = equivListener(window[reg][name], cb, options);
+  if (index >= 0)
+    window[reg][name].splice(index, 1);
+  window[reg][name].unshift({cb, options});
 }
 
 const stopPrevent = function (e) {
