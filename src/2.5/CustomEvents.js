@@ -1,4 +1,4 @@
-import {addEventListenerFirst} from "./window_addEventListenerFirst.js";
+import {addEventListenerFirst} from "./addEventListenerFirst.js";
 
 const grabbed = Symbol("customEventsGrabbed");
 
