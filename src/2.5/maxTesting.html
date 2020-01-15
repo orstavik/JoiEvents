@@ -97,17 +97,6 @@
 
 
     const grabbed = Symbol("customEventsGrabbed");
-    const cascadeClasses = {};                             //todo this is not strictly necessary
-    const eventTypeToCascadeEvents = {};
-
-    function callTrigger(cascadeEvent, event) {
-      const combined = cascadeEvent.getObservedNames();
-      cascadeEvent[event.type + "Trigger"](event);
-      const combined2 = cascadeEvent.getObservedNames();
-      const added = combined2.filter(name => combined.indexOf(name) === -1);
-      const removed = combined.filter(name => combined2.indexOf(name) === -1);
-      return {added, removed};
-    }
 
     function _processCascadeEvents(event) {
 
@@ -123,6 +112,7 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         grabber[event.type + "Trigger"](event);
+        updateCascadeClass(grabber);
         return;
       }
 
@@ -135,9 +125,9 @@
       //   this could be a problem, because the cascadeEvent functions might have changed their state and listeners.
       //   but, if everybody has a cancelMethod with a fixed name, then the call to cancel can be made all the time.
       const path = event.composedPath();
-      const observers = new Set(eventTypeToCascadeEvents[event.type]);
+      const observers = new Set(eventNamesToCascadeClasses[event.type]);
       const listeningTriggers = [];
-      for (let el of path) {
+      pathLoop: for (let el of path) {
         for (let observer of observers) {
           if (observer.observedPrevented.indexOf(event.type) >= 0) {
             observer.cancelCascade(event);
@@ -145,9 +135,7 @@
             continue;
           }
           if (observer.observedTriggers.indexOf(event.type) >= 0 && observer.matches(event, el)) {
-            const {added, removed} = callTrigger(observer, event);
-            addCascadeClass(observer, added);
-            removeCascadeClass(observer, removed);
+            observer[event.type + "Trigger"](event);
             observers.delete(observer);
 
             if (event.defaultPrevented) {                    //cancelMode
@@ -155,34 +143,46 @@
                 hasListened.cancelCascade(event);
               for (let observer of observers)
                 observer.cancelCascade(event);
-              return;
+              break pathLoop;// return;
             }
             listeningTriggers.push(observer);
           }
         }
         if (observers.size === 0)
-          return;
+          break pathLoop;
+      }
+      for (let cascadeEvent of eventNamesToCascadeClasses[event.type])
+        updateCascadeClass(cascadeEvent);
+    }
+
+    const cascadeClassesToEventNames = new WeakMap();
+    const eventNamesToCascadeClasses = {};
+
+    function addCascadeClassListeners(eventNames, cascadeClass) {
+      for (let name of eventNames) {
+        eventNamesToCascadeClasses[name] ||(eventNamesToCascadeClasses[name] = new Set());
+        eventNamesToCascadeClasses[name].add(cascadeClass);
+        if (eventNamesToCascadeClasses[name].size === 1)
+          addEventListenerFirst(window, name, _processCascadeEvents, true);
       }
     }
 
-    function addCascadeClass(cascadeClass, allEventTypes) {
-      for (let eventType of allEventTypes) {
-        if (!eventTypeToCascadeEvents[eventType]) {
-          eventTypeToCascadeEvents[eventType] = new Set();
-          addEventListenerFirst(window, eventType, _processCascadeEvents, true);
-        }
-        eventTypeToCascadeEvents[eventType].add(cascadeClass);
+    function removeCascadeClassListeners(eventNames, cascadeClass) {
+      for (let name of eventNames) {
+        eventNamesToCascadeClasses[name].delete(cascadeClass);
+        if (eventNamesToCascadeClasses[name].size === 0)
+          window.removeEventListener(name, _processCascadeEvents, true);
       }
     }
 
-    function removeCascadeClass(cascadeClass, allEventTypes) {
-      for (let eventType of allEventTypes) {
-        eventTypeToCascadeEvents[eventType].delete(cascadeClass);
-        if (eventTypeToCascadeEvents[eventType].size === 0) {
-          delete eventTypeToCascadeEvents[eventType];
-          window.removeEventListener(eventType, _processCascadeEvents, true);
-        }
-      }
+    function updateCascadeClass(cascadeClass) {
+      const oldEventNames = cascadeClassesToEventNames.get(cascadeClass);
+      const newEventNames = cascadeClass.getObservedNames();
+      const added = newEventNames.filter(name => oldEventNames.indexOf(name) === -1);
+      const removed = oldEventNames.filter(name => newEventNames.indexOf(name) === -1);
+      addCascadeClassListeners(added, cascadeClass);
+      removeCascadeClassListeners(removed, cascadeClass);
+      cascadeClassesToEventNames.set(cascadeClass, newEventNames);
     }
 
     class CustomEvents {
@@ -192,19 +192,19 @@
       }
 
       define(CascadeEventClass) {
-        if (cascadeClasses[CascadeEventClass.name])
+        if (cascadeClassesToEventNames.has(CascadeEventClass))
           throw new Error("EventCascadeClass: " + CascadeEventClass.name + " is already defined.");
-        const cascadeClass = new CascadeEventClass();
-        cascadeClasses[CascadeEventClass.name] = cascadeClass;
-        addCascadeClass(cascadeClass, cascadeClass.getObservedNames());
+        const eventNames = CascadeEventClass.getObservedNames();
+        cascadeClassesToEventNames.set(CascadeEventClass, eventNames);
+        addCascadeClassListeners(eventNames, CascadeEventClass);
       }
 
       undefine(CascadeEventClass) {
-        if (!cascadeClasses[CascadeEventClass.name])
+        if (!cascadeClassesToEventNames.has(CascadeEventClass))
           throw new Error("Cannot undefine EventCascadeClass: " + CascadeEventClass.name + " because it is not defined.");
-        const cascadeClass = cascadeClasses[CascadeEventClass.name];
-        delete cascadeClasses[CascadeEventClass.name];
-        removeCascadeClass(cascadeClass, cascadeClass.getObservedNames());
+        const eventNames = cascadeClassesToEventNames.get(CascadeEventClass);
+        cascadeClassesToEventNames.delete(CascadeEventClass);
+        removeCascadeClassListeners(eventNames, CascadeEventClass);
       }
 
       /**
@@ -228,9 +228,10 @@
         for (let name of names) {
           this[grabbed][name] = owner;
           //calling cancelCascade SYNC from grabEvents! Must be done to support grabEvent called from timers
-          for (let cascadeEventClass of eventTypeToCascadeEvents[name] || [])
-            cascadeEventClass === owner || cascadeEventClass.cancelCascade(name);
+          for (let cascadeEventClass of eventNamesToCascadeClasses[name] || [])
+            cascadeEventClass !== owner && cascadeEventClass.cancelCascade(name);
         }
+        updateCascadeClass(owner);             //todo do I need this one??
       }
 
       freeEvents(names, owner) {
@@ -242,6 +243,7 @@
         }
         for (let name of names)
           delete this[grabbed][name];
+        updateCascadeClass(owner);              //todo do I need this one??
       }
     }
 
@@ -253,8 +255,8 @@
   import {LongPressController} from "./LongPress.js";
   import {LongPress2Controller} from "./LongPress2.js";
 
-  window.customEvents.define(LongPressController);
-  window.customEvents.define(LongPress2Controller);
+  window.customEvents.define(new LongPressController());
+  window.customEvents.define(new LongPress2Controller());
 </script>
 
 <div long-press>
