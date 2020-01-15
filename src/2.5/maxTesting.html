@@ -1,0 +1,312 @@
+<script>
+  (function () {
+
+    /*If possible a passive EventListenerOptions*/
+    let supportsPassive = false;
+    try {
+      const opts = Object.defineProperty({}, "passive", {
+        get: function () {
+          supportsPassive = true;
+        }
+      });
+      window.addEventListener("test", null, opts);
+      window.removeEventListener("test", null, opts);
+    } catch (e) {
+    }
+    const captureActive = supportsPassive ? {capture: true, passive: false} : true;
+
+    /**
+     * suspend and resume event listeners on window.
+     */
+    const reg = Symbol("eventListenerRegister");
+    const grabbed = Symbol("grabbedEventTypes");
+
+    function equivListener(list, cb, options) {
+      return list.findIndex(function (cbOptions) {
+        if (cbOptions.cb !== cb)
+          return false;
+        const a = cbOptions.options, b = options;
+        const aBool = !!(a === true || (a instanceof Object && a.capture));       //todo test if the option can be truthy or if it must be boolean true
+        const bBool = !!(b === true || (b instanceof Object && b.capture));
+        return aBool === bBool;
+      });
+    }
+
+    Window.prototype.addEventListener = function (name, cb, options) {
+      this[reg] || (this[reg] = {});
+      this[reg][name] || (this[reg][name] = []);
+      if (equivListener(this[reg][name], cb, options) >= 0)
+        return;
+      this[reg][name].push({cb, options});
+      if (!this[grabbed] || !this[grabbed][name])
+        EventTarget.prototype.addEventListener.call(this, name, cb, options);
+    };
+
+    Window.prototype.removeEventListener = function (name, cb, options) {
+      if (!this[reg] || !this[reg][name])
+        return;
+      const index = equivListener(this[reg][name], cb, options);
+      if (index === -1)
+        return;
+      this[reg][name].splice(index, 1);
+      if (!this[grabbed] || !this[grabbed][name])
+        EventTarget.prototype.removeEventListener.call(this, name, cb, options);
+    };
+
+    function suspendEventListeners(windovv, eventType, cb) {
+      if (windovv[grabbed] && windovv[grabbed][eventType])
+        throw new Error("wtf");
+      if (windovv[reg][eventType]) {
+        for (let cbOptions of windovv[reg][eventType])
+          EventTarget.prototype.removeEventListener.call(windovv, eventType, cbOptions.cb, cbOptions.options);
+      }
+      windovv[grabbed] || (windovv[grabbed] = {});
+      windovv[grabbed][eventType] = cb;
+      EventTarget.prototype.addEventListener.call(windovv, eventType, cb, captureActive);
+    }
+
+    function resumeEventListeners(windovv, eventType) {
+      if (!windovv[grabbed] || !windovv[grabbed][eventType])
+        throw new Error("wtf2");
+      if (windovv[reg][eventType]) {
+        for (let cbOptions of windovv[reg][eventType])
+          EventTarget.prototype.addEventListener.call(windovv, eventType, cbOptions.cb, cbOptions.options);
+      }
+      const cb = windovv[grabbed][eventType];
+      if (cb)
+        EventTarget.prototype.removeEventListener.call(windovv, eventType, cb, captureActive);
+      delete windovv[grabbed][eventType];
+    }
+
+    function suspendEventListenersOnce(windovv, name, cb) {
+      suspendEventListeners(windovv, name, cb);
+      window.queueTaskInEventLoop(() => resumeEventListeners(windovv, name));
+    }
+
+    /**
+     * queue task in event loop
+     */
+    Window.prototype.queueTaskInEventLoop = function (cb) {
+      if (!(cb instanceof Function))
+        throw new Error("Only function references can be queued in the event loop.");
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = function () {
+        details.remove();
+        cb();
+      };
+      document.body.appendChild(details);
+      details.open = true;
+    };
+
+    /**
+     * fix preventDefault on mouse events.
+     */
+    const stopPrevent = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const ogPreventDefault = MouseEvent.prototype.preventDefault;
+    MouseEvent.prototype.preventDefault = function () {
+      if (this.defaultPrevented)
+        return;
+      ogPreventDefault.call(this);
+      try {
+        if (this.type === "mouseup") {
+          if (this.button === 0)
+            suspendEventListenersOnce(window, "click", stopPrevent);
+          else
+            suspendEventListenersOnce(window, "auxclick", stopPrevent);
+        } else if (this.type === "mousedown" && this.button === 2) {
+          suspendEventListenersOnce(window, "contextmenu", stopPrevent);
+        } else if (this.type === "click") {
+          suspendEventListenersOnce(window, "dblclick", stopPrevent);
+        }
+      } catch (e) {
+        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
+      }
+    };
+
+    const cascadeClasses = {};                             //todo this is not strictly necessary
+    const eventTypeToCascadeEvents = {};
+
+    function callTrigger(cascadeEvent, event) {
+      const combined = cascadeEvent.getObservedNames();
+      cascadeEvent[event.type + "Trigger"](event);
+      const combined2 = cascadeEvent.getObservedNames();
+      const added = combined2.filter(name => combined.indexOf(name) === -1);
+      const removed = combined.filter(name => combined2.indexOf(name) === -1);
+      return {added, removed};
+    }
+
+    function _processCascadeEvents(event) {
+      const composedPath = event.composedPath();
+      //todo both observed and prevented cannot hold the same event type at the same time
+      const cascadeEventFunctions = new Set(eventTypeToCascadeEvents[event.type]);
+
+      for (let cascadeEvent of cascadeEventFunctions) {
+        if (cascadeEvent.observedPrevented.indexOf(event.type) >= 0) {
+          cascadeEvent.cancelCascade();
+          cascadeEventFunctions.delete(cascadeEvent);
+        }
+      }
+      const hasRunCascadeFunctions = [];
+      for (let el of composedPath) {
+        for (let cascadeEvent of cascadeEventFunctions) {
+          if (!cascadeEvent.matches(event, el))
+            continue;
+          if (cascadeEvent.observedTriggers.indexOf(event.type) === -1)
+            throw new Error("omg?!");
+
+          cascadeEventFunctions.delete(cascadeEvent);
+
+          const {added, removed} = callTrigger(cascadeEvent, event);
+          addCascadeClass(cascadeEvent, added);
+          removeCascadeClass(cascadeEvent, removed);
+
+          if (event.defaultPrevented) {
+            for (let alreadyRunButNotPreventedFunction of hasRunCascadeFunctions)
+              alreadyRunButNotPreventedFunction.cancelCascade(event);
+            for (let notYetRunCascadeEvent of cascadeEventFunctions)
+              notYetRunCascadeEvent.cancelCascade(event);
+            return;
+          } else {
+            hasRunCascadeFunctions.push(cascadeEvent);
+          }
+
+        }
+      }
+    }
+
+
+    function addCascadeClass(cascadeClass, allEventTypes) {
+      for (let eventType of allEventTypes) {
+        if (!eventTypeToCascadeEvents[eventType]) {
+          eventTypeToCascadeEvents[eventType] = new Set();
+          window.addEventListener(eventType, _processCascadeEvents, true);
+        }
+        eventTypeToCascadeEvents[eventType].add(cascadeClass);
+      }
+    }
+
+    function removeCascadeClass(cascadeClass, allEventTypes) {
+      for (let eventType of allEventTypes) {
+        eventTypeToCascadeEvents[eventType].delete(cascadeClass);
+        if (eventTypeToCascadeEvents[eventType].size === 0) {
+          delete eventTypeToCascadeEvents[eventType];
+          window.removeEventListener(eventType, _processCascadeEvents, true);
+        }
+      }
+    }
+
+    const grabbed2 = Symbol("customEventsGrabbed");
+
+    function stopAndTrigger(e) {                //todo this should be moved into CustomEventCascade
+      e.preventDefault();
+      e.stopPropagation();
+      this[e.type + "Trigger"](e);
+    }
+
+    class CustomEvents {
+      define(CascadeEventClass) {
+        if (cascadeClasses[CascadeEventClass.name])
+          throw new Error("EventCascadeClass: " + CascadeEventClass.name + " is already defined.");
+        const cascadeClass = new CascadeEventClass();
+        cascadeClasses[CascadeEventClass.name] = cascadeClass;
+        addCascadeClass(cascadeClass, cascadeClass.getObservedNames());
+      }
+
+      undefine(CascadeEventClass) {
+        if (!cascadeClasses[CascadeEventClass.name])
+          throw new Error("Cannot undefine EventCascadeClass: " + CascadeEventClass.name + " because it is not defined.");
+        const cascadeClass = cascadeClasses[CascadeEventClass.name];
+        delete cascadeClasses[CascadeEventClass.name];
+        removeCascadeClass(cascadeClass, cascadeClass.getObservedNames());
+      }
+
+      /**
+       * An event can be grabbed by an EventCascadeController.
+       * The grabbed callback is ALWAYS ACTIVE as grabbing an event also implies overriding any default action too.
+       * By setting the grab event listener to be active, scrolling from touchstart (and wheel) will always be
+       * turned off in Safari and delayed in Chrome. FF doesn't react as much to active controllers.
+       *
+       * Netscape navigator had two methods: releaseEvents and captureEvents. These methods are remnants of the browser
+       * war between netscape and MS IE. They were replaced by .stopPropagation() when Netscape's trickle down (capture)
+       * and IE's bubble up event order was merged into a unified capture+bubble propagation.
+       *
+       * @param names
+       * @param owner
+       */
+      grabEvents(names, owner) {
+        this[grabbed2] || (this[grabbed2] = {});
+        for (let name of names) {
+          if (this[grabbed2][name])
+            throw new Error("Event type '" + name + "' has already been grabbed!");
+        }
+        for (let name of names) {
+          suspendEventListeners(window, name, stopAndTrigger.bind(owner));
+          this[grabbed2][name] = owner;
+        }
+        //calling cancel from grabEvents
+        // todo instead of cancelling grab events, I could just add the process function.
+        // todo then the process first checks the grabbed, if someone has grabbed it, it will call that method on that grabber
+        // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
+        // todo then, all the other functions can be reset.
+        // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
+        for (let name of names) {
+          for (let cascadeEventClass of eventTypeToCascadeEvents[name] || [])
+            cascadeEventClass === owner || cascadeEventClass.cancelCascade(name);
+        }
+      }
+
+      freeEvents(names, owner) {
+        if (!this[grabbed2])
+          throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+        for (let name of names) {
+          if (!this[grabbed2][name])
+            throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
+          if (this[grabbed2][name] !== owner)
+            throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
+        }
+        for (let name of names) {
+          delete this[grabbed2][name];
+          resumeEventListeners(window, name);
+        }
+      }
+
+      _cancelCascades(eventType, skipCascadeFunctionObj, eventObjIfAny) {
+        //todo here I collect the methods to call .cancelEvent()
+      }
+
+      _triggerCascades(event, target) {
+        //todo here I collect the methods to call .triggerEvent()
+        //todo iterates until preventDefault is registered.
+      }
+    }
+
+    window.customEvents || (window.customEvents = new CustomEvents());
+  })();
+</script>
+
+<script type="module">
+  import {LongPressController} from "./LongPress.js";
+  import {LongPress2Controller} from "./LongPress2.js";
+
+  window.customEvents.define(LongPressController);
+  window.customEvents.define(LongPress2Controller);
+</script>
+
+<div long-press>
+  <div long-press-2> hello sunshine</div>
+</div>
+
+<script>
+  window.addEventListener("mousedown", console.log);
+  window.addEventListener("mouseup", console.log);
+  window.addEventListener("click", console.log);
+  window.addEventListener("long-press-activated", console.log);
+  window.addEventListener("long-press", console.log);
+  window.addEventListener("long-press-2-activated", console.log);
+  window.addEventListener("long-press-2", console.log);
+</script>
