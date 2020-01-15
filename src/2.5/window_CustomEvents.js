@@ -157,4 +157,20 @@ export class CustomEvents {
         window.removeEventListener(name, _processCascadeEvents, true);
     }
   }
+
+  /**
+   * queue task in event loop
+   */
+  queueTask = function (cb) {
+    if (!(cb instanceof Function))
+      throw new Error("Only function references can be queued in the event loop.");
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = function () {
+      details.remove();
+      cb();
+    };
+    document.body.appendChild(details);
+    details.open = true;
+  }
 }

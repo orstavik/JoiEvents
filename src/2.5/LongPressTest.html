@@ -22,22 +22,6 @@
       blockEvent("dblclick");
   };
 
-  /**
-   * queue task in event loop
-   */
-  Window.prototype.queueTaskInEventLoop = function (cb) {
-    if (!(cb instanceof Function))
-      throw new Error("Only function references can be queued in the event loop.");
-    const details = document.createElement("details");
-    details.style.display = "none";
-    details.ontoggle = function () {
-      details.remove();
-      cb();
-    };
-    document.body.appendChild(details);
-    details.open = true;
-  };
-
   window.customEvents || (window.customEvents = new CustomEvents());
 
   window.customEvents.define(new LongPressController());

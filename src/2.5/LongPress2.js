@@ -38,7 +38,7 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
   mouseupTrigger(event) {
     event.preventDefault();
     this.cancelCascade();
-    queueTaskInEventLoop(function(){
+    customEvents.queueTask(function(){
       event.target.dispatchEvent(new LongPress2(""));
     });
   }
