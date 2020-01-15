@@ -219,7 +219,7 @@
       for (let eventType of allEventTypes) {
         if (!eventTypeToCascadeEvents[eventType]) {
           eventTypeToCascadeEvents[eventType] = new Set();
-          window.addEventListener(eventType, _processCascadeEvents, true);
+          window.addEventListenerFirst(eventType, _processCascadeEvents, true);
         }
         eventTypeToCascadeEvents[eventType].add(cascadeClass);
       }
