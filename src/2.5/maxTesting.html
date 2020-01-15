@@ -74,7 +74,7 @@
      */
     const stopPrevent = function (e) {
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
     };
 
     const ogPreventDefault = MouseEvent.prototype.preventDefault;
@@ -82,26 +82,19 @@
       if (this.defaultPrevented)
         return;
       ogPreventDefault.call(this);
-      // try {
-      if (this.type === "mouseup") {
-        if (this.button === 0)
-          window.addEventListenerFirst("click", stopPrevent, {capture: true, once: true, passive: false});
-        // suspendEventListenersOnce(window, "click", stopPrevent);
-        else
-          window.addEventListenerFirst("auxclick", stopPrevent, {capture: true, once: true, passive: false});
-        // suspendEventListenersOnce(window, "auxclick", stopPrevent);
-      } else if (this.type === "mousedown" && this.button === 2) {
-        window.addEventListenerFirst("contextmenu", stopPrevent, {capture: true, once: true, passive: false});
-        // suspendEventListenersOnce(window, "contextmenu", stopPrevent);
-      } else if (this.type === "click") {
-        window.addEventListenerFirst("dblclick", stopPrevent, {capture: true, once: true, passive: false});
-        // suspendEventListenersOnce(window, "dblclick", stopPrevent);
-      }
-      // } catch (e) {
-      //   throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
-      // }
+      if (this.type === "mouseup" && this.button === 0)
+        return window.addEventListenerFirst("click", stopPrevent, {capture: true, once: true, passive: false});
+      if (this.type === "mouseup")
+        return window.addEventListenerFirst("auxclick", stopPrevent, {capture: true, once: true, passive: false});
+      if (this.type === "mousedown" && this.button === 2)
+        return window.addEventListenerFirst("contextmenu", stopPrevent, {capture: true, once: true, passive: false});
+      if (this.type === "click")
+        return window.addEventListenerFirst("dblclick", stopPrevent, {capture: true, once: true, passive: false});
     };
 
+
+
+    const grabbed = Symbol("customEventsGrabbed");
     const cascadeClasses = {};                             //todo this is not strictly necessary
     const eventTypeToCascadeEvents = {};
 
@@ -119,10 +112,10 @@
       // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
       // todo then, all the other functions can be reset.
       // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
-      if (customEvents[grabbed2] && customEvents[grabbed2][event.type]) {
+      if (customEvents[grabbed] && customEvents[grabbed][event.type]) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        customEvents[grabbed2][event.type][event.type + "Trigger"](event);
+        customEvents[grabbed][event.type][event.type + "Trigger"](event);
         // stopAndTrigger(e);
         //problem, this is passive.. is that a problem? I think not, I think that active event listeners should be controlled from outside
         return;
@@ -186,8 +179,6 @@
       }
     }
 
-    const grabbed2 = Symbol("customEventsGrabbed");
-
     class CustomEvents {
       define(CascadeEventClass) {
         if (cascadeClasses[CascadeEventClass.name])
@@ -219,13 +210,13 @@
        * @param owner
        */
       grabEvents(names, owner) {
-        this[grabbed2] || (this[grabbed2] = {});
+        this[grabbed] || (this[grabbed] = {});
         for (let name of names) {
-          if (this[grabbed2][name])
+          if (this[grabbed][name])
             throw new Error("Event type '" + name + "' has already been grabbed!");
         }
         for (let name of names) {
-          this[grabbed2][name] = owner;
+          this[grabbed][name] = owner;
           //calling cancelCascade SYNC from grabEvents! Must be done to support grabEvent called from timers
           for (let cascadeEventClass of eventTypeToCascadeEvents[name] || [])
             cascadeEventClass === owner || cascadeEventClass.cancelCascade(name);
@@ -233,16 +224,16 @@
       }
 
       freeEvents(names, owner) {
-        if (!this[grabbed2])
+        if (!this[grabbed])
           throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
         for (let name of names) {
-          if (!this[grabbed2][name])
+          if (!this[grabbed][name])
             throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
-          if (this[grabbed2][name] !== owner)
+          if (this[grabbed][name] !== owner)
             throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
         }
         for (let name of names)
-          delete this[grabbed2][name];
+          delete this[grabbed][name];
       }
     }
 
