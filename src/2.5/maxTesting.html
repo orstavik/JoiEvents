@@ -36,21 +36,51 @@
       EventTarget.prototype.removeEventListener.call(this, name, cb, options);
     };
 
+    /**
+     * This method has an implied binding to stopPrevent().
+     * Even when you addEventListenerFirst, any stopPrevent will always remain and run first.
+     **/
     function addEventListenerFirst(window, name, cb, options) {
       window[reg] || (window[reg] = {});
       window[reg][name] || (window[reg][name] = []);
 
-      for (let cbOptions of window[reg][name])
-        EventTarget.prototype.removeEventListener.call(window, name, cbOptions.cb, cbOptions.options);
-
+      for (let cbOptions of window[reg][name]) {
+        if (cbOptions.cb !== stopPrevent)     //stopPrevent from blockEvent is left and thus put at the very beginning
+          EventTarget.prototype.removeEventListener.call(window, name, cbOptions.cb, cbOptions.options);
+      }
       EventTarget.prototype.addEventListener.call(window, name, cb, options);
       const index = equivListener(window[reg][name], cb, options);
       if (index >= 0)
         window[reg][name].splice(index, 1);
       window[reg][name].unshift({cb, options});
 
-      for (let cbOptions of window[reg][name])
-        EventTarget.prototype.addEventListener.call(window, name, cbOptions.cb, cbOptions.options);
+      for (let cbOptions of window[reg][name]) {
+        if (cbOptions.cb !== stopPrevent)     //as stopPrevent was not removed, it doesn't need to be added again
+          EventTarget.prototype.addEventListener.call(window, name, cbOptions.cb, cbOptions.options);
+      }
+    }
+
+    const stopPrevent = function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const index = equivListener(window[reg][e.type], stopPrevent, stopPreventOptions);
+      if (index >= 0)
+        window[reg][e.type].splice(index, 1);
+      if (blockers[e.type]) {
+        clearTimeout(blockers[e.type]);
+        blockers[e.type] = 0;
+      }
+    };
+    const stopPreventOptions = {capture: true, once: true, passive: false};
+
+    const blockers = {};
+
+    function blockEvent(eventName) {
+      addEventListenerFirst(window, eventName, stopPrevent, stopPreventOptions);
+      blockers[eventName] = setTimeout(function () {
+        blockers[eventName] = 0;
+        window.removeEventListener(eventName, stopPrevent, stopPreventOptions);
+      }, 0);
     }
 
     /**
@@ -72,27 +102,19 @@
     /**
      * fix preventDefault on mouse events.
      */
-    const stopPrevent = function (e) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    };
-
-    //todo addEventListenerFirst should be prioritized.
-    //todo that way, if a "click" is added by the process or define after a mouse.preventDefault has been called,
-    //todo then they would still be after the mouse.preventDefault.
     const ogPreventDefault = MouseEvent.prototype.preventDefault;
     MouseEvent.prototype.preventDefault = function () {
       if (this.defaultPrevented)
         return;
       ogPreventDefault.call(this);
       if (this.type === "mouseup" && this.button === 0)
-        return addEventListenerFirst(window, "click", stopPrevent, {capture: true, once: true, passive: false});
-      if (this.type === "mouseup")
-        return addEventListenerFirst(window, "auxclick", stopPrevent, {capture: true, once: true, passive: false});
-      if (this.type === "mousedown" && this.button === 2)
-        return addEventListenerFirst(window, "contextmenu", stopPrevent, {capture: true, once: true, passive: false});
-      if (this.type === "click")
-        return addEventListenerFirst(window, "dblclick", stopPrevent, {capture: true, once: true, passive: false});
+        blockEvent("click");
+      else if (this.type === "mouseup")
+        blockEvent("auxclick");
+      else if (this.type === "mousedown" && this.button === 2)
+        blockEvent("contextmenu");
+      else if (this.type === "click")
+        blockEvent("dblclick");
     };
 
 
@@ -149,7 +171,7 @@
           }
         }
         if (observers.size === 0)
-          break pathLoop;
+          break;
       }
       for (let cascadeEvent of eventNamesToCascadeClasses[event.type])
         updateCascadeClass(cascadeEvent);
@@ -160,7 +182,7 @@
 
     function addCascadeClassListeners(eventNames, cascadeClass) {
       for (let name of eventNames) {
-        eventNamesToCascadeClasses[name] ||(eventNamesToCascadeClasses[name] = new Set());
+        eventNamesToCascadeClasses[name] || (eventNamesToCascadeClasses[name] = new Set());
         eventNamesToCascadeClasses[name].add(cascadeClass);
         if (eventNamesToCascadeClasses[name].size === 1)
           addEventListenerFirst(window, name, _processCascadeEvents, true);
@@ -227,11 +249,17 @@
         }
         for (let name of names) {
           this[grabbed][name] = owner;
+          eventNamesToCascadeClasses[name] || (eventNamesToCascadeClasses[name] = new Set());
           //calling cancelCascade SYNC from grabEvents! Must be done to support grabEvent called from timers
-          for (let cascadeEventClass of eventNamesToCascadeClasses[name] || [])
-            cascadeEventClass !== owner && cascadeEventClass.cancelCascade(name);
+          for (let cascadeEventClass of eventNamesToCascadeClasses[name]) {
+            if (cascadeEventClass === owner)
+              continue;
+            cascadeEventClass.cancelCascade(name);
+            updateCascadeClass(cascadeEventClass)
+          }
+          if (eventNamesToCascadeClasses[name].size === 0)
+            addEventListenerFirst(window, name, _processCascadeEvents, true);
         }
-        updateCascadeClass(owner);             //todo do I need this one??
       }
 
       freeEvents(names, owner) {
@@ -241,9 +269,11 @@
           if (this[grabbed][name] !== owner)
             throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
         }
-        for (let name of names)
+        for (let name of names) {
           delete this[grabbed][name];
-        updateCascadeClass(owner);              //todo do I need this one??
+          if (eventNamesToCascadeClasses[name].size === 0)
+            window.removeEventListener(name, _processCascadeEvents, true);
+        }
       }
     }
 
@@ -259,16 +289,23 @@
   window.customEvents.define(new LongPress2Controller());
 </script>
 
-<div long-press>
-  <div long-press-2> hello sunshine</div>
+<div id="a" long-press>
+  <div id="b" long-press-2>
+    <h1 id="c">hello sunshine</h1>
+  </div>
 </div>
 
 <script>
-  window.addEventListener("mousedown", console.log);
-  window.addEventListener("mouseup", console.log);
-  window.addEventListener("click", console.log);
-  window.addEventListener("long-press-activated", console.log);
-  window.addEventListener("long-press", console.log);
-  window.addEventListener("long-press-2-activated", console.log);
-  window.addEventListener("long-press-2", console.log);
+  function log(e) {
+    console.log(e.type, e.target.id,);
+  }
+
+  window.addEventListener("mousedown", log);
+  window.addEventListener("mouseup", log);
+  window.addEventListener("mousemove", log);
+  window.addEventListener("click", log);
+  window.addEventListener("long-press-activated", log);
+  window.addEventListener("long-press", log);
+  window.addEventListener("long-press-2-activated", log);
+  window.addEventListener("long-press-2", log);
 </script>

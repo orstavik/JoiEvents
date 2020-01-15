@@ -28,7 +28,7 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
   }
 
   on500ms(){
-    customEvents.grabEvents(["mousemove", "mouseup"], this);      //todo here i should call grab...
+    customEvents.grabEvents(["mousemove", "mouseup", "mousemove"], this);      //todo here i should call grab...
     this.isGrabbing = true;
     this.startEvent.target.dispatchEvent(new LongPress2("-activated"));
     this.observedTriggers = ["mouseup"];
@@ -43,7 +43,10 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
     });
   }
 
-  mousemoveTrigger(){
+  mousemoveTrigger(e){
+    console.log("boo");
+    e.stopImmediatePropagation();
+    e.preventDefault();
   }
 
   // triggerEvent(event) {
@@ -72,7 +75,7 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
   cancelCascade(eventOrEventType) {
     clearTimeout(this.timer);
     if (this.isGrabbing)
-      customEvents.freeEvents(["mousemove", "mouseup"], this);
+      customEvents.freeEvents(["mousemove", "mouseup", "mousemove"], this);
     this.observedTriggers = ["mousedown"];
     this.observedPrevented = [];
     this.isGrabbing = false;
