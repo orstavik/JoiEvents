@@ -1,0 +1,47 @@
+<script type="module">
+  import {CustomEvents} from "../CustomEvents.js";
+  import {MyWheelController} from "./WheelToScrollAction.js";
+
+  window.customEvents || (window.customEvents = new CustomEvents());
+
+  debugger;
+  customEvents.define(new MyWheelController());
+</script>
+
+<div id="outer" style="height: 500px; width: 200px; overflow-y: scroll;">
+  <div my-wheel id="inner" style="height: 1000px; width: 180px; background-color: aquamarine;">Hello, wheel me</div>
+</div>
+
+
+<script type="module">
+  debugger;
+  const inner = document.querySelector("#inner");
+  document.addEventListener("wheel", function (e) {
+    console.log("hello sunshine");
+    debugger;
+    e.preventDefault();                                //on the window, the default is interpreted as passive
+  }, true);
+
+  inner.addEventListener("wheel", function (e) {
+    console.log("hello sunshine");
+    debugger;
+    e.preventDefault();
+  }, true);                                            //on an element, the default is interpreted as active
+
+  function log(e) {
+    console.log(e.type, e.target.id,);
+  }
+
+  window.addEventListener("wheel", log);
+  window.addEventListener("my-wheel", log);
+  window.addEventListener("scroll", log);
+
+  const raf = function () {
+    requestAnimationFrame(function () {
+      console.log("raf");
+      raf();
+    });
+  };
+  raf();
+
+</script>

@@ -38,7 +38,9 @@ function _processCascadeEvents(event) {
         observers.delete(observer);
         continue;
       }
-      if (observer.observedTriggers.indexOf(event.type) >= 0 && observer.matches(event, el)) {
+      if (
+        (observer.observedTriggers.indexOf(event.type) >= 0 || observer.observedTriggers.indexOf(event.type.toUpperCase()) >= 0) &&
+        observer.matches(event, el)) {
         observer[event.type + "Trigger"](event);
         observers.delete(observer);
 
@@ -67,7 +69,7 @@ function addCascadeClassListeners(eventNames, cascadeClass) {
     eventNamesToCascadeClasses[name] || (eventNamesToCascadeClasses[name] = new Set());
     eventNamesToCascadeClasses[name].add(cascadeClass);
     if (eventNamesToCascadeClasses[name].size === 1)
-      addEventListenerFirst(window, name, _processCascadeEvents, true);
+      addEventListener(name);
   }
 }
 
@@ -75,7 +77,7 @@ function removeCascadeClassListeners(eventNames, cascadeClass) {
   for (let name of eventNames) {
     eventNamesToCascadeClasses[name].delete(cascadeClass);
     if (eventNamesToCascadeClasses[name].size === 0)
-      window.removeEventListener(name, _processCascadeEvents, true);
+      removeEventListener(name);
   }
 }
 
@@ -87,6 +89,22 @@ function updateCascadeClass(cascadeClass) {
   addCascadeClassListeners(added, cascadeClass);
   removeCascadeClassListeners(removed, cascadeClass);
   cascadeClassesToEventNames.set(cascadeClass, newEventNames);
+}
+
+function addEventListener(name) {
+  const smallName = name.toLowerCase();
+  let options = {passive: true, capture: true};
+  if (smallName !== name)
+    options.passive = false;
+  addEventListenerFirst(window, smallName, _processCascadeEvents, options);
+}
+
+function removeEventListener(name) {
+  const smallName = name.toLowerCase();
+  let options = {passive: true, capture: true};
+  if (smallName !== name)
+    options.passive = false;
+  window.removeEventListener(smallName, _processCascadeEvents, options);
 }
 
 export class CustomEvents {
@@ -140,7 +158,7 @@ export class CustomEvents {
         updateCascadeClass(cascadeEventClass)
       }
       if (eventNamesToCascadeClasses[name].size === 0)
-        addEventListenerFirst(window, name, _processCascadeEvents, true);
+        addEventListener(name);
     }
   }
 
@@ -154,7 +172,7 @@ export class CustomEvents {
     for (let name of names) {
       delete this[grabbed][name];
       if (eventNamesToCascadeClasses[name].size === 0)
-        window.removeEventListener(name, _processCascadeEvents, true);
+        removeEventListener(name);
     }
   }
 
