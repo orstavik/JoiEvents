@@ -1,6 +1,8 @@
 <script type="module">
   import {blockEvent} from "./window_addEventListenerFirst.js";
-  import {Window_CustomEvents} from  "./window_CustomEvents.js";
+  import {CustomEvents} from  "./window_CustomEvents.js";
+  import {LongPressController} from "./LongPress.js";
+  import {LongPress2Controller} from "./LongPress2.js";
 
   /**
    * fix preventDefault on mouse events.
@@ -36,10 +38,7 @@
     details.open = true;
   };
 
-  window.customEvents || (window.customEvents = new Window_CustomEvents());
-
-  import {LongPressController} from "./LongPress.js";
-  import {LongPress2Controller} from "./LongPress2.js";
+  window.customEvents || (window.customEvents = new CustomEvents());
 
   window.customEvents.define(new LongPressController());
   window.customEvents.define(new LongPress2Controller());

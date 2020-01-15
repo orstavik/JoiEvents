@@ -89,7 +89,7 @@ function updateCascadeClass(cascadeClass) {
   cascadeClassesToEventNames.set(cascadeClass, newEventNames);
 }
 
-export class Window_CustomEvents {
+export class CustomEvents {
 
   constructor() {
     this[grabbed] = {};
