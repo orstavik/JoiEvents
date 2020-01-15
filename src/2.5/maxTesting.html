@@ -141,6 +141,10 @@
     }
 
     function _processCascadeEvents(event) {
+      // todo then the process first checks the grabbed, if someone has grabbed it, it will call that method on that grabber
+      // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
+      // todo then, all the other functions can be reset.
+      // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
       if (customEvents[grabbed2] && customEvents[grabbed2][event.type]){
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -253,16 +257,8 @@
             throw new Error("Event type '" + name + "' has already been grabbed!");
         }
         for (let name of names) {
-          // suspendEventListeners(window, name, stopAndTrigger.bind(owner));   //todo this should be undone
-          this[grabbed2][name] = owner;                 //todo move down into next loop
-        }
-        //calling cancel from grabEvents
-        // todo instead of cancelling grab events, I could just add the process function.
-        // todo then the process first checks the grabbed, if someone has grabbed it, it will call that method on that grabber
-        // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
-        // todo then, all the other functions can be reset.
-        // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
-        for (let name of names) {
+          this[grabbed2][name] = owner;
+          //calling cancelCascade SYNC from grabEvents! Must be done to support grabEvent called from timers
           for (let cascadeEventClass of eventTypeToCascadeEvents[name] || [])
             cascadeEventClass === owner || cascadeEventClass.cancelCascade(name);
         }
@@ -277,19 +273,8 @@
           if (this[grabbed2][name] !== owner)
             throw new Error("Cannot free event '" + name + "' because it is owned by someone else.");
         }
-        for (let name of names) {
+        for (let name of names)
           delete this[grabbed2][name];
-          // resumeEventListeners(window, name);
-        }
-      }
-
-      _cancelCascades(eventType, skipCascadeFunctionObj, eventObjIfAny) {
-        //todo here I collect the methods to call .cancelEvent()
-      }
-
-      _triggerCascades(event, target) {
-        //todo here I collect the methods to call .triggerEvent()
-        //todo iterates until preventDefault is registered.
       }
     }
 
