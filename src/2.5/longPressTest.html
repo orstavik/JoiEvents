@@ -1,0 +1,67 @@
+<script type="module">
+  import {blockEvent} from "./window_addEventListenerFirst.js";
+  import {Window_CustomEvents} from  "./window_CustomEvents.js";
+
+  /**
+   * fix preventDefault on mouse events.
+   */
+  const ogPreventDefault = MouseEvent.prototype.preventDefault;
+  MouseEvent.prototype.preventDefault = function () {
+    if (this.defaultPrevented)
+      return;
+    ogPreventDefault.call(this);
+    if (this.type === "mouseup" && this.button === 0)
+      blockEvent("click");
+    else if (this.type === "mouseup")
+      blockEvent("auxclick");
+    else if (this.type === "mousedown" && this.button === 2)
+      blockEvent("contextmenu");
+    else if (this.type === "click")
+      blockEvent("dblclick");
+  };
+
+  /**
+   * queue task in event loop
+   */
+  Window.prototype.queueTaskInEventLoop = function (cb) {
+    if (!(cb instanceof Function))
+      throw new Error("Only function references can be queued in the event loop.");
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = function () {
+      details.remove();
+      cb();
+    };
+    document.body.appendChild(details);
+    details.open = true;
+  };
+
+  window.customEvents || (window.customEvents = new Window_CustomEvents());
+
+  import {LongPressController} from "./LongPress.js";
+  import {LongPress2Controller} from "./LongPress2.js";
+
+  window.customEvents.define(new LongPressController());
+  window.customEvents.define(new LongPress2Controller());
+</script>
+
+<div id="a" long-press>
+  <div id="b" long-press-2>
+    <h1 id="c">hello sunshine</h1>
+  </div>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type, e.target.id,);
+  }
+
+  window.addEventListener("mousedown", log);
+  window.addEventListener("mouseup", log);
+  window.addEventListener("mousemove", log);
+  window.addEventListener("click", log);
+  window.addEventListener("long-press-activated", log);
+  window.addEventListener("long-press", log);
+  window.addEventListener("long-press-2-activated", log);
+  window.addEventListener("long-press-2", log);
+</script>
