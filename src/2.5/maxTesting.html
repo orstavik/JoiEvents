@@ -112,14 +112,66 @@
       // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
       // todo then, all the other functions can be reset.
       // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
-      if (customEvents[grabbed] && customEvents[grabbed][event.type]) {
+      //problem, this is passive.. is that a problem? I think not, I think that active event listeners should be controlled from outside
+
+      //1. check if the event is grabbed, if it is grabbed, then we execute the grabber and nothing else.
+      //   we do not need to call the cancelCascade on the other events, as this is done sync when the events are grabbed.
+      //   we need to call the cancelCascade sync when we are grabbing, because it may be called from a timer.
+      const grabber = customEvents[grabbed][event.type];
+      if (grabber) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        customEvents[grabbed][event.type][event.type + "Trigger"](event);
-        // stopAndTrigger(e);
-        //problem, this is passive.. is that a problem? I think not, I think that active event listeners should be controlled from outside
+        grabber[event.type + "Trigger"](event);
         return;
       }
+
+      //2. run the trigger functions up the composed path.
+      //   when it is running through the cascade functions, if the cascade function is a cancelObserve, then we call cancel no matter what
+      //   if the cascade function is a triggerObserve, then we check if it matches first.
+      //   if one of the trigger functions call e.preventDefault(), it is not only listening on the event, but is grabbing it
+      //   this will cause the _process function to flip into cancel mode.
+      //   in cancel mode, the process will cancel ALL other trigger functions, except the one that was already run.
+      //   this could be a problem, because the cascadeEvent functions might have changed their state and listeners.
+      //   but, if everybody has a cancelMethod with a fixed name, then the call to cancel can be made all the time.
+      const path = event.composedPath();
+      const observers = new Set(eventTypeToCascadeEvents[event.type]);
+      const listeningTriggers = [];
+      const cancelTriggers = [];
+      for (let el of path) {
+        for (let observer of observers) {
+          if (listeningTriggers.length + cancelTriggers.length === observers.size)
+            return;
+          if (listeningTriggers.indexOf(observer) >= 0 || cancelTriggers.indexOf(observer) >= 0)
+            continue;
+          if (observer.observedPrevented.indexOf(event.type) >= 0) {
+            observer.cancelCascade(event);
+            cancelTriggers.push(observer);
+            continue;
+          }
+          if (observer.observedTriggers.indexOf(event.type) >= 0) {
+            if (!observer.matches(event, el))
+              continue;
+            const {added, removed} = callTrigger(observer, event);
+            addCascadeClass(observer, added);
+            removeCascadeClass(observer, removed);
+
+            if (event.defaultPrevented){
+              //cancelMode
+              for (let hasListened of listeningTriggers)
+                hasListened.cancelCascade(event);
+              for (let observer of observers) {
+                if (listeningTriggers.indexOf(observer) === -1 && cancelTriggers.indexOf(observer) ===-1)
+                  observer.cancelCascade(event);
+              }
+              return;
+            }
+            listeningTriggers.push(observer);
+          }
+        }
+      }
+
+/*
+      //3. if the trigger function runs through without calling
       const composedPath = event.composedPath();
       //todo both observed and prevented cannot hold the same event type at the same time
       const cascadeEventFunctions = new Set(eventTypeToCascadeEvents[event.type]);
@@ -156,6 +208,7 @@
 
         }
       }
+*/
     }
 
 
@@ -180,6 +233,10 @@
     }
 
     class CustomEvents {
+
+      constructor() {
+        this[grabbed] = {};
+      }
       define(CascadeEventClass) {
         if (cascadeClasses[CascadeEventClass.name])
           throw new Error("EventCascadeClass: " + CascadeEventClass.name + " is already defined.");
@@ -210,7 +267,6 @@
        * @param owner
        */
       grabEvents(names, owner) {
-        this[grabbed] || (this[grabbed] = {});
         for (let name of names) {
           if (this[grabbed][name])
             throw new Error("Event type '" + name + "' has already been grabbed!");
@@ -224,8 +280,6 @@
       }
 
       freeEvents(names, owner) {
-        if (!this[grabbed])
-          throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
         for (let name of names) {
           if (!this[grabbed][name])
             throw new Error("Cannot free event '" + name + "' because it has not been grabbed.");
