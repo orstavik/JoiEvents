@@ -7,8 +7,8 @@ export class LongPress2 extends Event {
 export class LongPress2Controller /*extends CustomCascadeEvent*/ {
 
   constructor() {
-    this.observedTriggers = ["mousedown"];
-    this.observedPrevented = [];
+    this.observedTriggers = ["mousedown"];          //both as trigger and as a cancel trigger
+    this.observedPrevented = [];                    //only called as cancel
     this.timer = 0;
     this.isGrabbing;
     this.startEvent;
@@ -16,6 +16,10 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
 
   getObservedNames(){
     return this.observedTriggers.concat(this.observedPrevented);
+  }
+
+  matches(event, el) {
+    return el.hasAttribute && el.hasAttribute("long-press-2");
   }
 
   mousedownTrigger(event) {
@@ -82,7 +86,4 @@ export class LongPress2Controller /*extends CustomCascadeEvent*/ {
     this.startEvent = undefined;
   }
 
-  matches(event, el) {
-    return el.hasAttribute && el.hasAttribute("long-press-2");
-  }
 }
