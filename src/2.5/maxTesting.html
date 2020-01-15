@@ -93,7 +93,6 @@
     };
 
 
-
     const grabbed = Symbol("customEventsGrabbed");
     const cascadeClasses = {};                             //todo this is not strictly necessary
     const eventTypeToCascadeEvents = {};
@@ -108,15 +107,14 @@
     }
 
     function _processCascadeEvents(event) {
-      // todo then the process first checks the grabbed, if someone has grabbed it, it will call that method on that grabber
-      // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
-      // todo then, all the other functions can be reset.
-      // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
-      //problem, this is passive.. is that a problem? I think not, I think that active event listeners should be controlled from outside
 
       //1. check if the event is grabbed, if it is grabbed, then we execute the grabber and nothing else.
       //   we do not need to call the cancelCascade on the other events, as this is done sync when the events are grabbed.
       //   we need to call the cancelCascade sync when we are grabbing, because it may be called from a timer.
+      //
+      //   problem, the _processCascadeEvents is passive.. is that a problem?
+      //   I think not, I think that active event listeners should be controlled from outside.
+      //   if we want, we can just add and an active event listener when we grab/free event
       const grabber = customEvents[grabbed][event.type];
       if (grabber) {
         event.preventDefault();
@@ -136,81 +134,33 @@
       const path = event.composedPath();
       const observers = new Set(eventTypeToCascadeEvents[event.type]);
       const listeningTriggers = [];
-      const cancelTriggers = [];
       for (let el of path) {
         for (let observer of observers) {
-          if (listeningTriggers.length + cancelTriggers.length === observers.size)
-            return;
-          if (listeningTriggers.indexOf(observer) >= 0 || cancelTriggers.indexOf(observer) >= 0)
-            continue;
           if (observer.observedPrevented.indexOf(event.type) >= 0) {
             observer.cancelCascade(event);
-            cancelTriggers.push(observer);
+            observers.delete(observer);
             continue;
           }
-          if (observer.observedTriggers.indexOf(event.type) >= 0) {
-            if (!observer.matches(event, el))
-              continue;
+          if (observer.observedTriggers.indexOf(event.type) >= 0 && observer.matches(event, el)) {
             const {added, removed} = callTrigger(observer, event);
             addCascadeClass(observer, added);
             removeCascadeClass(observer, removed);
+            observers.delete(observer);
 
-            if (event.defaultPrevented){
-              //cancelMode
+            if (event.defaultPrevented) {                               //cancelMode
               for (let hasListened of listeningTriggers)
                 hasListened.cancelCascade(event);
-              for (let observer of observers) {
-                if (listeningTriggers.indexOf(observer) === -1 && cancelTriggers.indexOf(observer) ===-1)
-                  observer.cancelCascade(event);
-              }
+              for (let observer of observers)
+                observer.cancelCascade(event);
               return;
             }
             listeningTriggers.push(observer);
           }
         }
+        if (observers.size === 0)
+          return;
       }
-
-/*
-      //3. if the trigger function runs through without calling
-      const composedPath = event.composedPath();
-      //todo both observed and prevented cannot hold the same event type at the same time
-      const cascadeEventFunctions = new Set(eventTypeToCascadeEvents[event.type]);
-
-      for (let cascadeEvent of cascadeEventFunctions) {
-        if (cascadeEvent.observedPrevented.indexOf(event.type) >= 0) {
-          cascadeEvent.cancelCascade();
-          cascadeEventFunctions.delete(cascadeEvent);
-        }
-      }
-      const hasRunCascadeFunctions = [];
-      for (let el of composedPath) {
-        for (let cascadeEvent of cascadeEventFunctions) {
-          if (!cascadeEvent.matches(event, el))
-            continue;
-          if (cascadeEvent.observedTriggers.indexOf(event.type) === -1)
-            throw new Error("omg?!");
-
-          cascadeEventFunctions.delete(cascadeEvent);
-
-          const {added, removed} = callTrigger(cascadeEvent, event);
-          addCascadeClass(cascadeEvent, added);
-          removeCascadeClass(cascadeEvent, removed);
-
-          if (event.defaultPrevented) {
-            for (let alreadyRunButNotPreventedFunction of hasRunCascadeFunctions)
-              alreadyRunButNotPreventedFunction.cancelCascade(event);
-            for (let notYetRunCascadeEvent of cascadeEventFunctions)
-              notYetRunCascadeEvent.cancelCascade(event);
-            return;
-          } else {
-            hasRunCascadeFunctions.push(cascadeEvent);
-          }
-
-        }
-      }
-*/
     }
-
 
     function addCascadeClass(cascadeClass, allEventTypes) {
       for (let eventType of allEventTypes) {
@@ -237,6 +187,7 @@
       constructor() {
         this[grabbed] = {};
       }
+
       define(CascadeEventClass) {
         if (cascadeClasses[CascadeEventClass.name])
           throw new Error("EventCascadeClass: " + CascadeEventClass.name + " is already defined.");
