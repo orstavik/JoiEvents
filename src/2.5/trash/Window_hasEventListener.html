@@ -1,0 +1,35 @@
+<script src="hasEventListener2.js"></script>
+
+<h1 style="border: 1px solid grey">click <span>->"A, 1"<-</span> = , or ->"A, 2"<-</h1>
+
+<script>
+  function logA(e){
+    console.log("A", e.eventPhase);
+  }
+
+  const h1 = document.querySelector("h1");
+
+  //0. test of adding removing multiple eventListener for the same function
+  window.addEventListener("click", logA);
+  window.addEventListener("click", logA);             //not added
+  window.addEventListener("click", logA);             //not added
+  window.addEventListener("click", logA, true);
+  window.addEventListener("click", logA, true);       //not added
+  window.addEventListener("click", logA, true);       //not added
+
+  window.removeEventListener("click", logA);
+  window.removeEventListener("click", logA);          //not removed, because the second click listener has capture: true
+  //only prints out one "A" when you click on h1
+
+  //1. test of hasEventListener
+  console.log("3 false tests");
+  console.log(window.hasEventListener("click", undefined, false));
+  console.log(window.hasEventListener("click", undefined, {capture: false}));
+  console.log(window.hasEventListener("click", undefined, {passive: false}));
+  console.log("3 true tests");
+  console.log(window.hasEventListener("click", undefined, true));
+  console.log(window.hasEventListener("click", undefined, {capture: true}));
+  console.log(window.hasEventListener("click", undefined, {capture: true, passive: false}));
+  console.log("1 true test");
+  console.log(window.hasEventListener("click"));
+</script>

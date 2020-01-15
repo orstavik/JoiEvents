@@ -165,7 +165,7 @@
                 hasListened.cancelCascade(event);
               for (let observer of observers)
                 observer.cancelCascade(event);
-              break pathLoop;// return;
+              break pathLoop;
             }
             listeningTriggers.push(observer);
           }
