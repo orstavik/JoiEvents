@@ -53,35 +53,54 @@
         EventTarget.prototype.removeEventListener.call(this, name, cb, options);
     };
 
-    function suspendEventListeners(windovv, eventType, cb) {
-      if (windovv[grabbed] && windovv[grabbed][eventType])
-        throw new Error("wtf");
-      if (windovv[reg][eventType]) {
-        for (let cbOptions of windovv[reg][eventType])
-          EventTarget.prototype.removeEventListener.call(windovv, eventType, cbOptions.cb, cbOptions.options);
-      }
-      windovv[grabbed] || (windovv[grabbed] = {});
-      windovv[grabbed][eventType] = cb;
-      EventTarget.prototype.addEventListener.call(windovv, eventType, cb, captureActive);
-    }
+    Window.prototype.addEventListenerFirst = function (name, cb, options) {
+      this[reg] || (this[reg] = {});
+      this[reg][name] || (this[reg][name] = []);
 
-    function resumeEventListeners(windovv, eventType) {
-      if (!windovv[grabbed] || !windovv[grabbed][eventType])
-        throw new Error("wtf2");
-      if (windovv[reg][eventType]) {
-        for (let cbOptions of windovv[reg][eventType])
-          EventTarget.prototype.addEventListener.call(windovv, eventType, cbOptions.cb, cbOptions.options);
+      if (this[reg][name]) {
+        for (let cbOptions of this[reg][name])
+          EventTarget.prototype.removeEventListener.call(this, name, cbOptions.cb, cbOptions.options);
       }
-      const cb = windovv[grabbed][eventType];
-      if (cb)
-        EventTarget.prototype.removeEventListener.call(windovv, eventType, cb, captureActive);
-      delete windovv[grabbed][eventType];
-    }
+      EventTarget.prototype.addEventListener.call(this, name, cb, options);
+      const index = equivListener(this[reg][name], cb, options);
+      if (index >= 0)
+        this[reg][name].splice(index, 1);
+      this[reg][name].unshift({cb, options});
+      if (this[reg][name]) {
+        for (let cbOptions of this[reg][name])
+          EventTarget.prototype.addEventListener.call(this, name, cbOptions.cb, cbOptions.options);
+      }
+    };
 
-    function suspendEventListenersOnce(windovv, name, cb) {
-      suspendEventListeners(windovv, name, cb);
-      window.queueTaskInEventLoop(() => resumeEventListeners(windovv, name));
-    }
+    // function suspendEventListeners(windovv, eventType, cb) {
+    //   if (windovv[grabbed] && windovv[grabbed][eventType])
+    //     throw new Error("wtf");
+    //   if (windovv[reg][eventType]) {
+    //     for (let cbOptions of windovv[reg][eventType])
+    //       EventTarget.prototype.removeEventListener.call(windovv, eventType, cbOptions.cb, cbOptions.options);
+    //   }
+    //   windovv[grabbed] || (windovv[grabbed] = {});
+    //   windovv[grabbed][eventType] = cb;
+    //   EventTarget.prototype.addEventListener.call(windovv, eventType, cb, captureActive);
+    // }
+
+    // function resumeEventListeners(windovv, eventType) {
+    //   if (!windovv[grabbed] || !windovv[grabbed][eventType])
+    //     throw new Error("wtf2");
+    //   if (windovv[reg][eventType]) {
+    //     for (let cbOptions of windovv[reg][eventType])
+    //       EventTarget.prototype.addEventListener.call(windovv, eventType, cbOptions.cb, cbOptions.options);
+    //   }
+    //   const cb = windovv[grabbed][eventType];
+    //   if (cb)
+    //     EventTarget.prototype.removeEventListener.call(windovv, eventType, cb, captureActive);
+    //   delete windovv[grabbed][eventType];
+    // }
+
+    // function suspendEventListenersOnce(windovv, name, cb) {
+    //   suspendEventListeners(windovv, name, cb);
+    //   window.queueTaskInEventLoop(() => resumeEventListeners(windovv, name));
+    // }
 
     /**
      * queue task in event loop
@@ -112,20 +131,24 @@
       if (this.defaultPrevented)
         return;
       ogPreventDefault.call(this);
-      try {
+      // try {
         if (this.type === "mouseup") {
           if (this.button === 0)
-            suspendEventListenersOnce(window, "click", stopPrevent);
+            window.addEventListenerFirst("click", stopPrevent, {capture: true, once: true, passive: false});
+            // suspendEventListenersOnce(window, "click", stopPrevent);
           else
-            suspendEventListenersOnce(window, "auxclick", stopPrevent);
+            window.addEventListenerFirst("auxclick", stopPrevent, {capture: true, once: true, passive: false});
+            // suspendEventListenersOnce(window, "auxclick", stopPrevent);
         } else if (this.type === "mousedown" && this.button === 2) {
-          suspendEventListenersOnce(window, "contextmenu", stopPrevent);
+          window.addEventListenerFirst("contextmenu", stopPrevent, {capture: true, once: true, passive: false});
+          // suspendEventListenersOnce(window, "contextmenu", stopPrevent);
         } else if (this.type === "click") {
-          suspendEventListenersOnce(window, "dblclick", stopPrevent);
+          window.addEventListenerFirst("dblclick", stopPrevent, {capture: true, once: true, passive: false});
+          // suspendEventListenersOnce(window, "dblclick", stopPrevent);
         }
-      } catch (e) {
-        throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
-      }
+      // } catch (e) {
+      //   throw new Error("Cannot silence a grabbed event. You are probably calling e.preventDefault() on a mousedown, mouseup or click event, when the a contextmenu or (aux/dbl)click event has been grabbed.");
+      // }
     };
 
     const cascadeClasses = {};                             //todo this is not strictly necessary
@@ -145,7 +168,7 @@
       // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
       // todo then, all the other functions can be reset.
       // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
-      if (customEvents[grabbed2] && customEvents[grabbed2][event.type]){
+      if (customEvents[grabbed2] && customEvents[grabbed2][event.type]) {
         event.preventDefault();
         event.stopImmediatePropagation();
         customEvents[grabbed2][event.type][event.type + "Trigger"](event);
@@ -213,12 +236,6 @@
     }
 
     const grabbed2 = Symbol("customEventsGrabbed");
-
-    function stopAndTrigger(e) {                //todo this should be moved into CustomEventCascade
-      e.preventDefault();
-      e.stopPropagation();
-      this[e.type + "Trigger"](e);
-    }
 
     class CustomEvents {
       define(CascadeEventClass) {
