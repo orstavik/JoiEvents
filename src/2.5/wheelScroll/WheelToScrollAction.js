@@ -33,7 +33,7 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
     target.scrollTop = state.startPos + (state.distance * factor);
     if (state.count < 1)
       state.rafId = requestAnimationFrame(this.doScroll.bind(this, target));
-    else{
+    else {
       this.state.delete(target);
       this.activeElements.delete(target);
     }
@@ -55,14 +55,22 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
 
     const isActive = this.state.has(currentTarget);
 
-    this.state.set(currentTarget, {
-      startPos,
-      distance,
-      count: 0
-    });
-    if (!isActive){
+    if (!isActive) {
+      this.state.set(currentTarget, {
+        startPos,
+        distance,
+        count: 0
+      });
       this.activeElements.add(currentTarget);
       this.doScroll(currentTarget);
+    } else {
+      const state = this.state.get(currentTarget);
+      const oldDistance = state.distance;
+      this.state.set(currentTarget, {
+        startPos,
+        distance: distance + oldDistance / 2,
+        count: 0
+      });
     }
   }
 
