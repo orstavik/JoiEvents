@@ -54,7 +54,7 @@
 
   const outer2 = document.querySelector("#outer2");
   outer2.addEventListener("wheel", function (e) {
-    console.log("block wheel outer2");
+    // console.log("block wheel outer2");
     e.preventDefault();
   });   // }, {passive: false});      //on an element, the default is interpreted as active
 
@@ -64,7 +64,7 @@
   }
 
   window.addEventListener("wheel", log, true);
-  window.addEventListener("my-wheel", log, true);
+  // window.addEventListener("my-wheel", log, true);
   window.addEventListener("scroll", log, true);
 
   const raf = function () {

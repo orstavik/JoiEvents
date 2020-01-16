@@ -49,8 +49,8 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
 
     const startPos = currentTarget.scrollTop;
     const currentClientHeight = currentTarget.clientHeight;
-    const scrollDistanceDown = Math.min(currentTarget.scrollHeight - (startPos + currentClientHeight), 100);
-    const scrollDistanceUp = -Math.min(startPos, 100);
+    const scrollDistanceDown = Math.min(currentTarget.scrollHeight - (startPos + currentClientHeight), 50);
+    const scrollDistanceUp = -Math.min(startPos, 50);
     const distance = e.deltaY > 0 ? scrollDistanceDown : scrollDistanceUp;
 
     const isActive = this.state.has(currentTarget);
@@ -66,11 +66,7 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
     } else {
       const state = this.state.get(currentTarget);
       const oldDistance = state.distance;
-      this.state.set(currentTarget, {
-        startPos,
-        distance: distance + oldDistance / 2,
-        count: 0
-      });
+      state.distance += oldDistance / 2;
     }
   }
 
