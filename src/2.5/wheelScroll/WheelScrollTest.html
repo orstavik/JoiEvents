@@ -1,32 +1,59 @@
+<!--
+   Passive and active event listeners
+
+   If you assume that you ALWAYS specify your event listeners to the specific part of the DOM,
+   ie. make one function for one element to react and another function for another element to react,
+   then you can use the passive: true/false option to control how the order of the event cascade at the same time
+   you add the event listener. But. This pattern breaks down as soon as you want to add ONE js function on a container
+   element that should make a decision based on which element/branch of the DOM is used. We can call such a function
+   a "generalized event listener" or "multi-element event listener".
+
+   You might say that you shouldn't use multi-element event listeners. That you should always split your event functions
+   into pieces for different elements. Ie. the elements are always the primary mechanism for dividing event functionality,
+   the event itself is never the primary mechanism for dividing event functionality. That is wrong. Stupid. And counter
+   productive. Events are a primary method of organizing code. Event functionality might be highly consistent, while
+   the elements using or binding to such functionality might be highly fluid.
+
+   Instead, the alternative is to view the event functionality as two-fold:
+   1. the event function itself is one thing,
+   2. the act of "blocking" the native event cascade (of scrolling)
+      (ie. active event listener calling preventDefault()),
+      is a another thing.
+
+   Thus, for events that use "passive: true" in any meaningful way, you:
+    1. make your main event function as passive, always.
+    2. For the elements and branches in the DOM where you need to call preventDefault(),
+       you add an active event listener that ONLY calls preventDefault().
+    2b. If you need to check some state, and if that state needs to be controlled via the main event function,
+       you use an HTML attribute or CSS class or custom CSS property to specify if or not an element should be active
+       or passive. The active event listener can then check this property, and use this to decide if or not to call preventDefault().
+
+    x. It would have been MUCH MUCH better if active/passive event listeners did not exist. It would be MUCH MUCH better
+       if the browsers only relied on either a CSS property or an HTML attribute to control the order of the native EventCascade
+       ie. "scroll-event: scroll-before-wheel-propagation" or "scroll-event: wheel-propagation-before-scroll".
+
+       So, the trick is to imagine that you have such an HTML attribute, and then implement this attribute using
+       passive: false event listeners that either call or do not call `.preventDefault()`.
+-->
+
+<div my-wheel id="outer" style="height: 500px; width: 200px; overflow: hidden;">
+  <div id="inner" style="height: 1000px; width: 180px; background-color: aquamarine;">Hello, wheel me</div>
+</div>
+
 <script type="module">
   import {CustomEvents} from "../CustomEvents.js";
   import {MyWheelController} from "./WheelToScrollAction.js";
 
   window.customEvents || (window.customEvents = new CustomEvents());
 
-  debugger;
   customEvents.define(new MyWheelController());
-</script>
 
-<div id="outer" style="height: 500px; width: 200px; overflow-y: scroll;">
-  <div my-wheel id="inner" style="height: 1000px; width: 180px; background-color: aquamarine;">Hello, wheel me</div>
-</div>
-
-
-<script type="module">
-  debugger;
   const inner = document.querySelector("#inner");
-  document.addEventListener("wheel", function (e) {
-    console.log("hello sunshine");
-    debugger;
-    e.preventDefault();                                //on the window, the default is interpreted as passive
-  }, true);
-
   inner.addEventListener("wheel", function (e) {
-    console.log("hello sunshine");
-    debugger;
-    e.preventDefault();
-  }, true);                                            //on an element, the default is interpreted as active
+    console.log("block wheel");
+    // e.preventDefault();
+  });
+  // }, {passive: false});      //on an element, the default is interpreted as active
 
   function log(e) {
     console.log(e.type, e.target.id,);
@@ -36,12 +63,12 @@
   window.addEventListener("my-wheel", log);
   window.addEventListener("scroll", log);
 
-  const raf = function () {
-    requestAnimationFrame(function () {
-      console.log("raf");
-      raf();
-    });
-  };
-  raf();
+  // const raf = function () {
+  //   requestAnimationFrame(function () {
+  //     console.log("raf");
+  //     raf();
+  //   });
+  // };
+  // raf();
 
 </script>

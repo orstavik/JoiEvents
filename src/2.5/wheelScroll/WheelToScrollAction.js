@@ -7,11 +7,12 @@ export class MyWheelEvent extends Event {
 export class MyWheelController /*extends CustomCascadeEvent*/ {
 
   constructor() {
-    this.observedTriggers = ["WHEEL"];      //capital letters is ACTIVE
+    this.observedTriggers = ["wheel"];
     this.observedPrevented = [];
-    this.startEvent = undefined;
+    this.startTarget = undefined;
     this.remainingScrollActions = [];
     this.currentScrollSpeed = 0;
+    this.nextScrollTask;
   }
 
   getObservedNames() {
@@ -20,29 +21,29 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
 
   doScroll(counter) {
     if (counter)
-      return requestAnimationFrame(this.doScroll.bind(this, --counter));
+      return this.nextScrollTask = requestAnimationFrame(this.doScroll.bind(this, --counter));
+    console.log("scroll action");
     const scrollDistance = this.remainingScrollActions.shift();
-    this.startEvent.target.scrollTop += scrollDistance;
+    this.startTarget.scrollTop += scrollDistance;
     if (this.remainingScrollActions.length){
       this.currentScrollSpeed += 1;
       this.doScroll(this.currentScrollSpeed);
     } else {
-      this.startEvent = undefined;
-      this.remainingScrollActions = [];
-      this.currentScrollSpeed = 0;
+      this.cancelCascade();
     }
   }
 
-  wheelTrigger(e) {
-    this.startEvent = e;
+  wheelTrigger(e, currentTarget) {
+    this.startTarget = currentTarget;
 
-    e.preventDefault();
-    // e.stopImmediatePropagation();
+    // e.preventDefault();          //CANNOT call preventDefault() on wheel, touchstart, touchmove due to passive: true properties of these events on window.
+    // e.stopImmediatePropagation();//The control of the native EventCascade concerning these forms of scrolling must be done outside in the DOM/app.
+                                    //The stopPropation() methods should not be called here neither, since that will block any listeners that will call .preventDefault()...
 
     this.currentScrollSpeed = 0;
     this.remainingScrollActions = [2, 4, 8, 10, 14, 14, 15, 12, 10, 7, 3];
 
-    const target = this.startEvent.target;
+    const target = this.startTarget;
     customEvents.queueTask(target.dispatchEvent.bind(target, new MyWheelEvent()));
     customEvents.queueTask(this.doScroll.bind(this,this.currentScrollSpeed));
   }
@@ -61,7 +62,10 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
    * @param eventOrEventType either the event itself, in case of 1 or 2, or just a string with the eventType in case of 3.
    */
   cancelCascade(eventOrEventType) {
-    this.startEvent = undefined;
+    this.startTarget = undefined;
+    this.remainingScrollActions = [];
+    this.currentScrollSpeed = 0;
+    cancelAnimationFrame(this.nextScrollTask);
   }
 
   matches(event, el) {
