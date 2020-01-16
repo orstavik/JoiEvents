@@ -160,6 +160,8 @@ export class CustomEvents {
 
   /**
    * queue task in event loop
+   * todo return an id
+   * todo add an clearTask, that can cancel the queued task
    */
   queueTask = function (cb) {
     if (!(cb instanceof Function))

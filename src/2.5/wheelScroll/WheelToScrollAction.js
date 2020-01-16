@@ -2,6 +2,14 @@ export class MyWheelEvent extends Event {
   constructor() {
     super("my-wheel", {bubbles: true, composed: true});
   }
+
+  preventDefault() {
+    //todo should cancel the action of scrolling from my-wheel
+  }
+}
+
+function easeInOutQuint(t) {
+  return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t;
 }
 
 export class MyWheelController /*extends CustomCascadeEvent*/ {
@@ -9,43 +17,53 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
   constructor() {
     this.observedTriggers = ["wheel"];
     this.observedPrevented = [];
-    this.startTarget = undefined;
-    this.remainingScrollActions = [];
-    this.currentScrollSpeed = 0;
-    this.nextScrollTask;
+
+    this.state = new WeakMap();
+    this.activeElements = new Set();
   }
 
   getObservedNames() {
     return this.observedTriggers.concat(this.observedPrevented);
   }
 
-  doScroll(counter) {
-    if (counter)
-      return this.nextScrollTask = requestAnimationFrame(this.doScroll.bind(this, --counter));
-    console.log("scroll action");
-    const scrollDistance = this.remainingScrollActions.shift();
-    this.startTarget.scrollTop += scrollDistance;
-    if (this.remainingScrollActions.length){
-      this.currentScrollSpeed += 1;
-      this.doScroll(this.currentScrollSpeed);
-    } else {
-      this.cancelCascade();
+  doScroll(target) {
+    const state = this.state.get(target);
+    state.count += 0.1;
+    const factor = easeInOutQuint(state.count);
+    target.scrollTop = state.startPos + (state.distance * factor);
+    if (state.count < 1)
+      state.rafId = requestAnimationFrame(this.doScroll.bind(this, target));
+    else{
+      this.state.delete(target);
+      this.activeElements.delete(target);
     }
   }
 
   wheelTrigger(e, currentTarget) {
-    this.startTarget = currentTarget;
-
     // e.preventDefault();          //CANNOT call preventDefault() on wheel, touchstart, touchmove due to passive: true properties of these events on window.
     // e.stopImmediatePropagation();//The control of the native EventCascade concerning these forms of scrolling must be done outside in the DOM/app.
-                                    //The stopPropation() methods should not be called here neither, since that will block any listeners that will call .preventDefault()...
+    //The stopPropation() methods should not be called here neither, since that will block any listeners that will call .preventDefault()...
 
-    this.currentScrollSpeed = 0;
-    this.remainingScrollActions = [2, 4, 8, 10, 14, 14, 15, 12, 10, 7, 3];
+    //todo raf or queueTask, whichever is first.
+    customEvents.queueTask(currentTarget.dispatchEvent.bind(currentTarget, new MyWheelEvent()));
 
-    const target = this.startTarget;
-    customEvents.queueTask(target.dispatchEvent.bind(target, new MyWheelEvent()));
-    customEvents.queueTask(this.doScroll.bind(this,this.currentScrollSpeed));
+    const startPos = currentTarget.scrollTop;
+    const currentClientHeight = currentTarget.clientHeight;
+    const scrollDistanceDown = Math.min(currentTarget.scrollHeight - (startPos + currentClientHeight), 100);
+    const scrollDistanceUp = -Math.min(startPos, 100);
+    const distance = e.deltaY > 0 ? scrollDistanceDown : scrollDistanceUp;
+
+    const isActive = this.state.has(currentTarget);
+
+    this.state.set(currentTarget, {
+      startPos,
+      distance,
+      count: 0
+    });
+    if (!isActive){
+      this.activeElements.add(currentTarget);
+      this.doScroll(currentTarget);
+    }
   }
 
   /**
@@ -62,10 +80,14 @@ export class MyWheelController /*extends CustomCascadeEvent*/ {
    * @param eventOrEventType either the event itself, in case of 1 or 2, or just a string with the eventType in case of 3.
    */
   cancelCascade(eventOrEventType) {
-    this.startTarget = undefined;
-    this.remainingScrollActions = [];
-    this.currentScrollSpeed = 0;
-    cancelAnimationFrame(this.nextScrollTask);
+    for (let activeEl of this.activeElements) {
+      const state = this.state.get(activeEl);
+      if (!state.rafId)
+        throw new Error("omg");
+      cancelAnimationFrame(state.rafId);
+      this.activeElements.delete(activeEl);
+      this.state.delete(activeEl);
+    }
   }
 
   matches(event, el) {

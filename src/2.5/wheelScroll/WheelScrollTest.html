@@ -36,8 +36,12 @@
        passive: false event listeners that either call or do not call `.preventDefault()`.
 -->
 
-<div my-wheel id="outer" style="height: 500px; width: 200px; overflow: hidden;">
+<div id="outer" style="float: left; height: 500px; width: 200px; overflow: scroll;">
   <div id="inner" style="height: 1000px; width: 180px; background-color: aquamarine;">Hello, wheel me</div>
+</div>
+
+<div my-wheel id="outer2" style="float: right; height: 500px; width: 200px; overflow: scroll;">
+  <div id="inner2" style="height: 1000px; width: 180px; background-color: aquamarine;">Hello, wheel me</div>
 </div>
 
 <script type="module">
@@ -48,27 +52,27 @@
 
   customEvents.define(new MyWheelController());
 
-  const inner = document.querySelector("#inner");
-  inner.addEventListener("wheel", function (e) {
-    console.log("block wheel");
-    // e.preventDefault();
-  });
-  // }, {passive: false});      //on an element, the default is interpreted as active
+  const outer2 = document.querySelector("#outer2");
+  outer2.addEventListener("wheel", function (e) {
+    console.log("block wheel outer2");
+    e.preventDefault();
+  });   // }, {passive: false});      //on an element, the default is interpreted as active
 
+  let counter = 0;
   function log(e) {
-    console.log(e.type, e.target.id,);
+    console.log(e.type, counter++, e.target.id, e.target.scrollTop);
   }
 
-  window.addEventListener("wheel", log);
-  window.addEventListener("my-wheel", log);
-  window.addEventListener("scroll", log);
+  window.addEventListener("wheel", log, true);
+  window.addEventListener("my-wheel", log, true);
+  window.addEventListener("scroll", log, true);
 
-  // const raf = function () {
-  //   requestAnimationFrame(function () {
-  //     console.log("raf");
-  //     raf();
-  //   });
-  // };
-  // raf();
+  const raf = function () {
+    requestAnimationFrame(function () {
+      console.log("raf");
+      raf();
+    });
+  };
+  raf();
 
 </script>
