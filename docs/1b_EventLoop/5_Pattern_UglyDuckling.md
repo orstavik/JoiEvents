@@ -27,7 +27,7 @@ function queueUglyDucklingTask(cb) {
 }
 ```
 
-## Test: UglyDuckling vs ToggleTickTrick
+## Test: UglyDuckling vs ToggleTickTrick vs setTimeout
 
 This code is slightly less obtrusive than the ToggleTickTrick as the BlindManDOM `<link>` element is added to `document.head` instead of the `document.body`. But it is also far less efficient than the ToggleTickTrick as it requires a link to be queried by the browser. It is also more obtrusive in dev tools as it will print an error message in the console. Thus, so far, still a duck.
     
