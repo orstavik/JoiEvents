@@ -4,23 +4,21 @@
 <div id="outer">
   <h1 id="inner">Click on me!</h1>
 </div>
-
+ 
 <script>
   function log(e) {
-    const phase = e.eventPhase === 1 ? "capture" : 
-                                                  e.eventPhase === 2 ? "target" :
-                                                  e.eventPhase === 3 ? "bubble";
+    const phase = e.eventPhase === 1 ? "capture" :
+      e.eventPhase === 2 ? "target" : "bubble";
     console.log(e.type + " on #" + e.currentTarget.id + " in phase: " + phase);
-  }                         
-
+  }
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
-  
   outer.addEventListener("click", log, true);
   inner.addEventListener("click", log);
   outer.addEventListener("click", log);
-
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: false}));
+  inner.dispatchEvent(new MouseEvent("click", {
+    bubbles: false
+  }));
 </script>
 ```     
 
