@@ -1,0 +1,35 @@
+<script src="UnderlyingEventPropagationFunction.js"></script>
+<div id="outer">
+  <details id="middle">
+    <summary id="inner">hello sunshine!</summary>
+    more sunshine!
+  </details>
+</div>
+
+<script>
+  function logA(e) {
+    const target = e.currentTarget;
+    console.log(e.type + " on #" + target.id);
+    Promise.resolve().then(() => console.log("microtask from #" + target.id));
+  }
+
+  const div = document.querySelector("div");
+  const details = document.querySelector("details");
+  const summary = document.querySelector("summary");
+
+  div.addEventListener("toggle", logA, true);
+  details.addEventListener("toggle", logA, true);
+  summary.addEventListener("toggle", logA, true);
+
+  div.addEventListener("click", logA, true);
+  details.addEventListener("click", logA, true);
+  summary.addEventListener("click", logA, true);
+
+  setTimeout(()=>summary.dispatchEvent(new MouseEvent("click")), 0);
+  setTimeout(()=>console.log("-------------"), 100);
+  setTimeout(()=>dispatchEventSync(summary, new MouseEvent("click")), 200);
+  setTimeout(()=>console.log("-------------"), 300);
+  setTimeout(()=>dispatchEventAsync(summary, new MouseEvent("click")), 400);
+  setTimeout(()=>console.log("-------------"), 500);
+
+</script>
