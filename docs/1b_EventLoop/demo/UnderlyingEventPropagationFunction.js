@@ -27,6 +27,7 @@ EventTarget.prototype.addEventListener = function (name, cb, options) {
     options
   });
 };
+
 const ogRemove = EventTarget.prototype.removeEventListener;
 EventTarget.prototype.removeEventListener = function (name, cb, options) {
   if (!this[reg] || !this[reg][name])
@@ -36,28 +37,12 @@ EventTarget.prototype.removeEventListener = function (name, cb, options) {
   if (index >= 0)
     this[reg][name].splice(index, 1);
 };
-/**
- * @param name
- * @param cb function object, if undefined, all listeners are accepted.
- * @param options true/false || {capture: true/false}.
- *                if undefined, then both all options are accepted.
- * @returns {boolean}
- */
-EventTarget.prototype.hasEventListener = function (name, cb, options) {
-  if (!this[reg] || !this[reg][name])
-    return false;
-  if (equivListener(this[reg][name], cb, options) >= 0)
-    return true;
-  if (options === undefined)
-    return equivListener(this[reg][name], cb, true) >= 0;
-  return false;
-};
 
 EventTarget.prototype.hasEventListenerInstance = function (name, listenerKey) {
   return this[reg] && this[reg][name] && (this[reg][name].indexOf(listenerKey) !== -1);
 };
 
-EventTarget.prototype.getEventListener = function (name, phase) {
+EventTarget.prototype.getEventListenerInstances = function (name, phase) {
   if (!this[reg] || !this[reg][name])
     return [];
   if (phase === 2)
@@ -78,7 +63,7 @@ function path(target) {
 
 function callAllListeners(target, event, phase) {
   //1. lock the listeners being iterated. We cannot add listeners anymore.
-  const listeners = target.getEventListener(event.type, phase);
+  const listeners = target.getEventListenerInstances(event.type, phase);
   //2. update the event object to set the currentTarget to be the element currently propagated
   const updatedEvent = Object.defineProperty(event, "currentTarget", {
     value: target,
@@ -101,17 +86,14 @@ function callAllListeners(target, event, phase) {
 }
 
 function dispatchEventAsync(target, event) {
-  const propagationPath = path(target);                                      //locks the propagation path at the outset of event dispatch
-  for (let i = propagationPath.length - 1; i >= 1; i--)                      //capture
+  const propagationPath = path(target);                        //locks the propagation path at the outset of event dispatch
+  for (let i = propagationPath.length - 1; i >= 1; i--)        //capture
     setTimeout(callAllListeners.bind(null, propagationPath[i], event, 1));
-  setTimeout(callAllListeners.bind(null, target, event, 2));                 //target
+  setTimeout(callAllListeners.bind(null, target, event, 2));   //target
   if (event.bubbles) {
-    for (let i = 1; i < propagationPath.length; i++)                         //bubble
+    for (let i = 1; i < propagationPath.length; i++)           //bubble
       setTimeout(callAllListeners.bind(null, propagationPath[i], event, 1));
   }
-  //do default actions
-  if (propagationPath[0].tagName === "SUMMARY" && propagationPath[1].tagName === "DETAILS")
-    setTimeout(() => propagationPath[1].open = !propagationPath[1].open);
 }
 
 function dispatchEventSync(target, event) {
@@ -123,7 +105,4 @@ function dispatchEventSync(target, event) {
     for (let i = 1; i < propagationPath.length; i++)         //bubble
       callAllListeners(propagationPath[i], event, 1);
   }
-  //do default actions
-  if (propagationPath[0].tagName === "SUMMARY" && propagationPath[1].tagName === "DETAILS")
-    propagationPath[1].open = !propagationPath[1].open;
 }
