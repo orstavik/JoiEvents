@@ -1,3 +1,38 @@
+## Problem 0: Does non-bubbling events trickle down in the capture phase?
+
+```html
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "capture" : 
+                                                  e.eventPhase === 2 ? "target" :
+                                                  e.eventPhase === 3 ? "bubble";
+    console.log(e.type + " on #" + e.currentTarget.id + " in phase: " + phase);
+  }                         
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+  
+  outer.addEventListener("click", log, true);
+  inner.addEventListener("click", log);
+  outer.addEventListener("click", log);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: false}));
+</script>
+```     
+
+Results:
+
+```
+click on #outer in phase: capture
+click on #inner in phase: target
+```
+
+Yes, capture phase event listeners will still be called on parent elements/document/window for non-bubbling events. 
+
 ## Problem 1: Can an early event listener remove a later event listener?
 
 ```html
