@@ -16,9 +16,9 @@
   outer.addEventListener("click", log, true);
   inner.addEventListener("click", log);
   outer.addEventListener("click", log);
-  inner.dispatchEvent(new MouseEvent("click", {
-    bubbles: false
-  }));
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: false}));
+  // dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>
 ```     
 
@@ -53,6 +53,8 @@ Yes, capture phase event listeners will still be called on parent elements/docum
   outer.addEventListener("click", log);
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  // dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>
 ```   
 
@@ -87,6 +89,8 @@ Yes, an event listener can remove other event listeners later in the propagation
   inner.addEventListener("click", log, true);
 
 //  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+//  dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
+//  dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>
 ```  
 
@@ -123,6 +127,8 @@ Looking at the two previous problems, there are two questions:
   inner.addEventListener("click", log2);
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  // dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true}));
 </script>
 ```
 
