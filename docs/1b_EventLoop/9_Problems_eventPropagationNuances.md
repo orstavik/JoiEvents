@@ -92,6 +92,51 @@ Yes, an event listener can remove other event listeners later in the propagation
 
 No, any change to the DOM during the course of event propagation will *not!!* affect on which elements event listeners are called for the current event (the "composed path" for the current event propagation). 
 
+## Problem 3: Dynamically altering event listeners
+
+Looking at the two previous problems, there are two questions:
+ 1. If an element does not have an event listener when the event starts, will that element be included or excluded from the event propagation and its the composed path set up at the event propagation's outset?
+ 2. Can I add more event listeners dynamically to the element currently running its event listeners?
+ 3. Can I remove more event listeners dynamically from the current element?
+
+```html
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }                         
+  function log2() {
+    console.log("log2");
+  }                         
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+  
+  inner.addEventListener("click", function(){
+    inner.removeEventListener("click", log2);
+    inner.addEventListener("click", log);
+    outer.addEventListener("click", log);
+  });
+  inner.addEventListener("click", log2);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>
+```
+
+Results:
+
+```
+click on #outer
+```
+
+The answers are:
+1. yes, the composed path for event propagation is not excluding any elements that do not have an event listener added at the outset.
+2. no, once the event dispatching functions has started to run event listeners, it will not accept new event listeners for the current element.
+3. But. The event dispatching function will still let you delete such event listeners. So yes, you can remove event listeners dynamically from the current element being processed by the event dispatch propagation function.
+
 ## Conclusion
 
 The function that drives event propagation freezes the composed path at the outset, but the act of adding and removing event listeners are dynamic will affect the execution of event listeners positioned later in the propagation order for the current event.
