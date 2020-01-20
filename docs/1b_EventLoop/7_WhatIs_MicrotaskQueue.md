@@ -1,5 +1,7 @@
 # WhatIs: the Microtask Queue?
 
+> This chapter explains the microtask queue *without* going into the details of Promises. The reason for this is that I find it easier to first understand the concept of microtasks and async callbacks in regular JS, and then understand how the browser implements the async callbacks using Promises.  
+
 There are two main queue levels in the browsers: 
 1. The event loop with its various and varying macrotask queues.
 2. The microtask queue.
@@ -148,6 +150,7 @@ class MutableObject{
     if (this.count > 2)
       this.message = "hello sunshine!";
     this._countCallTriggered = false;
+    console.log(this.message);
   }
 }
 /** mutable object end **/
@@ -155,44 +158,62 @@ class MutableObject{
 /** demo start **/
 const mutableObject = new MutableObject();
 
-console.log(mutableObject.message);
-
 addMicroTask(function(){ 
   console.log("a");
   mutableObject.count += 1; 
+  console.log(mutableObject.message);
 });
 addMicroTask(function(){ 
   console.log("b");
   mutableObject.count += 1; 
+  console.log(mutableObject.message);
 });
 addMicroTask(function(){ 
   console.log("c");
   mutableObject.count += 1; 
+  console.log(mutableObject.message);
 });
 
 startMicroTaskProcessing();
-  console.log(mutableObject.message);
+
 /** demo end **/
 ```   
 
 Result:
 
 ```
-1.  not yet!
-2.  a
-3.  setting new count
-4.  adding async call to the microtask queue
+1.  a
+2.  setting new count
+3.  adding async call to the microtask queue
+4.  not yet!
 5.  b
 6.  setting new count
-7.  c
-8.  setting new count
-9.  performing the async task (ie. updating message)
-10. hello sunshine!
+7.  not yet!
+8.  c
+9.  setting new count
+10. not yet!
+11. performing the async task (ie. updating message)
+12. hello sunshine!
 ```
 
-1. The start value of `objectMutable.message` is printed.  
-2. The first microtask is run. This prints line 2., 3., and 4. As the `objectMutable.count` has not been changed since last update, the side-effect task of updating the `.message` based on the `.count` property is added to the microtask queue.
-3. The second microtask is run. This prints line 5. and 6.     
+1. Then, three tasks are added to the microtask queue array (3x `addMicroTask()`).
+2. Then the microtask queue is started (`startMicroTaskProcessing()`).
+   1. The first microtask is run. This prints line 1-4. As the `objectMutable.count` has not been changed since last update, the `objectMutable` wants to run a side-effect task of updating the `.message` based on the `.count` property. But, this task is not run immediately, it is instead added to the microtask queue. This means that the first task in the microtask queue adds another forth task to the microtask queue.
+   2. The second microtask is run. This prints line 5-7.     
+   3. The third microtask is run. This prints line 8-10. At this point, the `count === 3`, and so you might expect that the `message` would be updated. But, the process `_updateMessage()` is considered a side-effect, and to avoid this side-effect interfering with the logic of the current process, it is invoked *asynchronously*, ie. the system delays doing this task until it has completed the other tasks it is already working on/knows about. Hence, the message is still: `not yet!`     
+   4. The forth microtask is run (`objectMutable._updateMessage()`). This prints line 11 and 12. The task was added during the execution of the first microtask.
+3. The microtask queue is emptied, and the `startMicroTaskProcessing()` returns.
+
+## What's the difference between the macrotask and microtask queues?
+
+First, there is much more in common with the micro and macro task queues, than what distinguish them:
+
+1. Both the macrotask and microtask queues are lists of tasks. In the landscape of the JS browser these tasks are callable JS functions (or native equivalents).
+2. Both the macrotask queues and the microtask queue are FIFO. Sure, the event loop that consists of several macrotask queues can prioritize one queue over another, but within each queue, the tasks are FIFO.
+3. The same type of tasks can be added to both the macro and the macro queues. Consider for example the loading of an image:
+   * When an `<img>` element has loaded its source, a `load` event is queued as a macro task in the event loop.
+   * When an `fetch` call is made to retrieve the source of the same image file, its result is added to the microtask queue.
+   
 
 ## References
 
