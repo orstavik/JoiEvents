@@ -17,8 +17,8 @@
   inner.addEventListener("click", log);
   outer.addEventListener("click", log);
   inner.dispatchEvent(new MouseEvent("click", {bubbles: false}));
-  // dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
-  // dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
+  dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
+  dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>
 ```     
 
@@ -27,6 +27,12 @@ Results:
 ```
 click on #outer in phase: capture
 click on #inner in phase: target
+click on #outer in phase: bubble
+click on #inner in phase: bubble
+click on #outer in phase: bubble
+click on #outer in phase: bubble
+click on #inner in phase: bubble
+click on #outer in phase: bubble
 ```
 
 Yes, capture phase event listeners will still be called on parent elements/document/window for non-bubbling events. 
@@ -53,10 +59,18 @@ Yes, capture phase event listeners will still be called on parent elements/docum
   outer.addEventListener("click", log);
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  // dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
-  // dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
+  dispatchEventSync(inner, new MouseEvent("click", {bubbles: true}));
+  dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>
 ```   
+
+Results:
+
+```
+click on #inner
+click on #inner
+click on #inner
+```
 
 Yes, an event listener can remove other event listeners later in the propagation order.
 
@@ -94,6 +108,25 @@ Yes, an event listener can remove other event listeners later in the propagation
 </script>
 ```  
 
+Results
+
+```
+false
+click on #outer
+click on #middle
+click on #inner
+false
+click on #outer
+click on #inner
+false
+click on #outer
+false
+click on #outer
+click on #inner
+false
+click on #outer
+```
+
 No, any change to the DOM during the course of event propagation will *not!!* affect on which elements event listeners are called for the current event (the "composed path" for the current event propagation). 
 
 ## Problem 3: Dynamically altering event listeners
@@ -127,8 +160,8 @@ Looking at the two previous problems, there are two questions:
   inner.addEventListener("click", log2);
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  // dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true}));
-  // dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true}));
+  dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true})));
+  dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true})));
 </script>
 ```
 
@@ -136,11 +169,13 @@ Results:
 
 ```
 click on #outer
+click on #inner
+click on #inner
 ```
 
 The answers are:
-1. yes, the composed path for event propagation is not excluding any elements that do not have an event listener added at the outset.
-2. no, once the event dispatching functions has started to run event listeners, it will not accept new event listeners for the current element.
+1. Yes, the composed path for event propagation is not excluding any elements that do not have an event listener added at the outset.
+2. No, once the event dispatching functions has started to run event listeners, it will not accept new event listeners for the current element.
 3. But. The event dispatching function will still let you delete such event listeners. So yes, you can remove event listeners dynamically from the current element being processed by the event dispatch propagation function.
 
 ## Conclusion
@@ -149,4 +184,4 @@ The function that drives event propagation freezes the composed path at the outs
 
 ## References
 
-  * todo find this described in the spec.
+[Spec: Dispatching events](https://dom.spec.whatwg.org/#dispatching-events)
