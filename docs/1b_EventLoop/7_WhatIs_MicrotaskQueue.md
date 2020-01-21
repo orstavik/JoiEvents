@@ -30,6 +30,32 @@ startMicroTaskProcessing();                       //flushing microtask queue
 
 This naively simple microtask queue shows the basic. The microtask queue starts up empty. The queue is then filled with 3 tasks. Each task is in the form of an executable function. The microtask queue is then started (also called "flushed"), and the function processing the microtask queue then simply runs from start to end.
 
+## Demo x: what happens with errors in microtask queue?
+
+```javascript 
+function a(){
+  console.log("a");
+}
+function b(){
+  throw new Error();
+}
+function c(){
+  console.log("c");
+}
+
+Promise.resolve().then(a);
+Promise.resolve().then(b);
+Promise.resolve().then(c);
+```
+
+Result:
+
+```
+a
+error
+c
+```
+
 ## Demo 2: A minimalistic microtask queue with simple error handling 
 
 So far, so good. But, we would like to be a little safer. We need to ensure that:

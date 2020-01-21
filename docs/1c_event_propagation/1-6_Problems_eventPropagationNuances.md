@@ -143,6 +143,101 @@ The answers are:
 2. no, once the event dispatching functions has started to run event listeners, it will not accept new event listeners for the current element.
 3. But. The event dispatching function will still let you delete such event listeners. So yes, you can remove event listeners dynamically from the current element being processed by the event dispatch propagation function.
 
+## Problem 4: Errors in event listeners
+
+What happens when an error occurs during the execution of an event listener function? Does that affect the running of later event listeners?
+
+```html
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }                         
+  function error() {
+    throw new Error("event listener break down");
+  }                         
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+  
+  outer.addEventListener("click", error, true);
+  inner.addEventListener("click", error);
+  inner.addEventListener("click", log);
+  outer.addEventListener("click", log);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  // dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true}));
+</script>
+```
+
+Results:
+
+```
+2x Error: event listener break down
+click on #inner
+click on #outer
+```
+
+As we can see, a break down in one event listener doesn't affect the running of later event listeners in the propagation chain, not even when the breakdown occur in an event listener on the same element.
+
+## Problem 5: Adding the same event listener twice on the same element?
+
+What happens if we add the same event listener twice on the same element?
+
+```html
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }                         
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+  
+  //two log functions will be added, as the second log is a different function object 
+  inner.addEventListener("click", log);
+  inner.addEventListener("click", log);
+  inner.addEventListener("click", log.bind(null));
+
+  //only one log will be added,
+  //the only option the addEventListener distinguishes is the boolean capture equivalent 
+  outer.addEventListener("click", log);
+  outer.addEventListener("click", log, false);
+  outer.addEventListener("click", log, {capture: false});
+  outer.addEventListener("click", log, {capture: false, passive: false});
+
+  //only one log on outer capture phase will be added 
+  outer.addEventListener("click", log, true);
+  outer.addEventListener("click", log, {capture: true});
+  //but then this log function is removed too, even though the options don't match on 
+  //other properties than capture  
+  outer.removeEventListener("click", log, {capture: true, passive: true});
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  // dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true}));
+</script>
+```
+
+Results:
+
+```
+click on #inner
+click on #inner
+click on #outer
+```
+
+The test above shows that `addEventListener(...)` and `removeEventListener(...)` :
+1. compares the event listener functions as objects. Thus two logs are added to `#inner`.
+2. converts the `options` argument into a boolean value corresponding only to the options `capture` value. When checking if an event listener function can be added/removed from an element, the browser only compares the event listener function object and the options capture property.     
+
 ## Conclusion
 
 The function that drives event propagation freezes the composed path at the outset, but the act of adding and removing event listeners are dynamic will affect the execution of event listeners positioned later in the propagation order for the current event.

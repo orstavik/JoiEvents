@@ -195,7 +195,7 @@ Here, we get three different priorities:
  * Firefox `load` on `<link>` *after* `toggle`.
  * Chrome `load` on `<link>` *at the same time as* `toggle`.
   
-Still, this is better, as there is no sequential problems in Firefox. So. How do we solve the problem of irratic priorities? 
+Still, this is better, as there is no sequential problems in Firefox. So. How do we solve the problem of erratic priorities? 
 
 ## HowTo: dynamically assert the priority of macrotask queues?
 
@@ -228,7 +228,7 @@ toggleTick(()=> macrotaskPriority.push("toggle"));
 loadOnLink(()=> macrotaskPriority.push("load"));
 toggleTick(()=> macrotaskPriority.push("toggle"));
 loadOnLink(()=> macrotaskPriority.push("load"));
-let firstPriority = "load"; //or "toggle" what you prefer
+let firstPriority = "load" || "toggle"; //what you prefer
 setTimeout(function(){
   if (macrotaskPriority[0] === "load" && macrotaskPriority[1] === "load")
     firstPriority = "load";
@@ -237,8 +237,96 @@ setTimeout(function(){
 });
 ``` 
 
-In Safari IOS 13.3 `macrotaskPriority === ["load", "load", "toggle"]`. 
-In Chrome 79 and Firefox 71 `macrotaskPriority === ["toggle", "load", "toggle", "load"]`. 
+In Safari 13.3 `firstPriority` would be `"load"`. In and Firefox 71 it would be `"toggle"`. And in Chrome 79 it would be whatever you choose as default.
+
+## `load` or `<script>`
+
+`<link>`, `<img>` and `<script>` are all special elements. One would expect the browsers to give their `load` events special treatment in the event loop. We therefore need to check `load` on `<script>` too. Maybe the `load` event on `<script>` is more consistent across browsers than the others? Maybe it is given higher priority than the others? Lets find out.
+
+```javascript
+function loadOnScript(cb) {
+  const script = document.createElement("script");
+  script.onload = function () {
+    script.remove();
+    cb();
+  };
+  document.head.appendChild(script);
+  script.src = "data:text/javascript;base64,MSsx"; //btoa("1+1") === "MSsx"
+}
+```
+
+### Test: loadOnLink vs ToggleTickTrick vs setTimeout
+
+```javascript 
+function toggleTick(cb) {
+  const details = document.createElement("details");
+  details.style.display = "none";
+  details.ontoggle = function () {
+    details.remove();
+    cb();
+  };
+  document.body.appendChild(details);
+  details.open = true;
+}
+
+function loadOnScript(cb) {
+  const script = document.createElement("script");
+  script.onload = function () {
+    script.remove();
+    cb();
+  };
+  document.head.appendChild(script);
+  script.src = "data:text/javascript;base64,MSsx"; //btoa("1+1") === "MSsx"
+}
+
+for (let i = 0; i < 5; i++){ 
+  setTimeout(() => console.log("setTimeout 1"));
+  loadOnScript(() => console.log("loadOnScript 1"));
+  toggleTick(() => console.log("toggleTickTrick 1"));
+  setTimeout(() => console.log("setTimeout 2"));
+  loadOnScript(() => console.log("loadOnScript 2"));
+  toggleTick(() => console.log("toggleTickTrick 2"));
+}
+```  
+
+Results:
+
+```
+Firefox 71            Safari IOS 13.3      Chrome 79
+
+loadOnScript 1        toggleTickTrick 1    toggleTickTrick 1
+toggleTickTrick 1     toggleTickTrick 2    toggleTickTrick 2
+loadOnScript 2        toggleTickTrick 1    toggleTickTrick 1
+toggleTickTrick 2     toggleTickTrick 2    toggleTickTrick 2
+loadOnScript 1        toggleTickTrick 1    toggleTickTrick 1
+toggleTickTrick 1     toggleTickTrick 2    toggleTickTrick 2
+loadOnScript 2        toggleTickTrick 1    toggleTickTrick 1
+toggleTickTrick 2     toggleTickTrick 2    toggleTickTrick 2
+loadOnScript 1        toggleTickTrick 1    toggleTickTrick 1
+toggleTickTrick 1     toggleTickTrick 2    toggleTickTrick 2
+loadOnScript 2        setTimeout 1         setTimeout 1
+toggleTickTrick 2     setTimeout 2         setTimeout 2
+loadOnScript 1        setTimeout 1         setTimeout 1
+toggleTickTrick 1     setTimeout 2         setTimeout 2
+loadOnScript 2        setTimeout 1         setTimeout 1
+toggleTickTrick 2     loadOnLink 1         setTimeout 2
+loadOnScript 1        loadOnLink 2         loadOnScript 1 !!
+toggleTickTrick 1     loadOnLink 1         setTimeout 1   !!
+loadOnScript 2        loadOnLink 2         setTimeout 2   !!
+toggleTickTrick 2     loadOnLink 1         setTimeout 1   !!
+setTimeout 1          loadOnLink 2         loadOnScript 1 !!
+setTimeout 2          loadOnLink 1         setTimeout 2   !!
+setTimeout 1          loadOnLink 2         loadOnScript 1 !!
+setTimeout 2          loadOnLink 1         loadOnScript 1 !!
+setTimeout 1          loadOnLink 2         loadOnScript 2 !!
+setTimeout 2          setTimeout 2         loadOnScript 2 !!
+setTimeout 1          setTimeout 1         loadOnScript 2 !!
+setTimeout 2          setTimeout 2         loadOnScript 2 !!
+setTimeout 1          setTimeout 1         loadOnScript 1 
+setTimeout 2          setTimeout 2         loadOnScript 2
+``` 
+
+The `load` on `<script>` is queued very erratic, both across browsers, and within the macrotask queues of both Chrome and Safari. If regularity and priority is needed, the `load` on `<script>` elements do not provide a good basis.  
 
 ## References
 
