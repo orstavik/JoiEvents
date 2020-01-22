@@ -48,10 +48,20 @@ EventTarget.prototype.getEventListenerInstances = function (name, phase) {
   return this[reg][name].filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
 };
 
-function getComposedPath(target) {
+function getComposedPath(target, event) {
   const path = [];
-  for (; target.parentNode !== null; target = target.parentNode)
+  while (true){
     path.push(target);
+    if (target.parentNode)
+      target = target.parentNode;
+    else if(target.host){
+      if (!event.composed)
+        return path;
+      target = target.host;
+    } else {
+      break;
+    }
+  }
   path.push(document, window);
   return path;
 }
@@ -120,8 +130,8 @@ function dispatchEvent(target, event, async) {
     this._immediatePropagationStopped = true;
   };
   //locks the propagation path at the outset of event dispatch
-  const propagationPath = getComposedPath(target).slice(1);
-  for (let currentTarget of propagationPath.reverse())
+  const propagationPath = getComposedPath(target, event).slice(1);
+  for (let currentTarget of propagationPath.slice().reverse())
     callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE, async);
   callListenersOnElement(target, event, Event.AT_TARGET, async);
   for (let currentTarget of propagationPath)

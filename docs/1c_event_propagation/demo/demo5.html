@@ -1,0 +1,26 @@
+<hello-sunshine></hello-sunshine>
+
+<script>
+  let sunshineTarget;
+  class HelloSunshine extends HTMLElement {
+    constructor(){
+      super();
+      this.shadow = this.attachShadow({mode: "closed"});
+      this.shadow.innerHTML = `<h1>hello sunshine</h1>`;
+      this.shadow.addEventListener("click", e => console.log(e.target.tagName));
+      sunshineTarget = this.shadow.children[0];     //this is a hack, so we can click on the closed content
+    }
+  }
+  customElements.define("hello-sunshine", HelloSunshine);
+
+  function log(e) {
+    console.log(e.target);
+  }
+
+  const hello = document.querySelector("hello-sunshine");
+
+  hello.addEventListener("click", e => console.log(e.target.tagName));
+
+  sunshineTarget.dispatchEvent(new MouseEvent("click", {composed: true, bubbles: true}));
+  sunshineTarget.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>

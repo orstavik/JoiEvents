@@ -1,0 +1,31 @@
+<div id="outer">
+  <div id="middle">
+    <h1 id="inner">Click on me!</h1>
+  </div>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }
+
+  const inner = document.querySelector("#inner");
+  const middle = document.querySelector("#middle");
+  const outer = document.querySelector("#outer");
+
+  outer.addEventListener("click", function(){
+    outer.appendChild(inner);
+    middle.remove();
+    console.log(middle.isConnected);
+  }, true);
+
+  middle.addEventListener("click", function(){
+    document.body.appendChild(inner);
+  }, true);
+
+  outer.addEventListener("click", log, true);
+  middle.addEventListener("click", log, true);
+  inner.addEventListener("click", log, true);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>

@@ -1,0 +1,73 @@
+<script>
+  const ogAdd = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (name, cb, options) {
+    this._eventListeners || (this._eventListeners = {});
+    this._eventListeners[name] || (this._eventListeners[name] = []);
+    ogAdd.call(this, name, cb, options);
+    this._eventListeners[name].push({
+      cb,
+      options
+    });
+  };
+
+  EventTarget.prototype.getEventListeners = function (name, phase) {
+    if (!this._eventListeners || !this._eventListeners[name])
+      return [];
+    if (phase === Event.AT_TARGET)
+      return this._eventListeners[name].map(cbOptions => cbOptions.cb);
+    if (phase === Event.CAPTURING_PHASE){
+      return this._eventListeners[name]
+        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true))
+        .map(cbOptions => cbOptions.cb);
+    }
+    //(phase === Event.BUBBLING_PHASE)
+    return this._eventListeners[name]
+      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)))
+      .map(cbOptions => cbOptions.cb);
+  };
+
+  function getPath(target) {
+    const path = [];
+    while (target.parentNode !== null) {
+      path.push(target);
+      target = target.parentNode;
+    }
+    path.push(document, window);
+    return path;
+  }
+
+  function callListenersOnElement(currentTarget, event, phase) {
+    const listeners = currentTarget.getEventListeners(event.type, phase);
+    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+    for (let listener of listeners)
+      listener(event);
+  }
+
+  function dispatchEvent(target, event) {
+    const propagationPath = getPath(target).slice(1);
+    for (let currentTarget of propagationPath.slice().reverse())
+      callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
+    callListenersOnElement(target, event, Event.AT_TARGET);
+    for (let currentTarget of propagationPath)
+      callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
+  }
+</script>
+
+<div>
+  <h1>Hello sunshine</h1>
+</div>
+
+<script>
+  function log(e){
+    console.log(e.currentTarget.tagName);
+  }
+
+  const h1 = document.querySelector("h1");
+  const div = document.querySelector("div");
+
+  div.addEventListener("click", log, true);
+  h1.addEventListener("click", log);
+  div.addEventListener("click", log);
+
+  dispatchEvent(h1, new MouseEvent("click", {bubbles: true}));
+</script>
