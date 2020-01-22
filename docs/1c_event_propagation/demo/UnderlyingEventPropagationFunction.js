@@ -61,7 +61,7 @@ function getComposedPath(target) {
   return path;
 }
 
-function callAllListeners(currentTarget, event, phase, async) {
+function callListenersOnElement(currentTarget, event, phase, async) {
   if (event._propagationStopped || event._immediatePropagationStopped)
     return;
   if (!event.bubbles && phase === Event.BUBBLING_PHASE)
@@ -114,10 +114,10 @@ function callAllListeners(currentTarget, event, phase, async) {
 //   };
 //   const propagationPath = getComposedPath(target);                        //locks the propagation path at the outset of event dispatch
 //   for (let i = propagationPath.length - 1; i >= 1; i--)
-//     setTimeout(callAllListeners.bind(null, propagationPath[i], event, Event.CAPTURING_PHASE));
-//   setTimeout(callAllListeners.bind(null, target, event, Event.AT_TARGET));
+//     setTimeout(callListenersOnElement.bind(null, propagationPath[i], event, Event.CAPTURING_PHASE));
+//   setTimeout(callListenersOnElement.bind(null, target, event, Event.AT_TARGET));
 //   for (let i = 1; i < propagationPath.length; i++)
-//     setTimeout(callAllListeners.bind(null, propagationPath[i], event, Event.BUBBLING_PHASE));
+//     setTimeout(callListenersOnElement.bind(null, propagationPath[i], event, Event.BUBBLING_PHASE));
 // }
 //
 function dispatchEvent(target, event, async) {
@@ -130,8 +130,8 @@ function dispatchEvent(target, event, async) {
   //locks the propagation path at the outset of event dispatch
   const propagationPath = getComposedPath(target).slice(1);
   for (let currentTarget of propagationPath.reverse())
-    callAllListeners(currentTarget, event, Event.CAPTURING_PHASE, async);
-  callAllListeners(target, event, Event.AT_TARGET, async);
+    callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE, async);
+  callListenersOnElement(target, event, Event.AT_TARGET, async);
   for (let currentTarget of propagationPath)
-    callAllListeners(currentTarget, event, Event.BUBBLING_PHASE, async);
+    callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE, async);
 }
