@@ -238,6 +238,116 @@ The test above shows that `addEventListener(...)` and `removeEventListener(...)`
 1. compares the event listener functions as objects. Thus two logs are added to `#inner`.
 2. converts the `options` argument into a boolean value corresponding only to the options `capture` value. When checking if an event listener function can be added/removed from an element, the browser only compares the event listener function object and the options capture property.     
 
+## Problem 6: stopPropagation and .bubbles = false?
+
+What is `stopPropagation()`? Is `stopPropagation()` and `bubble = false` doing exactly the same?
+
+```html
+<div id="outer">
+  <h1 id="inner">Click and dblclick on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }                         
+
+  function bubblesFalse(e) {
+    e.bubbles = false;
+  }                         
+
+  function stopProp(e) {
+    e.stopPropagation();
+  }                         
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+  
+  outer.addEventListener("click", bubblesFalse, true);
+  outer.addEventListener("click", log, true);
+  inner.addEventListener("click", log);
+  outer.addEventListener("click", log);
+
+  outer.addEventListener("dblclick", stopProp, true);
+  outer.addEventListener("dblclick", log, true);
+  inner.addEventListener("dblclick", log);
+  outer.addEventListener("dblclick", log);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
+  // dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true}));
+</script>
+```
+
+Results:
+
+```
+click on #outer
+click on #inner
+dblclick on #outer
+```
+
+1. `stopPropagation()` and `bubbles = false` is *not* the same.
+   * `stopPropagation()` prevents the event propagation from going to the *next element* in the event's propagation path in *all phases*.
+   * `bubbles = false` also prevents the event propagation from going to the *next element* in the event's propagation path, but *only within the last bubbling phase*.
+   
+2. Both `stopPropagation()` and `bubbles = false` allows the event propagation to finish calling all event listeners added to the current element before stopping.  
+
+
+## Problem 7: How is `stopPropagationImmediate()` different from `stopPropagation()`?
+
+How is `stopPropagationImmediate()` different from `stopPropagation()`?
+
+```html
+<div id="outer">
+  <h1 id="inner">Click and dblclick on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }                         
+
+  function stopProp(e) {
+    e.stopPropagation();
+  }                         
+
+  function stopImmediate(e) {
+    e.stopImmediatePropagation();
+  }                         
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+  
+  outer.addEventListener("click", log, true);
+  inner.addEventListener("click", stopProp);
+  inner.addEventListener("click", log);
+  outer.addEventListener("click", log);
+
+  outer.addEventListener("dblclick", log, true);
+  inner.addEventListener("dblclick", stopImmediate);
+  inner.addEventListener("dblclick", log);
+  outer.addEventListener("dblclick", log);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
+  // dispatchEventSync(inner, (new MouseEvent("click", {bubbles: true}));
+  // dispatchEventAsync(inner, (new MouseEvent("click", {bubbles: true}));
+</script>
+```
+
+Results:
+
+```
+click on #outer
+click on #inner
+dblclick on #outer
+```
+
+ * `stopPropagation()` *allows* the event propagation function to finish calling all event listeners added to the current element before stopping.  
+ * `stopImmediatePropagation()` *prevents* the event propagation function to call any other event listeners, including later event listeners added to the current element being processed.  
+
 ## Conclusion
 
 The function that drives event propagation freezes the composed path at the outset, but the act of adding and removing event listeners are dynamic will affect the execution of event listeners positioned later in the propagation order for the current event.
