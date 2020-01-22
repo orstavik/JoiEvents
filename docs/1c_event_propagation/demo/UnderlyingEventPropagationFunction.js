@@ -3,39 +3,34 @@
  */
 const reg = Symbol("eventListenerRegister");
 
-function equivListener(list, cb, options) {
-  return list.findIndex(function (cbOptions) {
-    if (!(cb === undefined || cbOptions.cb === cb))
-      return false;
-    const a = cbOptions.options;
-    const b = options;
-    const aBool = !!(a === true || (a instanceof Object && a.capture));
-    const bBool = !!(b === true || (b instanceof Object && b.capture));
-    return aBool === bBool;
-  });
+function matchEventListeners(funA, optionsA, funB, optionsB) {
+  if (funA !== funB)
+    return false;
+  const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
+  const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
+  return a === b;
 }
 
 const ogAdd = EventTarget.prototype.addEventListener;
 EventTarget.prototype.addEventListener = function (name, cb, options) {
   this[reg] || (this[reg] = {});
   this[reg][name] || (this[reg][name] = []);
-  if (equivListener(this[reg][name], cb, options) >= 0)
+  const index = this[reg][name].findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
+  if (index >= 0)
     return;
   ogAdd.call(this, name, cb, options);
-  this[reg][name].push({
-    cb,
-    options
-  });
+  this[reg][name].push({cb, options});
 };
 
 const ogRemove = EventTarget.prototype.removeEventListener;
 EventTarget.prototype.removeEventListener = function (name, cb, options) {
   if (!this[reg] || !this[reg][name])
     return;
+  const index = this[reg][name].findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
+  if (index === -1)
+    return;
   ogRemove.call(this, name, cb, options);
-  const index = equivListener(this[reg][name], cb, options);
-  if (index >= 0)
-    this[reg][name].splice(index, 1);
+  this[reg][name].splice(index, 1);
 };
 
 EventTarget.prototype.hasEventListenerInstance = function (name, listenerKey) {
