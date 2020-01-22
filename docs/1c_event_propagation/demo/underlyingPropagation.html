@@ -22,9 +22,9 @@
 
   setTimeout(()=>inner.dispatchEvent(new MouseEvent("click")), 0);
   setTimeout(()=>console.log("-------------"), 100);
-  setTimeout(()=>dispatchEventSync(inner, new MouseEvent("click")), 200);
+  setTimeout(()=>dispatchEvent(inner, new MouseEvent("click")), 200);
   setTimeout(()=>console.log("-------------"), 300);
-  setTimeout(()=>dispatchEventAsync(inner, new MouseEvent("click")), 400);
+  setTimeout(()=>dispatchEvent(inner, new MouseEvent("click"), true), 400);
   setTimeout(()=>console.log("-------------"), 500);
 
 </script>
