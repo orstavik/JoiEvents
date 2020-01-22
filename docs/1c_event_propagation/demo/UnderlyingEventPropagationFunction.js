@@ -45,12 +45,12 @@ EventTarget.prototype.hasEventListenerInstance = function (name, listenerKey) {
 EventTarget.prototype.getEventListenerInstances = function (name, phase) {
   if (!this[reg] || !this[reg][name])
     return [];
-  if (phase === 2)
+  if (phase === Event.AT_TARGET)
     return this[reg][name];
-  if (phase === 1)
-    return this[reg][name].filter(listener => listener.options === true || listener.options.capture === true);
-  //(phase === 3)
-  return this[reg][name].filter(listener => listener.options !== true && listener.options.capture !== true);
+  if (phase === Event.CAPTURING_PHASE)
+    return this[reg][name].filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
+  //(phase === Event.BUBBLING_PHASE)
+  return this[reg][name].filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
 };
 
 function path(target) {
@@ -62,6 +62,10 @@ function path(target) {
 }
 
 function callAllListeners(target, event, phase) {
+  if (event._propagationStopped || event._immediatePropagationStopped)
+    return;
+  if (!event.bubbles && phase === Event.BUBBLING_PHASE)
+    return;
   //1. lock the listeners being iterated. We cannot add listeners anymore.
   const listeners = target.getEventListenerInstances(event.type, phase);
   //2. update the event object to set the currentTarget to be the element currently propagated
@@ -86,23 +90,31 @@ function callAllListeners(target, event, phase) {
 }
 
 function dispatchEventAsync(target, event) {
+  event.stopPropagation = function () {
+    this._propagationStopped = true;
+  };
+  event.stopImmediatePropagation = function () {
+    this._immediatePropagationStopped = true;
+  };
   const propagationPath = path(target);                        //locks the propagation path at the outset of event dispatch
-  for (let i = propagationPath.length - 1; i >= 1; i--)        //capture
-    setTimeout(callAllListeners.bind(null, propagationPath[i], event, 1));
-  setTimeout(callAllListeners.bind(null, target, event, 2));   //target
-  if (event.bubbles) {
-    for (let i = 1; i < propagationPath.length; i++)           //bubble
-      setTimeout(callAllListeners.bind(null, propagationPath[i], event, 1));
-  }
+  for (let i = propagationPath.length - 1; i >= 1; i--)
+    setTimeout(callAllListeners.bind(null, propagationPath[i], event, Event.CAPTURING_PHASE));
+  setTimeout(callAllListeners.bind(null, target, event, Event.AT_TARGET));
+  for (let i = 1; i < propagationPath.length; i++)
+    setTimeout(callAllListeners.bind(null, propagationPath[i], event, Event.BUBBLING_PHASE));
 }
 
 function dispatchEventSync(target, event) {
+  event.stopPropagation = function () {
+    this._propagationStopped = true;
+  };
+  event.stopImmediatePropagation = function () {
+    this._immediatePropagationStopped = true;
+  };
   const propagationPath = path(target);                      //locks the propagation path at the outset of event dispatch
-  for (let i = propagationPath.length - 1; i >= 1; i--)      //capture
-    callAllListeners(propagationPath[i], event, 1);
-  callAllListeners(target, event, 2);                  //target
-  if (event.bubbles) {
-    for (let i = 1; i < propagationPath.length; i++)         //bubble
-      callAllListeners(propagationPath[i], event, 1);
-  }
+  for (let i = propagationPath.length - 1; i >= 1; i--)
+    callAllListeners(propagationPath[i], event, Event.CAPTURING_PHASE);
+  callAllListeners(target, event, Event.AT_TARGET);
+  for (let i = 1; i < propagationPath.length; i++)
+    callAllListeners(propagationPath[i], event, Event.BUBBLING_PHASE);
 }
