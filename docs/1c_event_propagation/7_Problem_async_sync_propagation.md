@@ -17,11 +17,16 @@ Event listeners dispatched by the browser as a reaction to system or user driven
       console.log("microtask from #" + thisTarget);
     });
   }
+  
+  function log2(e){
+    log(e);
+  }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
   
   inner.addEventListener("click", log);
+  inner.addEventListener("click", log2);
   outer.addEventListener("click", log);
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
@@ -33,20 +38,24 @@ When you `click` on "Click on me!" using either mouse or touch, then you will se
 ```
 
 1. click on #inner
-2. click on #outer
-3. microtask from #inner
-4. microtask from #outer
+2. click on #inner
+3. click on #outer
+4. microtask from #inner
+5. microtask from #inner
+6. microtask from #outer
 
-5. click on #inner
-6. microtask from #inner
-7. click on #outer
-8. microtask from #outer
+7.  click on #inner
+8.  microtask from #inner
+9.  click on #inner
+10. microtask from #inner
+11. click on #outer
+12. microtask from #outer
 
 ``` 
 
- * Lines 1-4 is the output from `.dispatchEvent(new MouseEvent("click", {bubbles: true}))` on the "Click on me!" element. All three event listeners are run *before* any of the tasks added to the microtask queue.
+ * Lines 1-6 is the output from `.dispatchEvent(new MouseEvent("click", {bubbles: true}))` on the "Click on me!" element. All three event listeners are run *before* any of the tasks added to the microtask queue.
  
- * Lines 5-8 is the output from the "native" reaction to the user action of clicking on "Click on me!" with either mouse or touch. Here, the tasks added to the microtask queue are run *before* the next event listener.
+ * Lines 7-12 is the output from the "native" reaction to the user action of clicking on "Click on me!" with either mouse or touch. Here, the tasks added to the microtask queue are run *before* the next event listener.
  
 ## Conclusion
 
