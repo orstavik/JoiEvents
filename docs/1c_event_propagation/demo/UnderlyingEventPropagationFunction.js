@@ -69,10 +69,7 @@ function callListenersOnElement(currentTarget, event, phase, async) {
   //1. lock the listeners being iterated. We cannot add listeners anymore.
   const listeners = currentTarget.getEventListenerInstances(event.type, phase);
   //2. update the event object to set the currentTarget to be the element currently propagated
-  const updatedEvent = Object.defineProperty(event, "currentTarget", {
-    value: currentTarget,
-    writable: true
-  });
+  Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
   //3. iterate all event listeners for the current phase on this target
   for (let listener of listeners) {
     //4. check to see if the listener has been removed! cause we can remove, just not add them anymore.
@@ -83,21 +80,21 @@ function callListenersOnElement(currentTarget, event, phase, async) {
       //6. invoke the event listener
       if (async)
         setTimeout(function () {
-          const updatedEvent = Object.defineProperty(event, "currentTarget", {
+          Object.defineProperty(event, "currentTarget", {
             value: currentTarget,
             writable: true
           });
-          if (updatedEvent._immediatePropagationStopped)
+          if (event._immediatePropagationStopped)
             return;
-          if (currentTarget !== updatedEvent._lastTargetTriggered) {
-            if (updatedEvent._propagationStopped && (!updatedEvent.bubbles && phase === Event.BUBBLING_PHASE))
+          if (currentTarget !== event._lastTargetTriggered) {
+            if (event._propagationStopped && (!event.bubbles && phase === Event.BUBBLING_PHASE))
               return;
           }
-          updatedEvent._lastTargetTriggered = currentTarget;
-          listener.cb(updatedEvent);
+          event._lastTargetTriggered = currentTarget;
+          listener.cb(event);
         });
       else
-        listener.cb(updatedEvent);
+        listener.cb(event);
     } catch (err) {
       //7. if the event listener fails, write the error message to the console.
       console.error(err.message);
