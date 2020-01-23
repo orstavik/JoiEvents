@@ -1,0 +1,45 @@
+<div id="a">
+  <div id="b">
+    <h1 id="c">Click on me!</h1>
+  </div>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }
+  function log2(e) {
+    console.log("log2: " + e.type + " on #" + e.currentTarget.id);
+  }
+  function logDynamic(e) {
+    console.log("logDynamic: " + e.type + " on #" + e.currentTarget.id);
+  }
+
+  const a = document.querySelector("#a");
+  const b = document.querySelector("#b");
+  const c = document.querySelector("#c");
+
+  a.addEventListener("click", log);
+  c.addEventListener("click", log);
+  //1: adding an event listener to an element in the propagation path,
+  //   but that has no other event listener for this event type.
+  c.addEventListener("click", function(){
+    b.addEventListener("click", logDynamic);
+  });
+  //2: adding an event listener to the current target in the propagation path i the same phase
+  c.addEventListener("click", function(){
+    c.addEventListener("click", logDynamic, true);
+    //AT_TARGET phase doesn't distinguish between capture and bubble phase
+  });
+  //3: removing an event listener to another element in the propagation path that has not yet run.
+  c.addEventListener("click", function(){
+    a.removeEventListener("click", log);
+  });
+  //3: removing an event listener from the current target that has not yet run
+  c.addEventListener("click", function(){
+    c.removeEventListener("click", log2);
+  });
+  c.addEventListener("click", log2);
+
+  c.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>

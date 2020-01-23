@@ -1,0 +1,125 @@
+<script>
+  function matchEventListeners(funA, optionsA, funB, optionsB) {
+    if (funA !== funB)
+      return false;
+    const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
+    const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
+    return a === b;
+  }
+
+  const ogAdd = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (name, cb, options) {
+    this._eventListeners || (this._eventListeners = {});
+    this._eventListeners[name] || (this._eventListeners[name] = []);
+    const index = this._eventListeners[name]
+      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
+    if (index >= 0)
+      return;
+    ogAdd.call(this, name, cb, options);
+    this._eventListeners[name].push({cb, options});
+  };
+
+  const ogRemove = EventTarget.prototype.removeEventListener;
+  EventTarget.prototype.removeEventListener = function (name, cb, options) {
+    if (!this._eventListeners || !this._eventListeners[name])
+      return;
+    const index = this._eventListeners[name]
+      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
+    if (index === -1)
+      return;
+    ogRemove.call(this, name, cb, options);
+    this._eventListeners[name].splice(index, 1);
+  };
+
+  EventTarget.prototype.getEventListeners = function (name, phase) {
+    if (!this._eventListeners || !this._eventListeners[name])
+      return [];
+    if (phase === Event.AT_TARGET)
+      return this._eventListeners[name].slice();
+    if (phase === Event.CAPTURING_PHASE) {
+      return this._eventListeners[name]
+        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
+    }
+    //(phase === Event.BUBBLING_PHASE)
+    return this._eventListeners[name]
+      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
+  };
+
+  EventTarget.prototype.hasEventListener = function (name, listener) {
+    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
+  };
+
+  function getPath(target) {
+    const path = [];
+    while (target.parentNode !== null) {
+      path.push(target);
+      target = target.parentNode;
+    }
+    path.push(document, window);
+    return path;
+  }
+
+  function callListenersOnElement(currentTarget, event, phase) {
+    const listeners = currentTarget.getEventListeners(event.type, phase);
+    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+    for (let listener of listeners)
+      if (currentTarget.hasEventListener(event.type, listener))
+        listener.cb(event);
+  }
+
+  function dispatchEvent(target, event) {
+    Object.defineProperty(event, "target", {value: target});
+    const propagationPath = getPath(target).slice(1);
+    for (let currentTarget of propagationPath.slice().reverse())
+      callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
+    callListenersOnElement(target, event, Event.AT_TARGET);
+    for (let currentTarget of propagationPath)
+      callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
+  }
+</script>
+
+<div id="a">
+  <div id="b">
+    <h1 id="c">Click on me!</h1>
+  </div>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }
+  function log2(e) {
+    console.log("log2: " + e.type + " on #" + e.currentTarget.id);
+  }
+  function logDynamic(e) {
+    console.log("logDynamic: " + e.type + " on #" + e.currentTarget.id);
+  }
+
+  const a = document.querySelector("#a");
+  const b = document.querySelector("#b");
+  const c = document.querySelector("#c");
+
+  a.addEventListener("click", log);
+  c.addEventListener("click", log);
+  //1: adding an event listener to an element in the propagation path,
+  //   but that has no other event listener for this event type.
+  c.addEventListener("click", function(){
+    b.addEventListener("click", logDynamic);
+  });
+  //2: adding an event listener to the current target in the propagation path i the same phase
+  c.addEventListener("click", function(){
+    c.addEventListener("click", logDynamic, true);
+    //AT_TARGET phase doesn't distinguish between capture and bubble phase
+  });
+  //3: removing an event listener to another element in the propagation path that has not yet run.
+  c.addEventListener("click", function(){
+    a.removeEventListener("click", log);
+  });
+  //3: removing an event listener from the current target that has not yet run
+  c.addEventListener("click", function(){
+    c.removeEventListener("click", log2);
+  });
+  c.addEventListener("click", log2);
+
+  dispatchEvent(c, new MouseEvent("click", {bubbles: true}));
+</script>
