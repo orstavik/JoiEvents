@@ -68,7 +68,7 @@
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (event._propagationStopped)
+    if (event._propagationStopped || event._propagationStoppedImmediately)
       return;
     if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
       return;
@@ -76,9 +76,12 @@
       phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-    for (let listener of listeners)
+    for (let listener of listeners){
+      if (event._propagationStoppedImmediately)
+        return;
       if (currentTarget.hasEventListener(event.type, listener))
         listener.cb(event);
+    }
   }
 
   function dispatchEvent(target, event) {
@@ -97,6 +100,11 @@
     Object.defineProperty(event, "stopPropagation", {
       value: function () {
         this._propagationStopped = true;
+      }
+    });
+    Object.defineProperty(event, "stopImmediatePropagation", {
+      value: function () {
+        this._propagationStoppedImmediately = true;
       }
     });
     for (let currentTarget of propagationPath.slice().reverse())
@@ -118,25 +126,19 @@
     console.log(e.type + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  function stopProp(e) {
-    e.stopPropagation();
-    console.log(e.type + ".stopPropagation();");
+  function stopImmediately(e) {
+    e.stopImmediatePropagation();
+    console.log(e.type + ".stopImmediatePropagation();");
   }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("click", log, true);   //yes
-  inner.addEventListener("click", stopProp);    //yes
-  inner.addEventListener("click", log, true);   //yes, same current target as when stopPropagation() was called
-  inner.addEventListener("click", log);         //yes, same current target as when stopPropagation() was called
-  outer.addEventListener("click", log);         //no
-
-  document.body.addEventListener("dblclick", stopProp, true); //yes
-  outer.addEventListener("dblclick", log, true);              //no, stopPropagation() can block in all event phases.
-  inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
-  outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("click", log, true);            //yes
+  inner.addEventListener("click", stopImmediately, true);//yes
+  inner.addEventListener("click", log, true);            //no
+  inner.addEventListener("click", log);                  //no
+  outer.addEventListener("click", log);                  //no
 
   dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
-  dispatchEvent(inner, new MouseEvent("dblclick", {bubbles: true}));
 </script>

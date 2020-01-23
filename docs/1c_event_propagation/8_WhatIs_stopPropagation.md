@@ -55,7 +55,7 @@ dblclick.stopPropagation();
 
 ```javascript
 function callListenersOnElement(currentTarget, event, phase) {
-  if (event._propagationStopped === true)
+  if (event._propagationStopped)
     return;
   if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
     return;

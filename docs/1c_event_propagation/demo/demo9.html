@@ -1,0 +1,26 @@
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
+    console.log(e.type + " on #" + e.currentTarget.tagName + " - " + phase);
+  }
+
+  function stopImmediately(e) {
+    e.stopImmediatePropagation();
+    console.log(e.type + ".stopImmediatePropagation();");
+  }
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+
+  outer.addEventListener("click", log, true);            //yes
+  inner.addEventListener("click", stopImmediately, true);//yes
+  inner.addEventListener("click", log, true);            //no
+  inner.addEventListener("click", log);                  //no
+  outer.addEventListener("click", log);                  //no
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>

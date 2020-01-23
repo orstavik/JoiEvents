@@ -1,3 +1,101 @@
+# WhatIs: `.stopImmediatePropagation()`?
+
+`stopImmediatePropagation()` is the same as `stopPropagation()`, except it will also block all event listeners, even the ones added to the same target element.
+
+## Demo: native behavior
+
+```html
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
+    console.log(e.type + " on #" + e.currentTarget.tagName + " - " + phase);
+  }
+
+  function stopImmediately(e) {
+    e.stopImmediatePropagation();
+    console.log(e.type + ".stopImmediatePropagation();");
+  }
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+
+  outer.addEventListener("click", log, true);            //yes
+  inner.addEventListener("click", stopImmediately, true);//yes
+  inner.addEventListener("click", log, true);            //no
+  inner.addEventListener("click", log);                  //no
+  outer.addEventListener("click", log);                  //no
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>
+```
+
+Result: 
+
+```           
+click on #DIV - CAPTURE
+click.stopImmediatePropagation();
+```              
+
+## Implementation
+
+As, `.stopPropagation()`, `.stopImmediatePropagation()` is a method on `Event` objects. We therefore also here associate a corresponding property on `Event` objects that declares whether this particular event has been stopped immediately. But, this property must be checked for each new event listener retrieved, not just for each new element in the propagation path.
+
+```javascript
+function callListenersOnElement(currentTarget, event, phase) {
+  if (event._propagationStopped || event._propagationStoppedImmediately)
+    return;
+  if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
+    return;
+  if (event.cancelBubble)
+    phase = Event.CAPTURING_PHASE;
+  const listeners = currentTarget.getEventListeners(event.type, phase);
+  Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+  for (let listener of listeners){
+    if (event._propagationStoppedImmediately)
+      return;
+    if (currentTarget.hasEventListener(event.type, listener))
+      listener.cb(event);
+  }
+}
+
+function dispatchEvent(target, event) {
+  const propagationPath = getComposedPath(target, event).slice(1);
+  Object.defineProperty(event, "target", {
+    get: function () {
+      let lowest = target;
+      for (let t of propagationPath) {
+        if (t === this.currentTarget)
+          return lowest;
+        if (t instanceof DocumentFragment && t.mode === "closed")
+          lowest = t.host || lowest;
+      }
+    }
+  });
+  Object.defineProperty(event, "stopPropagation", {
+    value: function () {
+      this._propagationStopped = true;
+    }
+  });
+  Object.defineProperty(event, "stopImmediatePropagation", {
+    value: function () {
+      this._propagationStoppedImmediately = true;
+    }
+  });
+  for (let currentTarget of propagationPath.slice().reverse())
+    callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
+  callListenersOnElement(target, event, Event.AT_TARGET);
+  for (let currentTarget of propagationPath)
+    callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
+}
+```
+
+## Demo: masquerade dispatchEvent function
+
+```html
 <script>
   function matchEventListeners(funA, optionsA, funB, optionsB) {
     if (funA !== funB)
@@ -68,7 +166,7 @@
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (event._propagationStopped)
+    if (event._propagationStopped === true)
       return;
     if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
       return;
@@ -77,8 +175,7 @@
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      if (currentTarget.hasEventListener(event.type, listener))
-        listener.cb(event);
+      listener(event);
   }
 
   function dispatchEvent(target, event) {
@@ -137,6 +234,11 @@
   inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
   outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
 
-  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
-  dispatchEvent(inner, new MouseEvent("dblclick", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
 </script>
+```
+
+## References
+
+  * todo find this described in the spec.
