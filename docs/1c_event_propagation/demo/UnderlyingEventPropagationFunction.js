@@ -69,7 +69,7 @@ function getComposedPath(target, event) {
 function callListenersOnElement(currentTarget, event, phase, async) {
   if (event._propagationStopped || event._immediatePropagationStopped)
     return;
-  if (!event.bubbles && phase === Event.BUBBLING_PHASE)
+  if ((!event.bubbles || event.cancelBubble) && phase === Event.BUBBLING_PHASE)
     return;
   //1. lock the listeners being iterated. We cannot add listeners anymore.
   const listeners = currentTarget.getEventListenerInstances(event.type, phase);
@@ -92,7 +92,7 @@ function callListenersOnElement(currentTarget, event, phase, async) {
           if (event._immediatePropagationStopped)
             return;
           if (currentTarget !== event._lastTargetTriggered) {
-            if (event._propagationStopped && (!event.bubbles && phase === Event.BUBBLING_PHASE))
+            if (event._propagationStopped || ((!event.bubbles || event.cancelBubble) && phase === Event.BUBBLING_PHASE))
               return;
           }
           event._lastTargetTriggered = currentTarget;

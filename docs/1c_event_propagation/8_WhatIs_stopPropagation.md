@@ -237,7 +237,15 @@ function dispatchEvent(target, event) {
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
   inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
 </script>
-```
+``` 
+
+## bubbles vs stopPropagation
+
+1. `stopPropagation()` and `bubbles = false` is *not* the same.
+   * `stopPropagation()` prevents the event propagation from going to the *next element* in the event's propagation path in *all phases*.
+   * `bubbles = false` also prevents the event propagation from going to the *next element* in the event's propagation path, but *only within the last bubbling phase*.
+   
+2. Both `stopPropagation()` and `bubbles = false` allows the event propagation to finish calling all event listeners added to the current element before stopping.  
 
 ## References
 

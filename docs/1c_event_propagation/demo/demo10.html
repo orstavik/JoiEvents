@@ -1,0 +1,24 @@
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    console.log(e.type + " on #" + e.currentTarget.id);
+  }
+  function error() {
+    throw new Error("event listener break down");
+  }
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+
+  outer.addEventListener("click", error, true);
+  inner.addEventListener("click", error);
+  inner.addEventListener("click", log);
+  outer.addEventListener("click", log);
+
+  window.addEventListener("error", log);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>

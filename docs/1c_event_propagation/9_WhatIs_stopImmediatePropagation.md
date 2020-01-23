@@ -2,6 +2,9 @@
 
 `stopImmediatePropagation()` is the same as `stopPropagation()`, except it will also block all event listeners, even the ones added to the same target element.
 
+ * `stopPropagation()` *allows* the event propagation function to finish calling all event listeners added to the current element before stopping.  
+ * `stopImmediatePropagation()` *prevents* the event propagation function to call any other event listeners, including later event listeners added to the current element being processed.  
+
 ## Demo: native behavior
 
 ```html
