@@ -1,0 +1,32 @@
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
+    console.log(e.type + " on #" + e.currentTarget.tagName + " - " + phase);
+  }
+
+  function stopProp(e) {
+    e.stopPropagation();
+    console.log(e.type + ".stopPropagation();");
+  }
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+
+  outer.addEventListener("click", log, true);   //yes
+  inner.addEventListener("click", stopProp);    //yes
+  inner.addEventListener("click", log, true);   //yes, same current target as when stopPropagation() was called
+  inner.addEventListener("click", log);         //yes, same current target as when stopPropagation() was called
+  outer.addEventListener("click", log);         //no
+
+  document.body.addEventListener("dblclick", stopProp, true); //yes
+  outer.addEventListener("dblclick", log, true);              //no, stopPropagation() can block in all event phases.
+  inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
+</script>

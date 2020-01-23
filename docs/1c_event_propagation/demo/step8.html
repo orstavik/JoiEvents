@@ -68,11 +68,16 @@
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
+    if (event._propagationStopped === true)
+      return;
+    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
+      return;
+    if (event.cancelBubble)
+      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      if (currentTarget.hasEventListener(event.type, listener))
-        listener.cb(event);
+      listener(event);
   }
 
   function dispatchEvent(target, event) {
@@ -88,6 +93,11 @@
         }
       }
     });
+    Object.defineProperty(event, "stopPropagation", {
+      value: function () {
+        this._propagationStopped = true;
+      }
+    });
     for (let currentTarget of propagationPath.slice().reverse())
       callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
     callListenersOnElement(target, event, Event.AT_TARGET);
@@ -97,31 +107,35 @@
 
 </script>
 
-<hello-sunshine></hello-sunshine>
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
 
 <script>
-  let sunshineTarget;
-
-  class HelloSunshine extends HTMLElement {
-    constructor() {
-      super();
-      this.shadow = this.attachShadow({mode: "closed"});
-      this.shadow.innerHTML = `<h1>hello sunshine</h1>`;
-      this.shadow.addEventListener("click", e => console.log(e.target.tagName));
-      sunshineTarget = this.shadow.children[0];     //this is a hack, so we can click on the closed content
-    }
-  }
-
-  customElements.define("hello-sunshine", HelloSunshine);
-
   function log(e) {
-    console.log(e.target);
+    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
+    console.log(e.type + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  const hello = document.querySelector("hello-sunshine");
+  function stopProp(e) {
+    e.stopPropagation();
+    console.log(e.type + ".stopPropagation();");
+  }
 
-  hello.addEventListener("click", e => console.log(e.target.tagName));
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
 
-  dispatchEvent(sunshineTarget, new MouseEvent("click", {composed: true, bubbles: true}));
-  dispatchEvent(sunshineTarget, new MouseEvent("click", {bubbles: true}));
+  outer.addEventListener("click", log, true);   //yes
+  inner.addEventListener("click", stopProp);    //yes
+  inner.addEventListener("click", log, true);   //yes, same current target as when stopPropagation() was called
+  inner.addEventListener("click", log);         //yes, same current target as when stopPropagation() was called
+  outer.addEventListener("click", log);         //no
+
+  document.body.addEventListener("dblclick", stopProp, true); //yes
+  outer.addEventListener("dblclick", log, true);              //no, stopPropagation() can block in all event phases.
+  inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
 </script>

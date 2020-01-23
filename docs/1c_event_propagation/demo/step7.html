@@ -90,7 +90,6 @@
           if (t instanceof DocumentFragment && t.mode === "closed")
             lowest = t.host || lowest;
         }
-        throw new Error("Omg, a target not in the propagation path??");
       }
     });
     for (let currentTarget of propagationPath.slice().reverse())
