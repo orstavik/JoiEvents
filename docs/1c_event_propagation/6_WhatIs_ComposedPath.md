@@ -142,16 +142,18 @@ function dispatchEvent(target, event) {
     if (!this._eventListeners || !this._eventListeners[name])
       return [];
     if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].map(cbOptions => cbOptions.cb);
+      return this._eventListeners[name].slice();
     if (phase === Event.CAPTURING_PHASE) {
       return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true))
-        .map(cbOptions => cbOptions.cb);
+        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
     }
     //(phase === Event.BUBBLING_PHASE)
     return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)))
-      .map(cbOptions => cbOptions.cb);
+      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
+  };
+
+  EventTarget.prototype.hasEventListener = function (name, listener) {
+    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
   };
 
   function getComposedPath(target, event) {
@@ -176,7 +178,8 @@ function dispatchEvent(target, event) {
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      listener(event);
+      if (currentTarget.hasEventListener(event.type, listener))
+        listener.cb(event);
   }
 
   function dispatchEvent(target, event) {
