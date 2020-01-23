@@ -73,21 +73,19 @@
   }
 
   function dispatchEvent(target, event) {
+    const propagationPath = getComposedPath(target, event).slice(1);
     Object.defineProperty(event, "target", {
       get: function () {
         let lowest = target;
-        const path = getComposedPath(lowest, event);
-        for (let i = 0; i < path.length; i++) {
-          let t = path[i];
+        for (let t of propagationPath) {
           if (t === this.currentTarget)
             return lowest;
           if (t instanceof DocumentFragment && t.mode === "closed")
-            lowest = path[i+1];
+            lowest = t.host || lowest;
         }
         throw new Error("Omg, a target not in the propagation path??");
       }
     });
-    const propagationPath = getComposedPath(target, event).slice(1);
     for (let currentTarget of propagationPath.slice().reverse())
       callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
     callListenersOnElement(target, event, Event.AT_TARGET);
