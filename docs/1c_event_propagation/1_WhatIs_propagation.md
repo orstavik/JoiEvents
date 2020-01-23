@@ -62,7 +62,7 @@ The example above has a small DOM with a couple of elements. To these elements, 
   }
   
   function dispatchEvent(target, event) {
-    const propagationPath = getComposedPath(target).slice(1);
+    const propagationPath = getPath(target).slice(1);
     for (let currentTarget of propagationPath.slice().reverse())
       callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE, async);
     callListenersOnElement(target, event, Event.AT_TARGET, async);
