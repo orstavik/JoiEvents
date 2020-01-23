@@ -35,16 +35,18 @@
     if (!this._eventListeners || !this._eventListeners[name])
       return [];
     if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].map(cbOptions => cbOptions.cb);
+      return this._eventListeners[name].slice();
     if (phase === Event.CAPTURING_PHASE) {
       return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true))
-        .map(cbOptions => cbOptions.cb);
+        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
     }
     //(phase === Event.BUBBLING_PHASE)
     return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)))
-      .map(cbOptions => cbOptions.cb);
+      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
+  };
+
+  EventTarget.prototype.hasEventListener = function (name, listener) {
+    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
   };
 
   function getComposedPath(target, event) {
@@ -66,10 +68,15 @@
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
+    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
+      return;
+    if (event.cancelBubble)
+      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      listener(event);
+      if (currentTarget.hasEventListener(event.type, listener))
+        listener.cb(event);
   }
 
   function dispatchEvent(target, event) {
@@ -94,32 +101,51 @@
   }
 
 </script>
-
-<hello-sunshine></hello-sunshine>
+<div id="outer">
+  <h1 id="inner">Click on me!</h1>
+</div>
 
 <script>
-  let sunshineTarget;
-
-  class HelloSunshine extends HTMLElement {
-    constructor() {
-      super();
-      this.shadow = this.attachShadow({mode: "closed"});
-      this.shadow.innerHTML = `<h1>hello sunshine</h1>`;
-      this.shadow.addEventListener("click", e => console.log(e.target.tagName));
-      sunshineTarget = this.shadow.children[0];     //this is a hack, so we can click on the closed content
-    }
-  }
-
-  customElements.define("hello-sunshine", HelloSunshine);
-
   function log(e) {
-    console.log(e.target);
+    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
+    console.log(e.type + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  const hello = document.querySelector("hello-sunshine");
+  function log2(e) {
+    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
+    console.log(e.type + " (log2)" + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
+  }
 
-  hello.addEventListener("click", e => console.log(e.target.tagName));
+  function cancelBubble(e) {
+    e.cancelBubble = true;
+    console.log(e.type + ".cancelBubble = " + e.cancelBubble);
+  }
 
-  dispatchEvent(sunshineTarget, new MouseEvent("click", {composed: true, bubbles: true}));
-  dispatchEvent(sunshineTarget, new MouseEvent("click", {bubbles: true}));
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+
+  outer.addEventListener("mousedown", log, true);   //yes
+  inner.addEventListener("mousedown", log, true);   //yes
+  inner.addEventListener("mousedown", log);         //yes
+  outer.addEventListener("mousedown", log);         //yes
+
+  outer.addEventListener("mouseup", log, true);     //yes, capture phase is run when bubbles: false
+  inner.addEventListener("mouseup", log, true);     //yes
+  inner.addEventListener("mouseup", log);           //yes, at_target phase
+  outer.addEventListener("mouseup", log);           //no, bubbles: false
+
+  outer.addEventListener("click", log, true);         //yes
+  outer.addEventListener("click", cancelBubble, true);//yes
+  inner.addEventListener("click", log);               //no, at_target phase doesn't help, the event listener is added as a bubble event listener  !!!
+  outer.addEventListener("click", log);               //no, bubbles: false
+
+  outer.addEventListener("dblclick", log);            //yes
+  outer.addEventListener("dblclick", cancelBubble);   //yes
+  outer.addEventListener("dblclick", log2);           //yes, is the current target when bubbles false was set
+  document.body.addEventListener("dblclick", log);    //no
+
+  dispatchEvent(inner, new MouseEvent("mousedown", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("mouseup", {bubbles: false}));
+  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("dblclick", {bubbles: true}));
 </script>
