@@ -7,8 +7,6 @@ When events are created, they can have the property `bubbles` set to `true` or `
 > Non-bubbling = capture + target phase!! 
 
 Non-bubbling events operate exactly like normal, bubbling events that has an event listener on its innermost target element that either calls `.stopPropagation()` or sets `cancelBubbles = true`. 
-                           
-Att!! As the demo below will show, `cancelBubbles` is not *only* a legacy means to convert a bubbling event into a non-bubbling event. In *addition* to stopping normal bubbling, `cancelBubbles = true` will also prevent event listeners added with the `capture = false` option from being triggered *during the `AT_TARGET` phase*.
 
 ## Demo: native behavior
 
@@ -23,76 +21,33 @@ Att!! As the demo below will show, `cancelBubbles` is not *only* a legacy means 
     console.log(e.type + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  function log2(e) {
-    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
-    console.log(e.type + " (log2)" + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
-  }
-
-  function cancelBubble(e) {
-    e.cancelBubble = true;
-    console.log(e.type + ".cancelBubble = " + e.cancelBubble);
-  }
-
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log);         //yes
-  outer.addEventListener("mousedown", log);         //yes
+  outer.addEventListener("click", log, true);     //yes, capture phase is run when bubbles: false
+  inner.addEventListener("click", log, true);     //yes
+  inner.addEventListener("click", log);           //yes, at_target phase
+  outer.addEventListener("click", log);           //no, bubbles: false
 
-  outer.addEventListener("mouseup", log, true);     //yes, capture phase is run when bubbles: false
-  inner.addEventListener("mouseup", log, true);     //yes
-  inner.addEventListener("mouseup", log);           //yes, at_target phase
-  outer.addEventListener("mouseup", log);           //no, bubbles: false
-
-  outer.addEventListener("click", log, true);         //yes
-  outer.addEventListener("click", cancelBubble, true);//yes
-  inner.addEventListener("click", log);               //no, at_target phase doesn't help, the event listener is added as a bubble event listener  !!!
-  outer.addEventListener("click", log);               //no, bubbles: false
-
-  outer.addEventListener("dblclick", log);            //yes
-  outer.addEventListener("dblclick", cancelBubble);   //yes
-  outer.addEventListener("dblclick", log2);           //yes, is the current target when bubbles false was set
-  document.body.addEventListener("dblclick", log);    //no
-
-  inner.dispatchEvent(new MouseEvent("mousedown", {bubbles: true}));
-  inner.dispatchEvent(new MouseEvent("mouseup", {bubbles: false}));
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: false}));
 </script>
 ```
 
 ```
-mousedown bubbles = true on #DIV - CAPTURE
-mousedown bubbles = true on #H1 - TARGET
-mousedown bubbles = true on #H1 - TARGET
-mousedown bubbles = true on #DIV - BUBBLE
-
-mouseup bubbles = false on #DIV - CAPTURE
-mouseup bubbles = false on #H1 - TARGET
-mouseup bubbles = false on #H1 - TARGET
-
-click bubbles = true on #DIV - CAPTURE
-click.cancelBubble = true
-
-dblclick bubbles = true on #DIV - BUBBLE
-dblclick.cancelBubble = true
-dblclick (log2) bubbles = true on #DIV - BUBBLE
+click bubbles = false on #DIV - CAPTURE
+click bubbles = false on #H1 - TARGET
+click bubbles = false on #H1 - TARGET
 ```              
 
 ## Implementation
 
-To check for bubbling, we need to add two checks when we call listeners on a new element in the propagation path:
-1. If the phase is bubbling and the event is either a) non-bubbling (`bubbles = false`) or b) has set its `cancelBubble` to `true`, we do not call any event listeners on the new element.
-2. If the `cancelBubble` has been set to `true`, we only ask for event listeners for the `CAPTURING_PHASE` during the `AT_TARGET` phase.
+To check for bubbling, we need to add a check when we call listeners on a new element in the propagation path:
+1. If the phase is bubbling and the event is non-bubbling (`bubbles = false`), we do not call any event listeners on the target.
 
 ```javascript
 function callListenersOnElement(currentTarget, event, phase) {
-  if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
+  if (phase === Event.BUBBLING_PHASE && !event.bubbles)
     return;
-  if (event.cancelBubble)
-    phase = Event.CAPTURING_PHASE;
   const listeners = currentTarget.getEventListeners(event.type, phase);
   Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
   for (let listener of listeners)
@@ -158,25 +113,24 @@ function callListenersOnElement(currentTarget, event, phase) {
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
+    if (phase === Event.BUBBLING_PHASE && !event.bubbles)
       return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
@@ -195,7 +149,6 @@ function callListenersOnElement(currentTarget, event, phase) {
           if (t instanceof DocumentFragment && t.mode === "closed")
             lowest = t.host || lowest;
         }
-        throw new Error("Omg, a target not in the propagation path??");
       }
     });
     for (let currentTarget of propagationPath.slice().reverse())
@@ -206,6 +159,7 @@ function callListenersOnElement(currentTarget, event, phase) {
   }
 
 </script>
+
 <div id="outer">
   <h1 id="inner">Click on me!</h1>
 </div>
@@ -216,43 +170,15 @@ function callListenersOnElement(currentTarget, event, phase) {
     console.log(e.type + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  function log2(e) {
-    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
-    console.log(e.type + " (log2)" + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
-  }
-
-  function cancelBubble(e) {
-    e.cancelBubble = true;
-    console.log(e.type + ".cancelBubble = " + e.cancelBubble);
-  }
-
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log);         //yes
-  outer.addEventListener("mousedown", log);         //yes
+  outer.addEventListener("click", log, true);     //yes, capture phase is run when bubbles: false
+  inner.addEventListener("click", log, true);     //yes
+  inner.addEventListener("click", log);           //yes, at_target phase
+  outer.addEventListener("click", log);           //no, bubbles: false
 
-  outer.addEventListener("mouseup", log, true);     //yes, capture phase is run when bubbles: false
-  inner.addEventListener("mouseup", log, true);     //yes
-  inner.addEventListener("mouseup", log);           //yes, at_target phase
-  outer.addEventListener("mouseup", log);           //no, bubbles: false
-
-  outer.addEventListener("click", log, true);         //yes
-  outer.addEventListener("click", cancelBubble, true);//yes
-  inner.addEventListener("click", log);               //no, at_target phase doesn't help, the event listener is added as a bubble event listener  !!!
-  outer.addEventListener("click", log);               //no, bubbles: false
-
-  outer.addEventListener("dblclick", log);            //yes
-  outer.addEventListener("dblclick", cancelBubble);   //yes
-  outer.addEventListener("dblclick", log2);           //yes, is the current target when bubbles false was set
-  document.body.addEventListener("dblclick", log);    //no
-
-  dispatchEvent(inner, new MouseEvent("mousedown", {bubbles: true}));
-  dispatchEvent(inner, new MouseEvent("mouseup", {bubbles: false}));
-  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
-  dispatchEvent(inner, new MouseEvent("dblclick", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("click", {bubbles: false}));
 </script>
 ```
 

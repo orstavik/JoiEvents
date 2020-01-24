@@ -53,27 +53,24 @@
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (event._propagationStopped || event._propagationStoppedImmediately)
+    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-      return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners) {
@@ -108,11 +105,6 @@
         }
       }
     });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
-      }
-    });
     Object.defineProperty(event, "stopImmediatePropagation", {
       value: function () {
         this._propagationStoppedImmediately = true;
@@ -138,40 +130,41 @@
     details.open = true;
   }
 
-  function callListenerAsync(event, currentTarget, listener){
-    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-    if (event._propagationStoppedImmediately)
+  function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
+    if (!phase)
+      phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
+        roundTripPath.length === targetIndex ? Event.AT_TARGET :
+          Event.BUBBLING_PHASE;
+    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (!currentTarget.hasEventListener(event.type, listener))
-      return;
-    try {
-      listener.cb(event);
-    } catch (err) {
-      const error = new ErrorEvent(
-        'error',
-        {error: err, message: 'Uncaught Error: event listener break down'}
-      );
-      dispatchEvent(window, error);
-      if (!error.defaultPrevented)
-        console.error(error);
+    if (!currentTarget) {
+      currentTarget = roundTripPath.shift();
+      listeners = currentTarget.getEventListeners(event.type, phase);
+      Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     }
+    while (listeners.length) {
+      const listener = listeners.shift();
+      if (!currentTarget.hasEventListener(event.type, listener))
+        return;
+      try {
+        listener.cb(event);
+      } catch (err) {
+        const error = new ErrorEvent(
+          'error',
+          {error: err, message: 'Uncaught Error: event listener break down'}
+        );
+        dispatchEvent(window, error);
+        if (!error.defaultPrevented)
+          console.error(error);
+      }
+      if (listeners.length)
+        return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
+    }
+    if (roundTripPath.length)
+      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex));
   }
-
-  function callListenersOnElementAsync(currentTarget, event, phase) {
-    if (event._propagationStopped || event._propagationStoppedImmediately)
-      return;
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-      return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
-    const listeners = currentTarget.getEventListeners(event.type, phase);
-    for (let listener of listeners)
-      toggleTick(callListenerAsync.bind(null, event, currentTarget, listener)); 
-  }
-
 
   function dispatchEventAsync(target, event) {
-    const propagationPath = getComposedPath(target, event).slice(1);
     Object.defineProperty(event, "target", {
       get: function () {
         let lowest = target;
@@ -193,13 +186,10 @@
         this._propagationStoppedImmediately = true;
       }
     });
-    for (let currentTarget of propagationPath.slice().reverse())
-      setTimeout(callListenersOnElementAsync.bind(null, currentTarget, event, Event.CAPTURING_PHASE));
-    setTimeout(callListenersOnElementAsync.bind(null, target, event, Event.AT_TARGET));
-    for (let currentTarget of propagationPath)
-      setTimeout(callListenersOnElementAsync.bind(null, currentTarget, event, Event.BUBBLING_PHASE));
+    const propagationPath = getComposedPath(target, event);
+    const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length));
   }
-
 </script>
 
 <div id="outer">
@@ -210,12 +200,12 @@
   function log(e) {
     const thisTarget = e.currentTarget.id;
     console.log(e.type + " on #" + thisTarget);
-    Promise.resolve().then(function() {
+    Promise.resolve().then(function () {
       console.log("microtask from #" + thisTarget);
     });
   }
 
-  function log2(e){
+  function log2(e) {
     log(e);
   }
 

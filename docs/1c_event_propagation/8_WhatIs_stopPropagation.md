@@ -2,6 +2,12 @@
 
 `stopPropagation()` works very much the same as `bubbles: false`, except that it can be called on the event at any time during event propagation and that it will take effect from the next element in the event propagation path, regardless of which phase the event listener is in.
 
+But! `stopPropagation()` works exactly like `cancelBubble = false`. `cancelBubble` is a legacy property from the good old Internet Explorer days, and in the aftermath of the browser war when the event propagation algorithms of Netscape Navigator (cf. capture) and Internet Explorer (cf. bubble) was merged, it was decided that `cancelBubble` should simply echo the new `stopPropagation()` method. Therefore:
+ * When you call `stopPropagation()`, then `cancelBubble` becomes `true`.
+ * To set `cancelBubble = false` is the same as calling `stopPropagation()`. 
+ 
+If propagation first is stopped, it is irreversible. There is no `resumePropagation()` nor `cancelBubble = false`.    
+
 ## Demo: native behavior
 
 ```html
@@ -17,23 +23,35 @@
 
   function stopProp(e) {
     e.stopPropagation();
-    console.log(e.type + ".stopPropagation();");
+    console.log(e.type + ".stopPropagation(); cancelBubble = " + e.cancelBubble);
+  }
+
+  function cancelBubble(e) {
+    e.cancelBubble = true;
+    console.log(e.type + ".cancelBubble; cancelBubble = " + e.cancelBubble);
   }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("click", log, true);   //yes
-  inner.addEventListener("click", stopProp);    //yes
-  inner.addEventListener("click", log, true);   //yes, same current target as when stopPropagation() was called
-  inner.addEventListener("click", log);         //yes, same current target as when stopPropagation() was called
-  outer.addEventListener("click", log);         //no
+  outer.addEventListener("mouseup", log, true);   //yes
+  inner.addEventListener("mouseup", cancelBubble);//yes
+  inner.addEventListener("mouseup", log, true);//yes, same target as when stopPropagation() was called
+  inner.addEventListener("mouseup", log);      //yes, same target as when stopPropagation() was called
+  outer.addEventListener("mouseup", log);      //no
+
+  outer.addEventListener("click", log, true);//yes
+  inner.addEventListener("click", stopProp); //yes
+  inner.addEventListener("click", log, true);//yes, same current target as when stopPropagation() was called
+  inner.addEventListener("click", log);      //yes, same current target as when stopPropagation() was called
+  outer.addEventListener("click", log);      //no
 
   document.body.addEventListener("dblclick", stopProp, true); //yes
-  outer.addEventListener("dblclick", log, true);              //no, stopPropagation() can block in all event phases.
-  inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
-  outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("dblclick", log, true); //no, stopPropagation() can block in all event phases.
+  inner.addEventListener("dblclick", log);       //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("dblclick", log);       //no, stopPropagation() can block in all event phases.
 
+  inner.dispatchEvent(new MouseEvent("mouseup", {bubbles: true}));
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
   inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
 </script>
@@ -42,54 +60,29 @@
 Result: 
 
 ```           
+mouseup on #DIV - CAPTURE
+mouseup.cancelBubble; cancelBubble = true
+mouseup on #H1 - TARGET
+mouseup on #H1 - TARGET
 click on #DIV - CAPTURE
-click.stopPropagation();
+click.stopPropagation(); cancelBubble = true
 click on #H1 - TARGET
 click on #H1 - TARGET
-dblclick.stopPropagation();
-```              
+dblclick.stopPropagation(); cancelBubble = true```              
+```
 
 ## Implementation
 
-`.stopPropagation()` is a method on `Event` objects, and therefore it would be natural to associate a corresponding property on `Event` objects that declares whether this particular event has been stopped or not. This property can then be checked when the event propagation function tries to call event listeners on the next potential target in the propagation path.    
+We check the `cancelBubbles` property on the event when the event propagation function tries to trigger event listeners on the next potential target in the propagation path.    
 
 ```javascript
 function callListenersOnElement(currentTarget, event, phase) {
-  if (event._propagationStopped)
+  if (event.cancelBubble || (phase === Event.BUBBLING_PHASE && !event.bubbles))
     return;
-  if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-    return;
-  if (event.cancelBubble)
-    phase = Event.CAPTURING_PHASE;
   const listeners = currentTarget.getEventListeners(event.type, phase);
   Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
   for (let listener of listeners)
     listener(event);
-}
-
-function dispatchEvent(target, event) {
-  const propagationPath = getComposedPath(target, event).slice(1);
-  Object.defineProperty(event, "target", {
-    get: function () {
-      let lowest = target;
-      for (let t of propagationPath) {
-        if (t === this.currentTarget)
-          return lowest;
-        if (t instanceof DocumentFragment && t.mode === "closed")
-          lowest = t.host || lowest;
-      }
-    }
-  });
-  Object.defineProperty(event, "stopPropagation", {
-    value: function () {
-      this._propagationStopped = true;
-    }
-  });
-  for (let currentTarget of propagationPath.slice().reverse())
-    callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
-  callListenersOnElement(target, event, Event.AT_TARGET);
-  for (let currentTarget of propagationPath)
-    callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
 }
 ```
 

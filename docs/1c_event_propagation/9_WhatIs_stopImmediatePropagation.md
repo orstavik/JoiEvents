@@ -1,6 +1,6 @@
 # WhatIs: `.stopImmediatePropagation()`?
 
-`stopImmediatePropagation()` is the same as `stopPropagation()`, except it will also block all event listeners, even the ones added to the same target element.
+`stopImmediatePropagation()` is the same as `stopPropagation()`, except that it also blocks subsequent event listeners added to the same target element.
 
  * `stopPropagation()` *allows* the event propagation function to finish calling all event listeners added to the current element before stopping.  
  * `stopImmediatePropagation()` *prevents* the event propagation function to call any other event listeners, including later event listeners added to the current element being processed.  
@@ -45,16 +45,12 @@ click.stopImmediatePropagation();
 
 ## Implementation
 
-As, `.stopPropagation()`, `.stopImmediatePropagation()` is a method on `Event` objects. We therefore also here associate a corresponding property on `Event` objects that declares whether this particular event has been stopped immediately. But, this property must be checked for each new event listener retrieved, not just for each new element in the propagation path.
+`.stopImmediatePropagation()` is a method on the `Event` prototype. We therefore here associate a corresponding property on `Event` objects that declares whether this particular event has been stopped immediately. This very much resemble what `cancelBubble` does for `stopPropagation()`. However, this property must be checked for each new event listener retrieved, not just for each new element in the propagation path.
 
 ```javascript
 function callListenersOnElement(currentTarget, event, phase) {
-  if (event._propagationStopped || event._propagationStoppedImmediately)
-    return;
-  if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-    return;
-  if (event.cancelBubble)
-    phase = Event.CAPTURING_PHASE;
+    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
+      return;
   const listeners = currentTarget.getEventListeners(event.type, phase);
   Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
   for (let listener of listeners){
@@ -76,11 +72,6 @@ function dispatchEvent(target, event) {
         if (t instanceof DocumentFragment && t.mode === "closed")
           lowest = t.host || lowest;
       }
-    }
-  });
-  Object.defineProperty(event, "stopPropagation", {
-    value: function () {
-      this._propagationStopped = true;
     }
   });
   Object.defineProperty(event, "stopImmediatePropagation", {

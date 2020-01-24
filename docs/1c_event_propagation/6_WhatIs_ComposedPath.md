@@ -58,19 +58,20 @@ The first adjustment, providing an element's `composedPath` is fairly straight f
 ```javascript
 function getComposedPath(target, event) {
   const path = [];
-  while (true){
+  while (true) {
     path.push(target);
-    if (target.parentNode)
+    if (target.parentNode) {
       target = target.parentNode;
-    else if(target.host){
+    } else if (target.host) {
       if (!event.composed)
         return path;
       target = target.host;
+    } else if (target.defaultView) {
+      target = target.defaultView;
     } else {
       break;
     }
   }
-  path.push(document, window);
   return path;
 }
 ``` 

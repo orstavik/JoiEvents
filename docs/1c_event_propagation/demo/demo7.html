@@ -8,41 +8,13 @@
     console.log(e.type + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  function log2(e) {
-    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
-    console.log(e.type + " (log2)" + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
-  }
-
-  function cancelBubble(e) {
-    e.cancelBubble = true;
-    console.log(e.type + ".cancelBubble = " + e.cancelBubble);
-  }
-
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log);         //yes
-  outer.addEventListener("mousedown", log);         //yes
+  outer.addEventListener("click", log, true);     //yes, capture phase is run when bubbles: false
+  inner.addEventListener("click", log, true);     //yes
+  inner.addEventListener("click", log);           //yes, at_target phase
+  outer.addEventListener("click", log);           //no, bubbles: false
 
-  outer.addEventListener("mouseup", log, true);     //yes, capture phase is run when bubbles: false
-  inner.addEventListener("mouseup", log, true);     //yes
-  inner.addEventListener("mouseup", log);           //yes, at_target phase
-  outer.addEventListener("mouseup", log);           //no, bubbles: false
-
-  outer.addEventListener("click", log, true);         //yes
-  outer.addEventListener("click", cancelBubble, true);//yes
-  inner.addEventListener("click", log);               //no, at_target phase doesn't help, the event listener is added as a bubble event listener  !!!
-  outer.addEventListener("click", log);               //no, bubbles: false
-
-  outer.addEventListener("dblclick", log);            //yes
-  outer.addEventListener("dblclick", cancelBubble);   //yes
-  outer.addEventListener("dblclick", log2);           //yes, is the current target when bubbles false was set
-  document.body.addEventListener("dblclick", log);    //no
-
-  inner.dispatchEvent(new MouseEvent("mousedown", {bubbles: true}));
-  inner.dispatchEvent(new MouseEvent("mouseup", {bubbles: false}));
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: false}));
 </script>

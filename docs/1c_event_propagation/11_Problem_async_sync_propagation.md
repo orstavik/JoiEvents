@@ -1,13 +1,13 @@
-# Problem: Async vs sync event propagation
+# WhatIs: Async event propagation
 
-When the browser dispatches native events, it will queue the event listeners in the event loop. Or. It will queue them in what would conceptually be *the top-most prioritized* macrotask queue in the event loop, but still a queue that would have lower priority than the microtask queue.
+When browsers dispatch native events such as `click`, they will queue the event listeners in *the top-most prioritized* macrotask queue in the event loop (or some other queue that functions to this effect). This queue has a **lower priority than the microtask queue**.
 
-When a script dispatches an event to a target, these events are run synchronously. The browser simply loops through each task. But. The browser will handle and catch any errors that occur during each event listener callback, and will ensure that errors in an early event listener will not block the running of later event listeners.
-
-Examples of triggering event listeners triggered via scripts:
+When script dispatches an event, their event listeners are executed synchronously: the browser simply loops through each task. This loop catches errors, as described in earlier, but this loop has still a **higher priority than the microtask queue**. Examples of triggering event listeners triggered via scripts:
  * `el.click()`, 
  * `dispatchEvent(new MouseEvent("click", {bubbles: true}))`, and
  * `dispatchEvent(new CustomEvent("my-event"))`.
+
+Browsers *also* do dispatch some events such as `error` *synchronously*.
 
 ## Demo: Sync vs async `click` propagation   
 
@@ -66,46 +66,65 @@ When you `click` on "Click on me!" using either mouse or touch, then you will se
  
 ## Problem
 
-The main challenge with the async vs sync dispatch is that in an event listener, you cannot assume that tasks queued in the microtask queue will run before or after the next event listener in the event propagation path, unless you know that no all instances of that event will either be triggered by the browsers native, async dispatch function or via scripts sync event dispatch functions. The problem is, you do not know the exact order of the queue, from within an event listener.
+There is a problem with events propagating both sync and async:
+
+**if you inside an event listener queue a task in the microtask queue, you often don't know if this task will run before or after the next event listener in line.**
+ 
+There are exceptions to this rule:
+ * If you listen for `error` or some other event the browser dispatches sync, then you know microtask triggered by your event listener will always run after all the other event listeners for the same event.
+ * If you know that no script in your app dispatches a `click` event, then you know that microtasks queued from inside any `click` event listener will run before the next event listener.
+ 
+But still the problem remains. If scripts might dispatch "async events" such as `click` in your app either now or in the future, then inside event listeners for such apps, the timing of microtasks vs. other event listeners is uncertain.
 
 ## Implementation of async event propagation function
 
-There are some snags when simulating an async `dispatchEvent` function. We begin by letting the code speak for itself. First, event listeners can be added dynamically. This means that the we cannot at the outset of the event listener function queue all tasks: the only thing that is fixed at the outset is the propagation path. Thus, we must queue a task to process each element in the target chain. 
+Implementing the async version of `dispatchEvent` is slightly more complicated than the sync version:
+
+1. In both async and sync event propagation the propagation path is fixed at the outset.
+2. We can therefore create a fixed round trip propagation path and target index. This path is passed along in the event queue.
+3. But, in the async version, we also need to share the data about the currentTarget and the list of event listeners avaiable at that target in that phase. We therefore also pass along the currentTarget, its current list of event listeners, and the phase data.
+4. We then queue each call for next event listener asynchronously in the highest priority macrotask queue in the event loop available: `toggleTick(...)`.
 
 ```javascript
-function callListenerAsync(event, currentTarget, listener){
-  Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-  if (event._propagationStoppedImmediately)
-    return;
-  if (!currentTarget.hasEventListener(event.type, listener))
-    return;
-  try {
-    listener.cb(event);
-  } catch (err) {
-    const error = new ErrorEvent(
-      'error',
-      {error: err, message: 'Uncaught Error: event listener break down'}
-    );
-    dispatchEvent(window, error);
-    if (!error.defaultPrevented)
-      console.error(error);
-  }
-}                 
-
-function callListenersOnElementAsync(currentTarget, event, phase) {
+function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
+  if (!phase)
+    phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
+      roundTripPath.length === targetIndex ? Event.AT_TARGET :
+        Event.BUBBLING_PHASE;
   if (event._propagationStopped || event._propagationStoppedImmediately)
     return;
   if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
     return;
   if (event.cancelBubble)
     phase = Event.CAPTURING_PHASE;
-  const listeners = currentTarget.getEventListeners(event.type, phase);
-  for (let listener of listeners)
-    toggleTick(callListenerAsync.bind(null, event, currentTarget, listener)); 
-}                 
+  if (!currentTarget) {
+    currentTarget = roundTripPath.shift();
+    listeners = currentTarget.getEventListeners(event.type, phase);
+    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+  }
+  while (listeners.length) {
+    const listener = listeners.shift();
+    if (!currentTarget.hasEventListener(event.type, listener))
+      return;
+    try {
+      listener.cb(event);
+    } catch (err) {
+      const error = new ErrorEvent(
+        'error',
+        {error: err, message: 'Uncaught Error: event listener break down'}
+      );
+      dispatchEvent(window, error);
+      if (!error.defaultPrevented)
+        console.error(error);
+    }
+    if (listeners.length)
+      return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
+  }
+  if (roundTripPath.length)
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex));
+}       
 
 function dispatchEventAsync(target, event) {
-  const propagationPath = getComposedPath(target, event).slice(1);
   Object.defineProperty(event, "target", {
     get: function () {
       let lowest = target;
@@ -127,15 +146,11 @@ function dispatchEventAsync(target, event) {
       this._propagationStoppedImmediately = true;
     }
   });
-  for (let currentTarget of propagationPath.slice().reverse())
-    setTimeout(callListenersOnElementAsync.bind(null, currentTarget, event, Event.CAPTURING_PHASE));
-  setTimeout(callListenersOnElementAsync.bind(null, target, event, Event.AT_TARGET));
-  for (let currentTarget of propagationPath)
-    setTimeout(callListenersOnElementAsync.bind(null, currentTarget, event, Event.BUBBLING_PHASE));
+  const propagationPath = getComposedPath(target, event);
+  const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
+  toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length));
 }
 ```
-
-To get a que with a higher priority than setTimeout, we use the ToggleTickTrick.
 
 ## Demo: all completed!
 
@@ -195,17 +210,18 @@ To get a que with a higher priority than setTimeout, we use the ToggleTickTrick.
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
@@ -280,40 +296,41 @@ To get a que with a higher priority than setTimeout, we use the ToggleTickTrick.
     details.open = true;
   }
 
-  function callListenerAsync(event, currentTarget, listener){
-    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-    if (event._propagationStoppedImmediately)
+  function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
+    if (!phase)
+      phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
+        roundTripPath.length === targetIndex ? Event.AT_TARGET :
+          Event.BUBBLING_PHASE;
+    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (!currentTarget.hasEventListener(event.type, listener))
-      return;
-    try {
-      listener.cb(event);
-    } catch (err) {
-      const error = new ErrorEvent(
-        'error',
-        {error: err, message: 'Uncaught Error: event listener break down'}
-      );
-      dispatchEvent(window, error);
-      if (!error.defaultPrevented)
-        console.error(error);
+    if (!currentTarget) {
+      currentTarget = roundTripPath.shift();
+      listeners = currentTarget.getEventListeners(event.type, phase);
+      Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     }
+    while (listeners.length) {
+      const listener = listeners.shift();
+      if (!currentTarget.hasEventListener(event.type, listener))
+        return;
+      try {
+        listener.cb(event);
+      } catch (err) {
+        const error = new ErrorEvent(
+          'error',
+          {error: err, message: 'Uncaught Error: event listener break down'}
+        );
+        dispatchEvent(window, error);
+        if (!error.defaultPrevented)
+          console.error(error);
+      }
+      if (listeners.length)
+        return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
+    }
+    if (roundTripPath.length)
+      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex));
   }
-
-  function callListenersOnElementAsync(currentTarget, event, phase) {
-    if (event._propagationStopped || event._propagationStoppedImmediately)
-      return;
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-      return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
-    const listeners = currentTarget.getEventListeners(event.type, phase);
-    for (let listener of listeners)
-      toggleTick(callListenerAsync.bind(null, event, currentTarget, listener)); 
-  }
-
 
   function dispatchEventAsync(target, event) {
-    const propagationPath = getComposedPath(target, event).slice(1);
     Object.defineProperty(event, "target", {
       get: function () {
         let lowest = target;
@@ -325,23 +342,15 @@ To get a que with a higher priority than setTimeout, we use the ToggleTickTrick.
         }
       }
     });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
-      }
-    });
     Object.defineProperty(event, "stopImmediatePropagation", {
       value: function () {
         this._propagationStoppedImmediately = true;
       }
     });
-    for (let currentTarget of propagationPath.slice().reverse())
-      setTimeout(callListenersOnElementAsync.bind(null, currentTarget, event, Event.CAPTURING_PHASE));
-    setTimeout(callListenersOnElementAsync.bind(null, target, event, Event.AT_TARGET));
-    for (let currentTarget of propagationPath)
-      setTimeout(callListenersOnElementAsync.bind(null, currentTarget, event, Event.BUBBLING_PHASE));
+    const propagationPath = getComposedPath(target, event);
+    const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length));
   }
-
 </script>
 
 <div id="outer">
@@ -352,12 +361,12 @@ To get a que with a higher priority than setTimeout, we use the ToggleTickTrick.
   function log(e) {
     const thisTarget = e.currentTarget.id;
     console.log(e.type + " on #" + thisTarget);
-    Promise.resolve().then(function() {
+    Promise.resolve().then(function () {
       console.log("microtask from #" + thisTarget);
     });
   }
 
-  function log2(e){
+  function log2(e) {
     log(e);
   }
 

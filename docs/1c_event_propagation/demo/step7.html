@@ -53,25 +53,24 @@
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
+    if (phase === Event.BUBBLING_PHASE && !event.bubbles)
       return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
@@ -100,6 +99,7 @@
   }
 
 </script>
+
 <div id="outer">
   <h1 id="inner">Click on me!</h1>
 </div>
@@ -110,41 +110,13 @@
     console.log(e.type + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
   }
 
-  function log2(e) {
-    const phase = e.eventPhase === 1 ? "CAPTURE" : e.eventPhase === 2 ? "TARGET" : "BUBBLE";
-    console.log(e.type + " (log2)" + " bubbles = " + e.bubbles + " on #" + e.currentTarget.tagName + " - " + phase);
-  }
-
-  function cancelBubble(e) {
-    e.cancelBubble = true;
-    console.log(e.type + ".cancelBubble = " + e.cancelBubble);
-  }
-
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log, true);   //yes
-  inner.addEventListener("mousedown", log);         //yes
-  outer.addEventListener("mousedown", log);         //yes
+  outer.addEventListener("click", log, true);     //yes, capture phase is run when bubbles: false
+  inner.addEventListener("click", log, true);     //yes
+  inner.addEventListener("click", log);           //yes, at_target phase
+  outer.addEventListener("click", log);           //no, bubbles: false
 
-  outer.addEventListener("mouseup", log, true);     //yes, capture phase is run when bubbles: false
-  inner.addEventListener("mouseup", log, true);     //yes
-  inner.addEventListener("mouseup", log);           //yes, at_target phase
-  outer.addEventListener("mouseup", log);           //no, bubbles: false
-
-  outer.addEventListener("click", log, true);         //yes
-  outer.addEventListener("click", cancelBubble, true);//yes
-  inner.addEventListener("click", log);               //no, at_target phase doesn't help, the event listener is added as a bubble event listener  !!!
-  outer.addEventListener("click", log);               //no, bubbles: false
-
-  outer.addEventListener("dblclick", log);            //yes
-  outer.addEventListener("dblclick", cancelBubble);   //yes
-  outer.addEventListener("dblclick", log2);           //yes, is the current target when bubbles false was set
-  document.body.addEventListener("dblclick", log);    //no
-
-  dispatchEvent(inner, new MouseEvent("mousedown", {bubbles: true}));
-  dispatchEvent(inner, new MouseEvent("mouseup", {bubbles: false}));
-  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
-  dispatchEvent(inner, new MouseEvent("dblclick", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("click", {bubbles: false}));
 </script>

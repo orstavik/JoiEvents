@@ -53,27 +53,24 @@
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (event._propagationStopped || event._propagationStoppedImmediately)
+    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-      return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners){
@@ -95,11 +92,6 @@
           if (t instanceof DocumentFragment && t.mode === "closed")
             lowest = t.host || lowest;
         }
-      }
-    });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
       }
     });
     Object.defineProperty(event, "stopImmediatePropagation", {

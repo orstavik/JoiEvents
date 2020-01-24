@@ -10,11 +10,22 @@
 
   function stopProp(e) {
     e.stopPropagation();
-    console.log(e.type + ".stopPropagation();");
+    console.log(e.type + ".stopPropagation(); cancelBubble = " + e.cancelBubble);
+  }
+
+  function cancelBubble(e) {
+    e.cancelBubble = true;
+    console.log(e.type + ".cancelBubble; cancelBubble = " + e.cancelBubble);
   }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
+
+  outer.addEventListener("mouseup", log, true);   //yes
+  inner.addEventListener("mouseup", cancelBubble);//yes
+  inner.addEventListener("mouseup", log, true);   //yes, same current target as when stopPropagation() was called
+  inner.addEventListener("mouseup", log);         //yes, same current target as when stopPropagation() was called
+  outer.addEventListener("mouseup", log);         //no
 
   outer.addEventListener("click", log, true);   //yes
   inner.addEventListener("click", stopProp);    //yes
@@ -27,6 +38,7 @@
   inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
   outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
 
+  inner.dispatchEvent(new MouseEvent("mouseup", {bubbles: true}));
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
   inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
 </script>
