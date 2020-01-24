@@ -89,7 +89,76 @@ function updateCascadeClass(cascadeClass) {
   cascadeClassesToEventNames.set(cascadeClass, newEventNames);
 }
 
+
+
 export class CustomEvents {
+
+  clearQueueTask = function(key){
+    key.ontoggle = undefined;
+    key.remove();
+  };
+
+  /**
+   * Sets a task in event loop.
+   * The task is added in the DOM event macrotask queue, which has second priority to UI events.
+   * The spec hints that if the event loop is congested, the browser will process 3 events from
+   * the UI event macrotask queue for every 1 events processed from the "other" DOM Event macrotask queue.
+   * But, as there is no way to add UI events from script, the ToggleTickTrick is the most asap nextTick
+   * I could find.
+   *
+   * Although it varies from browser to browser, we can guesstimate that the browser uses the following
+   * macrotask queues in the following priority:
+   * Combined browser view:
+   * 1. UI Events (FF: 1, Chrome: 1, Safari: 1)
+   * 2. other DOM events (FF: 2, Chrome: 2, Safari: 2)
+   * 3. postMessage events (FF: 4, Chrome: 2, Safari: 2, then 3)
+   * 4. lifecycle  (FF: 4, Chrome: 2, Safari: 2, then 3)
+   * 5. setTimeout(cb, 0)  (FF: last, Chrome: last, Safari: first event2, then last)
+   *
+   * Chrome:
+   * 1. UI Events
+   * 2. other DOM events
+   * 2. postMessage events
+   * 3. lifecycle
+   * 4. setTimeout
+   *
+   * Firefox:
+   * 1. UI Events
+   * 2. other DOM events
+   * 3. postMessage events
+   * 4. lifecycle
+   * 5. setTimeout
+   *
+   * Safari, event loop consisting of one event of each type:
+   * 1. UI Events
+   * 2. other DOM events
+   * 3. postMessage events
+   * 4. lifecycle
+   * 5. setTimeout
+   *
+   * Safari, event loop consisting of many events of each type:
+   * 1. UI Events
+   * 2. other DOM events
+   * 3. postMessage events
+   * 4. lifecycle
+   * 5. setTimeout
+   *
+   * @param cb
+   * @returns {HTMLDetailsElement} the key/id that can be used in clearQueueTask(key/id)
+   */
+  setQueueTask = function (cb) {
+    if (!(cb instanceof Function))
+      throw new Error("Only function references can be queued in the event loop.");
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = function () {
+      details.remove();
+      cb();
+    };
+    document.body.appendChild(details);
+    details.open = true;
+    return details;
+  };
 
   constructor() {
     this[grabbed] = {};
@@ -156,23 +225,5 @@ export class CustomEvents {
       if (eventNamesToCascadeClasses[name].size === 0)
         window.removeEventListener(name, _processCascadeEvents, true);
     }
-  }
-
-  /**
-   * queue task in event loop
-   * todo return an id
-   * todo add an clearTask, that can cancel the queued task
-   */
-  queueTask = function (cb) {
-    if (!(cb instanceof Function))
-      throw new Error("Only function references can be queued in the event loop.");
-    const details = document.createElement("details");
-    details.style.display = "none";
-    details.ontoggle = function () {
-      details.remove();
-      cb();
-    };
-    document.body.appendChild(details);
-    details.open = true;
   }
 }

@@ -1,34 +1,62 @@
+/**
+ * I need to grabEvent
+ */
+(function () {
+  function grabEvent(eventName, cb){
+    //it would be natural to grabEvent on an event. But.. We might like to grab events that are not yet dispatched..
+    //and so the event object itself is not the natural home..
+    //also, we are grabbing from an actual position. Not everywhere.
+    //we are grabbing events passing through window.
+    //so
+    // window.grabEventType("name", cb)
+    //and
+    // window.addEventTypeGrabbedCallback("name", cb)
+    // window.removeEventTypeGrabbedCallback("name", cb)
+
+
+    //it also would be natural to call Event.add/removeGrabCallback() statically on the Event prototype.
+  }
+})();
+
 (function () {
   const reg = Symbol("eventListenerRegister");
+  const suspended = Symbol("suspendedEventTypes");
 
-  function lastIndexOf(list, cb, capture) {
+  function nameCapture(name, options) {
+    return name + " " + !!(options === true || (options && options.capture));
+  }
+
+  function lastIndexOf(list, cb) {
     if (!list)
       return -1;
     for (let i = list.length - 1; i >= 0; i--) {
-      const cbCapture = list[i];
-      if (cbCapture.cb === cb && cbCapture.capture === capture)
+      const cbOptions = list[i];
+      if (cbOptions.cb === cb)
         return i;
     }
     return -1;
   }
 
-  const ogAdd = HTMLElement.prototype.addEventListener;
-  HTMLElement.prototype.addEventListener = function (name, cb, options) {
+  const ogAdd = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (name, cb, options) {
     this[reg] || (this[reg] = {});
-    ogAdd.call(this, name, cb, options);
-    this[reg][name] || (this[reg][name] = []);
-    const capture = !!(options === true || (options && options.capture));
-    if (lastIndexOf(this[reg][name], cb, capture) === -1)
-      this[reg][name].push({cb, capture});
+    const nc = nameCapture(name, options);
+    this[reg][nc] || (this[reg][nc] = []);
+    if (lastIndexOf(this[reg][nc], cb) === -1) {
+      this[reg][nc].push({cb, options});
+      if (!this.isSuspendedEventListeners(name, options))
+        ogAdd.call(this, name, cb, options);
+    }
   };
 
-  const ogRemove = HTMLElement.prototype.removeEventListener;
-  HTMLElement.prototype.removeEventListener = function (name, cb, options) {
-    ogRemove.call(this, name, cb, options);
-    const capture = !!(options === true || (options && options.capture));
-    const index = lastIndexOf(this[reg][name], cb, capture);
+  const ogRemove = EventTarget.prototype.removeEventListener;
+  EventTarget.prototype.removeEventListener = function (name, cb, options) {
+    const nc = nameCapture(name, options);
+    if (!this.isSuspendedEventListeners(name, options))
+      ogRemove.call(this, name, cb, options);              //this would probably only return empty anyways?
+    const index = lastIndexOf(this[reg][nc], cb);
     if (index >= 0)
-      this[reg][name].splice(index, 1);
+      this[reg][nc].splice(index, 1);
   };
 
   /**
@@ -36,24 +64,48 @@
    * @param name
    * @param options true/false || {capture: true/false}.
    *                if undefined, then both are accepted.
+   *                //todo give this method the same argument signature as add/RemoveEventListener(eventName, ?cb, ?option)
+   *                //todo should I change ?option === undefined to mean bubble phase? as is done with add/remove? probably yes.
    * @returns {boolean}
    */
-  HTMLElement.prototype.hasEventListener = function (name, options) {
+  EventTarget.prototype.hasEventListener = function (name, options) {
     if (!this[reg])
       return false;
-    const listeners = this[reg][name];
-    if (!listeners)
-      return false;
     if (options === undefined)
-      return true;
-    const capture = !!(options === true || (options && options.capture));
-    for (let i = listeners.length - 1; i >= 0; i--) {
-      const listener = listeners[i];
-      if (listener.capture === capture)
-        return true;
-    }
-    return false;
-  }
+      return !!(this[reg][nameCapture(name, false)] || this[reg][nameCapture(name, true)]);
+    return !!this[reg][nameCapture(name, options)];
+  };
+
+  EventTarget.prototype.isSuspendedEventListeners = function (name, options) {
+    return this[suspended] && this[suspended][nameCapture(name, options)];
+  };
+
+  /**
+   */
+  EventTarget.prototype.suspendEventListeners = function (name, options, alternativeCB, alternativeOptions) {
+    this[suspended] || (this[suspended] = {});
+    const nc = nameCapture(name, options);
+    if (this[suspended][nc])      //calling suspend twice in a row
+      return;
+    //you can suspend when no listeners are added empty listeners, as it will influence how the events react once added.
+    for (let listener of this[reg][nc] || [])
+      ogRemove.call(this, name, listener.cb, listener.options);
+    ogAdd.call(this, name, alternativeCB, alternativeOptions);
+    this[suspended][nc] = {alternativeCB, alternativeOptions};
+  };
+
+  /**
+   */
+  EventTarget.prototype.resumeEventListeners = function (name, options) {
+    const nc = nameCapture(name, options);
+    if (!this[suspended] || !this[suspended][nc])      //calling resume on something that isn't suspended
+      return;
+    const alternative = this[suspended][nc];
+    ogRemove.call(this, name, alternative.alternativeCB, alternative.alternativeOptions);
+    delete this[suspended][nc];
+    for (let listener of this[reg][nc])
+      ogAdd.call(this, name, listener.cb, listener.options);
+  };
 })();
 
 
@@ -74,18 +126,10 @@
 
   //2. registry map for CustomEvent
   const eventToClass = {};
-  const eventToCaptureClass = {};
   const eventToListener = {};
 
   //3. loop for evaluating CascadeEvents and defaultActions
   function processTriggerEvent(event) {
-    //todo new
-    if (eventToCaptureClass[event.type]){
-      for (let task of eventToCaptureClass[event.type].triggerEvent(event, true) || [])
-        setTimeout(task, 0);
-      return;
-    }
-    //todo new
     const composedPath = event.composedPath();
     const ComposedEventClasses = new Set(eventToClass[event.type]);
 
@@ -96,8 +140,9 @@
           continue;
         ComposedEventClasses.delete(ComposedEventClass);
 
-        for (let task of ComposedEventClass.triggerEvent(event) || [])
-          setTimeout(task, 0);
+        const tasks = ComposedEventClass.triggerEvent(event);
+        // for (let task of tasks || [])
+        //   setTimeout(task, 0);
 
         if (event.defaultPrevented)
           ;//todo something like switching from matches to matchesGrabbed
@@ -118,7 +163,7 @@
   }
 
   function removeEventListenerIfNeeded(eventType) {
-    if (eventToCaptureClass[eventType] || eventToClass[eventType])
+    if (!eventToListener[eventType])  /*eventToCaptureClass[eventType] || eventToClass[eventType]*/
       return;
     // (eventType === "click" || eventType === "auxclick" || eventType === "dblclick" || eventType === "contextmenu")?
     //   document.removeEventListener(eventType, processTriggerEvent, thirdArg):
@@ -148,29 +193,4 @@
       }
     }
   };
-  //todo new below
-  customEvents.setEventTypeCapture = function (CaptureClass, arrayOfEventNames) {
-    for (let i = 0; i < arrayOfEventNames.length; i++) {
-      let eventType = arrayOfEventNames[i];
-      if (eventToCaptureClass[eventType] && eventToCaptureClass[eventType] !== CaptureClass) {
-        if (i > 0)
-          customEvents.releaseEventTypeCapture(arrayOfEventNames.slice(0, i - 1));
-        throw new Error("Event: " + eventType + " is already captured.");
-      }
-      eventToCaptureClass[eventType] = CaptureClass;
-      addEventListenerIfNeeded(eventType);
-      if (eventToClass[eventType]) {
-        for (let CustomEventClass of eventToClass[eventType]) {
-          if (CaptureClass !== CustomEventClass)
-            CustomEventClass.capturedEvent(eventType)
-        }
-      }
-    }
-  };
-  customEvents.releaseEventTypeCapture = function (arrayOfEventNames) {
-    for (let eventType of arrayOfEventNames) {
-      delete eventToCaptureClass[eventType];
-      removeEventListenerIfNeeded(eventType);
-    }
-  }
 })();

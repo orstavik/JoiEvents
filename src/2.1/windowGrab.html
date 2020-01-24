@@ -1,0 +1,40 @@
+<script src="customEvents.js"></script>
+<script src="hasEventListener.js"></script>
+
+<h1 style="border: 1px solid grey">click <span>->"A, 1"<-</span> = , or ->"A, 2"<-</h1>
+
+<script>
+  function logA(e) {
+    console.log("A", e.eventPhase, e.currentTarget);
+    Promise.resolve().then(()=>{
+      console.log("boo");});
+  }
+
+  function logGrab(e) {
+    console.log("logGrab", e.eventPhase, e.currentTarget);
+  }
+
+  const h1 = document.querySelector("h1");
+  const span = document.querySelector("span");
+
+  window.addEventListener("events-grabbed", console.log);
+  window.addEventListener("events-freed", console.log);
+
+  //0. test of adding removing multiple eventListener for the same function
+  window.addEventListener("click", logA, true);
+  h1.addEventListener("click", logA, true);       //not added
+  span.addEventListener("click", logA, true);       //not added
+  span.addEventListener("click", logA);             //not added
+  h1.addEventListener("click", logA);
+  window.addEventListener("click", logA);             //not added
+
+  // Promise.resolve().then(() => span.click());
+  span.click();
+  // Promise.resolve().then(() => span.click());
+  // setTimeout(() => span.click(), 0);
+  // setTimeout(() => window.grabEvents(["click"], logGrab), 0);
+  // setTimeout(() => span.click(), 0);
+  // setTimeout(() => window.freeEvents(["click"]), 0);
+  // setTimeout(() => span.click(), 0);
+
+</script>

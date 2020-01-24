@@ -76,7 +76,7 @@
     const body = document.querySelector("body");
     const sequence = {
       target,
-      cancelMouseout: target.hasAttribute("draggable-cancel-mouseout"),
+      cancelMouseout: target.hasAttribute("draggable-endSequence-mouseout"),
       flingDuration: parseInt(target.getAttribute("fling-duration")) || 50,
       flingDistance: parseInt(target.getAttribute("fling-distance")) || 150,
       recorded: [e],

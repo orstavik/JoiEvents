@@ -1,16 +1,18 @@
-<div>
-  <details>
-    <summary>Hello <a href="#nestedDefaultAction">#nestedDefaultAction</a></summary>
-    Sunshine!!
-  </details>
-</div>
-<script>
+<details>
+  <summary>
+    Open summary <a href="#link">Link inside summary <input type="checkbox"> </a>
+  </summary>
+  Hello Sunshine!!
+</details>
 
-  const div = document.querySelector("div");
+<script>
   const details = document.querySelector("details");
+  const summary = document.querySelector("summary");
+  const link = document.querySelector("a");
+  const input = document.querySelector("input");
 
   function log(e) {
-    console.log(e.type, e.currentTarget.tagName, e.eventPhase, "details is " + (details.open ? "open" : "closed"));
+    console.log(e.type, e.currentTarget.nodeName, e.eventPhase);
   }
 
   function preventD(e) {
@@ -18,12 +20,13 @@
     e.preventDefault();
   }
 
-  div.addEventListener("click", log, true);
+  // window.addEventListener("click", preventD, true);
+
+  details.addEventListener("click", log, true);
+  summary.addEventListener("click", log, true);
+  link.addEventListener("click", log, true);
+  input.addEventListener("click", log);
+  link.addEventListener("click", log);
+  summary.addEventListener("click", log);
   details.addEventListener("click", log);
-  div.addEventListener("click", log);
-  // div.addEventListener("click", preventD);
-
-  div.addEventListener("toggle", log, true);
-  details.addEventListener("toggle", log);
 </script>
-

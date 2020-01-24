@@ -1,0 +1,35 @@
+<a href="#link">Link and <span draggable="true">drag me</span></a>
+<pre>
+  This demo illustrate how click is *not* fired when a dragstart event has occured.
+
+  This shows how the browser doesn't branch out in its EventCascades.
+
+  but, the problem here is that we cannot do the same.
+  mousedown-, mousemove-, and mouseup-.preventDefault() doesn't stop click.
+  or auxclick or contextmenu.
+
+  And, similarly click.preventDefault() doesn't block dblclick.
+</pre>
+<script>
+  const link = document.querySelector("a");
+  const span = document.querySelector("span");
+
+  function log(e) {
+    console.log(e.type, e.currentTarget.nodeName, e.eventPhase);
+  }
+
+  function preventD(e) {
+    console.log("calling: " + e.type + ".preventDefault()");
+    e.preventDefault();
+  }
+
+  // window.addEventListener("click", preventD, true);
+
+  link.addEventListener("click", log, true);
+  span.addEventListener("click", log);
+  link.addEventListener("click", log);
+
+  link.addEventListener("dragstart", log, true);
+  span.addEventListener("dragstart", log);
+  link.addEventListener("dragstart", log);
+</script>

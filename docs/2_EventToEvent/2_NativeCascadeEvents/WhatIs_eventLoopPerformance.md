@@ -10,6 +10,10 @@ doesn't work because the Promise is executed before the next event listener. Tha
 2. Event propagation, or the event listener function queue.
 3. Promises, ie. the micro task queue.
 
+https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent#Notes
+
+The Event propagation queue is different from natively fired events and script triggered events. Put simply, when the browser dispatches a native event, it adds each event listener as a task in the event loop (the macro queue). When a script triggers event propagation via .dispatchEvent, then the event listeners are added one by one in the micro-task queue.
+
 ```html 
 <div>
   <a href="#sunshine">Hello sunshine!</a>

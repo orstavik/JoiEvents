@@ -1,0 +1,40 @@
+<!--<script src="customEvents.js"></script>-->
+<script src="dispatchEventNatively.js"></script>
+
+<details>
+  <summary>hello sunshine</summary>
+  Click on the summary to see the async click event in action.
+</details>
+
+see: <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent#Notes">mdn notes about sync
+  event listeners</a>
+
+<script>
+  let count = 0;
+
+  function logA(e) {
+    let id = count++;
+    console.log(e.type, "#" + id, e.eventPhase, e.currentTarget);
+    Promise.resolve().then(() => console.log("microtask from #" + id));
+  }
+
+  const details = document.querySelector("details");
+  const summary = document.querySelector("summary");
+
+  window.addEventListener("toggle", logA, true);
+  document.addEventListener("toggle", logA, true);
+  details.addEventListener("toggle", logA, true);
+
+  window.addEventListener("click", logA, true);
+  document.addEventListener("click", logA, true);
+  details.addEventListener("click", logA, true);
+
+  setTimeout(() => summary.dispatchEvent(new MouseEvent("click")), 0);
+  setTimeout(() => console.log("-------------"), 100);
+  setTimeout(() => summary.dispatchEventNatively(new MouseEvent("click")), 200);
+  // summary.click();
+  // details.open = true;
+  // details.dispatchEvent(new CustomEvent("toggle"));
+  // summary.click();
+
+</script>

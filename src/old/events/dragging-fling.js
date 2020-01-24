@@ -128,7 +128,7 @@ Events Touch and mouse have different properties and to solve this problem, it w
  * @returns {DraggingFling}
  */
 
-//todo should I add a mouseleave and touchleave on document.body also? to trigger cancel?
+//todo should I add a mouseleave and touchleave on document.body also? to trigger endSequence?
 touchStartListener = e => touchStart(e);
 touchMoveListener = e => touchMove(e);
 touchStopListener = e => touchStop(e);

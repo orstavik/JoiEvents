@@ -4,7 +4,7 @@ function distanceMoreThan4(a, b) {
 }
 
 let listeningState;
-let target;
+let targetState;
 
 export class DragImitation extends Event {
 
@@ -19,13 +19,15 @@ export class DragImitation extends Event {
 
   static onMousedown(event) {
     if (event.buttons === 1) {    //left mouse button
-      if (target || listeningState)
+      if (targetState || listeningState)
         throw new Error("omg! drag state was not reset");
-      listeningState = [event];
+      listeningState = event;
       customEvents.define(DragImitation, ["mousemove", "mouseup"]);
     } else {                      //more than one button or not the left button
-      if (target)
-        return DragImitation.endSequence(event, "drag-imitation-cancel");
+      if (targetState) {
+        event.stopImmediatePropagation ? event.stopImmediatePropagation() : event.stopPropagation();
+        DragImitation.endSequence(event, "drag-imitation-cancel");
+      }
       if (listeningState) {
         listeningState = undefined;
         customEvents.undefine(DragImitation, ["mousemove", "mouseup"]);
@@ -35,42 +37,37 @@ export class DragImitation extends Event {
 
   static onMousemove(event) {
     let tasks;
-    if (!target) {
-      listeningState.push(event);
-      if (!distanceMoreThan4(listeningState[0], listeningState[listeningState.length - 1]))
+    if (!targetState) {
+      if (!distanceMoreThan4(listeningState, event))
         return;
-      //cache the mousedownEvent
-      const mousedownEvent = listeningState[0];
-      //exit listening state
+      //listening state => target state
+      targetState = listeningState;
       listeningState = undefined;
       customEvents.undefine(DragImitation, ["mousemove", "mouseup"]);
-      //enter target state
-      target = mousedownEvent.target;
-      customEvents.setEventTypeCapture(DragImitation, ["mousedown", "mousemove", "mouseup", "blur"]);
+      targetState.setMouseCapture(DragImitation.triggerEvent, true);
+      customEvents.define(DragImitation, [/*"mousedown", "mousemove", "mouseup", */"blur"]);
+
       //block mouse event and return new event
       event.preventDefault();
       event.stopImmediatePropagation ? event.stopImmediatePropagation() : event.stopPropagation();
 
-      tasks = [target.dispatchEvent.bind(target, new DragImitation("drag-imitation-start", {
+      setTimeout(targetState.target.dispatchEvent.bind(targetState.target, new DragImitation("drag-imitation-start", {
         bubbles: true,
         composed: true
-      }, mousedownEvent))];
+      }, targetState)), 0);
     }
-    tasks = tasks || [];
     event.preventDefault();
     event.stopImmediatePropagation ? event.stopImmediatePropagation() : event.stopPropagation();
-    tasks.push(target.dispatchEvent.bind(target, new DragImitation("drag-imitation", {
+    setTimeout(targetState.target.dispatchEvent.bind(targetState.target, new DragImitation("drag-imitation", {
       bubbles: true,
       composed: true
-    }, event)));
-    return tasks;
+    }, event)), 0);
   }
 
   static onMouseup(event) {
-    if (target) {
-      event.preventDefault();
+    if (targetState) {
       event.stopImmediatePropagation ? event.stopImmediatePropagation() : event.stopPropagation();
-      return DragImitation.endSequence(event, "drag-imitation-end");
+      DragImitation.endSequence(event, "drag-imitation-end");
     } else {
       listeningState = undefined;
       customEvents.undefine(DragImitation, ["mousemove", "mouseup"]);
@@ -78,35 +75,38 @@ export class DragImitation extends Event {
   }
 
   static onBlur(event) {
-    if (!target)
+    if (!targetState)
       throw new Error("omg, forgot to clean up something here");
     if (document.hasFocus())
       return;
-    event.preventDefault();
-    return DragImitation.endSequence(event, "drag-imitation-cancel");
+    DragImitation.endSequence(event, "drag-imitation-cancel");
   }
 
   static endSequence(event, name) {
-    const tasks = [target.dispatchEvent.bind(target, new DragImitation(name, {bubbles: true, composed: true}, event))];
-    target = undefined;
-    customEvents.releaseEventTypeCapture(["mousedown", "mousemove", "mouseup", "blur"]);
-    return tasks;
+    event.preventDefault();
+    setTimeout(targetState.target.dispatchEvent.bind(targetState.target, new DragImitation(name, {
+      bubbles: true,
+      composed: true
+    }, event)), 0);
+    targetState = undefined;
+    event.releaseMouseCapture();
+    customEvents.undefine(DragImitation, ["blur"]);
   }
 
   static triggerEvent(event) {
     if (event.type === "mousedown")
-      return DragImitation.onMousedown(event);
+      DragImitation.onMousedown(event);
     if (event.type === "mousemove")
-      return DragImitation.onMousemove(event);
+      DragImitation.onMousemove(event);
     if (event.type === "mouseup")
-      return DragImitation.onMouseup(event);
+      DragImitation.onMouseup(event);
     if (event.type === "blur")
-      return DragImitation.onBlur(event);
+      DragImitation.onBlur(event);
   }
 
   static capturedEvent(eventType) {
-    if (target)
-      throw new Error("wtf, a capture conflict..");
+    if (targetState)
+      throw new Error("wtf, a capture conflict.. Didn't we grab the MouseEvents?");
     if (listeningState) {
       customEvents.undefine(DragImitation, ["mousemove", "mouseup"]);
       listeningState = undefined;

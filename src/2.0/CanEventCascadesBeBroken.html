@@ -1,0 +1,109 @@
+<h1>hello sunshine and can i split in between a native event cascade?</h1>
+
+<a id="a" href="#a">a</a>. <br>
+
+<details>
+  <summary>click here</summary>
+  b
+</details>
+<script>
+
+  (function () {
+
+    function toggleOnDetails(cb) {
+      var details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = function () {
+        cb();
+        details.remove();
+      };
+      document.body.appendChild(details);
+      details.hasAttribute("open") ?
+        details.removeAttribute("open") :
+        details.setAttribute("open", "");
+    }
+
+    function imgOnLoad(cb) {
+      var body = document.body;
+      var script = document.createElement("img");
+      script.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+      script.onload = function () {
+        body.removeChild(script);
+        cb();
+      };
+      body.appendChild(script);
+    }
+
+    var idOrigin = {};
+    var idCb = {};
+
+    function handle(evt) {
+      if (evt.source !== window)
+        return;
+      const mid = evt.data;
+      if (!idOrigin[mid])
+        return;
+      if (idOrigin[mid] !== evt.origin)
+        throw new Error("wtf");
+      // window.removeEventListener("message", handle);
+      evt.stopPropagation();
+      const cb = idCb[mid];
+      delete idOrigin[mid];
+      delete idCb[mid];
+      cb();
+    }
+
+    window.addEventListener("message", handle);
+
+    window.zetZeroTimeout = function (cb2) {
+      const mid = "pm." + Math.random();    // IE 10 does not support location.origin
+      const origin = window.location.origin || window.location.protocol + '//' + window.location.hostname + (window.location.port ? (':' + window.location.port) : '');
+      idOrigin[mid] = origin;
+      idCb[mid] = cb2;
+      window.postMessage(mid, origin);
+    };
+
+    const a = document.querySelector("#a");
+
+    a.addEventListener("click", function () {
+      zetZeroTimeout(function () {
+        console.log("postMessage");
+      }, 0);
+      toggleOnDetails(function () {
+        console.log("toggleOnDetails");
+      }, 0);
+      imgOnLoad(function () {
+        console.log("imgOnLoad");
+      }, 0);
+      throw new Error("Trying to break event cascade with an error.")
+    });
+    window.addEventListener("hashchange", function () {
+      console.log("hashchange");
+    });
+
+    const details = document.querySelector("details");
+
+    details.addEventListener("click", function () {
+      zetZeroTimeout(function () {
+        console.log("details postMessage");
+      }, 0);
+      toggleOnDetails(function () {
+        console.log("details toggleOnDetails");
+      }, 0);
+      imgOnLoad(function () {
+        console.log("details imgOnLoad");
+      }, 0);
+      Promise.resolve().then(()=>{
+        console.log("prt before Error");});
+      throw new Error("Trying to break event cascade with an error.")
+    });
+    window.addEventListener("click", function(){
+      console.log("window click");
+    });
+    details.addEventListener("toggle", function () {
+      console.log("toggle");
+    });
+
+  })();
+
+</script>

@@ -249,6 +249,11 @@
           this[grabbed2][name] = owner;
         }
         //calling cancel from grabEvents
+        // todo instead of cancelling grab events, I could just add the process function.
+        // todo then the process first checks the grabbed, if someone has grabbed it, it will call that method on that grabber
+        // todo then, the grabber will set PreventDefault. This will mean that all the other functions will be called as it has been cancelled.
+        // todo then, all the other functions can be reset.
+        // todo I need to move all the calls to the trigger functions up front, and then move all the cancel calls to the end.
         for (let name of names) {
           for (let cascadeEventClass of eventTypeToCascadeEvents[name] || [])
             cascadeEventClass === owner || cascadeEventClass.cancelCascade(name);

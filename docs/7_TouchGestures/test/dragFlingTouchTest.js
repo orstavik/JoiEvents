@@ -24,7 +24,7 @@ function userSelectShouldBe(e) {
 window.addEventListener("dragging-start", userSelectShouldBe);
 window.addEventListener("dragging-move", userSelectShouldBe);
 window.addEventListener("dragging-stop", userSelectShouldBe);
-window.addEventListener("dragging-cancel", userSelectShouldBe);
+window.addEventListener("dragging-endSequence", userSelectShouldBe);
 window.addEventListener("fling", userSelectShouldBe);
 
 //TEST3
@@ -41,8 +41,8 @@ window.addEventListener("dragging-start", testDraggableAttribute);
 var sequenceWorking = true;
 var sequences = [
   ["dragging-start", "dragging-move", "dragging-move", "dragging-stop", "fling"],
-  ["dragging-start", "dragging-move", "dragging-move", "dragging-cancel"],
-  ["dragging-start", "dragging-cancel"],
+  ["dragging-start", "dragging-move", "dragging-move", "dragging-endSequence"],
+  ["dragging-start", "dragging-endSequence"],
   ["dragging-start", "dragging-stop"]
 ];
 var prevEvent = undefined;
@@ -63,7 +63,7 @@ function checkSequence(e) {
 window.addEventListener("dragging-start", checkSequence);
 window.addEventListener("dragging-move", checkSequence);
 window.addEventListener("dragging-stop", checkSequence);
-window.addEventListener("dragging-cancel", checkSequence);
+window.addEventListener("dragging-endSequence", checkSequence);
 window.addEventListener("fling", checkSequence);
 
 
@@ -76,5 +76,5 @@ function reportTests() {
 }
 
 window.addEventListener("dragging-stop", reportTests);
-window.addEventListener("dragging-cancel", reportTests);
+window.addEventListener("dragging-endSequence", reportTests);
 window.addEventListener("dragging-fling", reportTests);

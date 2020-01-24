@@ -9,7 +9,7 @@
   //touch-hover-enter
   //touch-hover-over
   //touch-hover-leave
-  //touch-hover-cancel
+  //touch-hover-endSequence
   //click (native, not touch-hover-click)
 
   //we need to produce pseudo-pseudo-class

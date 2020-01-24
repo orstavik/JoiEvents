@@ -35,7 +35,7 @@
       return;
     if (timer) {
       clearTimeout(timer);
-      let longPress = new CustomEvent("long-press-cancel", {bubbles: true, composed: true, detail: duration});
+      let longPress = new CustomEvent("long-press-endSequence", {bubbles: true, composed: true, detail: duration});
       dispatchPriorEvent(e.target, longPress, e);
     } else {
       primaryEvent.target.classList.remove("long-press-active");
