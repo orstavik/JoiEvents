@@ -182,11 +182,6 @@
         }
       }
     });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
-      }
-    });
     Object.defineProperty(event, "stopImmediatePropagation", {
       value: function () {
         this._propagationStoppedImmediately = true;
