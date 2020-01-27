@@ -1,0 +1,28 @@
+<div id="c">
+  <div id="b">
+    <div id="a">Click me!</div>
+  </div>
+</div>
+
+<script>
+  const a = document.querySelector("#a");
+  const b = document.querySelector("#b");
+  const c = document.querySelector("#c");
+
+  function log(e) {
+    const name = e.currentTarget.id;
+    console.log(name);
+    Promise.resolve().then(function(){
+      console.log(name + " (normal microtask)");
+    });
+    Promise.resolve().then(function(){
+      Promise.resolve().then(function(){
+        console.log(name + " (nested microtask)");
+      });
+    });
+  }
+
+  a.addEventListener("click", log);
+  b.addEventListener("click", log);
+  c.addEventListener("click", log);
+</script>

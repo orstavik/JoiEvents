@@ -1,0 +1,26 @@
+<details>
+  <summary>click here!</summary>
+  <div style="background: orange">CLICK on ORANGE for 2 SEC and then wait!!!</div>
+</details>
+
+<script>
+  const details = document.querySelector("details");
+  const div = document.querySelector("div");
+
+  function onClick() {
+    console.log("click");
+  }
+
+  function onToggle() {
+    console.log("toggle");
+    const time = new Date().getTime();
+    while (time + 1000 > new Date().getTime()) ; //consume a second
+  }
+
+  details.addEventListener("toggle", onToggle);
+  details.addEventListener("toggle", onToggle.bind({}));
+  details.addEventListener("toggle", onToggle.bind({}));
+  details.addEventListener("toggle", onToggle.bind({}));
+  details.addEventListener("toggle", onToggle.bind({}));
+  div.addEventListener("click", onClick);
+</script>
