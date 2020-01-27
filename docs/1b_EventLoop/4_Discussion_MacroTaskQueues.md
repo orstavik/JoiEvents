@@ -68,7 +68,7 @@ setZeroTimeout(() => console.log("setZeroTimeout 2"));
  setTimeout0 2
 ```
 
-Chrome and Firefox adds the `message` and `toggle` event in the same macrotask queue, or at least two macrotask queues that have the same priority. But, the setTimoeAll browsers puts the timeouts last.  
+Chrome and Firefox adds the `message` and `toggle` event in the same macrotask queue, or at least two macrotask queues that have the same priority. All browsers prioritize `setTimeout` last.  
 
 ## Results: Safari IOS 13.3
 
@@ -81,15 +81,15 @@ Chrome and Firefox adds the `message` and `toggle` event in the same macrotask q
  setTimeout0 2
 ```
 
-Safari behaves differently. While Chrome and Firefox consistently puts setTimeout tasks last, Safari can on some occasions run setTimeout tasks first. However, the most consistent behavior in the Safari event loop seems to be that the toggle events are processed before the setZeroTimeout events that in turn come before setTimeout.
+Safari behaves differently. While Chrome and Firefox consistently puts setTimeout tasks last, Safari can on some occasions run setTimeout tasks first. However, most often, the Safari event loop prioritizes `toggle` over `message` over `setTimeout`.
 
 ## Conclusion
 
 All three browsers use a separate macrotask queue for `setTimeout` tasks. This macrotask queue is not processed until all `toggle` and `message` events (tasks) have been dispatched (processed).
 
-In Chrome and Firefox, there is no difference in priority between `toggle` and `message` events. They appear to be added to the same macrotask queue and between themselves processed FIFO.
+In Chrome and Firefox, there is no difference in priority between `toggle` and `message` events. They appear to be added to the same macrotask queue and processed FIFO.
   
-However, in Safari, `message` events appear not to be queued in the same macrotask queue. Safari operates with a different macrotask queue for `messages`, and Safari gives this macrotask queue a lower priority than `toggle` (an most likely other DOM events).
+However, in Safari, `message` events appear not to be queued in the same macrotask queue as `toggle`. Safari operates with a different macrotask queue for `messages`, and Safari gives this macrotask queue a lower priority than `toggle` (and most likely other DOM events).
 
 So, while `setZeroTimeout` would be the most practical and efficient pattern in Chrome and Firefox in isolation, it appears as though the ToggleTickTrick is the best pattern when the solution aims to be consistent with Safari.
 
