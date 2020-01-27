@@ -1,4 +1,4 @@
-# WhatIs: Async event propagation
+# WhatIs: Async propagation?
 
 When browsers dispatch native events such as `click`, they will queue the event listeners in *the top-most prioritized* macrotask queue in the event loop (or some other queue that functions to this effect). This queue has a **lower priority than the microtask queue**.
 
@@ -45,24 +45,34 @@ When you `click` on "Click on me!" using either mouse or touch, then you will se
 ```
 
 1. click on #inner
-2. click on #inner
-3. click on #outer
+2. click on #outer
+3. microtask from #inner
 4. microtask from #inner
-5. microtask from #inner
-6. microtask from #outer
+5. microtask from #outer
+6. nested microtask from #inner
+7. nested microtask from #inner
+8. nested microtask from #outer
 
-7.  click on #inner
-8.  microtask from #inner
 9.  click on #inner
 10. microtask from #inner
-11. click on #outer
-12. microtask from #outer
+11. nested microtask from #inner
+12. click on #inner
+13. microtask from #inner
+14. nested microtask from #inner
+15. click on #outer
+16. microtask from #outer
+17. nested microtask from #outer
 
 ``` 
 
- * Lines 1-6 is the output from `.dispatchEvent(new MouseEvent("click", {bubbles: true}))` on the "Click on me!" element. All three event listeners are run *before* any of the tasks added to the microtask queue.
- 
- * Lines 7-12 is the output from the "native" reaction to the user action of clicking on "Click on me!" with either mouse or touch. Here, the tasks added to the microtask queue are run *before* the next event listener.
+In the demo, there are three functionally identical event listeners triggered per click: first two on the `#inner` element, and then one on the `#outer` element. Each event listener prints to the console that they are running and then adds a first, normal task/callback to the microtask queue. Then, when this first task is run from the microtask queue, then it adds a second, nested task/callback to the microtask queue.
+
+ * Lines 1-8 is the output from `.dispatchEvent(new MouseEvent("click", {bubbles: true}))` on the "Click on me!" element.
+   1. All the three event listeners are run first.
+   2. Then the three normal, "first" microtasks from each event listener run.
+   3. At the end the three nested, "second" microtasks run.
+    
+ * Lines 9-17 is the output from the "native" reaction to the user action of clicking on "Click on me!" with either mouse or touch. Here, each event listener is run as its own macro task, so that *before* the next event listener is called, the microtask queue is completely emptied.
  
 ## Problem
 
@@ -71,10 +81,10 @@ There is a problem with events propagating both sync and async:
 **if you inside an event listener queue a task in the microtask queue, you often don't know if this task will run before or after the next event listener in line.**
  
 There are exceptions to this rule:
- * If you listen for `error` or some other event the browser dispatches sync, then you know microtask triggered by your event listener will always run after all the other event listeners for the same event.
- * If you know that no script in your app dispatches a `click` event, then you know that microtasks queued from inside any `click` event listener will run before the next event listener.
+ * If you listen for `error` event or some similar that the browser *always* dispatches in sync mode, then you know that microtask triggered by your event listener will always run *after* all the other event listeners for the same event has been triggered.
+ * If you know that no script in your app dispatches a `click` event (or another event the browser dispatches async), then you know that microtasks queued from inside any `click` event listener will run before the next event listener.
  
-But still the problem remains. If scripts might dispatch "async events" such as `click` in your app either now or in the future, then inside event listeners for such apps, the timing of microtasks vs. other event listeners is uncertain.
+But still the problem remains. If scripts might dispatch "async events" such as `click` in your app either now or in the future, then inside event listeners for such apps, the timing of microtasks vs. other event listeners is uncertain. And uncertainty is at the center of "fear, uncertainty, and doubt".
 
 ## Implementation of async event propagation function
 
@@ -152,7 +162,7 @@ function dispatchEventAsync(target, event) {
 }
 ```
 
-## Demo: all completed!
+## Demo: all together now
 
 ```html
 <script>
@@ -226,12 +236,8 @@ function dispatchEventAsync(target, event) {
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (event._propagationStopped || event._propagationStoppedImmediately)
+    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-      return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners) {
@@ -266,11 +272,6 @@ function dispatchEventAsync(target, event) {
         }
       }
     });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
-      }
-    });
     Object.defineProperty(event, "stopImmediatePropagation", {
       value: function () {
         this._propagationStoppedImmediately = true;
@@ -288,12 +289,18 @@ function dispatchEventAsync(target, event) {
   function toggleTick(cb) {
     const details = document.createElement("details");
     details.style.display = "none";
-    details.ontoggle = function () {
-      details.remove();
-      cb();
-    };
+    details.ontoggle = cb;
     document.body.appendChild(details);
     details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function () {
+        details.ontoggle = undefined;
+      },
+      resume: function () {
+        details.ontoggle = cb;
+      }
+    };
   }
 
   function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
@@ -327,7 +334,7 @@ function dispatchEventAsync(target, event) {
         return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
     }
     if (roundTripPath.length)
-      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex));
+      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined, undefined, undefined));
   }
 
   function dispatchEventAsync(target, event) {
@@ -342,6 +349,11 @@ function dispatchEventAsync(target, event) {
         }
       }
     });
+    Object.defineProperty(event, "stopPropagation", {
+      value: function () {
+        this._propagationStopped = true;
+      }
+    });
     Object.defineProperty(event, "stopImmediatePropagation", {
       value: function () {
         this._propagationStoppedImmediately = true;
@@ -349,7 +361,7 @@ function dispatchEventAsync(target, event) {
     });
     const propagationPath = getComposedPath(target, event);
     const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
-    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length));
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined, undefined, undefined));
   }
 </script>
 
@@ -363,6 +375,9 @@ function dispatchEventAsync(target, event) {
     console.log(e.type + " on #" + thisTarget);
     Promise.resolve().then(function () {
       console.log("microtask from #" + thisTarget);
+      Promise.resolve().then(() => {
+        console.log("nested microtask from #" + thisTarget);
+      });
     });
   }
 

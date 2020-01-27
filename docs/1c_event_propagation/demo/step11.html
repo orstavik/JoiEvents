@@ -122,12 +122,18 @@
   function toggleTick(cb) {
     const details = document.createElement("details");
     details.style.display = "none";
-    details.ontoggle = function () {
-      details.remove();
-      cb();
-    };
+    details.ontoggle = cb;
     document.body.appendChild(details);
     details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function () {
+        details.ontoggle = undefined;
+      },
+      resume: function () {
+        details.ontoggle = cb;
+      }
+    };
   }
 
   function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
@@ -161,7 +167,7 @@
         return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
     }
     if (roundTripPath.length)
-      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex));
+      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined, undefined, undefined));
   }
 
   function dispatchEventAsync(target, event) {
@@ -188,7 +194,7 @@
     });
     const propagationPath = getComposedPath(target, event);
     const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
-    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length));
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined, undefined, undefined));
   }
 </script>
 
@@ -202,6 +208,9 @@
     console.log(e.type + " on #" + thisTarget);
     Promise.resolve().then(function () {
       console.log("microtask from #" + thisTarget);
+      Promise.resolve().then(() => {
+        console.log("nested microtask from #" + thisTarget);
+      });
     });
   }
 

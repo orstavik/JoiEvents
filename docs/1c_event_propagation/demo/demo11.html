@@ -6,20 +6,20 @@
   function log(e) {
     const thisTarget = e.currentTarget.id;
     console.log(e.type + " on #" + thisTarget);
+    
     Promise.resolve().then(function() {
       console.log("microtask from #" + thisTarget);
+      Promise.resolve().then(()=>{
+        console.log("nested microtask from #" + thisTarget);
+      });
     });
-  }
-
-  function log2(e){
-    log(e);
   }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
   inner.addEventListener("click", log);
-  inner.addEventListener("click", log2);
+  inner.addEventListener("click", log.bind({}));
   outer.addEventListener("click", log);
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
