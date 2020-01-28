@@ -19,7 +19,9 @@ element.addEventListener("click", myClickHandler, options);
 ```
 
 There are two valid critiques of the conceptual structure of event bubbling in web browsers:
+
 1. The name "capture phase" is misleading. In principle, events are "captured" in all three phases of event bubbling. Therefore, the name "capture phase" does not distinguish the initial phase from the two other subsequent phases. Alternative names for the "capture phase" could be "the initial phase", the "down-ward phase", or the "sinking phase" (as opposed to the the "bubbling phase").
+
 2. Why does the browser ignore the capture and bubble phase properties of event listeners during the target phase? Event listeners added in the capture phase usually serve other purposes than event listeners added in the bubble phase, and so to ignore this property creates more problems than it solves.
 
 ## Example 1: Capture vs. Bubble phase
@@ -40,7 +42,9 @@ The example above has a small DOM with a couple of elements. To these elements, 
 
 "Event propagation" means that the browser triggers event listeners for that event. For events  that `bubbles`, this means going down and up the DOM searching for event listeners. But, not all events bubble. Thus, event propagation should be understood as both triggering event listeners for both a single element and a target element and its ancestors. 
 
-## Pseudo-code: Basic event propagation
+## Demo: Basic event propagation in pseudo-code
+
+In the demo below we illustrate in JS pseudo code what event propagation basically looks like. As will be evident in later chapters, this is a *very* naive piece of code. But, it still serves as a good starting point to understand the core concept of event propagation. 
 
 ```html
 <script>
@@ -75,9 +79,10 @@ The example above has a small DOM with a couple of elements. To these elements, 
   <h1>Hello sunshine</h1>
 </div>
 
-<script>  
+<script>
+  let counter = 0;  
   function log(e){
-    console.log(e.currentTarget.tagName);
+    console.log(e.type + counter++);
   }  
                                                         
   const h1 = document.querySelector("h1");  
@@ -93,48 +98,58 @@ The example above has a small DOM with a couple of elements. To these elements, 
 
 If the pseudo-code above worked, we would anticipate that it would result in:
 ```
-DIV, 1
-H1, 2
-DIV, 3
-```
+click0
+click1
+click2
+```     
 
-## Demo: Naive event propagation in code
+## Demo: Naive event propagation in real code
  
 But, what do we need to make the pseudo-code above actually work? How far from "real" is "pseudo" above?
 
-Not far. In fact, for this particular demo, we only need two adaptations:
-
-1. To set the `currentTarget` property on the element requires the use of `Object.defineProperty(...)`. This is a small adjustment.
-
-2. There is not such thing as `EventTarget.getEventListeners(eventName, phase)`. The browser hides the list of event listeners added to each element, document and window (ie. `EventTarget`), and to get a hold of that list we need to monkeypatch `addEventListener(...)` and  `removeEventListener(...)`.
+Not far. In fact, we only need the `.getEventListeners(eventName, phase)` extension to the `EventTarget` interface from our previous chapter.
 
 ```html
 <script>
+  function findEquivalentListener(registryList, listener, useCapture) {
+    return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);
+  }
+
   const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({
-      cb,
-      options
-    });
+  const ogRemove = EventTarget.prototype.removeEventListener;
+
+  EventTarget.prototype.addEventListener = function (name, listener, options) {
+    this._eventTargetRegistry || (this._eventTargetRegistry = {});
+    this._eventTargetRegistry[name] || (this._eventTargetRegistry[name] = []);
+    const entry = options instanceof Object ? Object.assign({listener}, options) : {listener, capture: options};
+    entry.capture = !!entry.capture;
+    const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
+    if (index >= 0)
+      return;
+    this._eventTargetRegistry[name].push(entry);
+    ogAdd.call(this, name, listener, options);
+  };
+
+  EventTarget.prototype.removeEventListener = function (name, listener, options) {
+    if (!this._eventTargetRegistry || !this._eventTargetRegistry[name])
+      return;
+    const capture = !!(options instanceof Object ? options.capture : options);
+    const index = findEquivalentListener(this._eventTargetRegistry[name], listener, capture);
+    if (index === -1)
+      return;
+    this._eventTargetRegistry[name].splice(index, 1);
+    ogRemove.call(this, name, listener, options);
   };
 
   EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
+    if (!this._eventTargetRegistry || !this._eventTargetRegistry[name])
+      return null;
     if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].map(cbOptions => cbOptions.cb);
-    if (phase === Event.CAPTURING_PHASE){
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true))
-        .map(cbOptions => cbOptions.cb);
-    }
+      return this._eventTargetRegistry[name].slice();
+    if (phase === Event.CAPTURING_PHASE)
+      return this._eventTargetRegistry[name].filter(listener => listener.capture);
     //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)))
-      .map(cbOptions => cbOptions.cb);
+    return this._eventTargetRegistry[name].filter(listener => !listener.capture);
   };
 
   function getPath(target) {
@@ -149,9 +164,10 @@ Not far. In fact, for this particular demo, we only need two adaptations:
 
   function callListenersOnElement(currentTarget, event, phase) {
     const listeners = currentTarget.getEventListeners(event.type, phase);
-    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+    if (!listeners)
+      return;
     for (let listener of listeners)
-      listener(event);
+      listener.listener(event);
   }
 
   function dispatchEvent(target, event) {
@@ -169,9 +185,10 @@ Not far. In fact, for this particular demo, we only need two adaptations:
 </div>
 
 <script>
+  let counter = 0;  
   function log(e){
-    console.log(e.currentTarget.tagName);
-  }
+    console.log(e.type + counter++);
+  }  
 
   const h1 = document.querySelector("h1");
   const div = document.querySelector("div");
@@ -187,12 +204,10 @@ Not far. In fact, for this particular demo, we only need two adaptations:
 The naive demo runs and prints:
 
 ```
-DIV
-H1
-DIV
+click0
+click1
+click2
 ```   
-
-In the next chapters, we look go more into detail in the event propagation algorithm.
 
 ## References
 
