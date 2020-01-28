@@ -92,25 +92,29 @@ Implementing the async version of `dispatchEvent` is slightly more complicated t
 
 1. In both async and sync event propagation the propagation path is fixed at the outset.
 2. We can therefore create a fixed round trip propagation path and target index. This path is passed along in the event queue.
-3. But, in the async version, we also need to share the data about the currentTarget and the list of event listeners avaiable at that target in that phase. We therefore also pass along the currentTarget, its current list of event listeners, and the phase data.
+3. But, in the async version, we also need to share the data about the list of currently iterated event listeners between async tasks. We therefore also pass along the current list of event listeners.
 4. We then queue each call for next event listener asynchronously in the highest priority macrotask queue in the event loop available: `toggleTick(...)`.
 
 ```javascript
-function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
-  if (!phase)
-    phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
-      roundTripPath.length === targetIndex ? Event.AT_TARGET :
-        Event.BUBBLING_PHASE;
-  if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
+function callNextListenerAsync(event, roundTripPath, targetIndex, listeners) {
+  if (event.cancelBubble || event._propagationStoppedImmediately || (event.eventPhase === Event.BUBBLING_PHASE && !event.bubbles))
     return;
-  if (!currentTarget) {
-    currentTarget = roundTripPath.shift();
-    listeners = currentTarget.getEventListeners(event.type, phase);
-    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+  if (!listeners) {
+    let phase = Event.CAPTURING_PHASE;
+    if (roundTripPath.length === targetIndex)
+      phase = Event.AT_TARGET;
+    if (roundTripPath.length < targetIndex)
+      phase = Event.BUBBLING_PHASE;
+    const currentTarget = roundTripPath.shift();
+    Object.defineProperties(event, {
+      "eventPhase": {value: phase, writable: true},
+      "currentTarget": {value: currentTarget, writable: true}
+    });
+    listeners = event.currentTarget.getEventListeners(event.type, event.eventPhase);
   }
   while (listeners && listeners.length) {
     const listener = listeners.shift();
-    if (!currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
+    if (!event.currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
       return;
     try {
       listener.listener(event);
@@ -119,37 +123,39 @@ function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget,
         'error',
         {error: err, message: 'Uncaught Error: event listener break down'}
       );
-      dispatchEvent(window, error);
+      window.dispatchEvent(error);
       if (!error.defaultPrevented)
         console.error(error);
     }
     if (listeners.length)
-      return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
+      return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, listeners));
   }
   if (roundTripPath.length)
-    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined, undefined, undefined));
-} 
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined));
+}          
 
 function dispatchEventAsync(target, event) {
-  Object.defineProperty(event, "target", {
-    get: function () {
-      let lowest = target;
-      for (let t of propagationPath) {
-        if (t === this.currentTarget)
-          return lowest;
-        if (t instanceof DocumentFragment && t.mode === "closed")
-          lowest = t.host || lowest;
+  Object.defineProperties(event, {
+    "target": {
+      get: function () {
+        let lowest = target;
+        for (let t of propagationPath) {
+          if (t === this.currentTarget)
+            return lowest;
+          if (t instanceof DocumentFragment && t.mode === "closed")
+            lowest = t.host || lowest;
+        }
       }
-    }
-  });
-  Object.defineProperty(event, "stopImmediatePropagation", {
-    value: function () {
-      this._propagationStoppedImmediately = true;
+    },
+    "stopImmediatePropagation": {
+      value: function () {
+        this._propagationStoppedImmediately = true;
+      }
     }
   });
   const propagationPath = getComposedPath(target, event);
   const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
-  toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined, undefined, undefined));
+  toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined));
 }
 ```
 
@@ -194,21 +200,25 @@ function dispatchEventAsync(target, event) {
     return path;
   }
 
-  function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
-    if (!phase)
-      phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
-        roundTripPath.length === targetIndex ? Event.AT_TARGET :
-          Event.BUBBLING_PHASE;
-    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
+  function callNextListenerAsync(event, roundTripPath, targetIndex, listeners) {
+    if (event.cancelBubble || event._propagationStoppedImmediately || (event.eventPhase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (!currentTarget) {
-      currentTarget = roundTripPath.shift();
-      listeners = currentTarget.getEventListeners(event.type, phase);
-      Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
+    if (!listeners) {
+      let phase = Event.CAPTURING_PHASE;
+      if (roundTripPath.length === targetIndex)
+        phase = Event.AT_TARGET;
+      if (roundTripPath.length < targetIndex)
+        phase = Event.BUBBLING_PHASE;
+      const currentTarget = roundTripPath.shift();
+      Object.defineProperties(event, {
+        "eventPhase": {value: phase, writable: true},
+        "currentTarget": {value: currentTarget, writable: true}
+      });
+      listeners = event.currentTarget.getEventListeners(event.type, event.eventPhase);
     }
     while (listeners && listeners.length) {
       const listener = listeners.shift();
-      if (!currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
+      if (!event.currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
         return;
       try {
         listener.listener(event);
@@ -217,37 +227,39 @@ function dispatchEventAsync(target, event) {
           'error',
           {error: err, message: 'Uncaught Error: event listener break down'}
         );
-        dispatchEvent(window, error);
+        window.dispatchEvent(error);
         if (!error.defaultPrevented)
           console.error(error);
       }
       if (listeners.length)
-        return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
+        return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, listeners));
     }
     if (roundTripPath.length)
-      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined, undefined, undefined));
+      toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined));
   }
 
   function dispatchEventAsync(target, event) {
-    Object.defineProperty(event, "target", {
-      get: function () {
-        let lowest = target;
-        for (let t of propagationPath) {
-          if (t === this.currentTarget)
-            return lowest;
-          if (t instanceof DocumentFragment && t.mode === "closed")
-            lowest = t.host || lowest;
+    Object.defineProperties(event, {
+      "target": {
+        get: function () {
+          let lowest = target;
+          for (let t of propagationPath) {
+            if (t === this.currentTarget)
+              return lowest;
+            if (t instanceof DocumentFragment && t.mode === "closed")
+              lowest = t.host || lowest;
+          }
         }
-      }
-    });
-    Object.defineProperty(event, "stopImmediatePropagation", {
-      value: function () {
-        this._propagationStoppedImmediately = true;
+      },
+      "stopImmediatePropagation": {
+        value: function () {
+          this._propagationStoppedImmediately = true;
+        }
       }
     });
     const propagationPath = getComposedPath(target, event);
     const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
-    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined, undefined, undefined));
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined));
   }
 </script>
 
