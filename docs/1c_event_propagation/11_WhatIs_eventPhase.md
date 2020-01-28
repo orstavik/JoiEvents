@@ -1,3 +1,57 @@
+# WhatIs: event phase?
+
+Finally, we will add the missing property to the `Event` object: `.eventPhase`. 
+
+## Demo: `eventPhase` 
+
+This fills our `dispatchEvent(...)` with lots of boilerplate code. In this demo we use the method `Object.defineProperties` to make the code a little more readable.
+
+```javascript
+function dispatchEvent(target, event) {
+  if (!target.isConnected)
+    return;  
+  const propagationPath = getComposedPath(target, event).slice(1);
+  Object.defineProperties(event, {
+    "target" : {
+      get: function () {
+        let lowest = target;
+        for (let t of propagationPath) {
+          if (t === this.currentTarget)
+            return lowest;
+          if (t instanceof DocumentFragment && t.mode === "closed")
+            lowest = t.host || lowest;
+        }
+      }
+    },
+    "stopImmediatePropagation": {
+      value: function () {
+        this._propagationStoppedImmediately = true;
+      }
+    },
+    "eventPhase": {
+      value: Event.CAPTURING_PHASE,
+      writable: true
+    }
+  });
+  for (let currentTarget of propagationPath.slice().reverse())
+    callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
+  Object.defineProperty(event, "eventPhase", {
+    value: Event.AT_TARGET,
+    writable: true
+  });
+  callListenersOnElement(target, event, Event.AT_TARGET);
+  Object.defineProperty(event, "eventPhase", {
+    value: Event.BUBBLING_PHASE,
+    writable: true
+  });
+  for (let currentTarget of propagationPath)
+    callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
+}
+```
+
+## Demo: `eventPhase`
+
+```html
 <script src="hasGetEventListeners.js"></script>
 <script>
   function getComposedPath(target, event) {
@@ -107,3 +161,8 @@
 
   inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
 </script>
+```
+
+## References
+
+ * []()
