@@ -1,53 +1,21 @@
+<script src="hasGetEventListeners.js"></script>
 <script>
-  function matchEventListeners(funA, optionsA, funB, optionsB) {
-    if (funA !== funB)
-      return false;
-    const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
-    const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
-    return a === b;
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function () {
+        details.ontoggle = undefined;
+      },
+      resume: function () {
+        details.ontoggle = cb;
+      }
+    };
   }
-
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index >= 0)
-      return;
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({cb, options});
-  };
-
-  const ogRemove = EventTarget.prototype.removeEventListener;
-  EventTarget.prototype.removeEventListener = function (name, cb, options) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return;
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index === -1)
-      return;
-    ogRemove.call(this, name, cb, options);
-    this._eventListeners[name].splice(index, 1);
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].slice();
-    if (phase === Event.CAPTURING_PHASE) {
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
-  };
-
-  EventTarget.prototype.hasEventListener = function (name, listener) {
-    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
-  };
 
   function getComposedPath(target, event) {
     const path = [];
@@ -68,74 +36,6 @@
     return path;
   }
 
-  function callListenersOnElement(currentTarget, event, phase) {
-    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
-      return;
-    const listeners = currentTarget.getEventListeners(event.type, phase);
-    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-    for (let listener of listeners) {
-      if (event._propagationStoppedImmediately)
-        return;
-      if (!currentTarget.hasEventListener(event.type, listener))
-        continue;
-      try {
-        listener.cb(event);
-      } catch (err) {
-        const error = new ErrorEvent(
-          'error',
-          {error: err, message: 'Uncaught Error: event listener break down'}
-        );
-        dispatchEvent(window, error);
-        if (!error.defaultPrevented)
-          console.error(error);
-      }
-    }
-  }
-
-  function dispatchEvent(target, event) {
-    const propagationPath = getComposedPath(target, event).slice(1);
-    Object.defineProperty(event, "target", {
-      get: function () {
-        let lowest = target;
-        for (let t of propagationPath) {
-          if (t === this.currentTarget)
-            return lowest;
-          if (t instanceof DocumentFragment && t.mode === "closed")
-            lowest = t.host || lowest;
-        }
-      }
-    });
-    Object.defineProperty(event, "stopImmediatePropagation", {
-      value: function () {
-        this._propagationStoppedImmediately = true;
-      }
-    });
-    for (let currentTarget of propagationPath.slice().reverse())
-      callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
-    callListenersOnElement(target, event, Event.AT_TARGET);
-    for (let currentTarget of propagationPath)
-      callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
-  }
-
-  /*ASYNC*/
-
-  function toggleTick(cb) {
-    const details = document.createElement("details");
-    details.style.display = "none";
-    details.ontoggle = cb;
-    document.body.appendChild(details);
-    details.open = true;
-    Promise.resolve().then(details.remove.bind(details));
-    return {
-      cancel: function () {
-        details.ontoggle = undefined;
-      },
-      resume: function () {
-        details.ontoggle = cb;
-      }
-    };
-  }
-
   function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
     if (!phase)
       phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
@@ -148,12 +48,12 @@
       listeners = currentTarget.getEventListeners(event.type, phase);
       Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     }
-    while (listeners.length) {
+    while (listeners && listeners.length) {
       const listener = listeners.shift();
-      if (!currentTarget.hasEventListener(event.type, listener))
+      if (!currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
         return;
       try {
-        listener.cb(event);
+        listener.listener(event);
       } catch (err) {
         const error = new ErrorEvent(
           'error',
@@ -194,7 +94,7 @@
 </script>
 
 <div id="outer">
-  <h1 id="inner">Click on me!</h1>
+  <h1 id="inner">Click me!</h1>
 </div>
 
 <script>
@@ -209,17 +109,12 @@
     });
   }
 
-  function log2(e) {
-    log(e);
-  }
-
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
   inner.addEventListener("click", log);
-  inner.addEventListener("click", log2);
+  inner.addEventListener("click", log.bind({}));
   outer.addEventListener("click", log);
 
-  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
   dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>

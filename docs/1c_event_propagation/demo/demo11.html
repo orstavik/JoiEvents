@@ -1,5 +1,5 @@
 <div id="outer">
-  <h1 id="inner">Click on me!</h1>
+  <h1 id="inner">Click me!</h1>
 </div>
 
 <script>
@@ -22,5 +22,5 @@
   inner.addEventListener("click", log.bind({}));
   outer.addEventListener("click", log);
 
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true})); the user must click
 </script>

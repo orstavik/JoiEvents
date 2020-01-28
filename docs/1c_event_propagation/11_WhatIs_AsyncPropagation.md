@@ -13,34 +13,34 @@ Browsers *also* do dispatch some events such as `error` *synchronously*.
 
 ```html
 <div id="outer">
-  <h1 id="inner">Click on me!</h1>
+  <h1 id="inner">Click me!</h1>
 </div>
 
 <script>
   function log(e) {
     const thisTarget = e.currentTarget.id;
     console.log(e.type + " on #" + thisTarget);
+    
     Promise.resolve().then(function() {
       console.log("microtask from #" + thisTarget);
+      Promise.resolve().then(()=>{
+        console.log("nested microtask from #" + thisTarget);
+      });
     });
-  }
-  
-  function log2(e){
-    log(e);
   }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
-  
+
   inner.addEventListener("click", log);
-  inner.addEventListener("click", log2);
+  inner.addEventListener("click", log.bind({}));
   outer.addEventListener("click", log);
 
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true})); the user must click
 </script>
 ```
 
-When you `click` on "Click on me!" using either mouse or touch, then you will see the following result printed out in the console.
+When you `click` on "Click me!" using either mouse or touch, then you will see the following result printed out in the console.
 
 ```
 
@@ -101,23 +101,19 @@ function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget,
     phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
       roundTripPath.length === targetIndex ? Event.AT_TARGET :
         Event.BUBBLING_PHASE;
-  if (event._propagationStopped || event._propagationStoppedImmediately)
+  if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
     return;
-  if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-    return;
-  if (event.cancelBubble)
-    phase = Event.CAPTURING_PHASE;
   if (!currentTarget) {
     currentTarget = roundTripPath.shift();
     listeners = currentTarget.getEventListeners(event.type, phase);
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
   }
-  while (listeners.length) {
+  while (listeners && listeners.length) {
     const listener = listeners.shift();
-    if (!currentTarget.hasEventListener(event.type, listener))
+    if (!currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
       return;
     try {
-      listener.cb(event);
+      listener.listener(event);
     } catch (err) {
       const error = new ErrorEvent(
         'error',
@@ -131,8 +127,8 @@ function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget,
       return toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, currentTarget, listeners, phase));
   }
   if (roundTripPath.length)
-    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex));
-}       
+    toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, targetIndex, undefined, undefined, undefined));
+} 
 
 function dispatchEventAsync(target, event) {
   Object.defineProperty(event, "target", {
@@ -146,11 +142,6 @@ function dispatchEventAsync(target, event) {
       }
     }
   });
-  Object.defineProperty(event, "stopPropagation", {
-    value: function () {
-      this._propagationStopped = true;
-    }
-  });
   Object.defineProperty(event, "stopImmediatePropagation", {
     value: function () {
       this._propagationStoppedImmediately = true;
@@ -158,63 +149,31 @@ function dispatchEventAsync(target, event) {
   });
   const propagationPath = getComposedPath(target, event);
   const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
-  toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length));
+  toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined, undefined, undefined));
 }
 ```
 
 ## Demo: all together now
 
 ```html
+<script src="hasGetEventListeners.js"></script>
 <script>
-  function matchEventListeners(funA, optionsA, funB, optionsB) {
-    if (funA !== funB)
-      return false;
-    const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
-    const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
-    return a === b;
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function () {
+        details.ontoggle = undefined;
+      },
+      resume: function () {
+        details.ontoggle = cb;
+      }
+    };
   }
-
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index >= 0)
-      return;
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({cb, options});
-  };
-
-  const ogRemove = EventTarget.prototype.removeEventListener;
-  EventTarget.prototype.removeEventListener = function (name, cb, options) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return;
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index === -1)
-      return;
-    ogRemove.call(this, name, cb, options);
-    this._eventListeners[name].splice(index, 1);
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].slice();
-    if (phase === Event.CAPTURING_PHASE) {
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
-  };
-
-  EventTarget.prototype.hasEventListener = function (name, listener) {
-    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
-  };
 
   function getComposedPath(target, event) {
     const path = [];
@@ -235,74 +194,6 @@ function dispatchEventAsync(target, event) {
     return path;
   }
 
-  function callListenersOnElement(currentTarget, event, phase) {
-    if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
-      return;
-    const listeners = currentTarget.getEventListeners(event.type, phase);
-    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-    for (let listener of listeners) {
-      if (event._propagationStoppedImmediately)
-        return;
-      if (!currentTarget.hasEventListener(event.type, listener))
-        continue;
-      try {
-        listener.cb(event);
-      } catch (err) {
-        const error = new ErrorEvent(
-          'error',
-          {error: err, message: 'Uncaught Error: event listener break down'}
-        );
-        dispatchEvent(window, error);
-        if (!error.defaultPrevented)
-          console.error(error);
-      }
-    }
-  }
-
-  function dispatchEvent(target, event) {
-    const propagationPath = getComposedPath(target, event).slice(1);
-    Object.defineProperty(event, "target", {
-      get: function () {
-        let lowest = target;
-        for (let t of propagationPath) {
-          if (t === this.currentTarget)
-            return lowest;
-          if (t instanceof DocumentFragment && t.mode === "closed")
-            lowest = t.host || lowest;
-        }
-      }
-    });
-    Object.defineProperty(event, "stopImmediatePropagation", {
-      value: function () {
-        this._propagationStoppedImmediately = true;
-      }
-    });
-    for (let currentTarget of propagationPath.slice().reverse())
-      callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
-    callListenersOnElement(target, event, Event.AT_TARGET);
-    for (let currentTarget of propagationPath)
-      callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
-  }
-
-  /*ASYNC*/
-
-  function toggleTick(cb) {
-    const details = document.createElement("details");
-    details.style.display = "none";
-    details.ontoggle = cb;
-    document.body.appendChild(details);
-    details.open = true;
-    Promise.resolve().then(details.remove.bind(details));
-    return {
-      cancel: function () {
-        details.ontoggle = undefined;
-      },
-      resume: function () {
-        details.ontoggle = cb;
-      }
-    };
-  }
-
   function callNextListenerAsync(event, roundTripPath, targetIndex, currentTarget, listeners, phase) {
     if (!phase)
       phase = roundTripPath.length > targetIndex ? Event.CAPTURING_PHASE :
@@ -315,12 +206,12 @@ function dispatchEventAsync(target, event) {
       listeners = currentTarget.getEventListeners(event.type, phase);
       Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     }
-    while (listeners.length) {
+    while (listeners && listeners.length) {
       const listener = listeners.shift();
-      if (!currentTarget.hasEventListener(event.type, listener))
+      if (!currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
         return;
       try {
-        listener.cb(event);
+        listener.listener(event);
       } catch (err) {
         const error = new ErrorEvent(
           'error',
@@ -349,11 +240,6 @@ function dispatchEventAsync(target, event) {
         }
       }
     });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
-      }
-    });
     Object.defineProperty(event, "stopImmediatePropagation", {
       value: function () {
         this._propagationStoppedImmediately = true;
@@ -366,7 +252,7 @@ function dispatchEventAsync(target, event) {
 </script>
 
 <div id="outer">
-  <h1 id="inner">Click on me!</h1>
+  <h1 id="inner">Click me!</h1>
 </div>
 
 <script>
@@ -381,26 +267,16 @@ function dispatchEventAsync(target, event) {
     });
   }
 
-  function log2(e) {
-    log(e);
-  }
-
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
   inner.addEventListener("click", log);
-  inner.addEventListener("click", log2);
+  inner.addEventListener("click", log.bind({}));
   outer.addEventListener("click", log);
 
-  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
   dispatchEventAsync(inner, new MouseEvent("click", {bubbles: true}));
 </script>
 ```                        
-
-## todo 
-
-minor details:
-* add the event.phase property.
 
 ## References
 
