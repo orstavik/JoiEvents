@@ -90,5 +90,5 @@ function equivalentListeners(funA, optionsA, funB, optionsB){
 
 ## References
 
-  * mdn `addEventListener(..)`
-  * mdn  `removeEventListener(..)`
+  * [MDN: `addEventListener(..)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)
+  * [MDN: `removeEventListener(..)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener)
