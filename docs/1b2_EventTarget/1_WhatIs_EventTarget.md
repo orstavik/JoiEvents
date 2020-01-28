@@ -38,7 +38,7 @@ Longer answer. Other scripts with access to the DOM can:
 
 2. move and restyle an element with event listeners already attached to it. This can fool the user into clicking on an element at the wrong time or place. 
 
-3. override the `addEventListener(..)` property on both the `EventTarget` prototype, the `HTMLElement` prototype or any `EventTarget`object (ie. all elements, documents and windows in the DOM). This would mean that scripts adding their event listeners after another script in the app has run, might inadvertantly pass their function objects to that other script.
+3. override the `addEventListener(..)` property on both the `EventTarget` prototype, the `HTMLElement` prototype or any `EventTarget`object (ie. all elements, documents and windows in the DOM). This would mean that scripts adding their event listeners after another script in the app has run, might inadvertently pass their function objects to that other script.
 
 Thus, by default, developers should consider functions added as event listeners as "open" in the DOM. They most likely can be intercepted and/or manipulated from other scripts with access to that DOM.
 
