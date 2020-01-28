@@ -161,8 +161,8 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
   if (options.priority !== undefined) {
     if (options.priority > Number.MAX_SAFE_INTEGER)
       options.priority = Number.MAX_SAFE_INTEGER;
-    if (options.priority < 0)
-      options.priority = 0;
+    if (options.priority < Number.MIN_SAFE_INTEGER)
+      options.priority = Number.MIN_SAFE_INTEGER;
     if (!Number.isInteger(options.priority))
       options.priority = parseInt(options.priority);
     if (isNaN(options.priority)){
@@ -283,8 +283,8 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
     if (options.priority !== undefined) {
       if (options.priority > Number.MAX_SAFE_INTEGER)
         options.priority = Number.MAX_SAFE_INTEGER;
-      if (options.priority < 0)
-        options.priority = 0;
+      if (options.priority < Number.MIN_SAFE_INTEGER)
+        options.priority = Number.MIN_SAFE_INTEGER;
       if (!Number.isInteger(options.priority))
         options.priority = parseInt(options.priority);
       if (isNaN(options.priority)){
