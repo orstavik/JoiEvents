@@ -1,31 +1,5 @@
+<script src="hasGetEventListeners.js"></script>
 <script>
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({
-      cb,
-      options
-    });
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].map(cbOptions => cbOptions.cb);
-    if (phase === Event.CAPTURING_PHASE){
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true))
-        .map(cbOptions => cbOptions.cb);
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)))
-      .map(cbOptions => cbOptions.cb);
-  };
-
   function getPath(target) {
     const path = [];
     while (target.parentNode !== null) {

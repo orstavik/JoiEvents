@@ -3,13 +3,12 @@
 The `target` is the node in the DOM at which the whole event is directed. 
 The `currentTarget` is the node on which the event listener is attached.
 
-## Demo: adding and removing event listeners
+## Demo: a changing `currentTarget` 
 
-In the demo below we illustrate how multiple matching event listeners are not added to the same element, and how matching event listeners are removed from the element.  
-
+In the demo below we see how the `target` remains the same and how the `currentTarget` changes for both event listeners.
 ```html
 <div id="outer">
-  <h1 id="inner">Click on me!</h1>
+  <h1 id="inner">Click me!</h1>
 </div>
 
 <script>
@@ -34,39 +33,15 @@ click, #inner, #inner
 click, #inner, #outer
 ```
 
-Setting the `target` is done *once* at *the beginning* of each event propagation. Setting the `currentTarget` is done every time the event propagation function calls event listeners on a new node in the event propagation path.   
+Setting the `target` is done *once* at *the beginning* of each event propagation. Setting the `currentTarget` is done every time the event propagation function calls event listeners on a new node in the event propagation path.
 
 ## Demo: Setting `target` and `currentTarget`
 
+To set the `target` and `currentTarget` property on the event we need to use `Object.defineProperty(...)`.
+
 ```html
+ <script src="hasGetEventListeners.js"></script>
 <script>
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({
-      cb,
-      options
-    });
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].map(cbOptions => cbOptions.cb);
-    if (phase === Event.CAPTURING_PHASE){
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true))
-        .map(cbOptions => cbOptions.cb);
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)))
-      .map(cbOptions => cbOptions.cb);
-  };
-
   function getPath(target) {
     const path = [];
     while (target.parentNode !== null) {
@@ -79,7 +54,7 @@ Setting the `target` is done *once* at *the beginning* of each event propagation
 
   function callListenersOnElement(currentTarget, event, phase) {
     const listeners = currentTarget.getEventListeners(event.type, phase);
-    Object.defineProperty(event, "currentTarget", {value: currentTarget});
+    Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
       listener(event);
   }
