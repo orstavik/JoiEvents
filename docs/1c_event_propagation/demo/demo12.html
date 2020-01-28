@@ -1,0 +1,33 @@
+<div id="outer">
+  <h1 id="inner">Click me!</h1>
+</div>
+
+<script>
+  function log(e) {
+    const thisTarget = e.currentTarget.id;
+    console.log(e.type + " on #" + thisTarget);
+    
+    Promise.resolve().then(function() {
+      console.log("microtask from #" + thisTarget);
+      Promise.resolve().then(()=>{
+        console.log("nested microtask from #" + thisTarget);
+      });
+    });
+  }
+
+  const inner = document.querySelector("#inner");
+  const outer = document.querySelector("#outer");
+
+  inner.addEventListener("click", log);
+  inner.addEventListener("click", log.bind({}));
+  outer.addEventListener("click", log);
+
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+
+  // const div = document.createElement("div");
+  // div.id = "toBeConnected";
+  // div.addEventListener("click", log);
+  // div.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  // document.body.appendChild(div);
+  // div.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+</script>

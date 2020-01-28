@@ -278,6 +278,9 @@ function dispatchEventAsync(target, event) {
 </script>
 ```                        
 
+Sync calls `dispatchEvent()` doesn't care if the target element is connected to the DOM or not. 
+However, for async event propagation, expect the browser to disqualify many event dispatches if `!target.isConnected` when the event is *to be queued*. However, once queued, the browser returns to its normal mode of operation of not caring if the target element is connected to the DOM or not. Cf. the ToggleTickTrick.    
+
 ## References
 
  * [MDN: sync vs async event listeners](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent#Notes)
