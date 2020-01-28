@@ -48,67 +48,16 @@ To check for bubbling, we need to add a check when we call listeners on a new el
 function callListenersOnElement(currentTarget, event, phase) {
   if (phase === Event.BUBBLING_PHASE && !event.bubbles)
     return;
-  const listeners = currentTarget.getEventListeners(event.type, phase);
-  Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-  for (let listener of listeners)
-    listener(event);
+  //...
+
 }
 ```
 
 ## Demo: masquerade dispatchEvent function
 
 ```html
+<script src="hasGetEventListeners.js"></script>
 <script>
-  function matchEventListeners(funA, optionsA, funB, optionsB) {
-    if (funA !== funB)
-      return false;
-    const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
-    const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
-    return a === b;
-  }
-
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index >= 0)
-      return;
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({cb, options});
-  };
-
-  const ogRemove = EventTarget.prototype.removeEventListener;
-  EventTarget.prototype.removeEventListener = function (name, cb, options) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return;
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index === -1)
-      return;
-    ogRemove.call(this, name, cb, options);
-    this._eventListeners[name].splice(index, 1);
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].slice();
-    if (phase === Event.CAPTURING_PHASE) {
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
-  };
-
-  EventTarget.prototype.hasEventListener = function (name, listener) {
-    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
-  };
-
   function getComposedPath(target, event) {
     const path = [];
     while (true) {
@@ -132,10 +81,12 @@ function callListenersOnElement(currentTarget, event, phase) {
     if (phase === Event.BUBBLING_PHASE && !event.bubbles)
       return;
     const listeners = currentTarget.getEventListeners(event.type, phase);
+    if (!listeners)
+      return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      if (currentTarget.hasEventListener(event.type, listener))
-        listener.cb(event);
+      if (currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
+        listener.listener(event);
   }
 
   function dispatchEvent(target, event) {

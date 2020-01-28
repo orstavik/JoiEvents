@@ -79,96 +79,44 @@ We check the `cancelBubbles` property on the event when the event propagation fu
 function callListenersOnElement(currentTarget, event, phase) {
   if (event.cancelBubble || (phase === Event.BUBBLING_PHASE && !event.bubbles))
     return;
-  const listeners = currentTarget.getEventListeners(event.type, phase);
-  Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-  for (let listener of listeners)
-    listener(event);
+  //...
 }
 ```
 
 ## Demo: masquerade dispatchEvent function
 
 ```html
+<script src="hasGetEventListeners.js"></script>
 <script>
-  function matchEventListeners(funA, optionsA, funB, optionsB) {
-    if (funA !== funB)
-      return false;
-    const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
-    const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
-    return a === b;
-  }
-
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index >= 0)
-      return;
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({cb, options});
-  };
-
-  const ogRemove = EventTarget.prototype.removeEventListener;
-  EventTarget.prototype.removeEventListener = function (name, cb, options) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return;
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index === -1)
-      return;
-    ogRemove.call(this, name, cb, options);
-    this._eventListeners[name].splice(index, 1);
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].slice();
-    if (phase === Event.CAPTURING_PHASE) {
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
-  };
-
-  EventTarget.prototype.hasEventListener = function (name, listener) {
-    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
-  };
-
   function getComposedPath(target, event) {
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
-    if (event._propagationStopped === true)
+    if (event.cancelBubble || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
-    if (phase === Event.BUBBLING_PHASE && (event.cancelBubble || !event.bubbles))
-      return;
-    if (event.cancelBubble)
-      phase = Event.CAPTURING_PHASE;
     const listeners = currentTarget.getEventListeners(event.type, phase);
+    if (!listeners)
+      return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      listener(event);
+      if (currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
+        listener.listener(event);
   }
 
   function dispatchEvent(target, event) {
@@ -182,11 +130,6 @@ function callListenersOnElement(currentTarget, event, phase) {
           if (t instanceof DocumentFragment && t.mode === "closed")
             lowest = t.host || lowest;
         }
-      }
-    });
-    Object.defineProperty(event, "stopPropagation", {
-      value: function () {
-        this._propagationStopped = true;
       }
     });
     for (let currentTarget of propagationPath.slice().reverse())
@@ -210,25 +153,37 @@ function callListenersOnElement(currentTarget, event, phase) {
 
   function stopProp(e) {
     e.stopPropagation();
-    console.log(e.type + ".stopPropagation();");
+    console.log(e.type + ".stopPropagation(); cancelBubble = " + e.cancelBubble);
+  }
+
+  function cancelBubble(e) {
+    e.cancelBubble = true;
+    console.log(e.type + ".cancelBubble; cancelBubble = " + e.cancelBubble);
   }
 
   const inner = document.querySelector("#inner");
   const outer = document.querySelector("#outer");
 
-  outer.addEventListener("click", log, true);   //yes
-  inner.addEventListener("click", stopProp);    //yes
-  inner.addEventListener("click", log, true);   //yes, same current target as when stopPropagation() was called
-  inner.addEventListener("click", log);         //yes, same current target as when stopPropagation() was called
-  outer.addEventListener("click", log);         //no
+  outer.addEventListener("mouseup", log, true);   //yes
+  inner.addEventListener("mouseup", cancelBubble);//yes
+  inner.addEventListener("mouseup", log, true);//yes, same target as when stopPropagation() was called
+  inner.addEventListener("mouseup", log);      //yes, same target as when stopPropagation() was called
+  outer.addEventListener("mouseup", log);      //no
+
+  outer.addEventListener("click", log, true);//yes
+  inner.addEventListener("click", stopProp); //yes
+  inner.addEventListener("click", log, true);//yes, same current target as when stopPropagation() was called
+  inner.addEventListener("click", log);      //yes, same current target as when stopPropagation() was called
+  outer.addEventListener("click", log);      //no
 
   document.body.addEventListener("dblclick", stopProp, true); //yes
-  outer.addEventListener("dblclick", log, true);              //no, stopPropagation() can block in all event phases.
-  inner.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
-  outer.addEventListener("dblclick", log);                    //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("dblclick", log, true); //no, stopPropagation() can block in all event phases.
+  inner.addEventListener("dblclick", log);       //no, stopPropagation() can block in all event phases.
+  outer.addEventListener("dblclick", log);       //no, stopPropagation() can block in all event phases.
 
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  inner.dispatchEvent(new MouseEvent("dblclick", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("mouseup", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("dblclick", {bubbles: true}));
 </script>
 ``` 
 

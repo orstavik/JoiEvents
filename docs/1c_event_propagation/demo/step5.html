@@ -16,7 +16,7 @@
       return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      if (currentTarget.hasEventListener(event.type, listener.listener, listener.options))
+      if (currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
         listener.listener(event);
   }
 

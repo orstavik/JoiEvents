@@ -106,81 +106,35 @@ function dispatchEvent(target, event) {
 ## Demo: A `dispatchEvent` function handling composed paths.
 
 ```html
+<script src="hasGetEventListeners.js"></script>
 <script>
-  function matchEventListeners(funA, optionsA, funB, optionsB) {
-    if (funA !== funB)
-      return false;
-    const a = optionsA === true || (optionsA instanceof Object && optionsA.capture === true);
-    const b = optionsB === true || (optionsB instanceof Object && optionsB.capture === true);
-    return a === b;
-  }
-
-  const ogAdd = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function (name, cb, options) {
-    this._eventListeners || (this._eventListeners = {});
-    this._eventListeners[name] || (this._eventListeners[name] = []);
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index >= 0)
-      return;
-    ogAdd.call(this, name, cb, options);
-    this._eventListeners[name].push({cb, options});
-  };
-
-  const ogRemove = EventTarget.prototype.removeEventListener;
-  EventTarget.prototype.removeEventListener = function (name, cb, options) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return;
-    const index = this._eventListeners[name]
-      .findIndex(cbOptions => matchEventListeners(cbOptions.cb, cbOptions.options, cb, options));
-    if (index === -1)
-      return;
-    ogRemove.call(this, name, cb, options);
-    this._eventListeners[name].splice(index, 1);
-  };
-
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventListeners || !this._eventListeners[name])
-      return [];
-    if (phase === Event.AT_TARGET)
-      return this._eventListeners[name].slice();
-    if (phase === Event.CAPTURING_PHASE) {
-      return this._eventListeners[name]
-        .filter(listener => listener.options === true || (listener.options && listener.options.capture === true));
-    }
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventListeners[name]
-      .filter(listener => !(listener.options === true || (listener.options && listener.options.capture === true)));
-  };
-
-  EventTarget.prototype.hasEventListener = function (name, listener) {
-    return this._eventListeners && this._eventListeners[name] && (this._eventListeners[name].indexOf(listener) !== -1);
-  };
-
   function getComposedPath(target, event) {
     const path = [];
     while (true) {
       path.push(target);
-      if (target.parentNode)
+      if (target.parentNode) {
         target = target.parentNode;
-      else if (target.host) {
+      } else if (target.host) {
         if (!event.composed)
           return path;
         target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
       } else {
         break;
       }
     }
-    path.push(document, window);
     return path;
   }
 
   function callListenersOnElement(currentTarget, event, phase) {
     const listeners = currentTarget.getEventListeners(event.type, phase);
+    if (!listeners)
+      return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      if (currentTarget.hasEventListener(event.type, listener))
-        listener.cb(event);
+      if (currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
+        listener.listener(event);
   }
 
   function dispatchEvent(target, event) {
@@ -194,7 +148,6 @@ function dispatchEvent(target, event) {
           if (t instanceof DocumentFragment && t.mode === "closed")
             lowest = t.host || lowest;
         }
-        throw new Error("Omg, a target not in the propagation path??");
       }
     });
     for (let currentTarget of propagationPath.slice().reverse())
