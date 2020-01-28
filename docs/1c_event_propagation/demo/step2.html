@@ -12,9 +12,11 @@
 
   function callListenersOnElement(currentTarget, event, phase) {
     const listeners = currentTarget.getEventListeners(event.type, phase);
+    if (!listeners)
+      return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      listener(event);
+      listener.listener(event);
   }
 
   function dispatchEvent(target, event) {

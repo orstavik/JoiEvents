@@ -40,7 +40,7 @@ Setting the `target` is done *once* at *the beginning* of each event propagation
 To set the `target` and `currentTarget` property on the event we need to use `Object.defineProperty(...)`.
 
 ```html
- <script src="hasGetEventListeners.js"></script>
+<script src="hasGetEventListeners.js"></script>
 <script>
   function getPath(target) {
     const path = [];
@@ -54,9 +54,11 @@ To set the `target` and `currentTarget` property on the event we need to use `Ob
 
   function callListenersOnElement(currentTarget, event, phase) {
     const listeners = currentTarget.getEventListeners(event.type, phase);
+    if (!listeners)
+      return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
     for (let listener of listeners)
-      listener(event);
+      listener.listener(event);
   }
 
   function dispatchEvent(target, event) {
