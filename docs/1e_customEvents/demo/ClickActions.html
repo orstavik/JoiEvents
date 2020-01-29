@@ -1,0 +1,21 @@
+<details>
+  <summary>
+    <i>Hello</i>
+    <a href="#darkness"><b>darkness</b></a>
+    <a href="#sunshine">sunshine</a>
+    <u>(.preventDefault())</u>
+  </summary>
+  Hello Hello.
+</details>
+
+<script>
+  const b = document.querySelector("b");
+  const i = document.querySelector("i");
+  const u = document.querySelector("u");
+
+  window.addEventListener("mousedown", e => console.log(e.type));
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+
+  u.addEventListener("click", e => e.preventDefault());
+</script>

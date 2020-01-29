@@ -1,24 +1,12 @@
-<h1>Right click me and below me</h1>
+<h1>Right click (no context menu)</h1>
+Right click here will show context menu
 
 <script>
-  //block all contextmenu events and stops their default actions
+  //1. block all contextmenu events and stops their default actions
   window.addEventListener("contextmenu", function(e){
     e.stopImmediatePropagation();
     e.preventDefault();
   }, true);
-
-  function toggleTick(cb) {
-    const details = document.createElement("details");
-    details.style.display = "none";
-    details.ontoggle = cb;
-    document.body.appendChild(details);
-    details.open = true;
-    Promise.resolve().then(details.remove.bind(details));
-    return {
-      cancel: function(){ details.ontoggle = undefined; },
-      resume: function(){ details.ontoggle = cb; }
-    };
-  }
 
   const h1 = document.querySelector("h1");
 
@@ -27,21 +15,20 @@
       return;
 
     const myContextMenuEvent = new CustomEvent("my-context-menu", {composed: true, bubbles: true});
-    const task1 = toggleTick(function(){
+    const task1 = setTimeout(function(){
       mousedownEvent.target.dispatchEvent(myContextMenuEvent);
     });
-    const task2 = toggleTick(function(){
+    const task2 = setTimeout(function(){
       alert("this is a bad excuse for a context menu..");
     });
     Object.defineProperty(myContextMenuEvent, "preventDefault", {value: function(){
-      task2.cancel();
-    }});
+        clearTimeout(task2);
+      }});
   }
+  window.addEventListener("mousedown", ContextMenuController, true);
 
-  window.addEventListener("mousedown", ContextMenuController);
   window.addEventListener("mousedown", e => console.log(e.type));
   window.addEventListener("my-context-menu", e => console.log(e.type));
 
   h1.addEventListener("my-context-menu", e => e.preventDefault());
 </script>
-

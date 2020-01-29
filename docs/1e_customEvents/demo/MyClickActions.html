@@ -1,0 +1,84 @@
+<details>
+  <summary>
+    <i>Hello</i>
+    <a href="#sunshine"><b>sunshine</b></a>
+    <u>(.preventDefault())</u>
+  </summary>
+  Hello Hello. <br>
+  If you click on <i>Hello</i>, you get the details default action. <br>
+  If you click on <b>sunshine</b>, you get link click default action. There is no darkness here.<br>
+  If you click on <u>(.preventDefault())</u>, you get no default action. <br>
+</details>
+
+<script>
+  //block all native click events and stops their default actions
+  window.addEventListener("click", function (e) {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }, true);
+
+  function naiveClickTarget(as, bs) {
+    let sharedTarget;
+    for (let i = 0; i < as.length && i < bs.length; i++) {
+      if (as[i] !== bs[i])
+        return sharedTarget;
+      sharedTarget = as[i];
+    }
+    return sharedTarget;
+  }
+
+  function findClickable(target) {
+    if (["A", "SUMMARY"].indexOf(target.tagName) >= 0)
+      return target;
+    const parentNode = target.parentNode || target.host || target.defaultView;
+    if (parentNode)
+      return findClickable(parentNode);
+    return target;
+  }
+
+  const ClickController = {
+    downPath: undefined,
+    upPath: undefined,
+    onMousedown: function (mousedownEvent) {
+      if (mousedownEvent.button !== 0)
+        return;
+      ClickController.downPath = mousedownEvent.composedPath().reverse();
+    },
+    onMouseup: function (mouseupEvent) {
+      if (mouseupEvent.button !== 0)
+        return;
+      ClickController.upPath = mouseupEvent.composedPath().reverse();
+      const sharedTarget = naiveClickTarget(ClickController.upPath, ClickController.downPath);
+      const myClickEvent = new CustomEvent("my-click", {composed: true, bubbles: true});
+      const task1 = setTimeout(function () {
+        sharedTarget.dispatchEvent(myClickEvent);
+      });
+      const interactive = findClickable(sharedTarget, ClickController.upPath);
+      const task2 = setTimeout(function () {
+        if (interactive.tagName === "A")
+          location.href = new URL(interactive.href, location.href).href;
+        else if (interactive.tagName === "SUMMARY")
+          interactive.parentNode.open = !interactive.parentNode.open;
+      });
+      Object.defineProperty(myClickEvent, "preventDefault", {
+        value: function () {
+          clearTimeout(task2);
+        }
+      });
+    }
+  };
+
+  window.addEventListener("mousedown", ClickController.onMousedown, true);
+  window.addEventListener("mouseup", ClickController.onMouseup, true);
+
+  const b = document.querySelector("b");
+  const i = document.querySelector("i");
+  const u = document.querySelector("u");
+
+  window.addEventListener("mousedown", e => console.log(e.type));
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("my-click", e => console.log(e.type));
+
+  u.addEventListener("my-click", e => e.preventDefault());
+</script>
