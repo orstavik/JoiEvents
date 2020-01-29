@@ -19,6 +19,12 @@ The second problem, the `stopPropagation()` torpedo, is insurmountable. Even on 
 `window.addEventListener("click", fun, {priority: Number.MIN_SAFE_INTEGER})`  
 
 cannot ensure that `fun` will *run* at last. We therefore call this antipattern DeadLast.
+
+## WhatIf: we could make it work?
+
+A fairly simple and unobtrusive way to make a DeadLast event listener work, would be to add an event listener option `unstoppable: true`. Adding such an option to an event listener would render it immune from interference from `stopPropagation()` and `stopImmediatePropagation()`.
+
+The problem with this option is that it is impossible to alter the native event propagation algorithm to support this method. The `dispatchEvent(..)` function might be monkeypatched, but events dispatched by the browser itself can not. 
    
 ## References
 
