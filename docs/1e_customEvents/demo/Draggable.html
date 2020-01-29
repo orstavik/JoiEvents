@@ -1,0 +1,15 @@
+<div draggable="true">Hello sunshine</div>
+
+<script>
+  let mousedown;
+  let mousemove;
+
+  window.addEventListener("mousedown", e => console.log(e.type));
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("mousemove", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+
+  window.addEventListener("dragstart", e => console.log(e.type));
+  window.addEventListener("drag", e => console.log(e.type));
+  window.addEventListener("dragend", e => console.log(e.type));
+</script>

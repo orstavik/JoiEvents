@@ -1,0 +1,70 @@
+<div my-draggable>Hello sunshine</div>
+
+<script>
+  const DragController = {
+    mousedown: undefined,
+    myDraggable: undefined,
+    onMousedown: function (e) {
+      if (e.buttons !== 1)
+        return;
+      DragController.myDraggable = e.composedPath().find(n => n.hasAttribute && n.hasAttribute("my-draggable"));
+      if (!DragController.myDraggable)
+        return;
+      DragController.mousedown = e;
+      window.removeEventListener("mousedown", DragController.onMousedown, true);
+      window.addEventListener("mousemove", DragController.onMousemoveTesting, true);
+    },
+    onMousemoveTesting: function (e) {
+      const diagX = Math.abs(DragController.mousedown.clientX - e.clientX);
+      const diagY = Math.abs(DragController.mousedown.clientY - e.clientY);
+      if (diagX + diagY <= 5)
+        return;
+      window.removeEventListener("mousemove", DragController.onMousemoveTesting, true);
+      window.addEventListener("mousemove", DragController.onMousemoveTranslating, true);
+      window.addEventListener("mouseup", DragController.onMouseup, true);
+      window.addEventListener("click", DragController.onClick, true);
+      const myDragStart = new CustomEvent("my-dragstart", {composed: true, bubbles: true});
+      setTimeout(function(){
+        DragController.myDraggable.dispatchEvent(myDragStart);
+      });
+    },
+    onClick: function (e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      window.removeEventListener("click", DragController.onClick, true);
+    },
+    onMousemoveTranslating: function (e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      const myDrag = new CustomEvent("my-drag", {composed: true, bubbles: true});
+      setTimeout(function(){
+        DragController.myDraggable.dispatchEvent(myDrag);
+      });
+    },
+    onMouseup: function (e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      window.removeEventListener("mousemove", DragController.onMousemoveTranslating, true);
+      window.removeEventListener("mouseup", DragController.onMouseup, true);
+      window.addEventListener("mousedown", DragController.onMousedown, true);
+      const myDragEnd = new CustomEvent("my-dragend", {composed: true, bubbles: true});
+      setTimeout(function(){
+        DragController.myDraggable.dispatchEvent(myDragEnd);
+      });
+    },
+  };
+
+  window.addEventListener("mousedown", DragController.onMousedown, true);
+
+  let mousedown;
+  let mousemove;
+
+  window.addEventListener("mousedown", e => console.log(e.type));
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("mousemove", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+
+  window.addEventListener("my-dragstart", e => console.log(e.type));
+  window.addEventListener("my-drag", e => console.log(e.type));
+  window.addEventListener("my-dragend", e => console.log(e.type));
+</script>
