@@ -1,0 +1,47 @@
+<h1>Right click me and below me</h1>
+
+<script>
+  //block all contextmenu events and stops their default actions
+  window.addEventListener("contextmenu", function(e){
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }, true);
+
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function(){ details.ontoggle = undefined; },
+      resume: function(){ details.ontoggle = cb; }
+    };
+  }
+
+  const h1 = document.querySelector("h1");
+
+  function ContextMenuController(mousedownEvent){
+    if (mousedownEvent.button !== 2)
+      return;
+
+    const myContextMenuEvent = new CustomEvent("my-context-menu", {composed: true, bubbles: true});
+    const task1 = toggleTick(function(){
+      mousedownEvent.target.dispatchEvent(myContextMenuEvent);
+    });
+    const task2 = toggleTick(function(){
+      alert("this is a bad excuse for a context menu..");
+    });
+    Object.defineProperty(myContextMenuEvent, "preventDefault", {value: function(){
+      task2.cancel();
+    }});
+  }
+
+  window.addEventListener("mousedown", ContextMenuController);
+  window.addEventListener("mousedown", e => console.log(e.type));
+  window.addEventListener("my-context-menu", e => console.log(e.type));
+
+  h1.addEventListener("my-context-menu", e => e.preventDefault());
+</script>
+
