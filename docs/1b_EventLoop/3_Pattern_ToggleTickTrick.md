@@ -141,16 +141,13 @@ console.log("one");
 
 ### Discussion: Why `<details>` and `toggle`?
 
-There are a couple of reasons why the `<details>` element and `toggle` event is chosen:
-1. The `<details>` element and `toggle` event is well and consistently supported in all relevant browsers.
+Why use the `<details>` element and `toggle` event for this purpose?
+
+1. The `<details>` element and `toggle` event is well and consistently supported in the main browsers: Chrome, Firefox, Safari, and Edge (todo from what version?).
 2. The ToggleTickTrick has a minimal footprint. Little JS code is needed to load, import and/or cut'n'paste.
 3. The ToggleTickTrick is efficient. The browser needs only to natively create a `<details>` element, populate it with some properties, and run a MutationObserver to get to the core task of queuing the callback in the event loop.
-4. The ToggleTickTrick is simple. Once you understand how and when the `toggle` event is triggered, there is really not much to it.
+4. The ToggleTickTrick is simple. It is an unobtrusive, single function! Once you understand how and when the `toggle` event is triggered, there is really not much to it.
 5. The `<details>` element and `toggle` event is not much used. It will less likely cause confusion with other code in the app.
-
-## Conclusion
-
-the ToggleTickTrick has drawbacks. But, relative to other methods of accessing the "Normal DOM event macrotask queue", the ToggleTickTrick is efficient, fairly unobtrusive, and well supported across browsers. Therefore, we will default to the ToggleTickTrick as the base method for adding "normal" tasks to the event loop.
 
 ## References
 

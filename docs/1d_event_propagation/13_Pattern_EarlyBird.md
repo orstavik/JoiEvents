@@ -2,7 +2,7 @@
 
 > gets the worm!
 
-The early bird pattern describes how we can catch an event *before* any other event listener. This is now quite simple.
+An EarlyBird captures an event *before* any other event listener. This is now quite simple.
  
 1. As we saw in the chapter about bubbling, the first target for *all* events is the **`window` node** in the **capture phase**. 
 
@@ -71,6 +71,10 @@ element.addEventListener("mouseup", function(e){
   });
 });
 ```
+
+## `composed: false` EarlyBirds
+
+For `composed: true` events, the EarlyBird pattern works for all events on the `window`. `composed: false` events on the other hand propagates *only* within a shadowDOM, down from the `shadowRoot`. That means that for `composed: false` events, the EarlyBird pattern must be employed on the `shadowRoot`, not the `window`. 
    
 ## References
 
