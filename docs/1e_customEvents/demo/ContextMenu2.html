@@ -1,0 +1,46 @@
+<h1>Right click me</h1>
+
+
+<script>
+  function sleep(ms){
+    const startTime = new Date().getTime();
+    while(startTime + ms > new Date().getTime());
+  }
+
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function(){ details.ontoggle = undefined; },
+      resume: function(){ details.ontoggle = cb; }
+    };
+  }
+
+  function macroTask(e) {
+    toggleTick(function(){
+      sleep(2000);
+      console.log("mAcrotask queued from " + e.type);
+    });
+  }
+
+  function microTask(e) {
+    Promise.resolve().then(function(){
+      console.log("mIcrotask queued from " + e.type);
+    });
+  }
+
+  const h1 = document.querySelector("h1");
+
+  h1.addEventListener("mousedown", e => console.log(e.type));
+  h1.addEventListener("mousedown", e => microTask(e));
+  h1.addEventListener("mousedown", e => macroTask(e));
+  h1.addEventListener("mousedown", e => sleep(1000));
+  h1.addEventListener("contextmenu", e => console.log(e.type));
+  h1.addEventListener("contextmenu", e => microTask(e));
+  h1.addEventListener("contextmenu", e => macroTask(e));
+  h1.addEventListener("contextmenu", e => sleep(1000));
+</script>
