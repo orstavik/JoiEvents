@@ -1,0 +1,10 @@
+<h1>Right click me (contextmenu.preventDefault())</h1>
+
+<script>
+  const h1 = document.querySelector("h1");
+
+  h1.addEventListener("mousedown", e => console.log(e.type));
+  h1.addEventListener("contextmenu", e => console.log(e.type));
+
+  h1.addEventListener("contextmenu", e => e.preventDefault());
+</script>
