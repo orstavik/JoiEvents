@@ -1,6 +1,6 @@
-# Pattern: OneToOne
+# Pattern: OneEventToOneAction
 
-Some events such as `submit` and `contextmenu` only have *one* possible default action. They are simple. Likeable. And we say that these events-to-defaultAction pairs conform to a OneToOne pattern.
+Some events such as `submit` and `contextmenu` only have *one* possible default action. They are simple. Likeable. And we say that these events-to-defaultAction pairs conform to a OneEventToOneAction pattern.
 
 ## Demo: naive ContextMenuController
 

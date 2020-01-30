@@ -1,0 +1,31 @@
+<input id="one" type="text" value="Hello sunshine!"/>
+<input id="two" type="text" value="Hello world."/>
+
+<script>
+  (function () {
+    const one = document.querySelector("#one");
+    const two = document.querySelector("#two");
+
+    function log(e) {
+      console.log("-- " + e.target.id + "." + e.type + " --");
+      console.log("document.activeElement: " + (document.activeElement.id || document.activeElement.tagName));
+      Promise.resolve().then(()=>{
+        console.log("microtask from " + e.target.id + "." + e.type);});
+    }
+
+    one.addEventListener("focus", log);
+    one.addEventListener("focusin", log);
+    one.addEventListener("focusout", log);
+    one.addEventListener("blur", log);
+
+    two.addEventListener("focus", log);
+    two.addEventListener("focusin", log);
+    two.addEventListener("focusout", log);
+    two.addEventListener("blur", log);
+
+    one.focus();
+    console.log("##########");
+    two.focus();
+    console.log("##########");
+  })();
+</script>

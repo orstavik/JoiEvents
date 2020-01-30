@@ -1,0 +1,45 @@
+<input id="one" type="text" value="Hello sunshine!"/>
+<input id="two" type="text" value="I don't want focus."/>
+
+<script>
+  (function () {
+
+    HTMLElement.prototype.myFocus = function () {
+      const oldMyActive = document.myActiveElement;
+      document.myActiveElement = document.body;
+      if (oldMyActive) {
+        oldMyActive.dispatchEvent(new FocusEvent("my-blur", {composed: true, bubbles: false}));
+        oldMyActive.dispatchEvent(new FocusEvent("my-focusout", {composed: true, bubbles: true}));
+      }
+      document.myActiveElement = this;
+      this.dispatchEvent(new FocusEvent("my-focus", {composed: true, bubbles: false}));
+      this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true}));
+    };
+
+    const one = document.querySelector("#one");
+    const two = document.querySelector("#two");
+
+    function log(e) {
+      console.log("-- " + e.target.id + "." + e.type + " --");
+      console.log("document.myActiveElement: " + (document.myActiveElement.id || document.myActiveElement.tagName));
+      Promise.resolve().then(()=>{
+        console.log("microtask from " + e.target.id + "." + e.type);});
+    }
+
+    one.addEventListener("my-focus", log);
+    one.addEventListener("my-focusin", log);
+    one.addEventListener("my-focusout", log);
+    one.addEventListener("my-blur", log);
+
+    two.addEventListener("my-focus", log);
+    two.addEventListener("my-focusin", log);
+    two.addEventListener("my-focusout", log);
+    two.addEventListener("my-blur", log);
+
+    //focus can be controlled via script
+    one.myFocus();
+    console.log("##########");
+    two.myFocus();
+    console.log("##########");
+  })();
+</script>

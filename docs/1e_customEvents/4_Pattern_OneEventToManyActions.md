@@ -1,6 +1,6 @@
-# Pattern: OneToMany
+# Pattern: OneEventToManyActions
 
-Some events such as `click` and `touchmove` have *many* possible default actions. These events are quite confusing. And full of if-then semantic logic. We can say such events-to-defaultAction pairs conform to a OneToMany pattern.
+Some events such as `click` and `touchmove` have *many* possible default actions. These events are quite confusing. And full of if-then semantic logic. We can say such events-to-defaultAction pairs conform to a OneEventToManyActions pattern.
 
 ## Demo: native `click` actions
 
