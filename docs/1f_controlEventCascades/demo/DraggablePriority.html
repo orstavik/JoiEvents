@@ -1,0 +1,23 @@
+<div>
+  <div>outer nothing, inner nothing</div>
+</div>
+
+<div draggable="true">
+  <div>outer draggable=true, inner nothing</div>
+</div>
+
+<div draggable="false">
+  <div>outer draggable=false, inner nothing</div>
+</div>
+
+<div draggable="true">
+  <div draggable="false">outer draggable=true, inner draggable=false</div>
+</div>
+
+<div draggable="false">
+  <div draggable="true">outer draggable=false, inner draggable=true</div>
+</div>
+
+<script>
+  window.addEventListener("drag", console.log);
+</script>
