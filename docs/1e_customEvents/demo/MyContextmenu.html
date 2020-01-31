@@ -1,0 +1,36 @@
+<h1>Right click me!</h1>
+<div>Right click me (no context menu)</div>
+
+<script>
+  (function () {
+
+    //1. block all contextmenu events and stop their default actions
+    window.addEventListener("contextmenu", e=> e.preventDefault(), true);
+
+    const ContextmenuController = {
+      onMousedown: function (mousedownEvent) {
+        if (mousedownEvent.button !== 2)
+          return;
+        const myContextMenuEvent = new MouseEvent("my-contextmenu", {composed: true, bubbles: true});
+        const task1 = setTimeout(function () {
+          mousedownEvent.target.dispatchEvent(myContextMenuEvent);
+        });
+        const task2 = setTimeout(function () {
+          alert("this is a bad excuse for a context menu..");
+        });
+        Object.defineProperty(myContextMenuEvent, "preventDefault", {
+          value: function () {
+            clearTimeout(task2);
+          }
+        });
+      }
+    };
+    window.addEventListener("mousedown", ContextmenuController.onMousedown, true);
+
+    window.addEventListener("mousedown", e => console.log(e.type));
+    window.addEventListener("my-contextmenu", e => console.log(e.type));
+
+    const div = document.querySelector("div");
+    div.addEventListener("my-contextmenu", e => e.preventDefault());
+  })();
+</script>
