@@ -1,0 +1,23 @@
+<div style="height: 200vh;">Hello sunshine</div>
+
+<script>
+  const raf = function () {
+    requestAnimationFrame(function () {
+      console.log("raf");
+      raf();
+    });
+  };
+  raf();
+
+  let counter = 0;
+
+  function log(e) {
+    console.log(e.type, counter++, document.body.scrollTop);
+  }
+
+  window.addEventListener("wheel", log, true);
+  window.addEventListener("scroll", log, true);
+
+  //call to `.scrollTo()` only produce one scroll action and one scroll event.
+  // setTimeout(() => document.body.scrollTo(0, document.body.scrollTop + 50), 1000);
+</script>
