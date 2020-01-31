@@ -1,5 +1,4 @@
-<h1>Hello sunshine!</h1>
-<input type="text" value="mousedown on me"/></input>
+<input type="text" value="Hello sunshine!"/>
 
 <script>
   function log(e){
@@ -7,6 +6,6 @@
   }
 
   window.addEventListener("mousedown", log);
-  window.addEventListener("focus", log);
+  window.addEventListener("focusin", log);
   window.addEventListener("contextmenu", log);
 </script>
