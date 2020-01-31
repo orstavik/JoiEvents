@@ -2,7 +2,7 @@
 
 In the previous chapter we saw how one action could trigger many different events on different targets. In this chapter we will look at how many different events can trigger the same action.
 
-## Demo: `mousedown` and `keypress` do `.focus()`?
+## Demo: `mousedown` and `keydown` do `.focus()`?
 
 There are two events that trigger `.focus()`:
 * `mousedown`
