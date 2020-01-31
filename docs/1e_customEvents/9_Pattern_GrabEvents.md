@@ -8,9 +8,6 @@ Some event cascades, such as the native Drag'n'drop events, can highjack and ess
 <div draggable="true">Hello sunshine</div>
 
 <script>
-  let mousedown;
-  let mousemove;
-
   window.addEventListener("mousedown", e => console.log(e.type));
   window.addEventListener("mouseup", e => console.log(e.type));
   window.addEventListener("mousemove", e => console.log(e.type));
@@ -84,11 +81,7 @@ The `dragstart` event does something new! Once triggered, it will grab future `m
       });
     },
   };
-
   window.addEventListener("mousedown", DragController.onMousedown, true);
-
-  let mousedown;
-  let mousemove;
 
   window.addEventListener("mousedown", e => console.log(e.type));
   window.addEventListener("mouseup", e => console.log(e.type));
