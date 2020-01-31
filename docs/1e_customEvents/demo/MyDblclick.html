@@ -1,0 +1,29 @@
+<h1>Hello sunshine!</h1>
+
+<script>
+  const DblclickController = {
+    lastTime: undefined,
+    onClick: function (e) {
+      if (!DblclickController.lastTime)
+        return DblclickController.lastTime = e.timeStamp;
+      const duration = e.timeStamp - DblclickController.lastTime;
+      if (duration > 300)
+        return DblclickController.lastTime = e.timeStamp;
+      DblclickController.lastTime = undefined;
+      setTimeout(function () {
+        e.target.dispatchEvent(new MouseEvent("my-dblclick", {bubbles: true, composed: true}));
+      });
+    }
+  };
+
+  window.addEventListener("click", DblclickController.onClick, true);
+
+  (function () {
+    function log(e) {
+      console.log(e.type + ": " + e.timeStamp);
+    }
+
+    window.addEventListener("click", log);
+    window.addEventListener("my-dblclick", log);
+  })();
+</script>

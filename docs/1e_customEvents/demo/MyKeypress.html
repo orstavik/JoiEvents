@@ -1,0 +1,38 @@
+<input type="text" value="Press 'a', 'Tab' and hold down 'x' for a second." />
+
+<script>
+  (function () {
+    const KeypressController = {
+      downers: {},
+      keydown: function(e){
+        if (e.key === "Tab")
+          return;
+        if (KeypressController.downers[e.key]) {
+          const myKeypress = new CustomEvent("my-keypress", {bubbles: true});
+          myKeypress.key = e.key;
+          e.target.dispatchEvent(myKeypress);
+        } else {
+          KeypressController.downers[e.key] = 1;
+        }
+      },
+      keyup: function(e){
+        if (!KeypressController.downers[e.key])
+          return;
+        KeypressController.downers[e.key] = undefined;
+        const myKeypress = new CustomEvent("my-keypress", {bubbles: true});
+        myKeypress.key = e.key;
+        e.target.dispatchEvent(myKeypress);
+      }
+    };
+    window.addEventListener("keydown", KeypressController.keydown, true);
+    window.addEventListener("keyup", KeypressController.keyup, true);
+
+    function log(e) {
+      console.log(e.type + ": " + e.key);
+    }
+
+    window.addEventListener("keydown", log);
+    window.addEventListener("keyup", log);
+    window.addEventListener("my-keypress", log);
+  })();
+</script>

@@ -1,0 +1,13 @@
+<input type="text" value="Press 'a', 'Tab' and hold down 'x' for a second." />
+
+<script>
+  (function () {
+    function log(e) {
+      console.log(e.type + ": " + e.key);
+    }
+
+    window.addEventListener("keydown", log);
+    window.addEventListener("keyup", log);
+    window.addEventListener("keypress", log);
+  })();
+</script>

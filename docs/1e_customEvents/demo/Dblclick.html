@@ -1,0 +1,12 @@
+<h1>Hello sunshine!</h1>
+
+<script>
+  (function () {
+    function log(e) {
+      console.log(e.type + ": " + e.timeStamp);
+    }
+
+    window.addEventListener("click", log);
+    window.addEventListener("dblclick", log);
+  })();
+</script>
