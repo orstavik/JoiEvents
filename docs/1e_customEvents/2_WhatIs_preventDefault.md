@@ -20,18 +20,20 @@ trigger(A) ⇒ eval(A) ⇒ prop(A) ⇒ eval(B) ⇒ prop(B) x    run(C)
 ## Demo: `.preventDefault()` and `contextmenu`
 
 ```html
-<h1>Right click me (contextmenu.preventDefault())</h1>
+<h1>Right click me!</h1>
+<div>Right click me (no context menu)</div>
 
 <script>
-  const h1 = document.querySelector("h1");
+  (function () {
+    window.addEventListener("mousedown", e => console.log(e.type));
+    window.addEventListener("contextmenu", e => console.log(e.type));
 
-  h1.addEventListener("mousedown", e => console.log(e.type));
-  h1.addEventListener("contextmenu", e => console.log(e.type));
-
-  h1.addEventListener("contextmenu", e => e.preventDefault());
+    const div = document.querySelector("div");
+    div.addEventListener("contextmenu", e => e.preventDefault());
+  })();
 </script>
 ```
-Results:
+Results if you right click on "Right click me (no context menu)":
 ```
 mousedown
 contextmenu
