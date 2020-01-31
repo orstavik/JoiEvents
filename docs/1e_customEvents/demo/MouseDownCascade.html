@@ -1,0 +1,12 @@
+<h1>Hello sunshine!</h1>
+<input type="text" value="mousedown on me"/></input>
+
+<script>
+  function log(e){
+    console.log(e.type);
+  }
+
+  window.addEventListener("mousedown", log);
+  window.addEventListener("focus", log);
+  window.addEventListener("contextmenu", log);
+</script>
