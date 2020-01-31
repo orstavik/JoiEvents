@@ -1,0 +1,20 @@
+<textarea>
+1. dblclick me!
+2. Wheel-click me!
+</textarea>
+
+<script>
+  function log(e){
+    console.log(e.type);
+  }
+  const textarea = document.querySelector("textarea");
+
+  textarea.addEventListener("mousedown", log);
+  textarea.addEventListener("mouseup", log);
+  textarea.addEventListener("click", log);
+  textarea.addEventListener("dblclick", log);
+  textarea.addEventListener("select", log);
+  textarea.addEventListener("auxclick", log);
+  textarea.addEventListener("focus", log);
+  textarea.addEventListener("contextmenu", log);
+</script>

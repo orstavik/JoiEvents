@@ -1,0 +1,52 @@
+<details>
+  <summary>click me</summary>
+  Hello sunshine!
+</details>
+
+<script>
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function () {
+        details.ontoggle = undefined;
+      },
+      resume: function () {
+        details.ontoggle = cb;
+      }
+    };
+  }
+
+  function sleep(ms) {
+    const startTime = new Date().getTime();
+    while (startTime + ms > new Date().getTime()) ;
+  }
+
+  function log(e) {
+    sleep(500);
+    console.log(e.type);
+    sleep(500);
+    toggleTick(function () {
+      sleep(500);
+      console.log("task queued from " + e.type);
+    });
+  }
+
+  const details = document.querySelector("details");
+
+  details.addEventListener("mouseup", log);
+  details.addEventListener("click", log);
+  details.addEventListener("toggle", log);
+
+  //mouseup
+  //click
+  //change dom
+  //task from mouseup
+  //task from click
+  //toggle
+  //task from toggle
+</script>
