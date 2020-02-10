@@ -4,9 +4,9 @@ Put simply, `.preventDefault()` is **stop the default task associated with an ev
 
 The principal difference between `.stopPropagation()` and `.preventDefault()` is that:
 1. `stopPropagation()` halts the inner cycle of event propagation, without affecting the outer cycle of the EventCascade, and 
-2. `preventDefault()` stops the last event in the outer cycle of the EventCascade from triggering its default action, without affecting the current, ongoing inner cycle of event propagation.
+2. `preventDefault()` stops an event in the outer cycle of the EventCascade from triggering its default actions, without affecting the current, ongoing inner cycle of event propagation.
 
-Conceptually, `.preventDefault()` is like a scissor that once-and-for-all will cut the ties between an event and its ensuing action.
+Conceptually, `.preventDefault()` is like a scissor that once-and-for-all will cut the ties between an event and its ensuing action(s).
 ``` 
                 ↱---- queue ----↴    ↱---- queue --x
 trigger(A) ⇒ eval(A) ⇒ prop(A) ⇒ eval(B) ⇒ prop(B) x    run(C)
@@ -45,25 +45,34 @@ contextmenu
 In this demo we try to call `.preventDefault()` on `mousedown`. Might this block the ensuing `contextmenu` event?
 
 ```html
-<h1>Right click me (mousedown.preventDefault())</h1>
+<h1 id="one">Right click me (mousedown.preventDefault())</h1>
+<h1 id="two">Right click me (contextmenu.preventDefault())</h1>
 
 <script>
   const h1 = document.querySelector("h1");
 
-  h1.addEventListener("mousedown", e => console.log(e.type));
-  h1.addEventListener("contextmenu", e => console.log(e.type));
+  window.addEventListener("mousedown", e => console.log(e.type));
+  window.addEventListener("contextmenu", e => console.log(e.type));
+  window.addEventListener("auxclick", e => console.log(e.type));
 
-  h1.addEventListener("mousedown", e => e.preventDefault());
+  document.querySelector('#one').addEventListener("mousedown", e => e.preventDefault());
+  document.querySelector('#two').addEventListener("contextmenu", e => e.preventDefault());
 </script>
 ```
 Results:
 ```
+//right click on the first header
 mousedown
 contextmenu
 //show context menu
+
+//right click on the second header
+mousedown
+contextmenu
+auxclick
 ```
 
-As we see, `.preventDefault()` does not block a cascading event.
+As we see, `.preventDefault()` does not block a cascading event in neither situation. However, the `contextmenu` *chooses* between either calling its own default action or dispatching an `auxclick` event, ie. the default action being run blocks the alternative path of dispatching an `auxclick` event.
  
 ## Demo: ContextmenuController
 
@@ -75,22 +84,25 @@ As we see, `.preventDefault()` does not block a cascading event.
   (function () {
 
     //1. block all contextmenu events and stop their default actions
-    window.addEventListener("contextmenu", e=> e.preventDefault(), true);
+    window.addEventListener("contextmenu", e => e.preventDefault(), true);
 
     const ContextmenuController = {
       onMousedown: function (mousedownEvent) {
         if (mousedownEvent.button !== 2)
           return;
-        const myContextMenuEvent = new MouseEvent("my-contextmenu", {composed: true, bubbles: true});
-        const task1 = setTimeout(function () {
+
+        setTimeout(function () {
+          const myContextMenuEvent = new MouseEvent("my-contextmenu", {
+            composed: true,
+            bubbles: true,
+            cancelable: true
+          });
           mousedownEvent.target.dispatchEvent(myContextMenuEvent);
-        });
-        const task2 = setTimeout(function () {
-          alert("this is a bad excuse for a context menu..");
-        });
-        Object.defineProperty(myContextMenuEvent, "preventDefault", {
-          value: function () {
-            clearTimeout(task2);
+          if (!myContextMenuEvent.defaultPrevented) {
+            alert("this is a bad excuse for a context menu..");
+          } else {
+            const myAuxclickEvent = new MouseEvent("my-auxclick", {composed: true, bubbles: true});
+            mousedownEvent.target.dispatchEvent(myAuxclickEvent);
           }
         });
       }
@@ -99,12 +111,19 @@ As we see, `.preventDefault()` does not block a cascading event.
 
     window.addEventListener("mousedown", e => console.log(e.type));
     window.addEventListener("my-contextmenu", e => console.log(e.type));
+    window.addEventListener("my-auxclick", e => console.log(e.type));
 
     const div = document.querySelector("div");
     div.addEventListener("my-contextmenu", e => e.preventDefault());
   })();
 </script>
 ``` 
+
+As can be seen in the example above, the `ContextmenuController` chooses one of two paths:
+ * the default action of showing an `alert(..)`, or
+ * the dispatch of an `auxclick` event.
+ 
+ Also worth noting is that the `my-contextmenu` event must be `cancelable` for the `.preventDefault()` to work.
  
 ## References
 
