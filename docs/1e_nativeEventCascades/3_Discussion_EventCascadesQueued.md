@@ -1,12 +1,12 @@
 # Discussion: EventCascades queued
 
-> To queue properly is an art form, and the JS event loop is the worlds biggest queue.
+> Two perspectives: To queue is an art, and the JS event loop is the worlds biggest queue.
 
-JS is controlled by the event loop, and the event controllers manage events in this queue. 
+> Event controllers can often queue multiple tasks per event.
 
-## Demo: slow `contextmenu` event cascade
+JS is controlled by the event loop, and the event controllers manage events in this queue. However, the computer moves at superhuman speed, and therefore it can be very difficult to understand (read: feel) where and how events in an event cascade are queued. This is bad, as we need a sense of how this works. And so, to remedy this, we will slow down the event cascade so we can keep up.  
 
-Your computer is hopefully so fast that it is impossible for you to feel the flow of the event cascade. In a blink of an eye the browser has dispatched all the events and shown the context menu. So, to get a feel for how things work, we slow down the event loop by making each step last for one second.
+## Demo: a slow `contextmenu` event cascade
 
 ```html
 <h1>Right click me!</h1>
@@ -21,7 +21,7 @@ Your computer is hopefully so fast that it is impossible for you to feel the flo
 
     function log(e) {
       console.log(e.type);
-      sleep(1000);
+      sleep(2000);
     }
 
     window.addEventListener("mousedown", e => log(e));
@@ -38,7 +38,11 @@ From this demo we see with our own eyes that the `contextmenu` event is dispatch
 
 ## InDepth: queueing events
 
-But, there are more questions remaining. 
+But, there are more questions remaining:
+1. What about the microtask queue?
+2. How do the tasks queued in the event loop compare to other tasks?
+3. How do the browser implement event controllers?
+4. How can developers implement event controllers?  
 
 ```html
 <h1>Right click me</h1>
@@ -104,57 +108,75 @@ mAcrotask queued from contextmenu
 Findings:
 1. The microtasks are run immediately after the event listener. This means that the tasks in the event cascade is queued in a queue with lower priority than the microtask queue: ie. the event loop.
    * Att! Note this finding about the task `show context menu`. As the microtask from `contextmenu` is run *before* we can see the context menu on screen, this default action of `contextmenu` event is queued separately from the function that dispatches the task `contextmenu` in the event loop.
-2. But, the macrotask we add to the event loop during `mousedown` is run *after* both the event propagation of `contextmenu` and the task `show context menu`. This can mean one of two things:
+2. But, the macrotask we add to the event loop during `mousedown` is run *after* both the event propagation of `contextmenu` and the task `show context menu`. This likely means that:
+
+   1. Native event controllers run each step in the event cascade as a controller that is triggered immediately after an event has finished propagating, as some kind of postpropagation callback. Note: this callback does not exist in JS.
  
-   1. *Both tasks* (trigger `contextmenu` event and `show context menu` action) is added to the queue *at the same time*. This means that *before* the `mousedown` propagates, the two subsequent tasks in the event cascade has already been added to the event loop.
-   2. Tasks in the event cascade is added to another macrotask queue in the event loop that is always given priority over "normal DOM event queue" (`toggleTick` tasks). A prime candidate for such a queue would be the AsyncEventListenerQueue from chapter 2.8.
+   2. Alternatively, the controller *could* add the whole sequence up front, even *before* the `mousedown` propagates. This method *is* repeatable from JS, and this is what we did in our previous ContextmenuController.
+   
+   3. Tasks in the event cascade is added to another macrotask queue in the event loop that is always given priority over "normal DOM event queue" (such as `toggleTick` tasks). A prime candidate for such a queue would be the AsyncEventListenerQueue from chapter 2.8. It is however unlikely that the browser would do this, as method one seems more conceptually simple. This method is also not accessible from JS. 
 
-In this chapter we are going to assume that *both* models are correct(!): 
-1. Internally, we assume that the browser actually queues the `show context menu` task *after* the `contextmenu` is triggered, but that it does so in a macrotask queue in the event loop that has topmost priority over all other parts of the event loop (such as the AsyncEventListenerQueue).
-2. But we cannot access these top-priority queues in the event loop. Therefore, for our practical purposes as developers, the browser essentially queues *both* tasks in the event loop at the outset. Since we have no means to put another task in between, never ever.
+In this chapter we assume that the browser natively follows method 1 above, and that we from JS should follow method 2.
 
-## Conceptual model of an event cascade
+## The native model of an event cascade
 
 ```
-                ↱---- queue ----↴    ↱---- queue ----↴
-trigger(A) ⇒ eval(A) ⇒ prop(A) ⇒ eval(B) ⇒ prop(B) ⇒ run(C)
-                       ↓    ↑              ↓    ↑
-                     cap    bub          cap    bub
-                       ↳ tar⮥              ↳ tar⮥  
+  prop(A) ⇒ eval(A) ⇒ prop(B) ⇒ eval(B) ⇒ prop(C) ⇒ run(D)
+  ↓    ↑              ↓    ↑              ↓    ↑
+cap    bub          cap    bub          cap    bub
+  ↳ tar⮥              ↳ tar⮥              ↳ tar⮥  
 ```
 
-1. The first event A is triggered. Initial events are most often triggered by users, the network or something outside the browser window.
-2. The browser **pre-evaluates*** event A in the context of the current session. For example, the browser keeps tabs on the previous `mousedown` event that it uses to evaluate a subsequent `mouseup` event.
-3. During pre-evaluation of event A, the browser concludes that event A should trigger event B. The browser therefore **queues event B in the event loop**. Pre-evaluation of A ends.
-4. *After* pre-evaluation of A and queueing of B in the event loop, the browser **dispatches event A**. The event propagates down and up the DOM and triggers event listeners added to targets in its path.
-5. **Event B is pre-evaluated** in context.
-6. During pre-evaluation of B, the browser discovers that it should trigger action C. This action can be a universal browser command such as "navigate to web page X" or a DOM related action such as "flip the value of checkbox Y". **Action C is queued in the event loop**. Pre-evaluation of B ends.    
-7. The browser **dispatches event B**. Event B propagates down and up the DOM and triggers event listeners.
-8. The browser **runs action C**. 
+1. First, the trigger **event A propagates**. Event A propagates down and up the DOM and triggers event listeners. Initial trigger events are most often triggered by the user, the network or something else outside the DOM.
+2. The browser **post-evaluates*** event A in the context of the current session and DOM. For example:
+   * the browser keeps tabs on the previous `mousedown` event that it uses to evaluate a subsequent `mouseup` event;
+   * the browser might see that the `.button` property of the event has a certain value; or
+   * the browser sees that the `.preventDefault()` has been called.
 
-Conceptually, and mostly likely the technical model inside the browser, event cascade functions are queued on a one-task-per-event model.
+   During post-evaluation of event A, the browser concludes that event A should trigger event B. The browser therefore **immediately** dispatches event B.
+3. **Event B propagates**.
+4. The browser **post-evaluates event B**. The browser discovers that it should trigger action C. This action can be a universal browser command such as "navigate to web page X" or a DOM related action such as "flip the value of checkbox Y".
+5. The browser **runs action C**.
 
-## Practical model of an event cascade
+ * However, during post-evaluation, the browser might find that it needs to run several tasks and/or dispatch several events. *If* these events are to run *sync*, then the browser can simply perform them one by one within the same macrotask. Mostly, this is how the browser does it when it schedules many task after having evaluated a run event. But, there are events that are queued asynchronously from a post-evaluation callback, for example `dblclick` and `auxclick`. To mirror such queuing, we use *two* `setTimeout()` callbacks in our demos.
 
-For us as JS developers, the event cascade looks like this:
+We do not *know* that the browser's native event controller functions behave in this way. But it is conceptually reasonable to assume so.
 
-```                                  
-                ↱--------- queue 2 ----------↴
-                ↱---- queue 1 ----↴    
-trigger(A) ⇒ eval(A) ⇒ prop(A) ⇒ eval(B) ⇒ prop(B) ⇒ run(C)
-                       ↓    ↑              ↓    ↑
-                     cap    bub          cap    bub
-                       ↳ tar⮥              ↳ tar⮥  
+## The JS model of a SYNC event cascade
+
+When we wish to mimic event cascades from JS, without access to any postpropagation callback, the event cascade looks like this:
+
+``` 
+SYNC event cascade
+
+    ↱--------- queue 1 ---------↴    
+eval(A) ⇒ prop(A)   ⇒ |-------- task 1 ---------------|
+            ↓    ↑       prop(B) ⇒ run(C) ⇒ prop(D)  
+          cap    bub     ↓    ↑             ↓    ↑   
+            ↳ tar⮥     cap    bub         cap    bub 
+                         ↳ tar⮥             ↳ tar⮥   
+```
+1. The user triggers A, such as a `mousedown`.
+2. The JS function **pre-evaluates event A**, *before* event A propagates.
+3. During this pre-evaluation the JS function sees that it needs to perform an action. For example, the function might find that the right mouse button is being pressed. Then, the function uses this info to decide that it wants to run a task that dispatches an event B, such as `contextmenu`, run task C, such as `show the context menu`, or alternatively dispatch event D, such as `auxclick`. The browser therefore **queues *one* tasks in the event loop** that will run these three (sub)tasks synchronously.
+
+## The JS model of an ASYNC event cascade
+
+``` 
+ASYNC event cascade
+
+    ↱------------------- queue 3 ------------↴
+    ↱------------- queue 2 ----------↴
+    ↱------ queue 1 ------↴    
+eval(A) ⇒ prop(A)   ⇒   prop(B) ⇒ run(C) ⇒ prop(D)
+            ↓    ↑      ↓    ↑             ↓    ↑
+          cap    bub  cap    bub         cap    bub
+            ↳ tar⮥      ↳ tar⮥             ↳ tar⮥  
 ```
 
-1. The user triggers `mousedown`.
-2. The browser **pre-evaluates the `mousedown` event**.
-3. During this pre-evaluation the browser sees that the right mouse button is being pressed. To the browser, this means that `mousedown` event should trigger a `contextmenu` event, which in turn should trigger a `show context menu` action. The browser therefore **queues two tasks in the event loop at the same time** dispatch `contextmenu` event and `show context menu` action.
-4. The browser **dispatches `mousedown`**. The `mousedown` event propagates down and up the DOM and triggers `mousedown` event listeners added to targets in its path.
-5. The browser **dispatches `contextmenu`** event.
-6. The browser **runs `show context menu`**.
-
-Practically, from a developers standpoint, event controllers queues multiple-tasks-per-event.
+1. The user triggers A, such as a `mousedown`.
+2. The JS function **pre-evaluates event A**, *before* event A propagates.
+3. During this pre-evaluation the JS function sees that it needs to perform an action. It identifies *three* asynchronous tasks that it should do as a consequence of this task. An example of this might be a `mouseup` event that should trigger a `click` event, the change of an `<input type="text">`, and finally dispatch a `dblclick` event. The browser therefore queues *all* three tasks *separately* in the event loop, *at the same time*, and *before* the trigger event has even propagated. 
 
 ## References
 

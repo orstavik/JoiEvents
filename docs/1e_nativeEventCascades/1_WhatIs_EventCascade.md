@@ -1,10 +1,10 @@
 # WhatIs: EventCascade
 
-Very often, one event will *trigger* another subsequent event or action. For example: when a `mouseup` event occurs, it triggers a `click` event (most of the time). And if that `click` event occurs on a checkbox, this will cause the checkbox to flip state. It's a domino-effect: the `mouseup` triggers a `click` that triggers a `checkbox.checked =! checkbox.checked` action. And we call this domino-effect between events an EventCascade.  
+Very often, one event will *trigger* another subsequent event or action. For example: when a `mouseup` event occurs, it triggers a `click` event (most of the time). And if that `click` event occurs on a checkbox, this will cause the checkbox to flip state. It's a domino-effect: the `mouseup` triggers a `click` that triggers an action `checkbox.checked =! checkbox.checked`. This domino-effect we call an "event cascade".  
 
-## Demo: `contextmenu` event cascade
+## Demo: contextmenu event cascade
 
-To understand how EventCascades work, we look at an example containing *three* events (`mousedown`, `contextmenu`, and `auxclick`) and an action (`show context menu`). If you right-click on an element, then the browser will first dispatch a `mousedown` event, then a `contextmenu` event, and then show you the context menu. If you call `preventDefault()` on the `contextmenu`, the browser will not show the context menu, but dispatch the `auxclick` event instead.
+To understand how event cascades work, we look at an example: the contextmenu event cascade. The contextmenu event cascade contains *three* events (`mousedown`, `contextmenu`, and `auxclick`) and an action (`show context menu`). If you right-click on an element, then the browser will first dispatch a `mousedown` event, then a `contextmenu` event, and then show you the context menu. If you call `preventDefault()` on the `contextmenu`, the browser will not show the context menu, but dispatch the `auxclick` event instead.
 
 ```                                  
 mousedown event 
@@ -13,6 +13,14 @@ contextmenu → show context menu action
           ↓ or
          auxclick event      
 ```
+
+1. The user triggers `mousedown`.
+2. The browser sees that it is a right-click `mousedown` and triggers a `contextmenu` event.
+3. The browser then sees the `contextmenu` and then runs either:
+   1. the `show context menu` action (`.preventDefault()` has not been called on the `contextmenu` event), or
+   2. dispatches an `auxclick` event (`.preventDefault()` has been called).   
+
+> Note. Whenever `.preventDefault()` *can be triggered*, the browser always makes a *choice*: *to run* the default action, or *to not run* the default action. The `contextmenu` is a very good example of this choice as it not only *does not run* its default action as it actually runs another action when `.preventDefault()` has been called, but even runs another action instead:  the dispatch of an `auxclick` event.
 
 ```html
 <h1>Right click me!</h1>
@@ -29,16 +37,6 @@ contextmenu → show context menu action
   })();
 </script>
 ```
-
-1. The user triggers `mousedown`.
-2. The browser sees that it is a right-click `mousedown` and triggers a `contextmenu` event.
-3. The browser then sees the `contextmenu` and then runs either:
-   1. the `show context menu` action or
-   2. dispatches an `auxclick` event (if `.preventDefault()` has been called on the `contextmenu` event).
-   
-> Sometimes, an event cascade dispatch multiple events and performs multiple actions, and sometimes an event cascade will *choose* between two or more different alternatives depending on whether `preventDefault()` has been called or some other setting. More on this later.
-
-> a) the show context menu action and b) the dispatch of the `auxclick` event.    
 
 ## Native event cascades
 
