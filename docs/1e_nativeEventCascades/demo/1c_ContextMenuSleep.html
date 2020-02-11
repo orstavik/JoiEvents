@@ -1,0 +1,23 @@
+<h1>Right click me!</h1>
+<div>Right click me (no context menu)</div>
+
+<script>
+  (function () {
+    function sleep(ms) {
+      const startTime = new Date().getTime();
+      while (startTime + ms > new Date().getTime()) ;
+    }
+
+    function log(e) {
+      console.log(e.type);
+      sleep(1000);
+    }
+
+    window.addEventListener("mousedown", e => log(e));
+    window.addEventListener("contextmenu", e => log(e));
+    window.addEventListener("auxclick", e => log(e));
+
+    const div = document.querySelector("div");
+    div.addEventListener("contextmenu", e => e.preventDefault());
+  })();
+</script>

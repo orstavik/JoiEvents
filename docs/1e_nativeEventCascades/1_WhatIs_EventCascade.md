@@ -40,14 +40,20 @@ contextmenu → show context menu action
 
 > a) the show context menu action and b) the dispatch of the `auxclick` event.    
 
-## List of native event cascades:
+## Native event cascades
 
-1. `mousedown`, `contextmenu`, show context menu or `auxclick`
-2. `keydown`, `keypress`
-3. `mousedown` or `keydown`, `focusout`, set focus, `focusin`
-4.
-5.
-6.
+In this chapter we will present a series of native events that illustrate several patterns the browser use in its event controllers.
+
+1. Contextmenu: `mousedown` → `contextmenu` → show context menu/`auxclick`
+2. Keypress: `keydown` → `keypress`
+3. Focus: `mousedown`/`keydown` → `focusout`+`blur` → set focus → `focusin`+`focus`
+4. Drag:
+5. WheelScroll:
+6. DoubleClick:
+7. Input: 
+8. Change:
+9. Submit:
+  
 
 ## References
 
