@@ -1,34 +1,32 @@
-# HowTo: Control events using HTML?
+# WhatIs: InteractiveElements
 
-The DOM is a hierarchy:
+Some elements have builtin reactions to certain events. These elements are often referred to as ["interactive elements"](todo mdn or spec). Most commonly, interactive elements react when the user `click`s on them. Naively, we could think of them as "clickable elements". But, the event doesn't have to be a `click`; it could react to other event's such as `wheel` or `mousedown` instead of/in addition to `click`. 
 
-1. (Many) CSS properties in the DOM cascade. They trickle down from parent to child nodes, and you can both override and stop (`unset`) this cascade along the way.
-2. Similarly, the content (HTML elements) are structured in this way: put text inside a `<h1>`, and that text will be the content of the header element. The texts visual position will be inside the `<h1>`'s position.
-3. Events trickle down the DOM during the capture phase, hits its target element, and then bubble up again. The structure of the DOM is reflected in the event propagation path.
+(todo check the list of interactive elements, find out if they all react to click and if some of them react to other events too.)
 
-So, how can we use the DOM hierarchy to control events' behavior? How can we via HTML elements and HTML attributes in the DOM communicate to and control the functions that control the browsers' events' behavior?   
-
-## HTML element type
-
-The most important means we have to control events' behavior are element types:
+Interactive elements is the primary mean to control events' behavior in HTML. By wrapping our content inside interactive elements, we give the content a behavior (and often a little style to facilitate the new behavior:
  * When we use an `<a href>` instead of a `<span>` it is *first and foremost* to make the browser interpret `click` as a call to navigate to a new page, not to underline the text and color it blue.
- * Similarly, when we use a `<details>` element instead of a `<ul>` it is not because we want a triangle instead of a disc before its first item, but it is because we want the `click` to open up or hide extra content depending on the user's actions.
+ * Similarly, when we use a `<details>` element instead of a `<ul>`, it is not because we want a triangle instead of a disc before its first item, but it is because we want the user to open up or hide extra content via `click`.
  
-> By choosing an HTML element type, we actively select and connect a) an element/branch in the DOM with b) a particular behavior with c) a particular event.
+> By choosing an HTML element type, we actively select and connect a) an element/branch in the DOM with b) a particular event with c) a particular set of actions.
 
-## Problem 1: nested interactive elements 
+## Problem: nested interactive elements 
 
-> Interactive elements are simply elements that reacts when the user clicks on them, ie. will-react-to-click-elements.
- 
-What happens if there are:
-1. *two* HTML elements in the same propagation path that  
-2. *both* has a particular behavior attached to the same event?
+But. HTML elements can be nested. What if we nest interactive elements?
 
-For `click` the spec says that "interactive cannot be nested inside each other". According to the spec, it is illegal to place a `<a href>` inside a `<summary>` element. Why? Well, the user might be confused about what might happen if he clicks on it: would the `click` be interpreted as "navigate" or "open details"? This is an easy way out for the spec. And it leaves the rest of us with an unresolved issue. (todo find the parts of the spec that says this) 
+The spec essentially says that "interactive elements cannot be nested inside each other" (todo). According to the spec, it is illegal to place an `<a href>` inside a `<summary>` element for example. According to the spec, this never happens, the problem doesn't exist, the browser shouldn't support it, and implicitly that the use-case doesn't exist. But. This is all wrong. Nested interactive elements happen, the problem is real, the browser partially supports it, and there are real use-cases for it.
+  
+ > If I were to speculate about why nested interactive elements are illegal in the spec I would guess that the early browsers had no good idea about how to resolve the conflict of element actions. For example, if you nest a link inside a details summary, then should a click on the link "navigate" or open the details body? The spec then chose an easy way out: no such conflicts allowed, and left the rest of us to figure out this dilemma on our own.
 
-Because, there are many valid use-cases for nesting interactive elements. And people do it. And the browsers support it. If there are nested interactive elements, the browser (her Chrome) will first look at the target to see if the target itself has a `click` reaction, and then turn to the rest of the propagation path to find the interactive target for the `click`.
+So, how does the browsers' handle nested interactive elements when they actually render and run them?
 
-## Demo: HowTo select native `click` actions?
+## Demo: link in details, details in link
+
+In the demo below, you will see the following results:
+
+1. Some interactive elements *can be* nested inside each other. Others can't. The `<summary>` accepts the `<a href>` as a child, but the browser doesn't accept the `<summary>` as a child of `<a href>`. 
+2. `click` only creates *one* reaction from *one* of the elements. If an `<a href>` is nested inside a `<summary>` element, then they wont both react to the `click`.
+3. But, there is a problem. There is no clear concise logic that regulate which interactive element is selected. Chrome, for example, seems to select the target first, and then bottom-down the propagation path. This is strange.
 
 ```html
 <details>
@@ -39,6 +37,16 @@ Because, there are many valid use-cases for nesting interactive elements. And pe
   </summary>
   Hello Hello.
 </details>
+
+<!--
+  This piece of template is rendered very strangely.
+<a href="#iRenderVeryStrangely">
+  <details>
+    <summary>Hello</summary>
+    Hello Hello.
+  </details>
+</a>
+-->
 
 <script>
   const b = document.querySelector("b");
@@ -58,7 +66,7 @@ When you click on:
 
 ## Demo: naive ClickController
 
-The `ClickController` demo below illustrate the *simplest and most intuitive* means to find the appropriate action for the `click` event. The `ClickController` is very naive: it covers only two of many more click actions and its logic for identifying targets and handling special cases are easily broken. However, as a teaching tool, the naive `ClickController` works wonderfully. 
+The `ClickController` demo below illustrate the *simplest and most intuitive* means to find the appropriate interactive element for the `click` event. The `ClickController` is very naive: it covers only two of many more click actions and its logic for identifying targets and handling special cases are easily broken. However, as a teaching tool, the naive `ClickController` works wonderfully. 
 
 The demo:
 1. completely blocks all the native `click` events, and 
@@ -158,7 +166,10 @@ When you click on:
  * **sunshine** you get the `<a href>` default action adding `#sunshine` to the address bar. This demo doesn't include any darkness, as this part of the algorithm is... a little better than the one in Chrome. 
  * "(.preventDefault())" you get no default action.
 
-## Principled conclusion
+## Discussion
+
+`click` is not the only event that will cause such conflicts between targets. As we will see in the next chapters, there is an abundance of conflicts between both targets within one event controller as depicted above and between targets and potential event controllers triggered by the same trigger events (yes, touch and mouse and drag, I am thinking of you..).
+
 
 When an event occurs in the DOM, it is natural to assume that the user intends to invoke
 > the behavior of the `target` of that event, or the nearest parent of that element.

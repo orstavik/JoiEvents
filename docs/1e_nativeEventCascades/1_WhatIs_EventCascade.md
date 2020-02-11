@@ -52,7 +52,7 @@ In this chapter we will present a series of native events that illustrate severa
 6. DoubleClick:
 7. Input: 
 8. Change:
-9. Submit:
+9. Form events: Submit and Reset:
   
 
 ## References
