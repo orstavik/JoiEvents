@@ -81,6 +81,12 @@ In this demo we mirror the behavior of the native EventController for `contextme
     div.addEventListener("my-contextmenu", e => e.preventDefault());
   })();
 </script>
-```
+```  
+
+As can be seen in the example above, the `ContextmenuController` chooses one of two paths:
+ * the default action of showing an `alert(..)`, or
+ * the dispatch of an `auxclick` event.
+ 
+ Also worth noting is that the `my-contextmenu` event must be `cancelable` for the `.preventDefault()` to work.
 
 ## References 

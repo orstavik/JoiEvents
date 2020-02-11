@@ -27,6 +27,7 @@ trigger(A) ⇒ eval(A) ⇒ prop(A) ⇒ eval(B) ⇒ prop(B) x    run(C)
   (function () {
     window.addEventListener("mousedown", e => console.log(e.type));
     window.addEventListener("contextmenu", e => console.log(e.type));
+    window.addEventListener("auxclick", e => console.log(e.type));
 
     const div = document.querySelector("div");
     div.addEventListener("contextmenu", e => e.preventDefault());
@@ -38,92 +39,32 @@ Results if you right click on "Right click me (no context menu)":
 mousedown
 contextmenu
 //does NOT show the context menu
-```
-
-## Demo: `.preventDefault()` doesn't block ensuing events
-
-In this demo we try to call `.preventDefault()` on `mousedown`. Might this block the ensuing `contextmenu` event?
-
-```html
-<h1 id="one">Right click me (mousedown.preventDefault())</h1>
-<h1 id="two">Right click me (contextmenu.preventDefault())</h1>
-
-<script>
-  const h1 = document.querySelector("h1");
-
-  window.addEventListener("mousedown", e => console.log(e.type));
-  window.addEventListener("contextmenu", e => console.log(e.type));
-  window.addEventListener("auxclick", e => console.log(e.type));
-
-  document.querySelector('#one').addEventListener("mousedown", e => e.preventDefault());
-  document.querySelector('#two').addEventListener("contextmenu", e => e.preventDefault());
-</script>
-```
-Results:
-```
-//right click on the first header
-mousedown
-contextmenu
-//show context menu
-
-//right click on the second header
-mousedown
-contextmenu
 auxclick
 ```
 
-As we see, `.preventDefault()` does not block a cascading event in neither situation. However, the `contextmenu` *chooses* between either calling its own default action or dispatching an `auxclick` event, ie. the default action being run blocks the alternative path of dispatching an `auxclick` event.
- 
-## Demo: ContextmenuController
+> It is worth noting that `.preventDefault()` *chooses* between a subsequent action or event. By not calling `preventDefault()`, the app is basically *choosing* not to dispatch the `auxclick` event.
+
+## Non-`cancelable` events
+
+Some events cannot be called `.preventDefault()` on. These events have their `cancelable` property set to `false`. Event cascades that flow from such events are essentially unstoppable/unpreventable. `mousedown` is one such event.
 
 ```html
 <h1>Right click me!</h1>
-<div>Right click me (no context menu)</div>
 
 <script>
-  (function () {
-
-    //1. block all contextmenu events and stop their default actions
-    window.addEventListener("contextmenu", e => e.preventDefault(), true);
-
-    const ContextmenuController = {
-      onMousedown: function (mousedownEvent) {
-        if (mousedownEvent.button !== 2)
-          return;
-
-        setTimeout(function () {
-          const myContextMenuEvent = new MouseEvent("my-contextmenu", {
-            composed: true,
-            bubbles: true,
-            cancelable: true
-          });
-          mousedownEvent.target.dispatchEvent(myContextMenuEvent);
-          if (!myContextMenuEvent.defaultPrevented) {
-            alert("this is a bad excuse for a context menu..");
-          } else {
-            const myAuxclickEvent = new MouseEvent("my-auxclick", {composed: true, bubbles: true});
-            mousedownEvent.target.dispatchEvent(myAuxclickEvent);
-          }
-        });
-      }
-    };
-    window.addEventListener("mousedown", ContextmenuController.onMousedown, true);
-
-    window.addEventListener("mousedown", e => console.log(e.type));
-    window.addEventListener("my-contextmenu", e => console.log(e.type));
-    window.addEventListener("my-auxclick", e => console.log(e.type));
-
-    const div = document.querySelector("div");
-    div.addEventListener("my-contextmenu", e => e.preventDefault());
-  })();
+  //trying to stop the event cascade from mousedown, but it doesn't work.
+  window.addEventListener("mousedown", e => e.preventDefault());
 </script>
-``` 
+```      
 
-As can be seen in the example above, the `ContextmenuController` chooses one of two paths:
- * the default action of showing an `alert(..)`, or
- * the dispatch of an `auxclick` event.
- 
- Also worth noting is that the `my-contextmenu` event must be `cancelable` for the `.preventDefault()` to work.
+Result:
+```
+mousedown
+contextmenu
+//show context menu
+```
+
+Most events are `canceable: true`, but some are not. When working with event cascades and EventControllers, you need to be aware of this distinction and check each event for this feature.
  
 ## References
 
