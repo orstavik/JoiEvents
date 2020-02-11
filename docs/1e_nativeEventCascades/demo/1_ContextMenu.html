@@ -5,6 +5,7 @@
   (function () {
     window.addEventListener("mousedown", e => console.log(e.type));
     window.addEventListener("contextmenu", e => console.log(e.type));
+    window.addEventListener("auxclick", e => console.log(e.type));
 
     const div = document.querySelector("div");
     div.addEventListener("contextmenu", e => e.preventDefault());
