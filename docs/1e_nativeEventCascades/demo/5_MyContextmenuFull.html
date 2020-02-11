@@ -1,0 +1,63 @@
+<body style="touch-action: none;">
+<h1>Right click me!</h1>
+<div>Right click me (no context menu)</div>
+
+<script>
+  (function () {
+
+    //1. block all contextmenu events and stop their default actions
+    window.addEventListener("contextmenu", e => e.preventDefault(), true);
+
+    const ContextmenuController = {
+      onMousedown: function (mousedownEvent) {
+        if (mousedownEvent.button === 2)
+          this.triggerContextMenu(mousedownEvent);
+        else if (mousedownEvent.button === 1/*and this mouse only has a primary mouse button*/)
+          //setTimeout to trigger the contextmenu on long press
+          //cancel timeout if the mouseup is given before this time.
+          this.triggerContextMenu(mousedownEvent);
+      },
+      onTouchstart: function (mousedownEvent) {
+        if (onlyOne)
+          this.triggerContextMenu(mousedownEvent);
+        if (mousedownEvent.button === 1/*and this mouse only has a primary mouse button*/)
+          //setTimeout to trigger the contextmenu on long press
+          //cancel timeout if the mouseup is given before this time.
+          this.triggerContextMenu(mousedownEvent);
+      },
+      onKeydown: function (keydownEvent) {
+        if (keydownEvent.key === "meta key wtf?")
+          this.triggerContextMenu(keydownEvent);
+      },
+      triggerContextMenu: function (triggerEvent) {
+        setTimeout(function () {
+          const myContextMenuEvent = new MouseEvent("my-contextmenu", {
+            composed: true,
+            bubbles: true,
+            cancelable: true
+          });
+          triggerEvent.target.dispatchEvent(myContextMenuEvent);
+          if (!triggerEvent.defaultPrevented) {
+            alert("this is a bad excuse for a context menu..");
+          } else {
+            const myAuxclickEvent = new MouseEvent("my-auxclick", {composed: true, bubbles: true});
+            triggerEvent.target.dispatchEvent(myAuxclickEvent);
+          }
+        });
+      }
+    };
+    window.addEventListener("mousedown", ContextmenuController.onMousedown, true);
+    window.addEventListener("touchstart", ContextmenuController.onTouchstart, true);
+    window.addEventListener("keydown", ContextmenuController.onKeydown, true);
+
+    window.addEventListener("mousedown", e => console.log(e.type));
+    window.addEventListener("keydown", e => console.log(e.type));
+    window.addEventListener("touchstart", e => console.log(e.type));
+    window.addEventListener("my-contextmenu", e => console.log(e.type));
+    window.addEventListener("my-auxclick", e => console.log(e.type));
+
+    const div = document.querySelector("div");
+    div.addEventListener("my-contextmenu", e => e.preventDefault());
+  })();
+</script>
+</body>
