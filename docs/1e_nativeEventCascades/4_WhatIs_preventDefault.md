@@ -1,6 +1,6 @@
 # WhatIs: `.preventDefault()`
 
-Put simply, `.preventDefault()` is **stop the default task associated with an event**, such as stopping the `show context menu` action from the `contextmenu` event.
+Put simply, `.preventDefault()` **stops the default task associated with an event**, such as stopping the `show context menu` action from the `contextmenu` event.
 
 The principal difference between `.stopPropagation()` and `.preventDefault()` is that:
 1. `stopPropagation()` halts the inner cycle of event propagation, without affecting the outer cycle of the EventCascade, and 
@@ -8,13 +8,13 @@ The principal difference between `.stopPropagation()` and `.preventDefault()` is
 
 Conceptually, `.preventDefault()` is like a scissor that once-and-for-all will cut the ties between an event and its ensuing action(s).
 ``` 
-                ↱---- queue ----↴    ↱---- queue --x
-trigger(A) ⇒ eval(A) ⇒ prop(A) ⇒ eval(B) ⇒ prop(B) x    run(C)
-                       ↓    ↑              ↓    ↑    ↑
-                     cap    bub          cap    bub  ↑         
-                       ↳tar ⮥              ↳tar ⮥   ↑ 
-                                               ↓     ↑
-                                              .prevDef() 
+     ↱queue -- x
+   prop(A)     x    run(B)
+   ↓    ↑      ↑
+ cap    bub    ↑         
+   ↳tar ⮥     ↑ 
+      ↓       ↑
+      .prevDef() 
 ```
 
 ## Demo: `.preventDefault()` and `contextmenu`
@@ -41,8 +41,6 @@ contextmenu
 //does NOT show the context menu
 auxclick
 ```
-
-> It is worth noting that `.preventDefault()` *chooses* between a subsequent action or event. By not calling `preventDefault()`, the app is basically *choosing* not to dispatch the `auxclick` event.
 
 ## Non-`cancelable` events
 

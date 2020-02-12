@@ -2,9 +2,9 @@
 
 
 <script>
-  function sleep(ms){
+  function sleep(ms) {
     const startTime = new Date().getTime();
-    while(startTime + ms > new Date().getTime());
+    while (startTime + ms > new Date().getTime()) ;
   }
 
   function toggleTick(cb) {
@@ -21,15 +21,17 @@
   }
 
   function macroTask(e) {
-    toggleTick(function(){
-      sleep(2000);
+    toggleTick(function () {
+      //debugger;
       console.log("mAcrotask queued from " + e.type);
     });
   }
 
   function microTask(e) {
-    Promise.resolve().then(function(){
-      console.log("mIcrotask queued from " + e.type);
+    Promise.resolve().then(function () {
+      Promise.resolve().then(function () {
+        console.log("mIcrotask queued from " + e.type);
+      });
     });
   }
 

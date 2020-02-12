@@ -19,12 +19,8 @@
             cancelable: true
           });
           mousedownEvent.target.dispatchEvent(myContextMenuEvent);
-          if (!myContextMenuEvent.defaultPrevented) {
+          if (!myContextMenuEvent.defaultPrevented)
             alert("this is a bad excuse for a context menu..");
-          } else {
-            const myAuxclickEvent = new MouseEvent("my-auxclick", {composed: true, bubbles: true});
-            mousedownEvent.target.dispatchEvent(myAuxclickEvent);
-          }
         });
       }
     };
@@ -32,7 +28,6 @@
 
     window.addEventListener("mousedown", e => console.log(e.type));
     window.addEventListener("my-contextmenu", e => console.log(e.type));
-    window.addEventListener("my-auxclick", e => console.log(e.type));
 
     const div = document.querySelector("div");
     div.addEventListener("my-contextmenu", e => e.preventDefault());
