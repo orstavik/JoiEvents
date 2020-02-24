@@ -1,0 +1,69 @@
+<input type="text" value="I have mirrored input events"/>
+
+<script>
+  (function () {
+    // block all native beforeinput events and stop their default actions
+    // this also blocks all native input events indirectly
+    window.addEventListener("beforeinput", function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, true);
+
+    function toggleTick(cb) {
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = cb;
+      document.body.appendChild(details);
+      details.open = true;
+      Promise.resolve().then(details.remove.bind(details));
+      return {
+        cancel: function () {
+          details.ontoggle = undefined;
+        },
+        resume: function () {
+          details.ontoggle = cb;
+        }
+      };
+    }
+
+    const InputController = {
+      keypress: function (e) {
+        toggleTick(function () {
+          const beforeInputEvent = new InputEvent("my-beforeinput", {composed: true, bubbles: true, cancelable: true});
+          e.target.dispatchEvent(beforeInputEvent);
+          if (beforeInputEvent.defaultPrevented)
+            return;
+          e.target.value += e.key;
+          const inputEvent = new InputEvent("my-input", {composed: true, bubbles: true, cancelable: true});
+          inputEvent.key = e.key;
+          e.target.dispatchEvent(inputEvent);
+        });
+      },
+      // Backspace doesn't trigger a keypress. Thus, to implement backspace, we need to listen for the keydown event instead.
+      keydown: function (e) {
+        if (e.key !== "Backspace")
+          return;
+        toggleTick(function () {
+          const beforeInputEvent = new InputEvent("my-beforeinput", {composed: true, bubbles: true, cancelable: true});
+          e.target.dispatchEvent(beforeInputEvent);
+          if (beforeInputEvent.defaultPrevented)
+            return;
+          e.target.value = e.target.value.substr(0, e.target.value.length - 1);
+          const inputEvent = new InputEvent("my-input", {composed: true, bubbles: true, cancelable: true});
+          inputEvent.key = e.key;
+          e.target.dispatchEvent(inputEvent);
+        });
+      }
+    };
+
+    window.addEventListener("keydown", InputController.keydown, true);
+    window.addEventListener("keypress", InputController.keypress, true);
+
+    window.addEventListener("my-beforeinput", e => console.warn("my-beforeinput"));
+    window.addEventListener("my-input", e => console.warn("my-input"));
+    window.addEventListener("beforeinput", e => console.log("beforeinput"));    // is blocked
+    window.addEventListener("input", e => console.log("input"));                // is blocked
+    window.addEventListener("my-input", e => e.preventDefault());               // makes no difference
+    //window.addEventListener("my-beforeinput", e => e.preventDefault());       // this will block dom changes and subsequent input event
+  })();
+</script>

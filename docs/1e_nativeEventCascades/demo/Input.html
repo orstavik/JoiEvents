@@ -1,0 +1,22 @@
+<input id="one" type="text" value="Tell us your story ...">
+<input id="two" type="text" value="Nothing can stop you!">
+<input id="three" type="text" value="Or could it?">
+
+<script >
+  (function() {
+    const one = document.querySelector("#one");
+    const two = document.querySelector("#two");
+    const three = document.querySelector("#three");
+
+    one.addEventListener("beforeinput", e =>
+      console.log("When this message is printed, the input's value is NOT YET updated.")
+    );
+    one.addEventListener("input", e =>
+      console.log("When this message is printed, the input's value HAS BEEN updated.")
+    );
+    two.addEventListener("input", e => e.preventDefault());
+    // the text is updated in the DOM, the input event is dispatched AFTER the DOM is updated.
+    three.addEventListener("beforeinput", e => e.preventDefault());
+    // you try to make changes to input #three, but you can't.
+  })();
+</script>
