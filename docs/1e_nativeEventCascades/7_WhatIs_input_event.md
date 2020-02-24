@@ -1,4 +1,4 @@
-# What is `input`?
+# WhatIs: `input`?
 
 The `input` event fires **after** the value of an `<input>`, `<select>`, or `<textarea>` element has changed. We call `<input>`, `<select>`, or `<textarea>` element here "input elements". 
 

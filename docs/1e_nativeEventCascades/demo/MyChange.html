@@ -1,0 +1,80 @@
+<form>
+  <input id="normalText" type="text" value="type something ...">
+  <textarea id="normalTextarea">type something else</textarea>
+  <select id="normalSelect">
+    <option value="a">a</option>
+    <option value="b">b</option>
+    <option value="c">c</option>
+  </select>
+  <input id="normalCheckbox" type="checkbox">
+
+  <label for="radioOne">one</label><input id="radioOne" type="radio" name="group1">
+  <label for="radioTwo">two</label><input id="radioTwo" type="radio" name="group1">
+</form>
+
+<script>
+  (function () {
+    function toggleTick(cb) {
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = cb;
+      document.body.appendChild(details);
+      details.open = true;
+      Promise.resolve().then(details.remove.bind(details));
+      return {
+        cancel: function () {
+          details.ontoggle = undefined;
+        },
+        resume: function () {
+          details.ontoggle = cb;
+        }
+      };
+    }
+
+    const ChangeController = {
+      target: undefined,
+      value: undefined,
+
+      input: function (e) {
+        if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT" && e.target.type !== "text") {
+          toggleTick(() => {
+            const changeEvent = new InputEvent("my-change", {composed: true, bubbles: true, cancelable: true});
+            e.target.dispatchEvent(changeEvent);
+            ChangeController.target = undefined;
+            ChangeController.value = undefined;
+          });
+        }
+      },
+      focusin: function (e) {
+        if ((e.target.tagName === "INPUT" && e.target.type === "text") || e.target.tagName === "TEXTAREA") {
+          ChangeController.target = e.target;
+          ChangeController.value = e.target.value;
+          window.removeEventListener("focusin", ChangeController.focusin, true);
+          window.addEventListener("focusout", ChangeController.focusout, true);
+          window.addEventListener("submit", ChangeController.focusout, true);
+        }
+      },
+      focusout: function (e) {
+        window.removeEventListener("focusout", ChangeController.focusout, true);
+        window.removeEventListener("submit", ChangeController.focusout, true);
+        window.addEventListener("focusin", ChangeController.focusin, true);
+        if (ChangeController.value === e.target.value)
+          return;
+        const changeEvent = new InputEvent("my-change", {composed: true, bubbles: true, cancelable: true});
+        //no toggle tick here, because the change event should run before the focusout event.
+        ChangeController.target.dispatchEvent(changeEvent);
+        ChangeController.target = undefined;
+        ChangeController.value = undefined;
+      }
+    };
+
+    window.addEventListener("focusin", ChangeController.focusin, true);
+    window.addEventListener("input", ChangeController.input, true);
+  })();
+
+  window.addEventListener("input", e => console.log("input ", e.target.id));
+  window.addEventListener("change", e => console.log("change ", e.target.id));
+  window.addEventListener("focusout", e => console.log("focusout ", e.target.id));
+  window.addEventListener("submit", e => console.log("submit ", e.target.id));
+  window.addEventListener("my-change", e => console.log("my-change ", e.target.id));
+</script>
