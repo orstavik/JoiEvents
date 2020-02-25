@@ -1,36 +1,41 @@
 <div style="height: 500vh; background: linear-gradient(white, yellow)">Hello sunshine</div>
 
 <script>
-  //turn off the native wheel to scroll action. "wheel" require passive: false for preventDefault() to work.
-  window.addEventListener("wheel", e => e.preventDefault(), {capture: true, passive: false});
 
-  //animation t varies from 0 to 1, for example: t=0, then t=0.1, t=0.2, t=0.3, ..., t=1.
-  function easeInOutQuint(t) {
-    return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t;
-  }
+  (function () {
+    //turn off the native wheel to scroll action. "wheel" require passive: false for preventDefault() to work.
+    window.addEventListener("wheel", e => e.preventDefault(), {capture: true, passive: false});
 
-  const WheelController = {
-    onWheel: function (e) {
-      const target = document.body;
-      const down = target.scrollTop;
-      const onePageHeight = target.clientHeight * 0.25;
-      const maxDistanceDown = Math.min(onePageHeight, target.scrollHeight - (down+target.clientHeight));
-      const maxDistanceUp = Math.min(onePageHeight, down);
-      const distance = e.deltaY > 0 ? maxDistanceDown : -maxDistanceUp;
-      requestAnimationFrame(WheelController.doScroll.bind(null, target, distance/5, 0));
-    },
-    doScroll: function (target, goal, step) {
+    //animation t varies from 0 to 1, for example: t=0, then t=0.1, t=0.2, t=0.3, ..., t=1.
+    function easeInOutQuint(t) {
+      return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t;
+    }
+
+    function doScroll(target, goal, step) {
       const next = goal * easeInOutQuint(step += 0.091);
       target.scrollTo(0, target.scrollTop + next);
       if (step < 1)
         requestAnimationFrame(WheelController.doScroll.bind(null, target, goal, step));
     }
-  };
-  window.addEventListener("wheel", WheelController.onWheel, true);
+
+    const WheelController = {
+      onWheel: function (e) {
+        const target = document.body;
+        const down = target.scrollTop;
+        const onePageHeight = target.clientHeight * 0.25;
+        const maxDistanceDown = Math.min(onePageHeight, target.scrollHeight - (down + target.clientHeight));
+        const maxDistanceUp = Math.min(onePageHeight, down);
+        const distance = e.deltaY > 0 ? maxDistanceDown : -maxDistanceUp;
+        requestAnimationFrame(doScroll.bind(null, target, distance / 5, 0));
+      }
+    };
+    window.addEventListener("wheel", WheelController.onWheel, true);
+  })();
 
   function logWheel(e) {
     console.log("---- " + e.type);
   }
+
   function logScroll(e) {
     console.log(e.type, document.body.scrollTop);
   }
