@@ -1,0 +1,28 @@
+<form oninput="c.value=parseInt(a.value)+parseInt(b.value);">
+  <input type="text" size="50" value="In the beginning..."/>
+  <textarea>...there was a textnode...</textarea>
+  <select id="normalSelect">
+    <option value="a">a</option>
+    <option value="b" selected="selected">b</option>
+    <option value="c">c</option>
+  </select>
+  <input id="normalCheckbox" type="checkbox" checked>
+  <hr>
+  0<input type="range" id="a" value="50">100 +
+  <input type="number" id="b" value="50"> =
+  <output id="c" for="a b"></output>
+  <hr>
+  <input type="reset" value="Reset">
+  <button type="reset">Reset</button>
+  <button id ="clickPrevented" type="reset">Reset, but with click.preventDefault() being called.</button>
+  <div id="test">.reset()</div>
+</form>
+
+<script>
+  document.querySelector("#test").addEventListener("click", e => e.target.parentNode.reset());
+  document.querySelector("#clickPrevented").addEventListener("click", e => e.preventDefault());
+
+  window.addEventListener("click", e=> console.log(e.target.tagName));
+  window.addEventListener("reset", e=> console.log(e));
+  // window.addEventListener("reset", e=> e.preventDefault());  //enable this to block the form from resetting itself
+</script>

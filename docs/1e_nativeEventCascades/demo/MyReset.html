@@ -1,0 +1,86 @@
+<form>
+  <input type="text" size="50" value="In the beginning..."/>
+  <textarea>...there was a textnode...</textarea>
+  <select id="normalSelect">
+    <option value="a">a</option>
+    <option value="b" selected="selected">b</option>
+    <option value="c">c</option>
+  </select>
+  <input id="normalCheckbox" type="checkbox" checked>
+  <hr>
+  <input type="reset" value="Reset">
+  <button type="reset">Reset</button>
+  <div id="test">.reset()</div>
+</form>
+
+<script>
+  (function () {
+    //block native reset behavior
+    window.addEventListener("click", e => {
+      if (e.target.form && e.target.type === "reset" && (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON"))
+        e.preventDefault();
+    });
+
+    function toggleTick(cb) {
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = cb;
+      document.body.appendChild(details);
+      details.open = true;
+      Promise.resolve().then(details.remove.bind(details));
+      return {
+        cancel: function () {
+          details.ontoggle = undefined;
+        },
+        resume: function () {
+          details.ontoggle = cb;
+        }
+      };
+    }
+
+    function getOriginalSelectIndex(select) {
+      const options = select.querySelectorAll("option");
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].hasAttribute("selected"))
+          return i;
+      }
+      return 0;
+    }
+
+    HTMLFormElement.prototype.resetAction = function () {
+      for (let element of this.elements) {
+        if (element.type !== "reset" && element.type !== "submit")
+          element.value = element.getAttribute("value") || element.defaultValue;
+        else if (element.tagName === "SELECT")
+          element.selectedIndex = getOriginalSelectIndex(element);
+        else if (element.tagName === "TEXTAREA")
+          element.value = element.innerText;
+      }
+    };
+
+    HTMLFormElement.prototype.reset = function () {
+      const resetEvent = new InputEvent("my-reset", {cancelable: true, composed: true, bubbles: true});
+      this.dispatchEvent(resetEvent);
+      if (!resetEvent.defaultPrevented)
+        this.resetAction();
+    };
+
+    const ResetController = {
+      click: function (e) {
+        const formElement = e.target.form;
+        if (!formElement || e.target.type !== "reset" || (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON"))
+          return;
+        toggleTick(e => !e.defaultPrevented && formElement.reset());
+      },
+    };
+
+    window.addEventListener("click", ResetController.click);
+  })();
+
+  document.querySelector("#test").addEventListener("click", e => e.target.parentNode.reset());
+
+  window.addEventListener("click", e => console.log(e), true);
+  window.addEventListener("reset", e => console.log(e), true);
+  window.addEventListener("my-reset", e => console.log(e), true);
+  // window.addEventListener("my-reset", e=> e.preventDefault());  //enable this to block the form from resetting itself
+</script>
