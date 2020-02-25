@@ -1,0 +1,116 @@
+<form id="one">
+  <input type="text" value="Hello" name="story">
+  <input type="text" value="Sunshine" name="story">
+  <input id="a" type="submit">
+  <div id="b">requestSubmit(button)</div>
+  <div id="c">requestSubmit()</div>
+</form>
+
+<script>
+  (function () {
+    HTMLFormElement.prototype.submit = function () {
+      //1. we assume the form is valid
+      //2. we do not dispatch submit event
+      //3. we only submit the form
+      console.log("Make the post https request and navigate to that page.");
+    };
+
+    HTMLFormElement.prototype.requestSubmitImpl = function (submitter) {
+      //1. validate the form
+      console.log("Validating the form.");
+      // if the form is invalid, then show the error message and return.
+
+      //2. dispatch the submit event
+      if (submitter) {
+        //Set errors according to  https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
+        if (submitter.type !== "submit")
+          throw new Error("TypeError: " + submitter.type + "type is not submit");
+        if (submitter.form !== this)
+          throw new Error("NotFoundError: " + this.tagName + " not a FORM");
+      }
+      let submitEvent = new InputEvent("my-submit", {composed: true, bubbles: true, cancelable: true});
+      submitEvent.submitter = submitter || this;
+      this.dispatchEvent(submitEvent);
+      //3. submit the form
+      if (!submitEvent.defaultPrevented)
+        this.submit();
+    };
+
+    HTMLFormElement.prototype.requestSubmit = function () {
+      const submitter = this.querySelector("input[type='submit'], button[type='submit']");
+      this.requestSubmitImpl(submitter);
+    };
+
+    function toggleTick(cb) {
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = cb;
+      document.body.appendChild(details);
+      details.open = true;
+      Promise.resolve().then(details.remove.bind(details));
+      return {
+        cancel: function () {
+          details.ontoggle = undefined;
+        },
+        resume: function () {
+          details.ontoggle = cb;
+        }
+      };
+    }
+
+    // to prevent default submit event from keypress Enter events
+    // (we use the beforeinput instead of the keypress to intercept enter).
+    window.addEventListener('beforeinput', e => {
+      if (e.inputType === "insertLineBreak" && e.target.form)
+        e.preventDefault();
+    });
+    // to prevent default submit event from click on submit buttons
+    window.addEventListener('click', e => {
+      if (e.target.type === "submit" && (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON"))
+        e.preventDefault();
+    });
+
+    const SubmitController = {
+
+      beforeinput: function (e) {
+        const formElement = e.target.form;
+        // we can use only Enter key
+        if (e.inputType !== "insertLineBreak" || !formElement)
+          return;
+        // select first submit button (default button according to spec)
+        const firstSubmitButton = formElement.querySelector("input[type=submit], button[type=submit]");
+        // check how many input elements (not reset/submit type) are located in the form
+        const numberOfInputs = formElement.querySelectorAll("input:not([type=reset]):not([type=submit])").length;
+
+        // According to spec(https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission)
+        // 1. if one or several <input>s and one or several submit buttons are located on the <form> - .click() on default button to submit a form
+        if (numberOfInputs >= 1 && firstSubmitButton)
+          firstSubmitButton.click();
+        //2. if there is only one <input> element  - fire 'submit' event on <form> (even if there is no any submit button)
+        else if (numberOfInputs === 1)
+          toggleTick(() => formElement.requestSubmit());
+      },
+
+      click: function (e) {
+        if ((e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") && e.target.type === "submit")
+          toggleTick(() => {
+            if (!e.defaultPrevented)
+              e.target.form.requestSubmitImpl(e.target)
+          });
+      }
+    };
+    window.addEventListener("beforeinput", SubmitController.beforeinput, true);
+    window.addEventListener("click", SubmitController.click, true);
+  })();
+
+  const one = document.querySelector("#one");
+  const button = document.querySelector("#a");
+  const requestSubmitButton = document.querySelector("#b");
+  const submitButton = document.querySelector("#c");
+
+  window.addEventListener("my-submit", () => console.log("my-submit"));
+  requestSubmitButton.addEventListener("click", e => e.target.parentNode.requestSubmit());
+  submitButton.addEventListener("click", e => e.target.parentNode.submit());
+
+  window.addEventListener("click", e => console.log(e.type, " on ", e.target.id))
+</script>

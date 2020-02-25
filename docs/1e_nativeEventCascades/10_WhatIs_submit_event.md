@@ -7,6 +7,7 @@ The `submit` event is fired *before* a `<form>` is submitted and the browser nav
 There are 4 ways to submit a form and send it to the server:
 
 1. The user `click` on a submit button, ie. a `<input type="submit">`, `<input type="image">` or `<button type="submit"> Submit </button>` element.
+   * Att! The action of requsting a `submit` event is preventable. This means that if you call `clickEvent.preventDefault()`, then the browser will stop pursuing any form validation, `submit` events, and form submission.
 2. The user `keypress` "enter" while the document's focus is on an `<input>` element in the form. If a submit button is present, the "enter" keypress will trigger a `click` event on the first submit button in the DOM tree order; if no submit button is present, the "enter" will just submit the form without any `click` event.
     * Caveat: if there is a) no submit button in the form AND b) more than one `<input>` element in the form, then `keypress` "enter" will *not* submit the form.
 3. A script calls `.submit()` on a `<form>` element.
@@ -14,7 +15,7 @@ There are 4 ways to submit a form and send it to the server:
 
 *One* of these methods, calling `.submit()` from a script, does *not* trigger a `submit` event. The three other methods will all dispatch a `submit` event *before* the form is submitted. The difference between `submit()` and `requestSubmit()` will be described in more detail later.
 
-The `submit` event is `cancelable`. This means that calling `.preventDefault()` will stop the form from being submitted to the server and the browser from navigating out of the document.
+The `submit` event is `cancelable`. This means that calling `.preventDefault()` on it will stop the form from being submitted to the server and the browser from navigating out of the document.
   
 ## Demo: Four ways to `submit` 
 
@@ -79,7 +80,7 @@ The `submit` event is dispatched *before* the form is submitted. But how is it q
 
 The demo below shows a form that can only be submitted via script. 
 
-```html 
+```html
 <form>
   <input type="text" value="enter will not submit me">
   <input type="text" value="me neither">
@@ -114,186 +115,139 @@ The demo below shows a form that can only be submitted via script.
 
 ## Demo: `SubmitController`
 
-In the demo below a function `SubmitController` essentially recreates the logic of the `submit` event cascade and defines its own `my-submit` event. 
+In the demo below, the two methods `HTMLFormElement.submit()` and `HTMLFormElement.requestSubmit()` are monkey-patched to illustrate their functionality. The good-old `submit()` method does neither validate nor dispatch any `submit` events. The newer `requestSubmit()` on the other hand does both validation and dispatch `submit` events as the user driven form submitting methods do.
+
+In the `SubmitController` we can therefore rely on the `requestSubmit()` method when implementing the `submit` event controller. This simplifies the logic of the `SubmitController`.   
  
 The demo:
+1. Uses `toggleTick` to queue the task of requesting submits in the event loop. ;
+2. Blocks the native `submit` event controller by calling preventDefault() on both click and enter keypress/beforeinput events in the relevant use cases. 
+3. The `SubmitController` listens for `beforeinput` and `click` events, and when appropriate queue a call to `requestSubmit()` in the event loop (with the appropriate submit button element set as the event's [`submitter`](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-submitevent-interface)).
+4. The `requestSubmit()` then:
+   1. validates the form [spec](https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit),
+   2. dispatches the `submit` event synchronously, and 
+   3. calls the good-old `submit()` method.
+5. The good-old `submit()` method sends the form data to the server.
 
-1. Adds a function `toggleTick` that allows to delay event dispatching;
-2. Completely blocks all the native `'submit'` events. 
-3. Then it adds a function `SubmitController` that listens for `beforeinput`,`click` events and intercepts `requestSubmit()` calling;
-4. Once the `ResetController` receives an appropriate trigger event, it:
-    1. When the `"beforeinput"` event is activated, the `Enter` button is filtered out.  
-        1. After it is pressed, the default action is blocked. This is necessary to avoid `click()`  on the submit button, which is initialized by the browser;
-        2. The specification defines the features of activating the event by pressing a key. If the number of `<input>` elements differs, the behavior will be different. So it is necessary to determine their number and then depending on the result of the event and do the default actions;
-        3. Delay the sending of the event to make it possible to cancel it.
-    2. If the `click` event is activated, the value of `type` attribute of event target will be checked. This is necessary in order to ensure the activation of the functionality only by means of the `submit` buttons.
-    3. If 'requestSubmit()` is reconciled, it will be intercepted and processed. 
-        1. In accordance with the [spec](https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit), it is checked for errors;
-        2. In addition, depending on the value of the passed argument, the [`submitter`](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-submitevent-interface) property is added to the event.
-5. Demo presents two forms. The first simulates the activation of `submit` event. 
-   The second one demonstrates the prevention of activation with `e.preventDefault()` placed inside event listener of the custom `my-submit` event.         
-    
+About processing `beforeinput` and `click` events:
+* When the `SubmitController` processes the enter key and the submit button clicks, it must validate the click or the enter keypress to ensure that they are proper requests to submit the form. There are several click and enter keypresses that would not fulfill the criteria of form submission.
+* The specification defines the features of activating the event by pressing an enter key. Depending on both the number of `<input>` elements and the presence of a submit button, the behavior of this algorithm differs.
+* Only `click` on submit buttons will submit the form. 
+
  ```html
-    <form id="one">
-        <fieldset>
-            <legend>Click "Submit" button or press Enter</legend>
-            <input type="text" value="Hello" name="story">
-            <input type="text" value="Sunshine" name="story">
-            <input id="a" type="submit">
-            <div id="b"> requestSubmit(button)</div>
-            <div  id="c"> requestSubmit()</div>
-        </fieldset>
-    </form>
-    
-    <form id="two">
-        <fieldset>
-            <legend>Click the "Submit" button, but it will be prevent</legend>
-            <input type="text" value="Name" name="story">
-            <input type="text" value="Surname" name="story">
-            <input id="a1" type="submit">
-            <div  id="b1"> requestSubmit(button)</div>
-            <div  id="c1"> requestSubmit()</div>
-        </fieldset>
-    </form>
-    
-    <script>
-    
-      (function () {
-        function toggleTick(cb) {
-          const details = document.createElement("details");
-          details.style.display = "none";
+<form id="one">
+  <input type="text" value="Hello" name="story">
+  <input type="text" value="Sunshine" name="story">
+  <input id="a" type="submit">
+  <div id="b">requestSubmit(button)</div>
+  <div id="c">requestSubmit()</div>
+</form>
+
+<script>
+  (function () {
+    HTMLFormElement.prototype.submit = function () {
+      //1. we assume the form is valid
+      //2. we do not dispatch submit event
+      //3. we only submit the form
+      console.log("Make the post https request and navigate to that page.");
+    };
+
+    HTMLFormElement.prototype.requestSubmitImpl = function (submitter) {
+      //1. validate the form
+      console.log("Validating the form.");
+
+      //2. dispatch the submit event
+      if (submitter) {
+        //Set errors according to  https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
+        if (submitter.type !== "submit")
+          throw new Error("TypeError: " + submitter.type + "type is not submit");
+        if (submitter.form !== this)
+          throw new Error("NotFoundError: " + this.tagName + " not a FORM");
+      }
+      let submitEvent = new InputEvent("my-submit", {composed: true, bubbles: true, cancelable: true});
+      submitEvent.submitter = submitter || this;
+      this.dispatchEvent(submitEvent);
+      //3. submit the form
+      if (!submitEvent.defaultPrevented)
+        this.submit();
+    };
+
+    HTMLFormElement.prototype.requestSubmit = function () {
+      const submitter = this.querySelector("input[type='submit'], button[type='submit']");
+      this.requestSubmitImpl(submitter);
+    };
+
+    function toggleTick(cb) {
+      const details = document.createElement("details");
+      details.style.display = "none";
+      details.ontoggle = cb;
+      document.body.appendChild(details);
+      details.open = true;
+      Promise.resolve().then(details.remove.bind(details));
+      return {
+        cancel: function () {
+          details.ontoggle = undefined;
+        },
+        resume: function () {
           details.ontoggle = cb;
-          document.body.appendChild(details);
-          details.open = true;
-          Promise.resolve().then(details.remove.bind(details));
-          return {
-            cancel: function () {
-              details.ontoggle = undefined;
-            },
-            resume: function () {
-              details.ontoggle = cb;
-            }
-          };
         }
-    
-        const SubmitController = {
-    
-          beforeinput: function (e) {
-            let formElement = e.target.form;
-            // we can use only Enter key
-            if (e.inputType !== "insertLineBreak" || !formElement)
-              return;
-            // to prevent default click() after Enter key press
-            e.preventDefault();
-            // check how many input elements (not reset/submit type) are located in the form
-            let inputs = formElement.querySelectorAll("input:not([type=reset]):not([type=submit])").length;
-            // select first submit button (default button according to spec)
-            let firstSubmitButton = formElement.querySelector("input[type=submit]");
+      };
+    }
 
-            let submitEvent = new InputEvent("my-submit", {composed: true, bubbles: true, cancelable: true});
-    
-            // According to spec(https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission)
-            // 1. if one or several <input>s and one or several submit buttons are located on the <form> - .click() on default button to submit a form
-            if (inputs >= 1 && firstSubmitButton)
-              firstSubmitButton.click();
-            //2. if there is only one <input> element  - fire 'submit' event on <form> (even if there is no any submit button)
-            else if (inputs === 1) {
-              // delay event to make it possible to prevent it
-              toggleTick(() => {
-                formElement.dispatchEvent(submitEvent);
-                if (submitEvent.defaultPrevented) {
-                  clearTimeout(i);
-                  console.log("defaultPrevented ");
-                }
-              });
-              //fires after toggleClick to provide default action prevention
-              let i = setTimeout(() => {
-                console.log("do default action here");
-              }, 0);
-            }
-          },
-    
-          click: function (e) {
-            let formElement = e.target.form;
-            if (e.target.type && e.target.type !== "submit" || !formElement)
-              return;
-    
-            let submitEvent = new InputEvent("my-submit", {composed: true, bubbles: true, cancelable: true});
-    
-            toggleTick(() => {
-              formElement.dispatchEvent(submitEvent);
-              if (submitEvent.defaultPrevented) {
-                clearTimeout(i);
-                console.log("defaultPrevented ");
-              }
-            });
-    
-            let i = setTimeout(() => {
-              console.log("do default action here");
-            }, 0);
-          },
-    
-          requestSubmit: function (submitButton) {
-           
-            //Set errors according to  https://html.spec.whatwg.org/multipage/forms.html#dom-form-requestsubmit
-            if (submitButton && submitButton.type !== "submit")
-               throw new Error("TypeError: " + submitButton.type + "type is not submit");
-            if (submitButton && submitButton.form !== this)
-              throw new Error("NotFoundError: " + this.tagName + " not a FORM");
-            
-            let submitEvent = new InputEvent("my-submit", {composed: true, bubbles: true, cancelable: true});
+    // to prevent default submit event from keypress Enter events
+    // (we use the beforeinput instead of the keypress to intercept enter).
+    window.addEventListener('beforeinput', e => {
+      if (e.inputType === "insertLineBreak" && e.target.form)
+        e.preventDefault();
+    });
+    // to prevent default submit event from click on submit buttons
+    window.addEventListener('click', e => {
+      if (e.target.type === "submit" && (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON"))
+        e.preventDefault();
+    });
 
-            if (submitButton !== null)
-              submitEvent.submitter = submitButton;
-    
-            toggleTick(() => {
-              this.dispatchEvent(submitEvent);
-              if (submitEvent.defaultPrevented) {
-                clearTimeout(i);
-                console.log("defaultPrevented ");
-              }
-            });
-    
-            let i = setTimeout(() => {
-              console.log("do default action here");
-            }, 0);
-          }
-        };
-    
-        window.addEventListener("submit", e => e.preventDefault());
-        window.addEventListener("beforeinput", SubmitController.beforeinput.bind(this), true);
-        window.addEventListener("click", SubmitController.click, true);
-        HTMLFormElement.prototype.requestSubmit = function (submitter) {
-          SubmitController.requestSubmit.call(this, submitter)
-        };
-    
-      })();
-      
-      let one = document.querySelector("#one");
-      let two = document.querySelector("#two");
-      let button = document.querySelector("#a");
-      let button1 = document.querySelector("#a1");
-    
-      //form 1, must log "do default action here"
-      document.querySelector("#b").addEventListener("click", () => one.requestSubmit(button));
-      document.querySelector("#c").addEventListener("click", () => one.requestSubmit());
-    
-      //form 2 preventable, must log "defaultPrevented"
-      document.querySelector("#b1").addEventListener("click", () => two.requestSubmit(button1));
-      document.querySelector("#c1").addEventListener("click", () => two.requestSubmit());
-    
-      one.addEventListener("my-submit", e => console.warn(e.type));
-      two.addEventListener("my-submit", e => console.warn(e.type));
-      two.addEventListener("my-submit", e => e.preventDefault());
-    
-      window.addEventListener("click", e => console.log(e.type, " on ", e.target.id))
-    
-    </script>
+    const SubmitController = {
+
+      beforeinput: function (e) {
+        const formElement = e.target.form;
+        // we can use only Enter key
+        if (e.inputType !== "insertLineBreak" || !formElement)
+          return;
+        // select first submit button (default button according to spec)
+        const firstSubmitButton = formElement.querySelector("input[type=submit], button[type=submit]");
+        // check how many input elements (not reset/submit type) are located in the form
+        const numberOfInputs = formElement.querySelectorAll("input:not([type=reset]):not([type=submit])").length;
+
+        // According to spec(https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission)
+        // 1. if one or several <input>s and one or several submit buttons are located on the <form> - .click() on default button to submit a form
+        if (numberOfInputs >= 1 && firstSubmitButton)
+          firstSubmitButton.click();
+        //2. if there is only one <input> element  - fire 'submit' event on <form> (even if there is no any submit button)
+        else if (numberOfInputs === 1)
+          toggleTick(() => formElement.requestSubmit());
+      },
+
+      click: function (e) {
+        if ((e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") && e.target.type === "submit")
+          toggleTick(() => e.target.form.requestSubmitImpl(e.target));
+      }
+    };
+    window.addEventListener("beforeinput", SubmitController.beforeinput, true);
+    window.addEventListener("click", SubmitController.click, true);
+  })();
+
+  const one = document.querySelector("#one");
+  const button = document.querySelector("#a");
+  const requestSubmitButton = document.querySelector("#b");
+  const submitButton = document.querySelector("#c");
+
+  window.addEventListener("my-submit", () => console.log("my-submit"));
+  requestSubmitButton.addEventListener("click", e => e.target.parentNode.requestSubmit());
+  submitButton.addEventListener("click", e => e.target.parentNode.submit());
+
+  window.addEventListener("click", e => console.log(e.type, " on ", e.target.id))
+</script>
  ```
-
-Some events such as `submit` only have *one* possible default action. They are simple. Likeable. And we say that these events-to-defaultAction pairs conform to a OneEventToOneAction pattern.
-
-So. What does these events look like inside? How can we make such events in JS? And what does the function that control them look like?
 
 ## References
 

@@ -1,0 +1,16 @@
+<form>
+  <input type="number" size="300" placeholder="write 'e' here and submit"/>
+  <input type="submit">
+  <div id="one">submit()</div>
+  <div id="two">requestSubmit()</div>
+</form>
+
+<script>
+  document.querySelector("#one").addEventListener("click", e => e.target.parentNode.submit());
+  document.querySelector("#two").addEventListener("click", e => e.target.parentNode.requestSubmit());
+
+  window.addEventListener("submit", e => {
+    e.preventDefault();
+    console.log("submit event initiated by: #", e.target.id);
+  });
+</script>

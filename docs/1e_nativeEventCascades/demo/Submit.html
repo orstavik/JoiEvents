@@ -1,0 +1,47 @@
+<form>
+  <input type="text" value="Click enter while I am in focus to submit.">
+  <hr>
+  <input type="submit">
+  <input type="image" src="https://via.placeholder.com/150" width="50">
+  <button type="submit">Submit</button>
+  <button id="preventedSubmit" type="submit">Submit, but with click.preventDefault()</button>
+
+  <div id="one">submit()</div>
+  <div id="two">requestSubmit() (only works in new Chrome and Firefox).</div>
+</form>
+
+<script>
+  function toggleTick(cb) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+    details.ontoggle = cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    return {
+      cancel: function () {
+        details.ontoggle = undefined;
+      },
+      resume: function () {
+        details.ontoggle = cb;
+      }
+    };
+  }
+
+  document.querySelector("#preventedSubmit").addEventListener("click", e => e.preventDefault());
+
+  document.querySelector("#one").addEventListener("click", e => e.target.parentNode.submit());
+  document.querySelector("#two").addEventListener("click", e => {
+    Promise.resolve().then(() => console.log("micro task queued BEFORE a .requestSubmit()"));
+    e.target.parentNode.requestSubmit();
+  });
+
+  window.addEventListener("DOMContentLoaded", e => console.log("document (re)loaded"), true);
+  window.addEventListener("submit", e => console.log("submit event"), true);
+  window.addEventListener("submit", e => e.preventDefault(), true);
+
+  window.addEventListener("click", e => {
+    console.log("click");
+    toggleTick(() => console.log("event loop task queued from click event"));
+  }, true);
+</script>
