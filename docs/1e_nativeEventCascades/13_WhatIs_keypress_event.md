@@ -1,8 +1,11 @@
-# Pattern: EventTimers
+# WhatIs: `keypress`?
 
-Some events use the passage of time as an alternative trigger event. 
+The `keypress` event is bla bla bla.
 
-The keypress demo below also filters events. 
+what is all these different .key and .code and .char?? properties?
+
+* Some events use the passage of time as an alternative trigger event. 
+* The keypress demo below also filters events. 
 
 ## Demo: `keydown`+`keyup`=`keypress` (sometimes)
 
@@ -20,8 +23,10 @@ The keypress demo below also filters events.
     window.addEventListener("keypress", log);
   })();
 </script>
-```
-If you press "a" and then "Tab" you get the following result:
+```                              
+
+If you a) press "a", and then b) "Tab", and then c) hold down "x" you get the following result:
+
 ```
 keydown: a
 keypress: a
@@ -41,8 +46,8 @@ keyup: x
 ```
 
 As we can see from this result:
- * Only *some* keys produce keypresses. `keydown` and `keyup` on "Tab" does not produce a `keypress`.
- * If we hold down a key for more than ms (depends on your OS settings for the keyboard), the browser will receive a new `keydown` events *roughly every 33ms* for the same key. These 33 `keydown`s per second events will also produce a `keypress` event.
+ * Only *some* `keydown` produce `keypress`. For example, `keydown` and `keyup` on `"Tab"` does not produce a `keypress`.
+ * If we hold down a key for more than *roughly ?? ms*, the browser will receive a new `keydown` events *roughly every 33ms* for the same key. How long you must hold a key down and how fast it will produce `keydown` events depends on your OS settings for the keyboard. These 33 `keydown`s per second events will also produce one new `keypress` event each.
 
 ## Demo: `keydown`+`keyup`=`my-keypress`
 
@@ -87,3 +92,6 @@ We make a `KeypressController` to mirror the behavior of the browser. From the f
 </script>
 ```
 
+## References
+
+ *
