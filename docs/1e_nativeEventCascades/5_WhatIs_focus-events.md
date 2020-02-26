@@ -128,7 +128,9 @@ This demo illustrate the behavior of `focus()`, `blur()`, `document.activeElemen
 1. The demo mirrors and exposes the behavior of `HTMLElement.focus()`, `HTMLElement.blur()`, and `document.activeElement`.
    * The behavior of `document.activeElement` cannot fully be exposed, as it controls pseudo classes a.o., so a naive `document.myActiveElement` property that resemble the `activeElement` property behavior is set up.
 2. Then we turn off the triggers(default action) of focus events for mousedown and keypress.
-3. Then we add a focus event controller function that listens for *two* events, `mousedown` and `keydown`. It then checks the value of these triggering events and decides to call `.blur()` and `.focus()` respectively. The FocusController is very naive, and implements only a fraction of the functionality for `keydown`. For example, `tabindex` is not supported, nor is the ability to focus on the addressbar and other browser buttons represented, devtools behaves strangely, and in essence all elements can be given focus.
+3. Then we add a focus event controller function that listens for *two* events, `mousedown` and `keydown`. It then checks the value of these triggering events and decides to call `.blur()` and `.focus()` respectively. 
+
+The FocusController is very naive. It only supports input, textarea, select, a, and body elements. It does not support `tabindex`. It does not support focus on the addressbar and other browser buttons. Devtools peculiarities are not handled at all. But, in order to remain readable, these and other functions of the FocusController are cut off at this point.
 
 ```html
 <style>
@@ -230,10 +232,6 @@ This demo illustrate the behavior of `focus()`, `blur()`, `document.activeElemen
   });
 </script>
 ```
-
- <!--
-todo make a chapter about the `tabindex` attributes as a means to control an event controller via the DOM.
- -->
 
 ## References
 
