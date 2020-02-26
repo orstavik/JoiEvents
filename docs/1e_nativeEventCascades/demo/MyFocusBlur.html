@@ -1,0 +1,98 @@
+<style>
+  .pseudo_my_focus {
+    border: 2px solid orange;
+  }
+</style>
+
+<h3>click on the input fields to shift focus</h3>
+<input type="text" value="Hello sunshine!"/>
+<input type="text" value="Hello world"/>
+<div>.focus() on sunshine!</div>
+
+<script>
+  (function () {
+
+    //1. monkey-patch the HTMLElement.focus(), .blur(), and  .focusNoTwin() methods to expose their behavior
+    HTMLElement.prototype.blur = function () {
+      const previousFocus = document.myActiveElement;
+      document.myActiveElement = document.body;
+      if (previousFocus === undefined || previousFocus === document.myActiveElement)
+        return;
+      setTimeout(() => previousFocus.dispatchEvent(new FocusEvent("my-blur", {composed: true, bubbles: false})));
+      setTimeout(() => previousFocus.dispatchEvent(new FocusEvent("my-focusout", {composed: true, bubbles: true})));
+    };
+
+    HTMLElement.prototype.focus = function () {
+      document.myActiveElement = this;
+      this.dispatchEvent(new FocusEvent("my-focus", {composed: true, bubbles: false}));
+      this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true}));
+    };
+
+    HTMLElement.prototype.focusNoTwin = function () {
+      document.myActiveElement = this;
+      setTimeout(() => this.dispatchEvent(new FocusEvent("my-focus", {composed: true, bubbles: false})));
+      setTimeout(() => this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true})));
+    };
+
+    //2b. add setter and getter for myActiveElement to mirror the behavior of activeElement
+    Object.defineProperty(HTMLDocument.prototype, "myActiveElement", {
+      get: function () {
+        return this._myActiveElement || this.body;
+      },
+      set: function (el) {
+        this._myActiveElement && this._myActiveElement.classList.remove("pseudo_my_focus");
+        this._myActiveElement = el;
+        el.classList.add("pseudo_my_focus");
+      }
+    });
+
+    //2. turning off native call to .focus() for both native events
+    window.addEventListener("mousedown", e => e.preventDefault(), true);
+    window.addEventListener("keydown", e => e.key === "Tab" && e.preventDefault(), true);
+
+    //3. focus event controller that listens for mousedown and keypress
+    const FocusController = {
+      onMousedown: function (e) {
+        if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
+          return;
+        setTimeout(() => document.myActiveElement.blur());
+        setTimeout(() => e.target.focusNoTwin());
+      },
+      tabIndex: -1,
+      onKeydown: function (e) {
+        if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
+          return;
+        if (e.key !== "Tab")
+          return;
+        const inputTextareas = document.querySelectorAll("input, textarea, select, a"); //etc. etc.
+        e.shiftKey ? FocusController.tabIndex-- : FocusController.tabIndex++;
+        FocusController.tabIndex = FocusController.tabIndex % inputTextareas.length;
+        const focusTarget = inputTextareas[FocusController.tabIndex];
+        setTimeout(() => document.myActiveElement.blur());
+        setTimeout(() => focusTarget.focusNoTwin());
+      }
+    };
+
+    window.addEventListener("mousedown", FocusController.onMousedown, true);
+    window.addEventListener("keydown", FocusController.onKeydown, true);
+  })();
+
+  function log(e) {
+    console.log(e.type + ": " + e.target.tagName);
+    console.log("document.myActiveElement: " + document.myActiveElement.tagName);
+    Promise.resolve().then(() => {
+      console.log("microtask from previous " + e.type);
+    });
+  }
+
+  window.addEventListener("my-focus", log, true);
+  window.addEventListener("my-focusin", log, true);
+  window.addEventListener("my-focusout", log, true);
+  window.addEventListener("my-blur", log, true);
+
+  const one = document.querySelector("input");
+  const div = document.querySelector("div");
+  div.addEventListener("click", function () {
+    one.focus();
+  });
+</script>

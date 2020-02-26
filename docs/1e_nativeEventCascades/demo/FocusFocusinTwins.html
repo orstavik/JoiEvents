@@ -1,0 +1,29 @@
+<h3>click on the input fields to shift focus</h3>
+<input type="text" value="Hello sunshine!"/>
+<input type="text" value="Hello world"/>
+<div>.focus() on sunshine!</div>
+
+<script>
+  (function () {
+    console.log("Even while the document is loading, document.activeElement = ", document.activeElement);
+
+    function log(e) {
+      console.log(e.type + ": " + e.target.tagName);
+      console.log("document.activeElement: " + document.activeElement.tagName);
+      Promise.resolve().then(() => {
+        console.log("microtask from previous " + e.type);
+      });
+    }
+
+    window.addEventListener("focus", log, true);
+    window.addEventListener("focusin", log, true);
+    window.addEventListener("focusout", log, true);
+    window.addEventListener("blur", log, true);
+
+    const one = document.querySelector("input");
+    const div = document.querySelector("div");
+    div.addEventListener("click", function () {
+      one.focus();
+    });
+  })();
+</script>
