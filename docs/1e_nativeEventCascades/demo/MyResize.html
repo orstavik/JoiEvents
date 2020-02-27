@@ -1,0 +1,27 @@
+<h1>Hello sunshine!</h1>
+<p>Resize the window and see the event being logged in the console.</p>
+
+<script>
+  (function () {
+    const ResizeController = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      lastChange: performance.now(),
+      tick: function () {
+        if (ResizeController.width === Math.floor(window.innerWidth) /*|| ResizeController.height !== Math.floor(window.innerHeight)*/) {
+          const delay = performance.now() - ResizeController.lastChange < 50 ? 45 : 150;
+          setTimeout(ResizeController.tick, delay);
+        }
+        ResizeController.width = Math.floor(window.innerWidth);
+        ResizeController.height = Math.floor(window.innerHeight);
+        ResizeController.lastChange = performance.now();
+        //sync, we are effectively eating the timer task that used to trigger
+        window.dispatchEvent(new UIEvent("my-resize"));
+        requestAnimationFrame(ResizeController.tick);
+      }
+    };
+    ResizeController.tick();
+  })();
+
+  window.addEventListener("my-resize", e => console.log(e.type));
+</script>
