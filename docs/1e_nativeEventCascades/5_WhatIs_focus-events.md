@@ -1,4 +1,4 @@
-# WhatIs: `focus` events
+# WhatIs: `focus` events?
 
 The focus events is used to signal which interactive elements will receive the next `keypress` events. If a `<input>` or `<textarea>` has focus, then the next keypresses will fill that element with text. If an `<a href>` has focus, that element will trigger to the next "enter" or "space". 
  
@@ -10,7 +10,7 @@ If in doubt, just use `focusin` and `focusout`. They are supported by all browse
 
 ## WhatIs: `.focus()`, `.blur()` and `document.activeElement`?
 
-There can be only *one* element in the DOM that has focus at any one time. This element is the `document.activeElement`.
+There can be only *one* element in the DOM that has focus at any one time. This element is the `document.activeElement`.  `document.activeElement` cannot be directly assigned to an element in the DOM; it must be indirectly set using either `HTMLElement.focus()` or `HTMLElement.blur()`.
 
 The `HTMLElement.blur()` removes the focus from an element. When no element is set to have focus, then `document.activeElement = document.body`. In principle, `.blur()` controls and dispatches the `blur` and `focusout` events.
 
@@ -121,16 +121,34 @@ But. This is *not* the case when `.focus()` is triggered by script for `focus` a
 * When you switch between the two input fields, you can see in the console which events are run in which order.
 * If you have focus either on the document or the "Hello world." input field, and then click on ".focus() on sunshine!", you can see in the console the microtasks queued from `focus` and `focusin` being run together at the end. This has been tested in both Chrome and Firefox (feb 2020). 
 
+## `:focus` pseudoclass
+
+The `activeElement` in focus, and all its ancestors, are marked with a CSS pseudo-class called `:focus`. A CSS pseudo-class is essentially a CSS class that can only be added and removed from an element by the browser itself. It is protected from developer interference, and reflect consistently another aspect of the DOM into the CSSOM. The `:focus` pseudo-class *always* reflect the state of the `document.activeElement`, which would otherwise not be able to query from CSS.
+
+CSS pseudo-classes are:
+1. not that many: `:focus`, `:focus-within`, `:hover`, `:visited`, `:active`,  todo full list of CSS pseudo-classes.
+2. session dependent. They often reflect the state of a session (or the expanded session history as reflected by the browsing history and `:visited` pseudo-class).
+3. universal. Yes, they represent a state in a particular DOM (and browsing history), but they do reflect that state in the same way always, for all browsers and users.
+4. completely controlled by the browser('s event controllers or actions that they control). It is not possible for the developer to directly manipulate them. Developers can only do so sometimes by indirectly by manipulating the DOM (and/or browsing history).
+
+The `:focus` pseudo-class is added/removed from the elements as they gain/loos focus when they are set/unset as the `document.activeElement`.
+
 ## Demo 2: FocusController 
 
 This demo illustrate the behavior of `focus()`, `blur()`, `document.activeElement` and the native focus event controller function.
 
 1. The demo mirrors and exposes the behavior of `HTMLElement.focus()`, `HTMLElement.blur()`, and `document.activeElement`.
    * The behavior of `document.activeElement` cannot fully be exposed, as it controls pseudo classes a.o., so a naive `document.myActiveElement` property that resemble the `activeElement` property behavior is set up.
-2. Then we turn off the triggers(default action) of focus events for mousedown and keypress.
-3. Then we add a focus event controller function that listens for *two* events, `mousedown` and `keydown`. It then checks the value of these triggering events and decides to call `.blur()` and `.focus()` respectively. 
+2. Then we turn off the triggers(default action) of focus events for `mousedown`.
+3. Then we add a focus event controller function that listens for `mousedown` events only. It then checks the value of these triggering events and decides to call `.blur()` and `.focus()` respectively.
 
-The FocusController is very naive. It only supports input, textarea, select, a, and body elements. It does not support `tabindex`. It does not support focus on the addressbar and other browser buttons. Devtools peculiarities are not handled at all. But, in order to remain readable, these and other functions of the FocusController are cut off at this point.
+The FocusController is very naive:
+1. It doesn't restrict the ability to focus to interactive content, and it doesn't support neither `keydown` nor `tabindex`. This behavior we will add in the next chapter.
+2. `:focus-within` is not supported.
+3. It also restrict the demonstration of focus to in-DOM-elements. It is not possible to switch focus to the addressbar nor other browser non-DOM units.
+4. Devtools peculiarities are not handled at all.
+
+This naivete keeps the FocusController readable.
 
 ```html
 <style>
@@ -147,11 +165,7 @@ The FocusController is very naive. It only supports input, textarea, select, a, 
 <script>
   (function () {
 
-    //1. turning off native call to .focus() for both native events
-    window.addEventListener("mousedown", e => e.preventDefault(), true);
-    window.addEventListener("keydown", e => e.key === "Tab" && e.preventDefault(), true);
-
-    //2. monkey-patch the HTMLElement.focus(), .blur(), and  .focusNoTwin() methods to expose their behavior
+    //1. monkey-patch the HTMLElement.focus(), .blur(), and  .focusNoTwin() methods to expose their behavior
     HTMLElement.prototype.blur = function () {
       const previousFocus = document.myActiveElement;
       document.myActiveElement = document.body;
@@ -173,7 +187,6 @@ The FocusController is very naive. It only supports input, textarea, select, a, 
       setTimeout(() => this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true})));
     };
 
-    //2b. add setter and getter for myActiveElement to mirror the behavior of activeElement
     Object.defineProperty(HTMLDocument.prototype, "myActiveElement", {
       get: function () {
         return this._myActiveElement || this.body;
@@ -185,31 +198,20 @@ The FocusController is very naive. It only supports input, textarea, select, a, 
       }
     });
 
-    //3. focus event controller that listens for mousedown and keypress
+    //2. turning off native call to .focus() on mousedown
+    window.addEventListener("mousedown", e => e.preventDefault(), true);
+
+    //3. focus event controller that listens for mousedown only
     const FocusController = {
       onMousedown: function (e) {
-        if (!e.isTrusted /*|| e.defaultPrevented*/)   //the check for preventDefault() must be turned off in this test, see 1
+        if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
           return;
         setTimeout(() => document.myActiveElement.blur());
         setTimeout(() => e.target.focusNoTwin());
-      },
-      tabIndex: -1,
-      onKeydown: function (e) {
-        if (!e.isTrusted /*|| e.defaultPrevented*/)   //the check for preventDefault() is turned off in this test, see 1
-          return;
-        if (e.key !== "Tab")
-          return;
-        const inputTextareas = document.querySelectorAll("input, textarea, select, a"); //etc. etc.
-        e.shiftKey ? FocusController.tabIndex-- : FocusController.tabIndex++;
-        FocusController.tabIndex = FocusController.tabIndex % inputTextareas.length;
-        const focusTarget = inputTextareas[FocusController.tabIndex];
-        setTimeout(() => document.myActiveElement.blur());
-        setTimeout(() => focusTarget.focusNoTwin());
       }
     };
 
     window.addEventListener("mousedown", FocusController.onMousedown, true);
-    window.addEventListener("keydown", FocusController.onKeydown, true);
   })();
 
   function log(e) {
@@ -235,4 +237,5 @@ The FocusController is very naive. It only supports input, textarea, select, a, 
 
 ## References
 
- * dunno
+ * [MDN: `:focus`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus)
+ * [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within)

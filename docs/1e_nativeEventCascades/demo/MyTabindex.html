@@ -1,0 +1,156 @@
+<style>
+  .pseudo_my_focus {
+    border: 2px dotted red;
+  }
+</style>
+<ol>
+  <li><input type="text" value="no tabindex"/></li>
+  <li><input tabindex="1" type="text" value="tabindex=1"/></li>
+  <li><textarea tabindex="1">tabindex="1"</textarea></li>
+  <li>
+    <div tabindex="1">tabindex="1"</div>
+  </li>
+  <li>
+    <div tabindex="-1">tabindex="-1"</div>
+  </li>
+  <li>
+    <div tabindex="-2">tabindex="-2"</div>
+  </li>
+  <li>
+    <div tabindex="0">tabindex="0"</div>
+  </li>
+  <li>
+    <div tabindex="z">tabindex="z" (is not included in the list, since it is not a valid number)</div>
+  </li>
+  <li>
+    <div tabindex="1000">tabindex="1000"</div>
+  </li>
+  <li>
+    <select id="no_tabindex">
+      <option value="a">hello world!</option>
+    </select>
+  </li>
+  <li>
+    <button>wait 3sec and then move all the other elements behind this element</button>
+  </li>
+</ol>
+<script>
+  (function () {
+
+    //1. monkey-patch the HTMLElement.focus(), .blur(), and  .focusNoTwin() methods to expose their behavior
+    HTMLElement.prototype.blur = function () {
+      const previousFocus = document.myActiveElement;
+      document.myActiveElement = document.body;
+      if (previousFocus === undefined || previousFocus === document.myActiveElement)
+        return;
+      setTimeout(() => previousFocus.dispatchEvent(new FocusEvent("my-blur", {composed: true, bubbles: false})));
+      setTimeout(() => previousFocus.dispatchEvent(new FocusEvent("my-focusout", {composed: true, bubbles: true})));
+    };
+
+    HTMLElement.prototype.focus = function () {
+      document.myActiveElement = this;
+      this.dispatchEvent(new FocusEvent("my-focus", {composed: true, bubbles: false}));
+      this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true}));
+    };
+
+    HTMLElement.prototype.focusNoTwin = function () {
+      document.myActiveElement = this;
+      setTimeout(() => this.dispatchEvent(new FocusEvent("my-focus", {composed: true, bubbles: false})));
+      setTimeout(() => this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true})));
+    };
+
+    //2b. add setter and getter for myActiveElement to mirror the behavior of activeElement
+    Object.defineProperty(HTMLDocument.prototype, "myActiveElement", {
+      get: function () {
+        return this._myActiveElement || this.body;
+      },
+      set: function (el) {
+        this._myActiveElement && this._myActiveElement.classList.remove("pseudo_my_focus");
+        this._myActiveElement = el;
+        el.classList.add("pseudo_my_focus");
+      }
+    });
+
+    function interactiveElements(doc) {
+      const interactiveTypes = "a[href], audio[controls], button, details, embed, iframe, img[usemap], input:not([type='hidden']), label, object[usemap], select, textarea, video[controls]";
+      const hardcore = Array.from(doc.querySelectorAll(interactiveTypes));
+      const interactive = Array.from(doc.querySelectorAll(interactiveTypes + ", [tabindex]"));
+      return interactive.filter(el => hardcore.indexOf(el) >= 0 || !isNaN(parseInt(el.getAttribute("tabindex"))));
+    }
+
+    function tabbableElements(doc) {
+      const interactiveTypes = "a[href], audio[controls], button, details, embed, iframe, img[usemap], input:not([type='hidden']), label, object[usemap], select, textarea, video[controls]";
+      const hardcore = Array.from(doc.querySelectorAll(interactiveTypes));
+      const interactive = Array.from(doc.querySelectorAll(interactiveTypes + ", [tabindex]"));
+      return interactive.filter(el => hardcore.indexOf(el) >= 0 || parseInt(el.getAttribute("tabindex")) >= 0);
+    }
+
+    function sortTabindex(tabbables) {
+      return tabbables.sort((a, b) => {
+        const A = parseInt(a.getAttribute("tabindex")) || 0;
+        const B = parseInt(b.getAttribute("tabindex")) || 0;
+        if (A === B)
+          return 0;
+        if (B === 0)
+          return -1;
+        if (A === 0)
+          return 1;
+        return A > B ? 1 : -1;
+      });
+    }
+
+    //2. turning off native call to .focus() for both native events
+    window.addEventListener("mousedown", e => e.preventDefault(), true);
+    window.addEventListener("keydown", e => e.key === "Tab" && e.preventDefault(), true);
+
+    //3. focus event controller that listens for mousedown and keypress
+    const FocusController = {
+      onMousedown: function (e) {
+        if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
+          return;
+        if (!interactiveElements(document).indexOf(e.target) && e.target !== document.body)
+          return;
+        setTimeout(() => document.myActiveElement.blur());
+        setTimeout(() => e.target.focusNoTwin());
+      },
+      onKeydown: function (e) {
+        if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
+          return;
+        if (e.key !== "Tab")
+          return;
+        const tabbables = tabbableElements(document);
+        let focusTarget;
+        if (tabbables.indexOf(document.myActiveElement) === -1) {
+          const position = tabbables.findIndex(node => document.myActiveElement.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+          focusTarget = tabbables[position];
+        } else {
+          let position = sortTabindex(tabbables).indexOf(document.myActiveElement);
+          e.shiftKey ? position-- : position++;
+          position = position % tabbables.length;
+          focusTarget = tabbables[position];
+        }
+        setTimeout(() => document.myActiveElement.blur());
+        setTimeout(() => focusTarget.focusNoTwin());
+      }
+    };
+
+    window.addEventListener("mousedown", FocusController.onMousedown, true);
+    window.addEventListener("keydown", FocusController.onKeydown, true);
+  })();
+</script>
+<script>
+  window.addEventListener("focusin", e => console.log(e.target.outerHTML));
+
+  document.querySelector("button").addEventListener("click", function () {
+    setTimeout(function () {
+      const ol = document.querySelector("ol");
+      const children = Array.from(ol.children);
+      for (let child of children) {
+        if (child.children[0] !== document.myActiveElement)
+          ol.appendChild(child);
+        else
+          console.log(child);
+      }
+    }, 3000);
+  });
+</script>

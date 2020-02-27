@@ -1,0 +1,38 @@
+<style>
+  :focus {
+    border: 2px dotted red;
+  }
+</style>
+<ol>
+  <li><input type="text" value="no tabindex"/></li>
+  <li><input tabindex="1" type="text" value="tabindex=1"/></li>
+  <li><textarea tabindex="1">tabindex="1"</textarea></li>
+  <li><div tabindex="1">tabindex="1"</div></li>
+  <li><div tabindex="-1">tabindex="-1"</div></li>
+  <li><div tabindex="-2">tabindex="-2"</div></li>
+  <li><div tabindex="0">tabindex="0"</div></li>
+  <li><input tabindex="y" type="text" value="tabindex=y"/></li>
+  <li><div tabindex="z">tabindex="z" (is not included in the list, since it is not a valid number)</div></li>
+  <li><div tabindex="1000">tabindex="1000"</div></li>
+  <li>
+    <select id="no_tabindex">
+      <option value="a">hello world!</option>
+    </select>
+  </li>
+  <li><button>wait 3sec and then move all the other elements behind this element</button></li>
+</ol>
+<script>
+  window.addEventListener("focusin", e => console.log(e.target.outerHTML));
+
+  document.querySelector("button").addEventListener("click", function () {
+    setTimeout(function () {
+      const ol = document.querySelector("ol");
+      for (let child of ol.children) {
+        if (child.children[0] !== document.activeElement)
+          ol.appendChild(child);
+        else
+          console.log(child);
+      }
+    }, 3000);
+  });
+</script>

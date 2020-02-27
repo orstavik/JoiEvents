@@ -34,7 +34,7 @@
       setTimeout(() => this.dispatchEvent(new FocusEvent("my-focusin", {composed: true, bubbles: true})));
     };
 
-    //2b. add setter and getter for myActiveElement to mirror the behavior of activeElement
+    //1b. add setter and getter for myActiveElement to mirror the behavior of activeElement
     Object.defineProperty(HTMLDocument.prototype, "myActiveElement", {
       get: function () {
         return this._myActiveElement || this.body;
@@ -46,35 +46,20 @@
       }
     });
 
-    //2. turning off native call to .focus() for both native events
+    //2. turning off native call to .focus() on mousedown
     window.addEventListener("mousedown", e => e.preventDefault(), true);
-    window.addEventListener("keydown", e => e.key === "Tab" && e.preventDefault(), true);
 
-    //3. focus event controller that listens for mousedown and keypress
+    //3. focus event controller that listens for mousedown only
     const FocusController = {
       onMousedown: function (e) {
         if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
           return;
         setTimeout(() => document.myActiveElement.blur());
         setTimeout(() => e.target.focusNoTwin());
-      },
-      tabIndex: -1,
-      onKeydown: function (e) {
-        if (!e.isTrusted /*|| e.defaultPrevented*/)   //preventDefault() cannot be checked in this test, see 2.
-          return;
-        if (e.key !== "Tab")
-          return;
-        const inputTextareas = document.querySelectorAll("input, textarea, select, a"); //etc. etc.
-        e.shiftKey ? FocusController.tabIndex-- : FocusController.tabIndex++;
-        FocusController.tabIndex = FocusController.tabIndex % inputTextareas.length;
-        const focusTarget = inputTextareas[FocusController.tabIndex];
-        setTimeout(() => document.myActiveElement.blur());
-        setTimeout(() => focusTarget.focusNoTwin());
       }
     };
 
     window.addEventListener("mousedown", FocusController.onMousedown, true);
-    window.addEventListener("keydown", FocusController.onKeydown, true);
   })();
 
   function log(e) {
