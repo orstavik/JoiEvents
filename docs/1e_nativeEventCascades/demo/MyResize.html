@@ -6,16 +6,18 @@
     const ResizeController = {
       width: window.innerWidth,
       height: window.innerHeight,
-      lastChange: performance.now(),
+      lastTime: performance.now(),
       tick: function () {
-        if (ResizeController.width === Math.floor(window.innerWidth) /*|| ResizeController.height !== Math.floor(window.innerHeight)*/) {
-          const delay = performance.now() - ResizeController.lastChange < 50 ? 45 : 150;
+        const widthNow = Math.round(window.innerWidth);
+        const heightNow = Math.round(window.innerHeight);
+        const timeNow = performance.now();
+        if (ResizeController.width === widthNow /*&& ResizeController.height === heightNow*/) {
+          const delay = timeNow - ResizeController.lastTime < 50 ? 45 : 150;
           setTimeout(ResizeController.tick, delay);
         }
-        ResizeController.width = Math.floor(window.innerWidth);
-        ResizeController.height = Math.floor(window.innerHeight);
-        ResizeController.lastChange = performance.now();
-        //sync, we are effectively eating the timer task that used to trigger
+        ResizeController.width = widthNow;
+        ResizeController.height = heightNow;
+        ResizeController.lastTime = timeNow;
         window.dispatchEvent(new UIEvent("my-resize"));
         requestAnimationFrame(ResizeController.tick);
       }
