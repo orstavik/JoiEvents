@@ -1,0 +1,27 @@
+<h1>Hello sunshine!</h1>
+<p>
+  Normal. Text selection will not turn off click events.
+  The contextmenu behavior is turned off in this demo, so you will can auxclick's too.
+</p>
+<a href="#one">normal. Dragging will turn off click.</a>
+<br>
+<br>
+<a href="#two" draggable="false">
+  draggable=false.
+  Here you can mousedown, drag around the mouse, and then if you return over the element again before you mouseup,
+  you get a click.</a>
+<br>
+<br>
+<p id="three">The element is disconnected from and then connected again to the DOM on mousedown,
+  and therefore cannot be "click"ed.</p>
+<script>
+  window.addEventListener("contextmenu", e=> e.preventDefault());
+
+  const three = document.querySelector("#three");
+  three.addEventListener("mousedown", ()=> document.body.appendChild(three));
+
+  window.addEventListener("mousedown", e => console.log(e.type, e.composedPath()));
+  window.addEventListener("mouseup", e => console.log(e.type, e.composedPath()));
+  window.addEventListener("click", e => console.log(e.type, e.composedPath()));
+  window.addEventListener("auxclick", e => console.log(e.type, e.composedPath()));
+</script>
