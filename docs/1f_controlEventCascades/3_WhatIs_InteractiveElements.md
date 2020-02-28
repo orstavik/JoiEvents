@@ -1,6 +1,6 @@
-# WhatIs: InteractiveElements
+# WhatIs: InteractiveContent
 
-Some elements have builtin reactions to certain events. These elements are often referred to as ["interactive elements"](todo mdn or spec). Most commonly, interactive elements react when the user `click`s on them. Naively, we could think of them as "clickable elements". But, the event doesn't have to be a `click`; it could react to other event's such as `wheel` or `mousedown` instead of/in addition to `click`. 
+Some elements have builtin reactions to certain events. These elements are referred to as ["interactive content"](https://html.spec.whatwg.org/multipage/dom.html#interactive-content-2). Most commonly, interactive elements react when the user `click`s on them. Naively, we could think of them as "clickable elements". But, the event doesn't have to be a `click`; it could react to other event's such as `wheel` or `mousedown` instead of/in addition to `click`. 
 
 (todo check the list of interactive elements, find out if they all react to click and if some of them react to other events too.)
 
@@ -190,4 +190,4 @@ Several of the native event controller functions evaluate the elements in the pr
 
 ## References
 
- * 
+ * [Whatwg: Interactive content](https://html.spec.whatwg.org/multipage/dom.html#interactive-content-2)
