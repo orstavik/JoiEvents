@@ -89,4 +89,4 @@ In cases where the `beforeinput` event would not meet your needs, any `keypress`
 
 ## References
 
- *
+ * [Why skip keypress](https://www.mutuallyhuman.com/blog/keydown-is-the-only-keyboard-event-we-need/)
