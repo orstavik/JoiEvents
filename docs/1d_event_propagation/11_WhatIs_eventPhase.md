@@ -10,7 +10,7 @@ This fills our `dispatchEvent(...)` with lots of boilerplate code. In this demo 
 function dispatchEvent(target, event) {
   if (!target.isConnected)
     return;  
-  const propagationPath = getComposedPath(target, event).slice(1);
+  const propagationPath = getComposedPath(target, event.composed).slice(1);
   Object.defineProperties(event, {
     "target" : {
       get: function () {
@@ -54,14 +54,14 @@ function dispatchEvent(target, event) {
 ```html
 <script src="hasGetEventListeners.js"></script>
 <script>
-  function getComposedPath(target, event) {
+  function getComposedPath(target, composed) {
     const path = [];
     while (true) {
       path.push(target);
       if (target.parentNode) {
         target = target.parentNode;
       } else if (target.host) {
-        if (!event.composed)
+        if (!composed)
           return path;
         target = target.host;
       } else if (target.defaultView) {
@@ -102,7 +102,7 @@ function dispatchEvent(target, event) {
   function dispatchEvent(target, event) {
     if (!target.isConnected)
       return;
-    const propagationPath = getComposedPath(target, event).slice(1);
+    const propagationPath = getComposedPath(target, event.composed).slice(1);
     Object.defineProperties(event, {
       "target" : {
         get: function () {

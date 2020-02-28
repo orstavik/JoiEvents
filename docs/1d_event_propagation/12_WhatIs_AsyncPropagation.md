@@ -153,7 +153,7 @@ function dispatchEventAsync(target, event) {
       }
     }
   });
-  const propagationPath = getComposedPath(target, event);
+  const propagationPath = getComposedPath(target, event.composed);
   const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
   toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined));
 }
@@ -181,14 +181,14 @@ function dispatchEventAsync(target, event) {
     };
   }
 
-  function getComposedPath(target, event) {
+  function getComposedPath(target, composed) {
     const path = [];
     while (true) {
       path.push(target);
       if (target.parentNode) {
         target = target.parentNode;
       } else if (target.host) {
-        if (!event.composed)
+        if (!composed)
           return path;
         target = target.host;
       } else if (target.defaultView) {
@@ -257,7 +257,7 @@ function dispatchEventAsync(target, event) {
         }
       }
     });
-    const propagationPath = getComposedPath(target, event);
+    const propagationPath = getComposedPath(target, event.composed);
     const roundTripPath = propagationPath.slice().reverse().concat(propagationPath.slice(1));
     toggleTick(callNextListenerAsync.bind(null, event, roundTripPath, propagationPath.length, undefined));
   }

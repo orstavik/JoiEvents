@@ -61,7 +61,7 @@ function callListenersOnElement(currentTarget, event, phase) {
 }
 
 function dispatchEvent(target, event) {
-  const propagationPath = getComposedPath(target, event).slice(1);
+  const propagationPath = getComposedPath(target, event.composed).slice(1);
   Object.defineProperty(event, "target", {
     get: function () {
       let lowest = target;
@@ -91,14 +91,14 @@ function dispatchEvent(target, event) {
 ```html
 <script src="hasGetEventListeners.js"></script>
 <script>
-  function getComposedPath(target, event) {
+  function getComposedPath(target, composed) {
     const path = [];
     while (true) {
       path.push(target);
       if (target.parentNode) {
         target = target.parentNode;
       } else if (target.host) {
-        if (!event.composed)
+        if (!composed)
           return path;
         target = target.host;
       } else if (target.defaultView) {
@@ -126,7 +126,7 @@ function dispatchEvent(target, event) {
   }
 
   function dispatchEvent(target, event) {
-    const propagationPath = getComposedPath(target, event).slice(1);
+    const propagationPath = getComposedPath(target, event.composed).slice(1);
     Object.defineProperty(event, "target", {
       get: function () {
         let lowest = target;
