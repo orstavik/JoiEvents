@@ -4,11 +4,11 @@ The `input` event fires **after** the value of an `<input>`, `<select>`, or `<te
 
 The browser dispatches the `input` event **only** when the user has changed the input element via either **mouse, keyboard** or another input device. Att! `input` events are **not** dispatched when the element's value is changed by a **script**. Hence, changing the `.value` property on an input element object in JS will not trigger an `input` event.
 
-Note also that the input event is **sync**: the `input` event is dispatched *immediately* after the DOM update of the element. This means that the `input` event *will be* the very first thing that happens after a *user-driven* change of the value of an input element. Hence, any task queued in the event loop from a `beforeinput` event listener, should run AFTER the input event dispatch. 
+The input event is **sync**. The `input` event is dispatched *immediately* after the DOM update of the element. This means that the `input` event *will be* the very first thing that happens after a *user-driven* change of the value of an input element. Hence, any task queued in the event loop from a `beforeinput` event listener, should run AFTER the input event dispatch. 
 
 Unlike keyboard events, the `input` event is triggered by any changes in values, even those not related to keyboard actions: pasting text with a mouse or using speech recognition to dictate text. 
 
-On the other hand, the `input` event is not triggered by typing from the keyboard and other actions that doesn't change the value of the input element, such as pressing the arrow keys during input.
+On the other hand, the `input` event is not triggered by typing from the keyboard and other actions that doesn't change the value of the input element, such as pressing the arrow keys during input or pressing "enter/new line" when the focus is on an `<input>`.
 
 > The `input` event is similar to the [`change` event](WhatIs_change.md). The difference is that the `input` event occurs immediately after the value of the element has changed, and the `change` occurs when the element loses focus after the content has been changed.
 
@@ -19,6 +19,8 @@ The `beforeinput` event is a newer addition to the `input` event cascade. The `b
     mouse or keyboard event -> beforeinput event -> change of the `.value` property of the input element in the DOM -> input event.
 
 Furthermore, the action of changing the `.value` property on the input element is added as the default action of the `beforeinput` event. This means that if you call `.preventDefault()` on a `beforeinput` event, then the input element's value will not be changed and you will not get an `input` event neither. 
+
+> `beforeinput` will be supported in Firefox 74.
 
 ## Demo: `input` and `beforeinput` event
 

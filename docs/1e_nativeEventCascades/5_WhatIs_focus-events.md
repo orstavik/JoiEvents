@@ -237,5 +237,6 @@ This naivete keeps the FocusController readable.
 
 ## References
 
+ * [W3C: focus events](https://w3c.github.io/uievents/#events-focusevent)
  * [MDN: `:focus`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus)
- * [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within)
+ * [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within) 
