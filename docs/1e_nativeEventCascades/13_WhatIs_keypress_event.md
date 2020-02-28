@@ -72,8 +72,8 @@ We make a `KeypressController` to mirror the behavior of the browser. The `Keypr
   }
 
   window.addEventListener("keydown", log);
-  window.addEventListener("keyup", log);
   window.addEventListener("my-keypress", log);
+  window.addEventListener("keyup", log);
 </script>
 ```
 
