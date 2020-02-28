@@ -1,11 +1,6 @@
 # WhatIs: `keypress`?
 
-The `keypress` event is bla bla bla.
-
-what is all these different .key and .code and .char?? properties?
-
-* Some events use the passage of time as an alternative trigger event. 
-* The keypress demo below also filters events. 
+The `keypress` event is dispatched when a key that *likely* would produce a character in a text entry is pressed. `keypress` is a filtered version of `keydown`. This means that all `keypress` events are preceded by a `keydown` event, but not all `keydown` events produce a `keypress` event. `keypress` is also global, ie. a *universally* interpreted event: the browser dispatches the same `keypress` event for all `keydown` events regardless of which element in the DOM has focus.  
 
 ## Demo: `keydown`+`keyup`=`keypress` (sometimes)
 
@@ -51,46 +46,46 @@ As we can see from this result:
 
 ## Demo: `keydown`+`keyup`=`my-keypress`
 
-We make a `KeypressController` to mirror the behavior of the browser. From the first demo, we can see that the browser produce `keypress` events:
- * only for *some* keys such as "a", but not for others such as "Tab",
- * just before the `keyup` event occurs when it has also registered a `keydown` event for that key earlier, and
- * just before the next `keydown` event, if the browser receives multiple `keydown` events as a consequence of the user holding down a key on the keyboard. 
+We make a `KeypressController` to mirror the behavior of the browser. The `KeypressController` only **filters `keydown` events** so that events that *usually* would produce a character in a text editor field of some kind will produce a `keypress` event. The `KeypressController` is very generic, it doesn't even evaluate the `target` of the `keydown` event.   
 
 ```html
-<input type="text" value="Press 'a', 'Tab' and hold down 'x' for a second." />
+<input type="text" value="Press 'a', 'Tab' and hold down 'x' for a second."/>
 
 <script>
   (function () {
+
     const KeypressController = {
-      downers: {},                    /**STATE**/
-      keydown: function(e){
-        if (e.key === "Tab")
+      keydown: function (e) {
+        if (e.ctrlKey || e.altKey /* || super, fn, altgr, ++*/)
           return;
-        if (KeypressController.downers[e.key])
-          e.target.dispatchEvent(new CustomEvent("my-keypress", {key: e.key});
-        else
-          KeypressController.downers[e.key] = true;
-      }, 
-      keyup: function(e){
-        if (!KeypressController.downers[e.key])
+        if (e.key === "Tab" || e.key === "F1" || e.key === "Esc" || e.key === "Shift" /* || Home, arrowLeft, ctrl, CapsLock, ++*/)
           return;
-        KeypressController.downers[e.key] = false;
-        e.target.dispatchEvent(new CustomEvent("my-keypress", {key: e.key});
-      } 
+        const myKeypressEvent = new KeyboardEvent("my-keypress", {composed: true, bubbles: true, key: e.key});
+        setTimeout(() => e.target.dispatchEvent(myKeypressEvent), 0);
+      }
     };
     window.addEventListener("keydown", KeypressController.keydown, true);
-    window.addEventListener("keyup", KeypressController.keyup, true);
-
-    function log(e) {
-      console.log(e.type + ": " + e.key);
-    }
-
-    window.addEventListener("keydown", log);
-    window.addEventListener("keyup", log);
-    window.addEventListener("my-keypress", log);
   })();
+
+  function log(e) {
+    console.log(e.type + ": " + e.key);
+  }
+
+  window.addEventListener("keydown", log);
+  window.addEventListener("keyup", log);
+  window.addEventListener("my-keypress", log);
 </script>
 ```
+
+## `keypress` is deprecated! Why?
+
+The main problem with `keypress` is that the interpretation of a key/`keydown` event is not universal. It slightly varies in so many ways, not only between languages and operating systems, but also between elements. This means that the same key/`keydown` event might mean different things when different elements in the same DOM has focus.
+
+For example, if the focus is on a `<textarea>` element, then a `keydown` on the "enter" key means a line break, ie. a `keypress` event for the `\n` character. But, if the focus is on an `<input>` element, then a `keydown` on the "enter" key means the action of submitting the form which the `<input>` element belongs too, ie. no `keypress` event.
+
+To fix this problem, the browsers and W3C standard has decided that the `keypress` event should be deprecated and instead be replaced by the use of another event: `beforeinput`. The `beforeinput` event is not universal, but associated with the currently focused element. This means that an "enter" `keydown` can be evaluated to only mean a `beforeinput` character producing event when a `<textarea>` has focus, and not so when an `<input>` element has focus.
+
+In cases where the `beforeinput` event would not meet your needs, any `keypress` event listener can easily and better be replaced by a `keydown` event listener.  
 
 ## References
 
