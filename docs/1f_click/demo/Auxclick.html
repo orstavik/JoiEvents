@@ -1,0 +1,47 @@
+<a href="#no-prevent-default">no preventDefault()</a>
+<hr>
+<a href="#mousedown-prevented">mousedown.preventDefault()</a>
+<hr>
+<a href="#click-prevented">click.preventDefault()</a>
+<hr>
+<a href="#contextmenu-prevented">contextmenu.preventDefault()</a>
+<hr>
+<a href="#auxclick-prevented">auxclick.preventDefault()</a>
+<hr>
+Click with the left, right and middle (wheel) mouse buttons on the links above to test click behavior.
+<hr>
+<textarea cols="30" rows="5">Try to paste text from the clipboard here using the middle mouse button. It works in some browsers/OSes.</textarea>
+<textarea cols="30" rows="5" id="textarea-auxclick-prevented">textarea with auxclick.preventDefault()</textarea>
+<textarea cols="30" rows="5" id="textarea-mouseup-prevented">textarea with mouseup.preventDefault()</textarea>
+<input type="text" value="paste click here">
+<hr>
+<a href="#omg">omg <input type="text" value="wtf"></a>.
+
+<script>
+  const mousedown_prevented = document.querySelector('a[href="#mousedown-prevented"]');
+  const click_prevented = document.querySelector('a[href="#click-prevented"]');
+  const contextmenu_prevented = document.querySelector('a[href="#contextmenu-prevented"]');
+  const auxclick_prevented = document.querySelector('a[href="#auxclick-prevented"]');
+
+  const textarea_auxclick_prevented = document.querySelector('#textarea-auxclick-prevented');
+  const textarea_mouseup_prevented = document.querySelector('#textarea-mouseup-prevented');
+
+  window.addEventListener("mousedown", e => console.log("mousedown"));
+  window.addEventListener("mouseup", e => console.log("mouseup"));
+  window.addEventListener("contextmenu", e => console.log("contextmenu"));
+  window.addEventListener("beforeinput", e => console.log("beforeinput"));
+  window.addEventListener("auxclick", e => console.log("auxclick"));
+  window.addEventListener("click", e => console.log("click"));
+
+  function preventD (e) {
+    console.log(e.type + ".preventDefault()");
+    e.preventDefault();
+  }
+  mousedown_prevented.addEventListener("mousedown", preventD);
+  click_prevented.addEventListener("click",  preventD);
+  contextmenu_prevented.addEventListener("contextmenu",  preventD);
+  auxclick_prevented.addEventListener("auxclick",  preventD);
+
+  textarea_auxclick_prevented.addEventListener("auxclick",  preventD);
+  textarea_mouseup_prevented.addEventListener("mouseup",  preventD);
+</script>

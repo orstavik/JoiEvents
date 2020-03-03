@@ -136,14 +136,6 @@ To implement a basic ClickController is simple:
       return pathA[i - 1];
     }
 
-    class DisconnectWrapper extends HTMLElement {
-      disconnectedCallback() {
-        ClickController.reset();
-      }
-    }
-
-    customElements.define("disconnected-wrapper", DisconnectWrapper);
-
     const ClickController = {
       mousedownPath: undefined,
       onMousedown: function (e) {
@@ -194,6 +186,7 @@ To implement a basic ClickController is simple:
 In this chapter we will look at the ins and outs of `click`:
 1. We start in this chapter looking at how the browser generates `click`.
 2. Then we look at how `auxclick` works, `click`'s cousin.
+3. Then we look at the competition between auxclick and click. this competition can be resolved looking at the mouseup event and the state machines of auxclick and click respectively. This is a bit simpler than the kåre en vinner when the competition is between different controllers on the same trigger event depending on the DOM context.
 3. We then look at how the browser generates the universal `dblclick` event from `click` events. The `dblclick` is always generated if appropriate.
 4. Then we look at the native element's behavior that is triggered by `click`:
    1. `click` on `<summary>` to `open` and  `toggle` the content of the parent `<details>`.   
