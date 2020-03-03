@@ -70,7 +70,7 @@ When *one* trigger event can induce *multiple* events/actions, then the event ca
 1. parallel event branches and
 2. competing event branches.  
 
-### Parallel event branching: `auxclick` && `beforeinput`
+### 1. Parallel event branching: `auxclick` && `beforeinput`
 
 Parallel event branching occurs when *one* trigger event induce *multiple, parallel* sequence of events/actions. But. As the event loop is linear, these *parallel* sequences must be listed linear, placing one branch in front of the other in the event loop.
 
@@ -82,7 +82,7 @@ It is customary that the simplest branch is queued first, if no other causal rel
  
 It is worth noting that calling `.preventDefault()` on the trigger event before the event cascade branches can have different effect on different branches. For example, calling `mouseup.preventDefault()` will block the `beforeinput` event and the remainder of the second branch, while at the same time having no effect on the first branch and let `auxclick` event pass unhindered.   
 
-### Event competition: `auxclick` || `contextmenu`
+### 2. Event competition: `auxclick` || `contextmenu`
 
 Competing event branches occur when 1) two event controllers depend on the same (set of) trigger events and 2) one event controller either deliberately or as a side-effect block the other event controller.
 
@@ -96,6 +96,22 @@ which can be described as
  * `mousedown` => `contextmenu` => ("show context menu" || `mouseup` => `auxclick`)
  
 `auxclick` will only be shown when `.preventDefault()` has been called on the `contextmenu` event.  
+
+### 3. Event competition: `auxclick` || `click`
+
+Another competition is between `auxclick` and `click`. Both events listen are triggered by `mousedown` and `mouseup` events, but they both exclude each other: if an `auxclick` occurs event, we should have no `click` event, and vice versa.
+
+Choosing winner between `auxclick` and `click` is (mostly) straight forward. The two events are triggered by two sets of `mousedown` and `mouseup` events that are mutually exclusive: `click` only respond to the *primary* mouse button, and `auxclick` respond to all the other mouse buttons except the primary button.
+ 
+But. There is one situation where `click` and `auxclick` still can get into trouble: what happens when the user presses more than one button at the same time? There are several alternative strategies to solve this conundrum:
+1. Both wins. The event controllers for both `click` and `auxclick` are fully parallel/transparent and ignore each other. This would mean that *two* events, both a `click` and an `auxclick`, would be dispatched when two buttons are pressed at the same time.
+2. Noone wins. If a `click` or an `auxclick` begins while the other is active, then both events are cancelled. This means that if you press down two buttons at the same time, before any one finger has been lifted, then you will get *no* events.
+3. First down wins. If a `click` has begun, then no `auxclick` event can be started. And vice versa. Ie. if the left mouse button is pressed down, then the event controller function managing `auxclick` would not react to the subsequent `mousedown` event until the left mouse button has been released.
+4. First up wins. If both the left and right mouse button is pressed down, then only the mouse button lifted first would trigger an event, and do so regardless if it was pressed down first or second.
+
+Which of these methods do the browsers subscribe to? To help you think it through, I would point to the following. It would most likely be bad to dispatch two mutually excluding events at more or less the same instant. So solution 1 is not desirable. Solution 2 is a clean solution, but it might cause problems for user with poor finger dexterity that might more frequently than one might imagine accidentally hit two buttons at the same time. Solution 3 therefore seems like the desired solution. One might imagine that users who accidentally press more than one mouse button most likely will have 1) more muscular control of pressing down, and 2) that the erroneous finger is most frequently pressed down after the intended finger. The only argument for choosing solution 4 over 3, as far as I can tell, would be that the user could 1) tactile sense that a second finger have accidentally pressed a button and 2) would manage to correct for this mistake by ensuring that the erroneous finger remains down until the intended finger is lifted. Chrome and Firefox chose solution 4. I personally would have selected solution 2. 
+
+ * `mousedown` => `mousedown` => `mouseup` => (`click` || `auxclick`)   
 
 ## Demo: AuxclickController
 
