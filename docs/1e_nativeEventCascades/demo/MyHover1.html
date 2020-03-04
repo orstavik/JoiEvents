@@ -1,0 +1,70 @@
+<style>
+  #inner {
+    background: green;
+    height: 100px;
+  }
+  /* These two selectors work. you can see that there are two more right than left borders.  */
+  *:not(body):not(:root)._my_hover {
+    border-right: 5px solid blue;
+  }
+  :not(mumbojumbo)._my_hover {
+    opacity: 1;
+    border-left: 5px dashed blue;
+  }
+  /* In this controller, these two work*/
+  *._my_hover {
+    border-bottom: 10px dotted red;
+  }
+  ._my_hover {
+    border-top: 10px dotted green;
+  }
+</style>
+
+<div id="div">
+  outer
+  <div id="inner">inner</div>
+</div>
+
+<script>
+  (function () {
+
+    // this is not the composedPath(), just a simplification for the purposes of this demo.
+    function toggleMyHoverPseudoClass(target, add){
+      for (let node = target; node.classList; node = node.parentNode)
+        add ? node.classList.add("_my_hover") : node.classList.remove("_my_hover");
+    }
+
+    const MouseoveroutController = {
+      target: null,
+      tryToDispatchMouseover: function (newTarget) {
+        if (MouseoveroutController.target === newTarget)
+          return;
+        if (MouseoveroutController.target) {
+          toggleMyHoverPseudoClass(MouseoveroutController.target, false);      //added this line
+          const oldTarget = MouseoveroutController.target;
+          setTimeout(function () {
+            const mouseoverEvent = new MouseEvent("my-mouseout", {composed: true, bubbles: true});
+            Object.defineProperty(mouseoverEvent, 'relatedTarget', {value: newTarget});
+            oldTarget.dispatchEvent(mouseoverEvent);
+          }, 0);
+        }
+        if (newTarget) {
+          toggleMyHoverPseudoClass(newTarget, true);                           //added this line
+          const oldTarget = MouseoveroutController.target;
+          setTimeout(function () {
+            const mouseoverEvent = new MouseEvent("my-mouseover", {composed: true, bubbles: true});
+            Object.defineProperty(mouseoverEvent, 'relatedTarget', {value: oldTarget});
+            newTarget.dispatchEvent(mouseoverEvent);
+          }, 0);
+        }
+        MouseoveroutController.target = newTarget;
+      }, mousemove: function (e) {
+        MouseoveroutController.tryToDispatchMouseover(e.target);
+      }
+    };
+    window.addEventListener("mousemove", MouseoveroutController.mousemove);
+  })();
+
+  window.addEventListener("my-mouseover", e => console.warn(e.type, e.target, e.relatedTarget));
+  window.addEventListener("my-mouseout", e => console.warn(e.type, e.target, e.relatedTarget));
+</script>

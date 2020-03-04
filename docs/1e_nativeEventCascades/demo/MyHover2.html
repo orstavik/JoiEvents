@@ -1,0 +1,44 @@
+<style>
+  #inner {
+    background: lightgrey;
+    height: 100px;
+  }
+  /* These two selectors work. you can see that there are two more right than left borders.  */
+  *:not(body):not(:root)._my_hover {
+    border-right: 5px solid orange;
+  }
+  :not(mumbojumbo)._my_hover {
+    opacity: 1;
+    border-left: 5px dashed blue;
+  }
+  /* In this controller, these two work*/
+  *._my_hover {
+    border-bottom: 10px dotted red;
+  }
+  ._my_hover {
+    border-top: 10px dotted green;
+  }
+</style>
+
+<div id="div">
+  outer
+  <div id="inner">inner</div>
+</div>
+
+<script>
+  (function () {
+
+    const HoverController = {
+      onMouseout: function (e) {
+        for (let loosingHover of e.composedPath())
+          loosingHover.classList && loosingHover.classList.remove("_my_hover");
+      },
+      onMouseover: function (e) {
+        for (let gainingHover of e.composedPath())
+          gainingHover.classList && gainingHover.classList.add("_my_hover");  //ignored if the element already has the css pseudo class.
+      },
+    };
+    window.addEventListener("mouseover", HoverController.onMouseover);
+    window.addEventListener("mouseout", HoverController.onMouseout);
+  })();
+</script>

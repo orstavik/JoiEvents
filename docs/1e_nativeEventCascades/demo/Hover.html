@@ -1,0 +1,33 @@
+<style>
+  #inner {
+    background: lightgray;
+    height: 100px;
+  }
+  /* These two selectors work. you can see that there are two more right than left borders.  */
+  *:not(body):not(:root):hover {
+    border-right: 5px solid orange;
+  }
+  :not(mumbojumbo):hover {
+    opacity: 1;
+    border-left: 5px dashed blue;
+  }
+  /*doesnt work. Likely turned off by the browser as they would select the html and body element too*/
+  *:hover {
+    border-bottom: 10px dotted red;
+  }
+  :hover {
+    border-top: 10px dotted red;
+  }
+</style>
+
+<div id="div">
+  outer
+  <div id="inner">inner</div>
+</div>
+
+<script>
+  setInterval(function () {
+    console.log(document.querySelectorAll('*:not(body):not(:root):hover'));
+    console.log(document.querySelector(':focus'));
+  }, 5000);
+</script>
