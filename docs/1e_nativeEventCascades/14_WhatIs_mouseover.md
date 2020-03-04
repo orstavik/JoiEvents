@@ -6,6 +6,8 @@ The `mouseover` and `mouseout` events are spin-offs of the `mousemove` event. Wh
 
 `mouseover` and `mouseout` only consider the `target` element of the `mousemove`. This means that if the `mousemove` passes from a parent to a child, then the parent element will first get a `mouseout` event, and then the child element will get a `mouseover` event (that will propagate over the parent element that just received a `mouseout` event).
 
+For `mouseover`, the `target` is the element that becomes the `target` for the `mousemove` event, and the `relatedTarget` is the old, previous `target` for the last `mouseover` event. For `mouseout` it is the exact opposite. Be aware. The `.relatedTarget` can be `null` when the mouse for example leaves the browser window.
+
 ## Demo: `mouseover`
 
 ```html
