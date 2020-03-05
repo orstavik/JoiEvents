@@ -20,8 +20,8 @@ If `priority` is used, then `first: true` will be converted into a `priority: Nu
     const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
     if (index >= 0)
       return;
-    if (options.immediateOnly) {
-      options.once = false;
+    if (entry.immediateOnly) {
+      entry.once = false;
       const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
       const macroTask = toggleTick(function () {
         immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
@@ -32,24 +32,24 @@ If `priority` is used, then `first: true` will be converted into a `priority: Nu
         immediateCb(e);
       }
     }
-    if (options.once) {
+    if (entry.once) {
       const onceSelf = this, onceCb = entry.listener, onceCapture = entry.capture;
       entry.listener = function (e) {
         onceSelf.removeEventListener(name, onceCb, onceCapture);
         onceCb(e);
       }
     }
-    if (options.first)
-      options.priority = Number.MAX_SAFE_INTEGER;
+    if (entry.first)
+      entry.priority = Number.MAX_SAFE_INTEGER;
     // todo throw an Error instead of reverting to 0?
-    options.priority = parseInt(options.priority) || 0;
-    if (options.priority > Number.MAX_SAFE_INTEGER)
-      options.priority = Number.MAX_SAFE_INTEGER;
-    if (options.priority < Number.MIN_SAFE_INTEGER)
-      options.priority = Number.MIN_SAFE_INTEGER;
+    entry.priority = parseInt(entry.priority) || 0;
+    if (entry.priority > Number.MAX_SAFE_INTEGER)
+      entry.priority = Number.MAX_SAFE_INTEGER;
+    if (entry.priority < Number.MIN_SAFE_INTEGER)
+      entry.priority = Number.MIN_SAFE_INTEGER;
     for (let listener of this._eventTargetRegistry[name])
       ogRemove.call(this, name, listener.listener, listener);
-    const i = this._eventTargetRegistry[name].findIndex(listener => listener.priority < options.priority);
+    const i = this._eventTargetRegistry[name].findIndex(listener => listener.priority < entry.priority);
     i === -1 ?
       this._eventTargetRegistry[name].push(entry) :
       this._eventTargetRegistry[name].splice(i, 0, entry);
@@ -134,8 +134,8 @@ If `priority` is used, then `first: true` will be converted into a `priority: Nu
     const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
     if (index >= 0)
       return;
-    if (options.immediateOnly) {
-      options.once = false;
+    if (entry.immediateOnly) {
+      entry.once = false;
       const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
       const macroTask = toggleTick(function () {
         immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
@@ -146,24 +146,24 @@ If `priority` is used, then `first: true` will be converted into a `priority: Nu
         immediateCb(e);
       }
     }
-    if (options.once) {
+    if (entry.once) {
       const onceSelf = this, onceCb = entry.listener, onceCapture = entry.capture;
       entry.listener = function (e) {
         onceSelf.removeEventListener(name, onceCb, onceCapture);
         onceCb(e);
       }
     }
-    if (options.first)
-      options.priority = Number.MAX_SAFE_INTEGER;
+    if (entry.first)
+      entry.priority = Number.MAX_SAFE_INTEGER;
     // todo throw an Error instead of reverting to 0?
-    options.priority = parseInt(options.priority) || 0;
-    if (options.priority > Number.MAX_SAFE_INTEGER)
-      options.priority = Number.MAX_SAFE_INTEGER;
-    if (options.priority < Number.MIN_SAFE_INTEGER)
-      options.priority = Number.MIN_SAFE_INTEGER;
+    entry.priority = parseInt(entry.priority) || 0;
+    if (entry.priority > Number.MAX_SAFE_INTEGER)
+      entry.priority = Number.MAX_SAFE_INTEGER;
+    if (entry.priority < Number.MIN_SAFE_INTEGER)
+      entry.priority = Number.MIN_SAFE_INTEGER;
     for (let listener of this._eventTargetRegistry[name])
       ogRemove.call(this, name, listener.listener, listener);
-    const i = this._eventTargetRegistry[name].findIndex(listener => listener.priority < options.priority);
+    const i = this._eventTargetRegistry[name].findIndex(listener => listener.priority < entry.priority);
     i === -1 ?
       this._eventTargetRegistry[name].push(entry) :
       this._eventTargetRegistry[name].splice(i, 0, entry);
