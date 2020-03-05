@@ -71,21 +71,22 @@
     const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
     if (index >= 0)
       return;
-    if (entry.immediateOnly){
+    if (entry.immediateOnly) {
       entry.once = false;
       const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
-      const macroTask = toggleTick(function() {
-        immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+      const macroTask = toggleTick(function () {
+        immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
       });
-      entry.listener = function(e){
+      entry.listener = function (e) {
         macroTask.cancel();
-        immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+        immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
         immediateCb(e);
       }
     }
-    if (entry.once){
-      const onceSelf = this, onceCapture = entry.capture;
-      entry.listener = function(e){
+    if (entry.once) {
+      const onceSelf = this;
+      const onceCapture = entry.capture;
+      entry.listener = function (e) {
         onceSelf.removeEventListener(name, entry.listener, onceCapture);
         listener(e);
       }
@@ -109,37 +110,34 @@
 <h1>Click me!</h1>
 
 <script>
-  function log1(e) {
-    console.log(e.type + " one");
-  }
-  function log2(e) {
-    console.log(e.type + " two");
-  }
-  function log3(e) {
-    console.log(e.type + " three");
-  }
-
   const h1 = document.querySelector("h1");
 
-  h1.addEventListener("click", log3, {once: true});
-  h1.addEventListener("click", log2, {first: true});
-  h1.addEventListener("click", log1, {first: true});
+  h1.addEventListener("click", () => console.log(0), {once: true});
+  h1.addEventListener("click", () => console.log(1), {});
+
   h1.dispatchEvent(new MouseEvent("click"));
   h1.dispatchEvent(new MouseEvent("click"));
 
-  window.addEventListener("click", function(e){
-    console.log("this click was supposed to be first.");
-  }, true);
-  window.addEventListener("mousedown", function(e){
-    console.log("mousedown");
-    window.addEventListener("click", function(e){
+  window.addEventListener("click", function (e) {
+    console.log("stopping click once");
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }, {capture: true, immediateOnly: true});
+
+  h1.dispatchEvent(new MouseEvent("click"));
+  h1.dispatchEvent(new MouseEvent("click"));
+
+  window.addEventListener("mousedown", function (e) {
+    console.log("stopping mousedown once, this will never run");
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }, {immediateOnly: true});
+
+  window.addEventListener("mouseup", function () {
+    window.addEventListener("click", function (e) {
+      console.log("stopping click once");
       e.stopImmediatePropagation();
       e.preventDefault();
-      console.log("stopped click");
-    }, {capture: true, first: true, immediateOnly: true});
-  }, true);
-
-  h1.addEventListener("mouseup", log1, {priority: 1});
-  h1.addEventListener("mouseup", log2, {priority: 2});
-  h1.addEventListener("mouseup", log3, {priority: 3});
+    }, {immediateOnly: true, capture: true});
+  }, {once: true});
 </script>
