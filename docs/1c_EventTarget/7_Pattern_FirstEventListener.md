@@ -1,4 +1,4 @@
-# Pattern: ExtendEventListenerOptions
+# Pattern: FirstEventListener
 
 In this chapter we implement two additional event listener options:
  1. `first` (custom option) 
@@ -20,26 +20,27 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
   const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
   if (index >= 0)
     return;
-  if (options.immediateOnly){
-    options.once = false;
+  if (entry.immediateOnly) {
+    entry.once = false;
     const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
     const macroTask = toggleTick(function() {
-      immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+      immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
     });
     entry.listener = function(e){
       macroTask.cancel();
-      immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+      immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
       immediateCb(e);
     }
-  } 
-  if (options.once){
-    const onceSelf = this, onceCb = entry.listener, onceCapture = entry.capture;
-    entry.listener = function(e){
-      onceSelf.removeEventListener(name, onceCb, onceCapture);
-      onceCb(e);
+  }
+  if (entry.once) {
+    const onceSelf = this;
+    const onceCapture = entry.capture;
+    entry.listener = function (e) {
+      onceSelf.removeEventListener(name, entry.listener, onceCapture);
+      listener(e);
     }
   }
-  if (options.first){
+  if (entry.first) {
     for (let listener of this._eventTargetRegistry[name]) 
       ogRemove.call(this, name, listener.listener, listener);
     this._eventTargetRegistry[name].unshift(entry);
@@ -47,7 +48,7 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
       ogAdd.call(this, name, listener.listener, listener);
   } else {
     this._eventTargetRegistry[name].push(entry);
-    ogAdd.call(this, name, listener, options);
+    ogAdd.call(this, name, entry.listener, entry);
   }
 };
 ``` 
@@ -65,42 +66,43 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
   const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
   if (index >= 0)
     return;
-  if (entry.immediateOnly){
+  if (entry.immediateOnly) {
     entry.once = false;
     const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
-    const macroTask = toggleTick(function() {
-      immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+    const macroTask = toggleTick(function () {
+      immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
     });
-    entry.listener = function(e){
+    entry.listener = function (e) {
       macroTask.cancel();
-      immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+      immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
       immediateCb(e);
     }
-  } 
-  if (entry.once){
-    const onceSelf = this, onceCb = entry.listener, onceCapture = entry.capture;
-    entry.listener = function(e){
-      onceSelf.removeEventListener(name, onceCb, onceCapture);
-      onceCb(e);
+  }
+  if (entry.once) {
+    const onceSelf = this;
+    const onceCapture = entry.capture;
+    entry.listener = function (e) {
+      onceSelf.removeEventListener(name, entry.listener, onceCapture);
+      listener(e);
     }
   }
-  if (entry.grab){
+  if (entry.grab) {
     if (this._eventTargetRegistry[name][0].grab)
       throw new Error("The event " + name + " has already been grabbed.");
     entry.first = true;
   }
-  if (entry.first){
-    for (let listener of this._eventTargetRegistry[name]) 
+  if (entry.first) {
+    for (let listener of this._eventTargetRegistry[name])
       ogRemove.call(this, name, listener.listener, listener);
     if (!this._eventTargetRegistry[name][0].grab)
-     this._eventTargetRegistry[name].unshift(entry);
+      this._eventTargetRegistry[name].unshift(entry);
     else
-     this._eventTargetRegistry[name].splice(1,0,entry); // todo test this
-    for (let listener of this._eventTargetRegistry[name]) 
+      this._eventTargetRegistry[name].splice(1, 0, entry);
+    for (let listener of this._eventTargetRegistry[name])
       ogAdd.call(this, name, listener.listener, listener);
   } else {
     this._eventTargetRegistry[name].push(entry);
-    ogAdd.call(this, name, listener, entry);
+    ogAdd.call(this, name, entry.listener, entry);
   }
 };
 ``` 
@@ -181,48 +183,43 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
     const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
     if (index >= 0)
       return;
-    if (options.immediateOnly){
-      options.once = false;
+    if (entry.immediateOnly) {
+      entry.once = false;
       const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
-      const macroTask = toggleTick(function() {
-        immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+      const macroTask = toggleTick(function () {
+        immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
       });
-      entry.listener = function(e){
+      entry.listener = function (e) {
         macroTask.cancel();
-        immediateSelf.removeEventListener(name, immediateCb, immediateCapture);
+        immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
         immediateCb(e);
       }
     }
-    if (options.once){
-      const onceSelf = this, onceCapture = entry.capture;
-      entry.listener = function(e){
+    if (entry.once) {
+      const onceSelf = this;
+      const onceCapture = entry.capture;
+      entry.listener = function (e) {
         onceSelf.removeEventListener(name, entry.listener, onceCapture);
         listener(e);
       }
     }
-    if (options.first)
-      options.priority = Number.MAX_SAFE_INTEGER;
-    if (options.priority !== undefined) {
-      if (options.priority > Number.MAX_SAFE_INTEGER)
-        options.priority = Number.MAX_SAFE_INTEGER;
-      if (options.priority < Number.MIN_SAFE_INTEGER)
-        options.priority = Number.MIN_SAFE_INTEGER;
-      if (!Number.isInteger(options.priority))
-        options.priority = parseInt(options.priority);
-      if (isNaN(options.priority)){
-        delete options.priority;
-      } else {
-        for (let listener of this._eventTargetRegistry[name])
-          ogRemove.call(this, name, listener.listener, listener);
-        const index = this._eventTargetRegistry[name].findIndex(listener => (listener.priority || 0) <= options.priority);
-        this._eventTargetRegistry[name].splice(index, 0, entry);
-        for (let listener of this._eventTargetRegistry[name])
-          ogAdd.call(this, name, listener.listener, listener);
-      }
+    if (entry.grab) {
+      if (this._eventTargetRegistry[name][0].grab)
+        throw new Error("The event " + name + " has already been grabbed.");
+      entry.first = true;
     }
-    if (options.priority === undefined){
+    if (entry.first) {
+      for (let listener of this._eventTargetRegistry[name])
+        ogRemove.call(this, name, listener.listener, listener);
+      if (!this._eventTargetRegistry[name][0].grab)
+        this._eventTargetRegistry[name].unshift(entry);
+      else
+        this._eventTargetRegistry[name].splice(1, 0, entry);
+      for (let listener of this._eventTargetRegistry[name])
+        ogAdd.call(this, name, listener.listener, listener);
+    } else {
       this._eventTargetRegistry[name].push(entry);
-      ogAdd.call(this, name, entry.listener, options);
+      ogAdd.call(this, name, entry.listener, entry);
     }
   };
 
@@ -241,55 +238,36 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
 <h1>Click me!</h1>
 
 <script>
-  function log1(e) {
-    console.log(e.type + " one");
-  }
-  function log2(e) {
-    console.log(e.type + " two");
-  }
-  function log3(e) {
-    console.log(e.type + " three");
-  }
-
   const h1 = document.querySelector("h1");
 
-  h1.addEventListener("click", log3, {once: true});
-  h1.addEventListener("click", log2, {first: true});
-  h1.addEventListener("click", log1, {first: true});
+  h1.addEventListener("click", () => console.log(5), {});
+  h1.addEventListener("click", () => console.log(6), {});
+  h1.addEventListener("click", () => console.log(4), {first: true});
+  h1.addEventListener("click", () => console.log(2), {grab: true, first: true});
+  h1.addEventListener("click", () => console.log(3), {first: true, once: true});
+  try {
+    h1.addEventListener("click", () => console.log("wtf"), {grab: true, first: true});
+  } catch (err) {
+    console.log(1);
+  }
   h1.dispatchEvent(new MouseEvent("click"));
   h1.dispatchEvent(new MouseEvent("click"));
-
-  window.addEventListener("click", function(e){
-    console.log("this click was supposed to be first.");
-  }, true);
-  window.addEventListener("mousedown", function(e){
-    console.log("mousedown");
-    window.addEventListener("click", function(e){
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      console.log("stopped click");
-    }, {capture: true, first: true, immediateOnly: true});
-  }, true);
-
-  h1.addEventListener("mouseup", log1, {priority: 1});
-  h1.addEventListener("mouseup", log2, {priority: 2});
-  h1.addEventListener("mouseup", log3, {priority: 3});
 </script>
 ```
 
 Result:
 
 ```
-click one
-click two
-click three
-click one
-click two
-mousedown
-mouseup three
-mouseup two
-mouseup one
-stopped click
+1
+2
+3
+4
+5
+6
+2
+4
+5
+6
 ```
 
 ## References
