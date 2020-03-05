@@ -188,15 +188,15 @@ If `priority` is used, then `first: true` will be converted into a `priority: Nu
 <script>
   const h1 = document.querySelector("h1");
 
-  h1.addEventListener("click", console.log.bind(null, 3), {priority: 1});
-  h1.addEventListener("click", console.log.bind(null, 2), {priority: 2});
-  h1.addEventListener("click", console.log.bind(null, 1), {priority: 3});
-  h1.addEventListener("click", console.log.bind(null, 4), {priority: 0});
-  h1.addEventListener("click", console.log.bind(null, 6), {priority: -1});
-  h1.addEventListener("click", console.log.bind(null, 5), {priority: "nan"});
-  h1.addEventListener("click", console.log.bind(null, -1), {priority: Number.MAX_SAFE_INTEGER, once:true});
-  h1.addEventListener("click", console.log.bind(null, 0), {first: true, priority: -1});
-  h1.addEventListener("click", console.log.bind(null, 7), {priority: Number.MIN_SAFE_INTEGER});
+  h1.addEventListener("click", () => console.log(3), {priority: 1});
+  h1.addEventListener("click", () => console.log(2), {priority: 2});
+  h1.addEventListener("click", () => console.log(1), {priority: 3});
+  h1.addEventListener("click", () => console.log(4), {priority: 0});
+  h1.addEventListener("click", () => console.log(6), {priority: -1});
+  h1.addEventListener("click", () => console.log(5), {priority: "nan"});
+  h1.addEventListener("click", () => console.log(-1), {priority: Number.MAX_SAFE_INTEGER, once:true});
+  h1.addEventListener("click", () => console.log(0), {first: true, priority: -1});
+  h1.addEventListener("click", () => console.log(7), {priority: Number.MIN_SAFE_INTEGER});
   h1.dispatchEvent(new MouseEvent("click"));
   h1.dispatchEvent(new MouseEvent("click"));
 </script>
