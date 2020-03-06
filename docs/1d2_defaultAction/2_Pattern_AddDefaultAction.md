@@ -17,17 +17,25 @@ We want this method to behave the following:
 ```javascript
 //requires the event listener option immediatelyOnly and the toggleTick function
 Object.defineProperty(Event.prototype, "addDefaultAction", {
-  value: function(cb, cancellable, preEvent){
-    if (cancellable === undefined) 
+  value: function (cb, cancellable, preEvent) {
+    if (cancellable === undefined)
       cancellable = true;
-    if (typeof(cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
+    if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
       throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
-    const cb2 = cancellable ? function(){!this.defaultPrevented && cb();} : cb;
-    const toggleTask = toggleTick(cb2);
+    if (cancellable) {
+      if (this.defaultPrevented)
+        return;
+      const cbOG = cb;
+      cb = function () {
+        if (!this.defaultPrevented)
+          cbOG();
+      }.bind(this);
+    }
+    const toggleTask = toggleTick(cb);
     if (preEvent)
-      window.addEventListener(preEvent, function() {
+      window.addEventListener(preEvent, function () {
         toggleTask.cancel();
-        cb2();
+        cb();
       }, {immediateOnly: true, first: true});
   },
   writable: false
@@ -160,9 +168,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     this._eventTargetRegistry[name].splice(index, 1);
     ogRemove.call(this, name, listener, options);
   };
-</script>
 
-<script>
   Object.defineProperty(Event.prototype, "addDefaultAction", {
     value: function (cb, cancellable, preEvent) {
       if (cancellable === undefined)
@@ -170,6 +176,8 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
         throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
       if (cancellable) {
+        if (this.defaultPrevented)
+          return;
         const cbOG = cb;
         cb = function () {
           if (!this.defaultPrevented)

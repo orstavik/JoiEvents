@@ -131,6 +131,8 @@
       if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
         throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
       if (cancellable) {
+        if (this.defaultPrevented)
+          return;
         const cbOG = cb;
         cb = function () {
           if (!this.defaultPrevented)
