@@ -1,50 +1,34 @@
-# Pattern: UnpreventablesPrevented
+# Pattern: AddDefaultAction
 
-In this chapter we will extend the `Event.preventDefault()` method so that it will be able to block actions that in the native event cascades are unpreventable. Examples of such actions is the dispatch of `click` or `auxclick` events from `mouseup`, `keypress` from `keydown`(todo check this one), and `dblclick` from `click`.
+In this chapter we will add a method to the `Event` interface called `.addDefaultAction()`.
 
-We want to be able to do the following:
+We want this method to behave the following:
 
-1. `event.preventDefault()` behaves normally.
-2. `event.preventDefault(true)` behaves normally, but in addition this method call will block all subsequent, cascade events. For example, `mouseupEvent.preventDefault(true)` would prevent any `auxclick`, `click`, and/or `dblclick` that would be dispatched as a consequence of this action.
-3. `event.preventDefault(eventName)` behaves normally, but in addition this method will also block any cascade event with the given eventName. For example, `mouseupEvent.preventDefault("click")` would block any subsequent `click` cascade event, but *not* `auxclick` nor `dblclick`.
-4. `event.preventDefault(listOfEventNames)` behaves normally, but in addition this method will also block any cascade event with a name in the listOfEventNames. For example, `mouseupEvent.preventDefault(["click", "dblclick"])` would block any subsequent `click` and `dblclick` cascade events, but not `auxclick`.
+1. `event.addDefaultAction(cb)` would run the function `cb` after the event cascade of `event` has been completed. The `event.addDefaultAction(cb)` does not cancel the browsers native default actions for the same event, as this can be controlled from the `preventDefault()` method. The function will not be added/cancelled if `preventDefault()` is called on the event. 
+2. `event.addDefaultAction(cb, false)` will run `cb` after the native event cascade is completed as above, except that it will not be cancelled by calling `preventDefault()` on the event.
+3. `event.addDefaultAction(cb, true, eventName)` will run `cb` only once either immediately before the subsequent eventName or as soon as the event cascade for the event is completed, and can be cancelled by `preventDefault()`.
 
-## Extending `.preventDefault()` 
+## Making `.addDefaultAction(cb, cancellable, preEvent)` 
 
-Extending `Event.preventDefault()` to include a list of arguments is pretty straight forward. We need a method that:
-1. calls the original `preventDefault()` method, and then
-2. contains a registry of unpreventable events,
-3. if `preventDefault(argument)` where `argument===true`, then replace argument with the entry of the unpreventable events registry equivalent.   
-4. if `preventDefault(argument)` has a string argument, then wrap that argument in an array.
-5. if the argument is not an array, it is now illegal.
-6. for each event name in the array argument, add an `immediateOnly`, `grab` event listener that both `preventDefault()` and `stopImmediatePropagation()` for that event name.
+1. The callback function `cb` in `.addDefaultAction(cb, cancellable, preEvent)` should be run no later than the first `toggleTick()`. Hence, the `cb` is added to a `toggleTick()` task.
+2. If a preEvent name is given, then the `cb` is also added to a once, EarlyBird event listener for such an immediately following event. If this EarlyBird event listener is triggered, it will cancel the `toggleTick` task.
+3. The `cancellable` arguments defaults to `true`. If the `cancellable` argument is `true`, then the `cb` function will not be executed when time comes. Iff the `cancellable` argument is `false`, then no check will be done of the `event.defaultPrevented` before `cb` is executed.   
 
 ```javascript
-//requires the event listener options: immediatelyOnly and grab
-const unpreventablesRegistry = {
-  mouseup: ["auxclick", "click", "dblclick"],
-  click: ["dblclick"]
-};
-
-function block(e){
-  e.preventDefault();
-  e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
-}
-
-const og = Event.preventDefault;
-Object.defineProperty(Event, "preventDefault", {
-  value: function(unpreventables){
-    og.call(this); 
-    if (unpreventables === undefined || unpreventables === false)
-      return;
-    if(unpreventables === true)
-      unpreventables = unpreventablesRegistry[this.type];
-    else if(typeof(unpreventables) === 'string' || unpreventables instanceof String)
-      unpreventables = [unpreventables];
-    if(!(unpreventables instanceof Array))
-      throw new Error("Event.preventDefault() must either have an argument that is either void, boolean, string or an array.");
-    for (let eventName of unpreventables) 
-      window.addEventListener(eventName, block, {capture: true, immediateOnly: true});
+//requires the event listener option immediatelyOnly and the toggleTick function
+Object.defineProperty(Event.prototype, "addDefaultAction", {
+  value: function(cb, cancellable, preEvent){
+    if (cancellable === undefined) 
+      cancellable = true;
+    if (typeof(cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
+      throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
+    const cb2 = cancellable ? function(){!this.defaultPrevented && cb();} : cb;
+    const toggleTask = toggleTick(cb2);
+    if (preEvent)
+      window.addEventListener(preEvent, function() {
+        toggleTask.cancel();
+        cb2();
+      }, {immediateOnly: true, first: true});
   },
   writable: false
 });
@@ -179,54 +163,52 @@ Object.defineProperty(Event, "preventDefault", {
 </script>
 
 <script>
-  //requires the event listener option immediatelyOnly
-  const unpreventablesRegistry = {
-    mouseup: ["auxclick", "click", "dblclick"],
-    click: ["dblclick"]
-  };
-
-  function block(e) {
-    e.preventDefault();
-    e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
-  }
-
-  const og = Event.prototype.preventDefault;
-  Object.defineProperty(Event.prototype, "preventDefault", {
-    value: function (unpreventables) {
-      og.call(this);
-      if (unpreventables === undefined || unpreventables === false)
-        return;
-      if (unpreventables === true)
-        unpreventables = unpreventablesRegistry[this.type];
-      else if (typeof (unpreventables) === 'string' || unpreventables instanceof String)
-        unpreventables = [unpreventables];
-      if (!(unpreventables instanceof Array))
-        throw new Error("Event.preventDefault() must either have an argument that is either void, boolean, string or an array.");
-      for (let eventName of unpreventables)
-        window.addEventListener(eventName, block, {capture: true, grab:true, immediateOnly: true});
+  Object.defineProperty(Event.prototype, "addDefaultAction", {
+    value: function (cb, cancellable, preEvent) {
+      if (cancellable === undefined)
+        cancellable = true;
+      if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
+        throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
+      if (cancellable) {
+        const cbOG = cb;
+        cb = function () {
+          if (!this.defaultPrevented)
+            cbOG();
+        }.bind(this);
+      }
+      const toggleTask = toggleTick(cb);
+      if (preEvent)
+        window.addEventListener(preEvent, function () {
+          toggleTask.cancel();
+          cb();
+        }, {immediateOnly: true, first: true});
     },
     writable: false
   });
 </script>
 
-<div id="one">mouseup.preventDefault() behaves normally.</div>
-<div id="two">mouseup.preventDefault(true) prevents any `auxclick`, `click`, `dblclick`</div>
-<div id="three">mouseup.preventDefault("click") prevents `click`, but not `auxclick` nor `dblclick`.</div>
-<div id="four">mouseup.preventDefault(["click", "dblclick"]) prevents `click` and `dblclick`, but not `auxclick`.</div>
+<div id="one">click.addDefaultAction(()=> console.log("one"));</div>
+<div id="two">click.addDefaultAction(()=> console.log("two"), true);</div>
+<div id="three">click.addDefaultAction(()=> console.log("three"), false);</div>
+<div id="four">click.addDefaultAction(()=> console.log("four"), undefined);</div>
+<div id="five">click.addDefaultAction(()=> console.log("five"), undefined, "dblclick");</div>
+<div id="six">click.addDefaultAction(()=> console.log("six"), "throwMeAnError");</div>
 
 <script>
-  window.addEventListener("contextmenu", e=> e.preventDefault());
-  window.addEventListener("mouseup", e=> console.log(e.type));
-  window.addEventListener("click", e=> console.log(e.type));
-  window.addEventListener("auxclick", e=> console.log(e.type));
-  window.addEventListener("dblclick", e=> console.log(e.type));
+  window.addEventListener("click", e => e.preventDefault());
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
   const two = document.querySelector("#two");
   const three = document.querySelector("#three");
   const four = document.querySelector("#four");
-  one.addEventListener("mouseup", e => e.preventDefault());
-  two.addEventListener("mouseup", e => e.preventDefault(true));
-  three.addEventListener("mouseup", e => e.preventDefault("click"));
-  four.addEventListener("mouseup", e => e.preventDefault(["click", "dblclick"]));
+  const five = document.querySelector("#five");
+  const six = document.querySelector("#six");
+  one.addEventListener("click", e => e.addDefaultAction(() => console.log("one")));
+  two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), true));
+  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), false));
+  four.addEventListener("click", e => e.addDefaultAction(() => console.log("four"), undefined));
+  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), undefined, "dblclick"));
+  six.addEventListener("click", e => e.addDefaultAction(() => console.log("six"), "throwMeAnError"));
 </script>
 ```

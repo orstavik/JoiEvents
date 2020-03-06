@@ -148,8 +148,9 @@
       if (!(unpreventables instanceof Array))
         throw new Error("Event.preventDefault() must either have an argument that is either void, boolean, string or an array.");
       for (let eventName of unpreventables)
-        window.addEventListener(eventName, block, {capture: true, grab:true, immediateOnly: true});
-    }
+        window.addEventListener(eventName, block, {capture: true, grab: true, immediateOnly: true});
+    },
+    writable: false
   });
 </script>
 
@@ -159,11 +160,11 @@
 <div id="four">mouseup.preventDefault(["click", "dblclick"]) prevents `click` and `dblclick`, but not `auxclick`.</div>
 
 <script>
-  window.addEventListener("contextmenu", e=> e.preventDefault());
-  window.addEventListener("mouseup", e=> console.log(e.type));
-  window.addEventListener("click", e=> console.log(e.type));
-  window.addEventListener("auxclick", e=> console.log(e.type));
-  window.addEventListener("dblclick", e=> console.log(e.type));
+  window.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("auxclick", e => console.log(e.type));
+  window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
   const two = document.querySelector("#two");
   const three = document.querySelector("#three");
