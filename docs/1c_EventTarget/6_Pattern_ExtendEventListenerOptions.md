@@ -3,6 +3,8 @@
 In this chapter we implement two event listener options:
  1. `once` (polyfill)
  2. `immediateOnly` (custom option)
+ 
+todo should i add a special check for `window.addEventListener("mouseenter",...` so that it will add an empty event listener for mouseenter on the document too, so that the window event listener for mouseenter is run?
 
 ## polyfilled EventListenerOption: `once`
 
