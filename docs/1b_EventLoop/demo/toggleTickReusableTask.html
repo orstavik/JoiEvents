@@ -1,0 +1,62 @@
+<script>
+  function toggleTick(cb, raceEvents) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+
+    const internals = {
+      _raceEvents: raceEvents,
+      cb: function () {
+        task.cancel();
+        cb();
+      },
+    };
+    const task = {
+      cancel: function () {
+        for (let raceEvent of internals._raceEvents)
+          window.removeEventListener(raceEvent, internals.cb, true);
+        details.ontoggle = undefined;
+      },
+      reuse: function (newCb, raceEvents) {
+        task.cancel();
+        internals.cb = function () {
+          task.cancel();
+          newCb();
+        };
+        internals._raceEvents = raceEvents;
+        details.ontoggle = internals.cb;
+        for (let raceEvent of internals._raceEvents)
+          window.addEventListener(raceEvent, internals.cb, {capture: true});
+      },
+      isActive: function () {
+        return !!details.ontoggle;
+      }
+    };
+
+    details.ontoggle = internals.cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    for (let raceEvent of internals._raceEvents)
+      window.addEventListener(raceEvent, internals.cb, {capture: true});
+
+    return task;
+  }
+
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("dblclick", e => console.log(e.type));
+
+  let toggleTask;
+  document.addEventListener("mouseup", function () {
+    toggleTask = toggleTick(() => console.log("toggleTick task from mouseup that race click"), ["click"]);
+    console.log(toggleTask.isActive());
+  });
+  window.addEventListener("mouseup", function () {
+    console.log(toggleTask.isActive());
+    toggleTask.reuse(() => console.log("toggleTick task from mouseup that race dblclick"), ["dblclick"]);
+    console.log(toggleTask.isActive());
+  });
+  window.addEventListener("mouseup", function () {
+    setTimeout( ()=>console.log(toggleTask.isActive()), 50);
+  });
+</script>
