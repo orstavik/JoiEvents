@@ -1,36 +1,44 @@
 <script>
-  const EventRoadMap = {};
-  EventRoadMap.UNPREVENTABLES = {
-    mouseup: ["click", "auxclick", "dblclick"],
-    click: ["dblclick"],
-    keydown: ["keypress"]
+  const EventRoadMap = {
+    ALL: {
+      mousedown: ["contextmenu"],
+      mouseup: ["click", "auxclick"],
+      click: ["dblclick", "submit", "reset"],
+      wheel: ["scroll"],
+      keydown: ["keypress"],
+      keypress: ["beforeinput"]
+    },
+    UNPREVENTABLES: {
+      mouseup: ["click", "auxclick", "dblclick"],
+      click: ["dblclick"],
+      keydown: ["keypress"]
+    }
   };
-  EventRoadMap.UNPREVENTABLES_FIRST_ONLY = Object.assign({}, EventRoadMap.UNPREVENTABLES, {
-    mouseup: ["click", "auxclick"]
-  });
 
-  function parseRaceEvents(raceEvents){
-    if(raceEvents instanceof Array)
+  function parseRaceEvents(raceEvents) {
+    if (raceEvents instanceof Array)
       return raceEvents;
-    if(raceEvents === undefined)
+    if (raceEvents === undefined)
       return [];
-    if (raceEvents instanceof String || typeof(raceEvents) === "string")
-      return EventRoadMap.UNPREVENTABLES_FIRST_ONLY[raceEvents];
+    if (raceEvents instanceof String || typeof (raceEvents) === "string")
+      return EventRoadMap.UNPREVENTABLES[raceEvents];
     throw new Error("The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, an array of event names, empty array, or a string with an event name for the trigger event in the event cascade.");
   }
 
   function toggleTick(cb, raceEvents) {
-    raceEvents =parseRaceEvents(raceEvents);
+    raceEvents = parseRaceEvents(raceEvents);
     const details = document.createElement("details");
     details.style.display = "none";
     const internals = {
       events: raceEvents,
       cb: cb
     };
+
     function wrapper() {
       task.cancel();
       internals.cb();
     }
+
     const task = {
       cancel: function () {
         for (let raceEvent of internals.events)
@@ -38,7 +46,7 @@
         details.ontoggle = undefined;
       },
       reuse: function (newCb, raceEvents) {
-        raceEvents =parseRaceEvents(raceEvents);
+        raceEvents = parseRaceEvents(raceEvents);
         internals.cb = newCb;
         for (let raceEvent of internals.events)
           window.removeEventListener(raceEvent, wrapper, true);
@@ -58,7 +66,7 @@
       window.addEventListener(raceEvent, wrapper, {capture: true});
     return task;
   }
-  
+
   window.addEventListener("contextmenu", e => e.preventDefault());
 
   window.addEventListener("mouseup", e => console.log(e.type));
@@ -68,7 +76,7 @@
   window.addEventListener("mouseup", function (e) {
     toggleTick(() => console.log("toggleTick task from mouseup that race click, auxclick"), e.type);
   });
-  window.addEventListener("mouseup", function (e) {
+  window.addEventListener("mouseup", function () {
     toggleTick(() => console.log("toggleTick task from mouseup that do not race other events"));
   });
 </script>
