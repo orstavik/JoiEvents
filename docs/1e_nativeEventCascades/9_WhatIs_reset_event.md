@@ -16,7 +16,7 @@ The **current value** of all the input elements above is the JS property `.value
 
 > Att! The `.value` property of input elements DO NOT reflect/mirror the `value` attribute of the same element. The two are completely DiFfErEnT things.
 
-> Att! As the  `<textarea>` element, the `<output>` element will revert to its `.innerText` value when its parent `<form>` is `reset`. But. This is really not what you would want; you would want the `<output>` element to update its calculation when being `reset`. However, this element is so little used, that we do not spend your time talking about its shortcomings. :)
+> Att! As the  `<textarea>` element, the `<output>` element will revert to its `.innerText` value when its parent `<form>` is `reset`. But. This is really not what you would want; you would want the `<output>` element to update its calculation when being `reset`. However, this element is so unpopular, that we do not spend your time talking about its shortcomings. :)
 
 ## The flow of the `reset` event
 
@@ -41,7 +41,7 @@ The `reset` event is also preventable from `click`. If you call `.preventDefault
   <hr>
   0<input type="range" id="a" value="50">100 +
   <input type="number" id="b" value="50"> =
-  <output id="c" for="a b"></output>
+  <output id="c" for="a b">666</output>
   <hr>
   <input type="reset" value="Reset">
   <button type="reset">Reset</button>
@@ -60,6 +60,7 @@ The `reset` event is also preventable from `click`. If you call `.preventDefault
 ```        
 
 * To see the **current** value of the different elements, open dev tools and check each element objects `.value` property. You will quickly see that the JS `.value` element is different from for example the same elements `value` attribute. This is not really nice. The `value` attribute should have been given a different name, such as `original-value`, to avoid confusion.
+* The demo illustrate how the `<output>` element is `.reset()` to its `.innerText` value. There is a little devil in that detail. 
 
 ### Demo: `ResetController`
 

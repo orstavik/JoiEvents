@@ -55,6 +55,8 @@
           element.selectedIndex = getOriginalSelectIndex(element);
         else if (element.tagName === "TEXTAREA")
           element.value = element.innerText;
+        else if (element.tagName === "OUTPUT")
+          element.value = element.innerText;
       }
     };
 
@@ -70,7 +72,13 @@
         const formElement = e.target.form;
         if (!formElement || e.target.type !== "reset" || (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON"))
           return;
-        toggleTick(e => !e.defaultPrevented && formElement.reset());
+        toggleTick(function () {
+          // todo addDefaultAction. and how to register at which target preventDefault is called.
+          // todo when we override preventDefault, should we register what is the currentTarget when preventDefault is called?
+          // this require an e.addDefaultAction that can a, call preventDefault, so that others can avoid it
+          // about the target position that this element is calling preventDefault from itself.
+          !e.defaultPrevented && formElement.reset();
+        });
       },
     };
 
