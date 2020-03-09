@@ -1,0 +1,37 @@
+<script>
+  function toggleTick(cb, raceEvents) {
+    const details = document.createElement("details");
+    details.style.display = "none";
+
+    const task = {
+      cb: function(){
+        task.cancel();
+        cb();
+      },
+      cancel: function () {
+        for (let raceEvent of raceEvents)
+          window.removeEventListener(raceEvent, task.cb, true);
+        details.ontoggle = undefined;
+      }
+    };
+
+    details.ontoggle = task.cb;
+    document.body.appendChild(details);
+    details.open = true;
+    Promise.resolve().then(details.remove.bind(details));
+    for (let raceEvent of raceEvents)
+      window.addEventListener(raceEvent, task.cb, {capture: true});
+
+    return task;
+  }
+
+  window.addEventListener("contextmenu", e=> e.preventDefault());
+
+  window.addEventListener("mouseup", e=> console.log(e.type));
+  window.addEventListener("click", e=> console.log(e.type));
+  window.addEventListener("auxclick", e=> console.log(e.type));
+
+  window.addEventListener("mouseup", function () {
+    toggleTick(()=> console.log("toggleTick task from mouseup that race both click and auxclick"), ["click", "auxclick"]);
+  });
+</script>
