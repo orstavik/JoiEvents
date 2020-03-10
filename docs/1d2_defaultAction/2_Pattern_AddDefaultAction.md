@@ -4,7 +4,7 @@ In this chapter we will extend the `Event` interface with an `.addDefaultAction(
 
 1. `event.addDefaultAction(cb)` will run the function `cb` after the event cascade of `event` has been completed. The `event.addDefaultAction(cb)` does not cancel the browsers native default actions for the same event, as this can be controlled from the `preventDefault()` method. The function will not be added/cancelled if `.preventDefault()` has already been/is later called on the event. 
 2. `event.addDefaultAction(cb, false)` will run `cb` after the native event cascade is completed as above, except that it will not be cancelled by calling `.preventDefault()` on the event.
-3. `event.addDefaultAction(cb, true, eventName)` will run `cb` only once either immediately before the subsequent eventName or as soon as the event cascade for the event is completed, and can be cancelled by `.preventDefault()`.
+3. `event.addDefaultAction(cb, true, raceEvents)` will run `cb` only once either immediately before the subsequent raceEvents or as soon as the event cascade for the event is completed, and can be cancelled by `.preventDefault()`.
 
 ## `.addDefaultAction(cb, preventable, raceEvents)` 
 
@@ -12,7 +12,6 @@ In this chapter we will extend the `Event` interface with an `.addDefaultAction(
 2. The `cb` is a function that will be added as the new default action for the event.
 3. If `preventable`, then the default action will not be run when `preventDefault()` is called on the event. If `preventable` and the `preventDefault()` has been called on the event before `.addDefaultAction()` is called, then the default action will not be added to the event at all.
 4. If `raceEvents` is not specified, the new default action is queued as a `toggleTick()` task. If `raceEvents` is given as either an array of event names, or as a string event name, the `toggleTick` task will race the list of given event names, or all the unpreventable given event names for the given event name, cf. `toggleTick` raceEvents.
-
 
 ```javascript
 function parsePreventableArg(preventable) {

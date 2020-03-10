@@ -111,6 +111,7 @@ If an event already has `_addedDefaultActionTriggerElement` and this element is 
         return this._defaultAction.reuse(wrapper, raceEvents);
 
       this._defaultAction = toggleTick(cb, raceEvents);
+      this.preventDefault();
       Object.defineProperty(this, "defaultPrevented", {
         get: function () {
           !this._defaultAction.isActive();
@@ -131,11 +132,11 @@ If an event already has `_addedDefaultActionTriggerElement` and this element is 
 </script>
 
 <div id="one">
-  click.addDefaultAction(#one, ()=> console.log("one"));
+  click.addDefaultAction(#one, ()=> console.log("one"), target, [dblclick]);
   <div id="two">
-    click.addDefaultAction(#two, ()=> console.log("two"), true);
+    click.addDefaultAction(#two, ()=> console.log("two"), target);
     <div id="three">
-      click.addDefaultAction(#three, ()=> console.log("three"), false);
+      click.addDefaultAction(#three, ()=> console.log("three"), undefined, [dblclick]);
     </div>
   </div>
 </div>
