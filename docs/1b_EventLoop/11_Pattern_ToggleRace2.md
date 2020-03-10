@@ -77,17 +77,17 @@ function toggleTick(cb, raceEvents) {
   }
   const task = {
     cancel: function () {
-      for (let raceEvent of internals.events)
+    for (let raceEvent of internals.events || [])
         window.removeEventListener(raceEvent, wrapper, true);
       details.ontoggle = undefined;
     },
     reuse: function (newCb, raceEvents) {
       raceEvents = parseRaceEvents(raceEvents);
       internals.cb = newCb;
-      for (let raceEvent of internals.events)
+    for (let raceEvent of internals.events || [])
         window.removeEventListener(raceEvent, wrapper, true);
       internals.events = raceEvents;
-      for (let raceEvent of internals.events)
+    for (let raceEvent of internals.events || [])
         window.addEventListener(raceEvent, wrapper, {capture: true});
     },
     isActive: function () {
@@ -98,7 +98,7 @@ function toggleTick(cb, raceEvents) {
   document.body.appendChild(details);
   details.open = true;
   Promise.resolve().then(details.remove.bind(details));
-  for (let raceEvent of internals.events)
+  for (let raceEvent of internals.events || [])
     window.addEventListener(raceEvent, wrapper, {capture: true});
   return task;
 }
@@ -153,17 +153,17 @@ function toggleTick(cb, raceEvents) {
 
     const task = {
       cancel: function () {
-        for (let raceEvent of internals.events)
+        for (let raceEvent of internals.events || [])
           window.removeEventListener(raceEvent, wrapper, true);
         details.ontoggle = undefined;
       },
       reuse: function (newCb, raceEvents) {
         raceEvents = parseRaceEvents(raceEvents);
         internals.cb = newCb;
-        for (let raceEvent of internals.events)
+        for (let raceEvent of internals.events || [])
           window.removeEventListener(raceEvent, wrapper, true);
         internals.events = raceEvents;
-        for (let raceEvent of internals.events)
+        for (let raceEvent of internals.events || [])
           window.addEventListener(raceEvent, wrapper, {capture: true});
       },
       isActive: function () {
@@ -174,7 +174,7 @@ function toggleTick(cb, raceEvents) {
     document.body.appendChild(details);
     details.open = true;
     Promise.resolve().then(details.remove.bind(details));
-    for (let raceEvent of internals.events)
+    for (let raceEvent of internals.events || [])
       window.addEventListener(raceEvent, wrapper, {capture: true});
     return task;
   }
