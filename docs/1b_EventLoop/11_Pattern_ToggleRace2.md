@@ -1,6 +1,8 @@
 # Pattern: ToggleRace 2
 
-Some events have multiple possible cascading events. For example, a `mouseup` might either trigger a `click` or an `auxclick`. In such scenarios, we need to race more than one other event.
+Some events have multiple possible cascading events. For example, a `mouseup` might either trigger a `click` and/or a `dblclick` or an `auxclick`. In such scenarios, we need to race more than one other event.
+
+In later chapters we will look at the ability to place event listeners `first` in the event listener queue. If you provide such abilities, the EarlyBird event listeners in `toggleTick` should use it. 
 
 ## `toggleTick` race with two or more events
 
@@ -40,6 +42,8 @@ Knowing which other events might lead to which other unpreventable events can be
 
 Here we use the `EventRoadMap.UNPREVENTABLES` map to enable developers to automatically queue `toggleTick` callbacks before any other racing events by only specifying the `raceEvents` attribute as a string, whose value is the name of the triggering event whose cascading events we wish to race.
 
+In addition, we would like to reuse the `toggleTick` task to be more efficient. We therefore add a `reuse(newCb, raceEvents)` to our `toggleTick` task object. Although as efficient as it can be, to make and discard multiple `toggleTick` tasks would be inefficient. Thus, we need to make a mechanism to reuse a `toggleTick` task when necessary.
+
 ```javascript
 const EventRoadMap = {
   UNPREVENTABLES: {
@@ -77,17 +81,17 @@ function toggleTick(cb, raceEvents) {
   }
   const task = {
     cancel: function () {
-    for (let raceEvent of internals.events || [])
+    for (let raceEvent of internals.events)
         window.removeEventListener(raceEvent, wrapper, true);
       details.ontoggle = undefined;
     },
     reuse: function (newCb, raceEvents) {
       raceEvents = parseRaceEvents(raceEvents);
       internals.cb = newCb;
-    for (let raceEvent of internals.events || [])
+      for (let raceEvent of internals.events)
         window.removeEventListener(raceEvent, wrapper, true);
       internals.events = raceEvents;
-    for (let raceEvent of internals.events || [])
+      for (let raceEvent of internals.events)
         window.addEventListener(raceEvent, wrapper, {capture: true});
     },
     isActive: function () {
@@ -98,7 +102,7 @@ function toggleTick(cb, raceEvents) {
   document.body.appendChild(details);
   details.open = true;
   Promise.resolve().then(details.remove.bind(details));
-  for (let raceEvent of internals.events || [])
+  for (let raceEvent of internals.events)
     window.addEventListener(raceEvent, wrapper, {capture: true});
   return task;
 }
@@ -153,17 +157,17 @@ function toggleTick(cb, raceEvents) {
 
     const task = {
       cancel: function () {
-        for (let raceEvent of internals.events || [])
+        for (let raceEvent of internals.events)
           window.removeEventListener(raceEvent, wrapper, true);
         details.ontoggle = undefined;
       },
       reuse: function (newCb, raceEvents) {
         raceEvents = parseRaceEvents(raceEvents);
         internals.cb = newCb;
-        for (let raceEvent of internals.events || [])
+        for (let raceEvent of internals.events)
           window.removeEventListener(raceEvent, wrapper, true);
         internals.events = raceEvents;
-        for (let raceEvent of internals.events || [])
+        for (let raceEvent of internals.events)
           window.addEventListener(raceEvent, wrapper, {capture: true});
       },
       isActive: function () {
@@ -174,7 +178,7 @@ function toggleTick(cb, raceEvents) {
     document.body.appendChild(details);
     details.open = true;
     Promise.resolve().then(details.remove.bind(details));
-    for (let raceEvent of internals.events || [])
+    for (let raceEvent of internals.events)
       window.addEventListener(raceEvent, wrapper, {capture: true});
     return task;
   }
