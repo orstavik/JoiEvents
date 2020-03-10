@@ -27,16 +27,15 @@ function parsePreventableArg(preventable) {
 Object.defineProperty(Event.prototype, "addDefaultAction", {
   value: function (cb, preventable, raceEvents) {
     preventable = parsePreventableArg(preventable);
-    if (preventable) {
-      if (this.defaultPrevented)
-        return;
-      const cbOG = cb;
-      cb = function () {
-        if (!this.defaultPrevented)
-          cbOG();
-      }.bind(this);
-    }
-    toggleTick(cb, raceEvents);
+    if (!preventable)
+      toggleTick(cb, raceEvents);
+    if (this.defaultPrevented)
+      return;
+    const wrapper = function () {
+      if (!this.defaultPrevented)
+        cb();
+    }.bind(this);
+    toggleTick(wrapper, raceEvents);
   },
   writable: false
 });
@@ -120,16 +119,15 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
   Object.defineProperty(Event.prototype, "addDefaultAction", {
     value: function (cb, preventable, raceEvents) {
       preventable = parsePreventableArg(preventable);
-      if (preventable) {
-        if (this.defaultPrevented)
-          return;
-        const cbOG = cb;
-        cb = function () {
-          if (!this.defaultPrevented)
-            cbOG();
-        }.bind(this);
-      }
-      toggleTick(cb, raceEvents);
+      if (!preventable)
+        toggleTick(cb, raceEvents);
+      if (this.defaultPrevented)
+        return;
+      const wrapper = function () {
+        if (!this.defaultPrevented)
+          cb();
+      }.bind(this);
+      toggleTick(wrapper, raceEvents);
     },
     writable: false
   });
