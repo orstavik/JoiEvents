@@ -1,28 +1,32 @@
 # Pattern: AddDefaultAction
 
-In this chapter we will add a method to the `Event` interface called `.addDefaultAction()`.
+In this chapter we will extend the `Event` interface with an `.addDefaultAction(...)` method with the following API:
 
-We want this method to behave the following:
+1. `event.addDefaultAction(cb)` will run the function `cb` after the event cascade of `event` has been completed. The `event.addDefaultAction(cb)` does not cancel the browsers native default actions for the same event, as this can be controlled from the `preventDefault()` method. The function will not be added/cancelled if `.preventDefault()` has already been/is later called on the event. 
+2. `event.addDefaultAction(cb, false)` will run `cb` after the native event cascade is completed as above, except that it will not be cancelled by calling `.preventDefault()` on the event.
+3. `event.addDefaultAction(cb, true, eventName)` will run `cb` only once either immediately before the subsequent eventName or as soon as the event cascade for the event is completed, and can be cancelled by `.preventDefault()`.
 
-1. `event.addDefaultAction(cb)` would run the function `cb` after the event cascade of `event` has been completed. The `event.addDefaultAction(cb)` does not cancel the browsers native default actions for the same event, as this can be controlled from the `preventDefault()` method. The function will not be added/cancelled if `preventDefault()` is called on the event. 
-2. `event.addDefaultAction(cb, false)` will run `cb` after the native event cascade is completed as above, except that it will not be cancelled by calling `preventDefault()` on the event.
-3. `event.addDefaultAction(cb, true, eventName)` will run `cb` only once either immediately before the subsequent eventName or as soon as the event cascade for the event is completed, and can be cancelled by `preventDefault()`.
+## `.addDefaultAction(cb, preventable, raceEvents)` 
 
-## Making `.addDefaultAction(cb, cancellable, preEvent)` 
+1. The `preventable` arguments must be a `boolean` or `undefined` which defaults to `true`.
+2. The `cb` is a function that will be added as the new default action for the event.
+3. If `preventable`, then the default action will not be run when `preventDefault()` is called on the event. If `preventable` and the `preventDefault()` has been called on the event before `.addDefaultAction()` is called, then the default action will not be added to the event at all.
+4. If `raceEvents` is not specified, the new default action is queued as a `toggleTick()` task. If `raceEvents` is given as either an array of event names, or as a string event name, the `toggleTick` task will race the list of given event names, or all the unpreventable given event names for the given event name, cf. `toggleTick` raceEvents.
 
-1. The callback function `cb` in `.addDefaultAction(cb, cancellable, preEvent)` should be run no later than the first `toggleTick()`. Hence, the `cb` is added to a `toggleTick()` task.
-2. If a preEvent name is given, then the `cb` is also added to a once, EarlyBird event listener for such an immediately following event. If this EarlyBird event listener is triggered, it will cancel the `toggleTick` task.
-3. The `cancellable` arguments defaults to `true`. If the `cancellable` argument is `true`, then the `cb` function will not be executed when time comes. Iff the `cancellable` argument is `false`, then no check will be done of the `event.defaultPrevented` before `cb` is executed.   
 
 ```javascript
-//requires the event listener option immediatelyOnly and the toggleTick function
+function parsePreventableArg(preventable) {
+  if (preventable === undefined)
+    return true;
+  if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
+    return preventable;
+  throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
+}
+
+//requires the toggleTick function
 Object.defineProperty(Event.prototype, "addDefaultAction", {
-  value: function (cb, cancellable, preEvent) {
-    if (cancellable === undefined)
-      cancellable = true;
-    if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
-      throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
-    if (cancellable) {
+  value: function (cb, preventable, raceEvents) {
+    if (preventable) {
       if (this.defaultPrevented)
         return;
       const cbOG = cb;
@@ -31,12 +35,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
           cbOG();
       }.bind(this);
     }
-    const toggleTask = toggleTick(cb);
-    if (preEvent)
-      window.addEventListener(preEvent, function () {
-        toggleTask.cancel();
-        cb();
-      }, {immediateOnly: true, first: true});
+    toggleTick(cb, raceEvents);
   },
   writable: false
 });
@@ -46,131 +45,70 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
 
 ```html
 <script>
-  function toggleTick(cb) {
+  const EventRoadMap = {
+    UNPREVENTABLES: {
+      mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
+      mouseup: ["click", "auxclick", "dblclick"],
+      click: ["dblclick"],
+      keydown: ["keypress"]
+    }
+  };
+
+  function parseRaceEvents(raceEvents) {
+    if (raceEvents instanceof Array)
+      return raceEvents;
+    if (raceEvents === undefined)
+      return [];
+    if (raceEvents instanceof String || typeof (raceEvents) === "string")
+      return EventRoadMap.UNPREVENTABLES[raceEvents];
+    throw new Error(
+      "The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, " +
+      "an array of event names, empty array, or a string with an event name " +
+      "for the trigger event in the event cascade.");
+  }
+
+  function toggleTick(cb, raceEvents) {
+    raceEvents = parseRaceEvents(raceEvents);
     const details = document.createElement("details");
     details.style.display = "none";
-    details.ontoggle = cb;
+    const internals = {
+      events: raceEvents,
+      cb: cb
+    };
+    function wrapper() {
+      task.cancel();
+      internals.cb();
+    }
+    const task = {
+      cancel: function () {
+        for (let raceEvent of internals.events || [])
+          window.removeEventListener(raceEvent, wrapper, true);
+        details.ontoggle = undefined;
+      },
+      reuse: function (newCb, raceEvents) {
+        raceEvents = parseRaceEvents(raceEvents);
+        internals.cb = newCb;
+        for (let raceEvent of internals.events || [])
+          window.removeEventListener(raceEvent, wrapper, true);
+        internals.events = raceEvents;
+        for (let raceEvent of internals.events || [])
+          window.addEventListener(raceEvent, wrapper, {capture: true});
+      },
+      isActive: function () {
+        return !!details.ontoggle;
+      }
+    };
+    details.ontoggle = wrapper;
     document.body.appendChild(details);
     details.open = true;
     Promise.resolve().then(details.remove.bind(details));
-    return {
-      cancel: function () {
-        details.ontoggle = undefined;
-      },
-      resume: function () {
-        details.ontoggle = cb;
-      }
-    };
+    for (let raceEvent of internals.events || [])
+      window.addEventListener(raceEvent, wrapper, {capture: true});
+    return task;
   }
-
-  /**
-   * getEventListeners(name, phase) returns a list of all the event listeners entries
-   * matching that event name and that event phase.
-   *
-   * @param name
-   * @param phase either Event.CAPTURING_PHASE, Event.AT_TARGET, or Event.BUBBLING_PHASE.
-   *        Defaults to Event.BUBBLING_PHASE.
-   * @returns {[{listener, capture}]}
-   */
-  EventTarget.prototype.getEventListeners = function (name, phase) {
-    if (!this._eventTargetRegistry || !this._eventTargetRegistry[name])
-      return null;
-    if (phase === Event.AT_TARGET)
-      return this._eventTargetRegistry[name].slice();
-    if (phase === Event.CAPTURING_PHASE)
-      return this._eventTargetRegistry[name].filter(listener => listener.capture);
-    //(phase === Event.BUBBLING_PHASE)
-    return this._eventTargetRegistry[name].filter(listener => !listener.capture);
-  };
-
-  /**
-   * hasEventListeners(name, cb, options) returns a list of all the event listeners entries
-   * matching that event name and that event phase. To query for an event listener in BOTH the
-   * capture and bubble propagation phases, one must do two queries:
-   *
-   *    el.hasEventListener(name, cb, false) || el.hasEventListener(name, cb, true)
-   *
-   * @param name
-   * @param cb
-   * @param options the only option used in identifying the event listener is capture/useCapture.
-   * @returns true if an equivalent event listener is in the list
-   */
-  EventTarget.prototype.hasEventListener = function (name, cb, options) {
-    if (!this._eventTargetRegistry || !this._eventTargetRegistry[name])
-      return false;
-    const capture = !!(options instanceof Object ? options.capture : options);
-    const index = findEquivalentListener(this._eventTargetRegistry[name], cb, capture);
-    return index !== -1;
-  };
-
-  function findEquivalentListener(registryList, listener, useCapture) {
-    return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);
-  }
-
-  const ogAdd = EventTarget.prototype.addEventListener;
-  const ogRemove = EventTarget.prototype.removeEventListener;
-
-  EventTarget.prototype.addEventListener = function (name, listener, options) {
-    this._eventTargetRegistry || (this._eventTargetRegistry = {});
-    this._eventTargetRegistry[name] || (this._eventTargetRegistry[name] = []);
-    const entry = options instanceof Object ? Object.assign({listener}, options) : {listener, capture: options};
-    entry.capture = !!entry.capture;
-    const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
-    if (index >= 0)
-      return;
-    if (entry.immediateOnly) {
-      entry.once = false;
-      const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
-      const macroTask = toggleTick(function () {
-        immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
-      });
-      entry.listener = function (e) {
-        macroTask.cancel();
-        immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
-        immediateCb(e);
-      }
-    }
-    if (entry.once) {
-      const onceSelf = this;
-      const onceCapture = entry.capture;
-      entry.listener = function (e) {
-        onceSelf.removeEventListener(name, entry.listener, onceCapture);
-        listener(e);
-      }
-    }
-    if (entry.grab) {
-      if (this._eventTargetRegistry[name][0].grab)
-        throw new Error("The event " + name + " has already been grabbed.");
-      entry.first = true;
-    }
-    if (entry.first) {
-      for (let listener of this._eventTargetRegistry[name])
-        ogRemove.call(this, name, listener.listener, listener);
-      if (!this._eventTargetRegistry[name][0].grab)
-        this._eventTargetRegistry[name].unshift(entry);
-      else
-        this._eventTargetRegistry[name].splice(1, 0, entry); // todo test this
-      for (let listener of this._eventTargetRegistry[name])
-        ogAdd.call(this, name, listener.listener, listener);
-    } else {
-      this._eventTargetRegistry[name].push(entry);
-      ogAdd.call(this, name, entry.listener, entry);
-    }
-  };
-
-  EventTarget.prototype.removeEventListener = function (name, listener, options) {
-    if (!this._eventTargetRegistry || !this._eventTargetRegistry[name])
-      return;
-    const capture = !!(options instanceof Object ? options.capture : options);
-    const index = findEquivalentListener(this._eventTargetRegistry[name], listener, capture);
-    if (index === -1)
-      return;
-    this._eventTargetRegistry[name].splice(index, 1);
-    ogRemove.call(this, name, listener, options);
-  };
 
   Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, cancellable, preEvent) {
+    value: function (cb, cancellable, raceEvents) {
       if (cancellable === undefined)
         cancellable = true;
       if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
@@ -184,12 +122,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
             cbOG();
         }.bind(this);
       }
-      const toggleTask = toggleTick(cb);
-      if (preEvent)
-        window.addEventListener(preEvent, function () {
-          toggleTask.cancel();
-          cb();
-        }, {immediateOnly: true, first: true});
+      toggleTick(cb, raceEvents);
     },
     writable: false
   });
@@ -197,13 +130,14 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
 
 <div id="one">click.addDefaultAction(()=> console.log("one"));</div>
 <div id="two">click.addDefaultAction(()=> console.log("two"), true);</div>
-<div id="three">click.addDefaultAction(()=> console.log("three"), false);</div>
-<div id="four">click.addDefaultAction(()=> console.log("four"), undefined);</div>
-<div id="five">click.addDefaultAction(()=> console.log("five"), undefined, "dblclick");</div>
+<div id="three">click.addDefaultAction(()=> console.log("three"), false); + preventDefault called on click</div>
+<div id="four">click.addDefaultAction(()=> console.log("four"), undefined); + preventDefault called on click</div>
+<div id="five">click.addDefaultAction(()=> console.log("five"), undefined, ["dblclick"]);</div>
 <div id="six">click.addDefaultAction(()=> console.log("six"), "throwMeAnError");</div>
 
 <script>
-  window.addEventListener("click", e => e.preventDefault());
+  document.querySelector("#three").addEventListener("click", e => e.preventDefault());
+  document.querySelector("#four").addEventListener("click", e => e.preventDefault());
   window.addEventListener("click", e => console.log(e.type));
   window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
@@ -216,7 +150,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
   two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), true));
   three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), false));
   four.addEventListener("click", e => e.addDefaultAction(() => console.log("four"), undefined));
-  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), undefined, "dblclick"));
+  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), undefined, ["dblclick"]));
   six.addEventListener("click", e => e.addDefaultAction(() => console.log("six"), "throwMeAnError"));
 </script>
 ```
