@@ -21,11 +21,12 @@ function parsePreventableArg(preventable) {
   if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
     return preventable;
   throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
-}
+}  
 
 //requires the toggleTick function
 Object.defineProperty(Event.prototype, "addDefaultAction", {
   value: function (cb, preventable, raceEvents) {
+    preventable = parsePreventableArg(preventable);
     if (preventable) {
       if (this.defaultPrevented)
         return;
@@ -107,13 +108,19 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     return task;
   }
 
+  function parsePreventableArg(preventable) {
+    if (preventable === undefined)
+      return true;
+    if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
+      return preventable;
+    throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
+  }
+
+  //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, cancellable, raceEvents) {
-      if (cancellable === undefined)
-        cancellable = true;
-      if (typeof (cancellable) !== 'boolean' && !(cancellable instanceof Boolean))
-        throw new Error("The second argument 'cancellable' in Event.addDefaultAction(cb, cancellable, preEvent) is neither undefined nor a boolean.");
-      if (cancellable) {
+    value: function (cb, preventable, raceEvents) {
+      preventable = parsePreventableArg(preventable);
+      if (preventable) {
         if (this.defaultPrevented)
           return;
         const cbOG = cb;
