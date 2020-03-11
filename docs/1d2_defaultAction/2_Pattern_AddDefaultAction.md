@@ -3,39 +3,20 @@
 In this chapter we will extend the `Event` interface with an `.addDefaultAction(...)` method with the following API:
 
 1. `event.addDefaultAction(cb)` will run the function `cb` after the event cascade of `event` has been completed. The `event.addDefaultAction(cb)` does not cancel the browsers native default actions for the same event, as this can be controlled from the `preventDefault()` method. The function will not be added/cancelled if `.preventDefault()` has already been/is later called on the event. 
-2. `event.addDefaultAction(cb, false)` will run `cb` after the native event cascade is completed as above, except that it will not be cancelled by calling `.preventDefault()` on the event.
-3. `event.addDefaultAction(cb, true, raceEvents)` will run `cb` only once either immediately before the subsequent raceEvents or as soon as the event cascade for the event is completed, and can be cancelled by `.preventDefault()`.
+2. `event.addDefaultAction(cb, raceEvents)` will run `cb` only once either immediately before the subsequent raceEvents or as soon as the event cascade for the event is completed.
+todo add the `true` argument to mean the name of the trigger event.
 
-## `.addDefaultAction(cb, preventable, raceEvents)` 
+## `.addDefaultAction(cb, raceEvents)` 
 
-1. The `preventable` arguments must be a `boolean` or `undefined` which defaults to `true`.
-2. The `cb` is a function that will be added as the new default action for the event. We pass the trigger `event` as the first argument to this method. 
-3. If `preventable`, then the default action will not be run when `preventDefault()` is called on the event. If `preventable` and the `preventDefault()` has been called on the event before `.addDefaultAction()` is called, then the default action will not be added to the event at all.
-4. If `raceEvents` is not specified, the new default action is queued as a `toggleTick()` task. If `raceEvents` is given as either an array of event names, or as a string event name, the `toggleTick` task will race the list of given event names, or all the unpreventable given event names for the given event name, cf. `toggleTick` raceEvents.
+1. The `cb` is a function that will be added as the new default action for the event. We pass the trigger `event` as the first argument to this method. 
+2. If `raceEvents` is not specified, the new default action is queued as a `toggleTick()` task. If `raceEvents` is given as either an array of event names, or as a string event name, the `toggleTick` task will race the list of given event names, or all the unpreventable given event names for the given event name, cf. `toggleTick` raceEvents.
 
 ```javascript
-function parsePreventableArg(preventable) {
-  if (preventable === undefined)
-    return true;
-  if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
-    return preventable;
-  throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
-}  
-
 //requires the toggleTick function
 Object.defineProperty(Event.prototype, "addDefaultAction", {
-  value: function (cb, preventable, raceEvents) {
+  value: function (cb, raceEvents) {
     const self = this;
-    preventable = parsePreventableArg(preventable);
-    if (!preventable)
-      toggleTick(() => cb(self), raceEvents);
-    if (this.defaultPrevented)
-      return;
-    const wrapper = function () {
-      if (!this.defaultPrevented)
-        cb(self);
-    }.bind(this);
-    toggleTick(wrapper, raceEvents);
+    toggleTick(() => cb(self), raceEvents);
   },
   writable: false
 });
@@ -75,10 +56,12 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       events: raceEvents,
       cb: cb
     };
+
     function wrapper() {
       task.cancel();
       internals.cb();
     }
+
     const task = {
       cancel: function () {
         for (let raceEvent of internals.events || [])
@@ -107,56 +90,25 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     return task;
   }
 
-  function parsePreventableArg(preventable) {
-    if (preventable === undefined)
-      return true;
-    if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
-      return preventable;
-    throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
-  }
-
   //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, preventable, raceEvents) {
+    value: function (cb, raceEvents) {
       const self = this;
-      preventable = parsePreventableArg(preventable);
-      if (!preventable)
-        toggleTick(() => cb(self), raceEvents);
-      if (this.defaultPrevented)
-        return;
-      const wrapper = function () {
-        if (!this.defaultPrevented)
-          cb(self);
-      }.bind(this);
-      toggleTick(wrapper, raceEvents);
+      toggleTick(() => cb(self), raceEvents);
     },
     writable: false
   });
 </script>
 
 <div id="one">click.addDefaultAction(()=> console.log("one"));</div>
-<div id="two">click.addDefaultAction(()=> console.log("two"), true);</div>
-<div id="three">click.addDefaultAction(()=> console.log("three"), false); + preventDefault called on click</div>
-<div id="four">click.addDefaultAction(()=> console.log("four"), undefined); + preventDefault called on click</div>
-<div id="five">click.addDefaultAction(()=> console.log("five"), undefined, ["dblclick"]);</div>
-<div id="six">click.addDefaultAction(()=> console.log("six"), "throwMeAnError");</div>
+<div id="five">click.addDefaultAction(()=> console.log("five"), ["dblclick"]);</div>
 
 <script>
-  document.querySelector("#three").addEventListener("click", e => e.preventDefault());
-  document.querySelector("#four").addEventListener("click", e => e.preventDefault());
   window.addEventListener("click", e => console.log(e.type));
   window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
-  const two = document.querySelector("#two");
-  const three = document.querySelector("#three");
-  const four = document.querySelector("#four");
   const five = document.querySelector("#five");
-  const six = document.querySelector("#six");
   one.addEventListener("click", e => e.addDefaultAction(() => console.log("one")));
-  two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), true));
-  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), false));
-  four.addEventListener("click", e => e.addDefaultAction(() => console.log("four"), undefined));
-  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), undefined, ["dblclick"]));
-  six.addEventListener("click", e => e.addDefaultAction(() => console.log("six"), "throwMeAnError"));
+  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), ["dblclick"]));
 </script>
 ```
