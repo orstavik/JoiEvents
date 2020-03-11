@@ -12,31 +12,34 @@ In this chapter we add `preventDefault()` functionality to the `addDefaultAction
 4. If `preventable` and the `preventDefault()` has been called on the event before `.addDefaultAction()` is called, then the default action will not be added to the event at all.
 
 ```javascript
-  function parsePreventableArg(preventable) {
-    if (preventable === undefined)
-      return true;
-    if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
-      return preventable;
-    throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
-  }
+function parsePreventableArg(preventable) {
+  if (preventable === undefined)
+    return true;
+  if (typeof (preventable) === 'boolean' || preventable instanceof Boolean)
+    return preventable;
+  throw new Error("The second argument 'preventable' in Event.addDefaultAction(cb, preventable, preEvent) is neither undefined nor a boolean.");
+}
 
-  //requires the toggleTick function
-  Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, preventable, raceEvents) {
-      const self = this;
-      preventable = parsePreventableArg(preventable);
-      if (!preventable)
-        toggleTick(() => cb(self), raceEvents);
-      if (this.defaultPrevented)
-        return;
-      const wrapper = function () {
-        if (!this.defaultPrevented)
-          cb(self);
-      }.bind(this);
-      toggleTick(wrapper, raceEvents);
-    },
-    writable: false
-  });
+//requires the toggleTick function
+Object.defineProperty(Event.prototype, "addDefaultAction", {
+  value: function (cb, preventable, raceEvents) {
+    const self = this;
+    preventable = parsePreventableArg(preventable);
+    if (!preventable)
+      toggleTick(() => cb(self), raceEvents);
+    if (this.defaultPrevented)
+      return;
+    const defaultAction = toggleTick(() => cb(self), raceEvents);
+    Object.defineProperty(this, "preventDefault", {
+      value: function () {
+        defaultAction.cancel();
+        self.preventDefault();
+      },
+      writable: false
+    });
+  },
+  writable: false
+});
 ``` 
 
 ## Demo: 
@@ -73,23 +76,25 @@ In this chapter we add `preventDefault()` functionality to the `addDefaultAction
       events: raceEvents,
       cb: cb
     };
+
     function wrapper() {
       task.cancel();
       internals.cb();
     }
+
     const task = {
       cancel: function () {
-        for (let raceEvent of internals.events || [])
+        for (let raceEvent of internals.events)
           window.removeEventListener(raceEvent, wrapper, true);
         details.ontoggle = undefined;
       },
       reuse: function (newCb, raceEvents) {
         raceEvents = parseRaceEvents(raceEvents);
         internals.cb = newCb;
-        for (let raceEvent of internals.events || [])
+        for (let raceEvent of internals.events)
           window.removeEventListener(raceEvent, wrapper, true);
         internals.events = raceEvents;
-        for (let raceEvent of internals.events || [])
+        for (let raceEvent of internals.events)
           window.addEventListener(raceEvent, wrapper, {capture: true});
       },
       isActive: function () {
@@ -100,7 +105,7 @@ In this chapter we add `preventDefault()` functionality to the `addDefaultAction
     document.body.appendChild(details);
     details.open = true;
     Promise.resolve().then(details.remove.bind(details));
-    for (let raceEvent of internals.events || [])
+    for (let raceEvent of internals.events)
       window.addEventListener(raceEvent, wrapper, {capture: true});
     return task;
   }
@@ -122,11 +127,14 @@ In this chapter we add `preventDefault()` functionality to the `addDefaultAction
         toggleTick(() => cb(self), raceEvents);
       if (this.defaultPrevented)
         return;
-      const wrapper = function () {
-        if (!this.defaultPrevented)
-          cb(self);
-      }.bind(this);
-      toggleTick(wrapper, raceEvents);
+      const defaultAction = toggleTick(() => cb(self), raceEvents);
+      Object.defineProperty(this, "preventDefault", {
+        value: function () {
+          defaultAction.cancel();
+          self.preventDefault();
+        },
+        writable: false
+      });
     },
     writable: false
   });
