@@ -74,14 +74,15 @@
   //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
     value: function (cb, preventable, raceEvents) {
+      const self = this;
       preventable = parsePreventableArg(preventable);
       if (!preventable)
-        toggleTick(cb, raceEvents);
+        toggleTick(() => cb(self), raceEvents);
       if (this.defaultPrevented)
         return;
       const wrapper = function () {
         if (!this.defaultPrevented)
-          cb();
+          cb(self);
       }.bind(this);
       toggleTick(wrapper, raceEvents);
     },

@@ -20,7 +20,8 @@ Extending `Event.preventDefault()` to include a list of arguments is pretty stra
 6. for each event name in the array argument, add an `immediateOnly`, `grab` event listener that both `preventDefault()` and `stopImmediatePropagation()` for that event name.
 
 ```javascript
-//requires the event listener options: immediatelyOnly and grab
+//requires the event listener options: immediatelyOnly and grab 
+//todo replace unpreventablesRegistry with the Roadmap
 const unpreventablesRegistry = {
   mouseup: ["auxclick", "click", "dblclick"],
   click: ["dblclick"]

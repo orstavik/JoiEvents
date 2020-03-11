@@ -9,7 +9,7 @@ In this chapter we will extend the `Event` interface with an `.addDefaultAction(
 ## `.addDefaultAction(cb, preventable, raceEvents)` 
 
 1. The `preventable` arguments must be a `boolean` or `undefined` which defaults to `true`.
-2. The `cb` is a function that will be added as the new default action for the event.
+2. The `cb` is a function that will be added as the new default action for the event. We pass the trigger `event` as the first argument to this method. 
 3. If `preventable`, then the default action will not be run when `preventDefault()` is called on the event. If `preventable` and the `preventDefault()` has been called on the event before `.addDefaultAction()` is called, then the default action will not be added to the event at all.
 4. If `raceEvents` is not specified, the new default action is queued as a `toggleTick()` task. If `raceEvents` is given as either an array of event names, or as a string event name, the `toggleTick` task will race the list of given event names, or all the unpreventable given event names for the given event name, cf. `toggleTick` raceEvents.
 
@@ -25,14 +25,15 @@ function parsePreventableArg(preventable) {
 //requires the toggleTick function
 Object.defineProperty(Event.prototype, "addDefaultAction", {
   value: function (cb, preventable, raceEvents) {
+    const self = this;
     preventable = parsePreventableArg(preventable);
     if (!preventable)
-      toggleTick(cb, raceEvents);
+      toggleTick(() => cb(self), raceEvents);
     if (this.defaultPrevented)
       return;
     const wrapper = function () {
       if (!this.defaultPrevented)
-        cb();
+        cb(self);
     }.bind(this);
     toggleTick(wrapper, raceEvents);
   },
@@ -117,14 +118,15 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
   //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
     value: function (cb, preventable, raceEvents) {
+      const self = this;
       preventable = parsePreventableArg(preventable);
       if (!preventable)
-        toggleTick(cb, raceEvents);
+        toggleTick(() => cb(self), raceEvents);
       if (this.defaultPrevented)
         return;
       const wrapper = function () {
         if (!this.defaultPrevented)
-          cb();
+          cb(self);
       }.bind(this);
       toggleTick(wrapper, raceEvents);
     },
