@@ -21,31 +21,34 @@ Extending `Event.preventDefault()` to include a list of arguments is pretty stra
 
 ```javascript
 //requires the event listener options: immediatelyOnly and grab 
-//todo replace unpreventablesRegistry with the Roadmap
-const unpreventablesRegistry = {
-  mouseup: ["auxclick", "click", "dblclick"],
-  click: ["dblclick"]
+const EventRoadMap = {
+  UNPREVENTABLES: {
+    mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
+    mouseup: ["click", "auxclick", "dblclick"],
+    click: ["dblclick"],
+    keydown: ["keypress"]
+  }
 };
 
-function block(e){
+function block(e) {
   e.preventDefault();
   e.stopImmediatePropagation ? e.stopImmediatePropagation() : e.stopPropagation();
 }
 
-const og = Event.preventDefault;
-Object.defineProperty(Event, "preventDefault", {
-  value: function(unpreventables){
-    og.call(this); 
+const og = Event.prototype.preventDefault;
+Object.defineProperty(Event.prototype, "preventDefault", {
+  value: function (unpreventables) {
+    og.call(this);
     if (unpreventables === undefined || unpreventables === false)
       return;
-    if(unpreventables === true)
-      unpreventables = unpreventablesRegistry[this.type];
-    else if(typeof(unpreventables) === 'string' || unpreventables instanceof String)
+    if (unpreventables === true)
+      unpreventables = EventRoadMap.UNPREVENTABLES[this.type];
+    else if (typeof (unpreventables) === 'string' || unpreventables instanceof String)
       unpreventables = [unpreventables];
-    if(!(unpreventables instanceof Array))
+    if (!(unpreventables instanceof Array))
       throw new Error("Event.preventDefault() must either have an argument that is either void, boolean, string or an array.");
-    for (let eventName of unpreventables) 
-      window.addEventListener(eventName, block, {capture: true, immediateOnly: true});
+    for (let eventName of unpreventables)
+      window.addEventListener(eventName, block, {capture: true, grab: true, immediateOnly: true});
   },
   writable: false
 });
@@ -180,10 +183,13 @@ Object.defineProperty(Event, "preventDefault", {
 </script>
 
 <script>
-  //requires the event listener option immediatelyOnly
-  const unpreventablesRegistry = {
-    mouseup: ["auxclick", "click", "dblclick"],
-    click: ["dblclick"]
+  const EventRoadMap = {
+    UNPREVENTABLES: {
+      mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
+      mouseup: ["click", "auxclick", "dblclick"],
+      click: ["dblclick"],
+      keydown: ["keypress"]
+    }
   };
 
   function block(e) {
@@ -198,13 +204,13 @@ Object.defineProperty(Event, "preventDefault", {
       if (unpreventables === undefined || unpreventables === false)
         return;
       if (unpreventables === true)
-        unpreventables = unpreventablesRegistry[this.type];
+        unpreventables = EventRoadMap.UNPREVENTABLES[this.type];
       else if (typeof (unpreventables) === 'string' || unpreventables instanceof String)
         unpreventables = [unpreventables];
       if (!(unpreventables instanceof Array))
         throw new Error("Event.preventDefault() must either have an argument that is either void, boolean, string or an array.");
       for (let eventName of unpreventables)
-        window.addEventListener(eventName, block, {capture: true, grab:true, immediateOnly: true});
+        window.addEventListener(eventName, block, {capture: true, grab: true, immediateOnly: true});
     },
     writable: false
   });
@@ -216,11 +222,11 @@ Object.defineProperty(Event, "preventDefault", {
 <div id="four">mouseup.preventDefault(["click", "dblclick"]) prevents `click` and `dblclick`, but not `auxclick`.</div>
 
 <script>
-  window.addEventListener("contextmenu", e=> e.preventDefault());
-  window.addEventListener("mouseup", e=> console.log(e.type));
-  window.addEventListener("click", e=> console.log(e.type));
-  window.addEventListener("auxclick", e=> console.log(e.type));
-  window.addEventListener("dblclick", e=> console.log(e.type));
+  window.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("auxclick", e => console.log(e.type));
+  window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
   const two = document.querySelector("#two");
   const three = document.querySelector("#three");

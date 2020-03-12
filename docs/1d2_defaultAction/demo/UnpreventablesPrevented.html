@@ -124,10 +124,13 @@
 </script>
 
 <script>
-  //requires the event listener option immediatelyOnly
-  const unpreventablesRegistry = {
-    mouseup: ["auxclick", "click", "dblclick"],
-    click: ["dblclick"]
+  const EventRoadMap = {
+    UNPREVENTABLES: {
+      mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
+      mouseup: ["click", "auxclick", "dblclick"],
+      click: ["dblclick"],
+      keydown: ["keypress"]
+    }
   };
 
   function block(e) {
@@ -142,7 +145,7 @@
       if (unpreventables === undefined || unpreventables === false)
         return;
       if (unpreventables === true)
-        unpreventables = unpreventablesRegistry[this.type];
+        unpreventables = EventRoadMap.UNPREVENTABLES[this.type];
       else if (typeof (unpreventables) === 'string' || unpreventables instanceof String)
         unpreventables = [unpreventables];
       if (!(unpreventables instanceof Array))
