@@ -1,3 +1,36 @@
+# Pattern: AddPreventableAction
+
+Default actions can be prevented by calling `.preventDefault()`. In this chapter, we extend the `addDefaultAction(...)` method to enable the added default action to be blocked by calling  `preventDefault()` on its triggering event.
+ 
+The default is to make `preventDefault()` block added default actions. Thus, we add a second option: `unpreventable` that defaults to `false`, to the `options` parameter.
+ 
+## `.addDefaultAction(cb, {unpreventable: false, raceEvents: false})` 
+
+```javascript
+//requires the toggleTick function
+Object.defineProperty(Event.prototype, "addDefaultAction", {
+  value: function (cb, options) {
+    let {unpreventable, raceEvents} = options instanceof Object ? options : {};
+    if (unpreventable)
+      return toggleTick(() => cb(this), raceEvents);
+    if (this.defaultPrevented)
+      return;
+    const defaultAction = toggleTick(() => cb(this), raceEvents);
+    Object.defineProperty(this, "preventDefault", {
+      value: function () {
+        defaultAction.cancel();
+        this.preventDefault();
+      }.bind(this),
+      writable: false
+    });
+  },
+  writable: false
+});
+``` 
+
+## Demo: 
+
+```html
 <script>
   const EventRoadMap = {
     UNPREVENTABLES: {
@@ -103,3 +136,4 @@
   three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), {unpreventable: true}));
   four.addEventListener("click", e => e.addDefaultAction(() => console.log("four")));
 </script>
+```

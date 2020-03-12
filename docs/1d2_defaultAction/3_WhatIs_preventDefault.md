@@ -1,6 +1,6 @@
 # WhatIs: `.preventDefault()`
 
-Put simply, `.preventDefault()` **stops the default task associated with an event**, such as stopping the `show context menu` action from the `contextmenu` event.
+`.preventDefault()` stops the default action associated with an event. For example, calling `.preventDefault()` on the `contextmenu` event will stop the browser from displaying the native context menu when the user for example right click on an element.
 
 The principal difference between `.stopPropagation()` and `.preventDefault()` is that:
 1. `stopPropagation()` halts the inner cycle of event propagation, without affecting the outer cycle of the EventCascade, and 
