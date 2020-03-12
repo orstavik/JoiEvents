@@ -1,22 +1,29 @@
 # Pattern: AddDefaultAction
 
-In this chapter we will extend the `Event` interface with an `.addDefaultAction(...)` method with the following API:
+How to add our own default actions to an event or type of events? 
 
-1. `event.addDefaultAction(cb)` will run the function `cb` after the event cascade of `event` has been completed. The `event.addDefaultAction(cb)` does not cancel the browsers native default actions for the same event, as this can be controlled from the `preventDefault()` method. The function will not be added/cancelled if `.preventDefault()` has already been/is later called on the event. 
-2. `event.addDefaultAction(cb, raceEvents)` will run `cb` only once either immediately before the subsequent raceEvents or as soon as the event cascade for the event is completed.
-todo add the `true` argument to mean the name of the trigger event.
+Default actions are best controlled from event instances and not per event type universal to all event instances. This is due to the fact that different, `preventable` default actions might compete with each other for the same trigger event, and in order to solve these conflicts we need to organize the default actions to each events propagation path. This require us working against each individual event object. More on this shortly.
+  
+To add a default action to an event we need to extend the `Event` interface with an `.addDefaultAction(...)` method. This method needs two arguments: `cb` and `raceEvents`.
 
-## `.addDefaultAction(cb, raceEvents)` 
+## Implementation: `event.addDefaultAction(cb, raceEvent)`
 
-1. The `cb` is a function that will be added as the new default action for the event. We pass the trigger `event` as the first argument to this method. 
-2. If `raceEvents` is not specified, the new default action is queued as a `toggleTick()` task. If `raceEvents` is given as either an array of event names, or as a string event name, the `toggleTick` task will race the list of given event names, or all the unpreventable given event names for the given event name, cf. `toggleTick` raceEvents.
+The `.addDefaultAction(...)` method heavily relies on the `toggleTick` method described in detail in a preceding chapter.
+
+1. **`cb`**: `function`. `event.addDefaultAction(...)` runs the `cb` function after the event cascade of the `event` has been completed.
+2. **`raceEvents`**: `true`, `undefined`, `eventName`, or `[event1, event2, ...]`. 
+   * If `raceEvents` is `true`, then the default action function (`cb`) will run immediately after the `event` has finished its propagation.
+   * If `raceEvents` is `undefined`, then the default action function (`cb`) will run after the `event` has finished its propagation *and* after all the `event`'s `EventRoadMap.UNPREVENTABLES` events have finished their propagation.
+   * If `raceEvents` is an `eventName` string, then then the default action function (`cb`) will run after the `event` has finished its propagation, but before any of the `eventName`'s `EventRoadMap.UNPREVENTABLES` events have begun their propagation.
+   * If `raceEvents` is a list of `eventName`s, then then the default action function (`cb`) will run after the `event` has finished its propagation, but before any of the events listed in the list of `eventNames`.
 
 ```javascript
 //requires the toggleTick function
 Object.defineProperty(Event.prototype, "addDefaultAction", {
   value: function (cb, raceEvents) {
-    const self = this;
-    toggleTick(() => cb(self), raceEvents);
+    if (raceEvents === true)
+      raceEvents = this.type;
+    toggleTick(() => cb(this), raceEvents);
   },
   writable: false
 });
@@ -93,22 +100,23 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
   //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
     value: function (cb, raceEvents) {
-      const self = this;
-      toggleTick(() => cb(self), raceEvents);
+      if (raceEvents === true)
+        raceEvents = this.type;
+      toggleTick(() => cb(this), raceEvents);
     },
     writable: false
   });
 </script>
 
-<div id="one">click.addDefaultAction(()=> console.log("one"));</div>
-<div id="five">click.addDefaultAction(()=> console.log("five"), ["dblclick"]);</div>
+<div id="one">click.addDefaultAction((trigger)=> console.log("action ONE triggered by ", trigger.type));</div>
+<div id="two">click.addDefaultAction((trigger)=> console.log("action TWO triggered by ", trigger.type));</div>
 
 <script>
   window.addEventListener("click", e => console.log(e.type));
   window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
-  const five = document.querySelector("#five");
-  one.addEventListener("click", e => e.addDefaultAction(() => console.log("one")));
-  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), ["dblclick"]));
+  const two = document.querySelector("#two");
+  one.addEventListener("click", e => e.addDefaultAction((trigger) => console.log("action ONE triggered by ", trigger.type)));
+  two.addEventListener("click", e => e.addDefaultAction((trigger) => console.log("action TWO triggered by ", trigger.type), ["dblclick"]));
 </script>
 ```

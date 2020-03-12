@@ -66,21 +66,22 @@
   //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
     value: function (cb, raceEvents) {
-      const self = this;
-      toggleTick(() => cb(self), raceEvents);
+      if (raceEvents === true)
+        raceEvents = this.type;
+      toggleTick(() => cb(this), raceEvents);
     },
     writable: false
   });
 </script>
 
-<div id="one">click.addDefaultAction(()=> console.log("one"));</div>
-<div id="five">click.addDefaultAction(()=> console.log("five"), ["dblclick"]);</div>
+<div id="one">click.addDefaultAction((trigger)=> console.log("action ONE triggered by ", trigger.type));</div>
+<div id="two">click.addDefaultAction((trigger)=> console.log("action TWO triggered by ", trigger.type));</div>
 
 <script>
   window.addEventListener("click", e => console.log(e.type));
   window.addEventListener("dblclick", e => console.log(e.type));
   const one = document.querySelector("#one");
-  const five = document.querySelector("#five");
-  one.addEventListener("click", e => e.addDefaultAction(() => console.log("one")));
-  five.addEventListener("click", e => e.addDefaultAction(() => console.log("five"), ["dblclick"]));
+  const two = document.querySelector("#two");
+  one.addEventListener("click", e => e.addDefaultAction((trigger) => console.log("action ONE triggered by ", trigger.type)));
+  two.addEventListener("click", e => e.addDefaultAction((trigger) => console.log("action TWO triggered by ", trigger.type), ["dblclick"]));
 </script>
