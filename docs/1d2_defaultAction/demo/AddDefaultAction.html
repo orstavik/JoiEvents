@@ -69,7 +69,7 @@
       let raceEvents = options ? options.raceEvents : undefined;
       if (raceEvents === true)
         raceEvents = this.type;
-      toggleTick(() => cb(this), raceEvents);
+      return toggleTick(() => cb(this), raceEvents);
     },
     writable: false
   });

@@ -18,6 +18,8 @@ The `.addDefaultAction(...)` method heavily relies on the `toggleTick` method de
       * `undefined`: the default action function (`cb`) runs after the `event` has finished its propagation *and* after all the `event`'s `EventRoadMap.UNPREVENTABLES` events have finished their propagation.
       * `[eventNames]`: the default action function (`cb`) runs after the `event` has finished its propagation, but **before** any of the events listed in the `[eventNames]` array.
       * `eventName` string: the default action function (`cb`) runs after the `event` has finished its propagation, but before any of the `eventName`'s `EventRoadMap.UNPREVENTABLES` events have begun their propagation. You should likely use `true` instead of `eventName` here.
+      
+The return value is the `toggleTick` task object that can for example be cancelled.
 
 ```javascript
 //requires the toggleTick function
@@ -26,7 +28,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     let raceEvents = options ? options.raceEvents : undefined;
     if (raceEvents === true)
       raceEvents = this.type;
-    toggleTick(() => cb(this), raceEvents);
+    return toggleTick(() => cb(this), raceEvents);
   },
   writable: false
 });
@@ -106,7 +108,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       let raceEvents = options ? options.raceEvents : undefined;
       if (raceEvents === true)
         raceEvents = this.type;
-      toggleTick(() => cb(this), raceEvents);
+      return toggleTick(() => cb(this), raceEvents);
     },
     writable: false
   });

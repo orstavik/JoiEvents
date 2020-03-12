@@ -14,7 +14,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     if (unpreventable)
       return toggleTick(() => cb(this), raceEvents);
     if (this.defaultPrevented)
-      return;
+      return null;
     const defaultAction = toggleTick(() => cb(this), raceEvents);
     Object.defineProperty(this, "preventDefault", {
       value: function () {
@@ -23,10 +23,13 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       }.bind(this),
       writable: false
     });
+    return defaultAction;
   },
   writable: false
 });
-``` 
+```  
+
+If no default action task is queued, as someone has already called `preventDefault()` on the event and the default action is `preventable`, then `addDefaultAction()` returns `null`;
 
 ## Demo: 
 
@@ -103,7 +106,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       if (unpreventable)
         return toggleTick(() => cb(this), raceEvents);
       if (this.defaultPrevented)
-        return;
+        return null;
       const defaultAction = toggleTick(() => cb(this), raceEvents);
       Object.defineProperty(this, "preventDefault", {
         value: function () {
@@ -112,6 +115,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
         }.bind(this),
         writable: false
       });
+      return defaultAction;
     },
     writable: false
   });

@@ -70,7 +70,7 @@
       if (unpreventable)
         return toggleTick(() => cb(this), raceEvents);
       if (this.defaultPrevented)
-        return;
+        return null;
       const defaultAction = toggleTick(() => cb(this), raceEvents);
       Object.defineProperty(this, "preventDefault", {
         value: function () {
@@ -79,6 +79,7 @@
         }.bind(this),
         writable: false
       });
+      return defaultAction;
     },
     writable: false
   });
