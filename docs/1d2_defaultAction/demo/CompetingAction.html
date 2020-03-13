@@ -65,46 +65,42 @@
 
   //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, owner, raceEvents) {
-      if (owner === undefined)
-        return toggleTick(cb, raceEvents);
-      if (!(owner instanceof HTMLElement))
-        throw new Error("The second argument 'owner' in Event.addDefaultAction(cb, owner, preEvent) must be undefined or an HTMLElement.");
+    value: function (cb, options) {
+      let {preventable, raceEvents} = options instanceof Object ? options : {};
+      if (!preventable)
+        return toggleTick(() => cb(this), raceEvents);
       if (this.defaultPrevented)
-        return;
+        return null;
 
-      // the previously added default action happened below in the DOM
+      if (this.composedPath().indexOf(preventable) === -1)
+        throw new Error("The preventable option in the addDefaultAction is not an element in this event's propagation path.");
+      // the preventable element is above the  previously added default action happened below in the DOM
       // and therefore essentially calls preventDefault() on the one attempted to be added here.
-      if (
-        this._addedDefaultActionTriggerElement && (
-        owner.contains(this._addedDefaultActionTriggerElement) ||
-        owner === this._addedDefaultActionTriggerElement)
-      )
-        return;
-      const wrapper = function () {
-        if (!this.defaultPrevented)
-          cb();
-      }.bind(this);
-      this._addedDefaultActionTriggerElement = owner;
-      if (this._defaultAction)
-        return this._defaultAction.reuse(wrapper, raceEvents);
+      if (this._defaultActionElement && preventable.contains(this._defaultActionElement) && preventable !== this._defaultActionElement)
+        return null;
+
+      this.preventDefault();
+      this._defaultActionElement = preventable;
+      if (this._defaultAction) {
+        this._defaultAction.reuse(cb, raceEvents);
+        return true;
+      }
 
       this._defaultAction = toggleTick(cb, raceEvents);
-      this.preventDefault();
-      Object.defineProperty(this, "defaultPrevented", {
-        get: function () {
-          !this._defaultAction.isActive();
-        },
-        set: function () {
-          debugger;
-        }
-      });
       Object.defineProperty(this, "preventDefault", {
         value: function () {
           this._defaultAction.cancel();
-        },
+        }.bind(this),
         writable: false
       });
+      Object.defineProperty(this, "defaultPrevented", {
+        get: function () {
+          !this._defaultAction.isActive();
+        }.bind(this),
+        set: function () {
+        }
+      });
+      return true;
     },
     writable: false
   });
@@ -127,7 +123,9 @@
   const one = document.querySelector("#one");
   const two = document.querySelector("#two");
   const three = document.querySelector("#three");
-  one.addEventListener("click", e => e.addDefaultAction(() => console.log("one"), e.currentTarget, ["dblclick"]), true);
-  two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), e.currentTarget), true);
-  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), undefined, ["dblclick"]), true);
-</script>
+  one.addEventListener("click", e => e.addDefaultAction(() => console.log("one"), {
+    preventable: e.currentTarget,
+    raceEvents: ["dblclick"]
+  }));
+  two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), {preventable: e.currentTarget}));
+  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), {raceEvents: ["dblclick"]}));</script>
