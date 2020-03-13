@@ -151,19 +151,20 @@ function mark_defaultActionElement(event) {
       }
 
       this._defaultAction = toggleTick(cb, raceEvents);
-      Object.defineProperty(this, "preventDefault", {
+      Object.defineProperties(this, {
+        "preventDefault": {
         value: function () {
           this._defaultAction.cancel();
         }.bind(this),
         writable: false
-      });
-      Object.defineProperty(this, "defaultPrevented", {
+      },
+      "defaultPrevented": {
         get: function () {
           !this._defaultAction.isActive();
         }.bind(this),
         set: function () {
         }
-      });
+      }});
       return true;
     },
     writable: false

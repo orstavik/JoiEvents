@@ -36,17 +36,19 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       return true;
     }
     this._defaultAction = toggleTick(cb, raceEvents);
-    Object.defineProperty(this, "preventDefault", {
-      value: function () {
-        this._defaultAction.cancel();
-      }.bind(this),
-      writable: false
-    });
-    Object.defineProperty(this, "defaultPrevented", {
-      get: function () {
-        !this._defaultAction.isActive();
-      }.bind(this),
-      set: function () {
+    Object.defineProperties(this, {
+      preventDefault: {
+        value: function () {
+          this._defaultAction.cancel();
+        }.bind(this),
+        writable: false
+      },
+      defaultPrevented: {
+        get: function () {
+          !this._defaultAction.isActive();
+        }.bind(this),
+        set: function () {
+        }
       }
     });
     return true;
@@ -147,17 +149,19 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       }
 
       this._defaultAction = toggleTick(cb, raceEvents);
-      Object.defineProperty(this, "preventDefault", {
-        value: function () {
-          this._defaultAction.cancel();
-        }.bind(this),
-        writable: false
-      });
-      Object.defineProperty(this, "defaultPrevented", {
-        get: function () {
-          !this._defaultAction.isActive();
-        }.bind(this),
-        set: function () {
+      Object.defineProperties(this, {
+        preventDefault: {
+          value: function () {
+            this._defaultAction.cancel();
+          }.bind(this),
+          writable: false
+        },
+        defaultPrevented: {
+          get: function () {
+            !this._defaultAction.isActive();
+          }.bind(this),
+          set: function () {
+          }
         }
       });
       return true;

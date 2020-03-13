@@ -114,17 +114,19 @@
       }
 
       this._defaultAction = toggleTick(cb, raceEvents);
-      Object.defineProperty(this, "preventDefault", {
-        value: function () {
-          this._defaultAction.cancel();
-        }.bind(this),
-        writable: false
-      });
-      Object.defineProperty(this, "defaultPrevented", {
-        get: function () {
-          !this._defaultAction.isActive();
-        }.bind(this),
-        set: function () {
+      Object.defineProperties(this, {
+        preventDefault: {
+          value: function () {
+            this._defaultAction.cancel();
+          }.bind(this),
+          writable: false
+        },
+        defaultPrevented: {
+          get: function () {
+            !this._defaultAction.isActive();
+          }.bind(this),
+          set: function () {
+          }
         }
       });
       return true;
@@ -159,4 +161,5 @@
     raceEvents: ["dblclick"]
   }));
   two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), {preventable: e.currentTarget}));
-  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), {raceEvents: ["dblclick"]}));</script>
+  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), {raceEvents: ["dblclick"]}));
+</script
