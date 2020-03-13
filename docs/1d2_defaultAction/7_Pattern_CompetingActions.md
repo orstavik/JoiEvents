@@ -32,10 +32,10 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     this.preventDefault();
     this._defaultActionElement = preventable;
     if (this._defaultAction) {
-      this._defaultAction.reuse(cb, raceEvents);
+      this._defaultAction.reuse(() => cb(this), raceEvents);
       return true;
     }
-    this._defaultAction = toggleTick(cb, raceEvents);
+    this._defaultAction = toggleTick(() => cb(this), raceEvents);
     Object.defineProperties(this, {
       preventDefault: {
         value: function () {
@@ -144,11 +144,11 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       this.preventDefault();
       this._defaultActionElement = preventable;
       if (this._defaultAction) {
-        this._defaultAction.reuse(cb, raceEvents);
+        this._defaultAction.reuse(() => cb(this), raceEvents);
         return true;
       }
 
-      this._defaultAction = toggleTick(cb, raceEvents);
+      this._defaultAction = toggleTick(() => cb(this), raceEvents);
       Object.defineProperties(this, {
         preventDefault: {
           value: function () {
