@@ -1,0 +1,33 @@
+<outer-component></outer-component>
+
+<script>
+  class InnerComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <input type="text" value="one">
+        <input type="text" value="two">
+      `;
+      this.shadowRoot.addEventListener("focusin", e => console.log("InnerShadow: ", e.composedPath()[0].value));
+    }
+  }
+
+  customElements.define("inner-component", InnerComponent);
+
+  class OuterComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <inner-component></inner-component>
+        <input type="text" value="three">
+      `;
+      this.shadowRoot.addEventListener("focusin", e => console.log("OuterShadow: ", e.composedPath()[0].value));
+    }
+  }
+
+  customElements.define("outer-component", OuterComponent);
+
+  window.addEventListener("focusin", e => console.log("main: ", e.composedPath()[0].value));
+</script>
