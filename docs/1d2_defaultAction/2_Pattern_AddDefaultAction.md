@@ -18,6 +18,8 @@ The `.addDefaultAction(...)` method heavily relies on the `toggleTick` method de
       * `undefined`: the default action function (`cb`) runs after the `event` has finished its propagation *and* after all the `event`'s `EventRoadMap.UNPREVENTABLES` events have finished their propagation.
       * `[eventNames]`: the default action function (`cb`) runs after the `event` has finished its propagation, but **before** any of the events listed in the `[eventNames]` array.
       * `eventName` string: the default action function (`cb`) runs after the `event` has finished its propagation, but before any of the `eventName`'s `EventRoadMap.UNPREVENTABLES` events have begun their propagation. You should likely use `true` instead of `eventName` here.
+
+> We assume that normal use of `addDefaultAction()` would not be to specify `raceEvents`. But, if your use-case require or benefit from your default action coming ahead of for example `focus` or `dblclick` event, then the `addDefaultAction()` has the facilities to help you out.
       
 The return value is the `toggleTick` task object that can for example be cancelled.
 
