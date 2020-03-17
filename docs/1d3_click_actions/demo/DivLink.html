@@ -6,7 +6,7 @@
 </div>
 <a href="#goodbye">
   goodbye
-  <span href="#world">world</span>
+  <span href="#school">school</span>
 </a>
 
 <script>
@@ -16,7 +16,7 @@
         e.addDefaultAction(function (e) {
           console.log("action is triggered by: ", e);
           location.href = new URL(this.getAttribute("href"), document.baseURI).href;
-        }.bind(element), {preventable: element, raceEvents: ["dblclick"]});
+        }.bind(element), {preventable: element/*, raceEvents: ["dblclick"]*/});
         return;
       }
     }

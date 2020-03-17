@@ -1,17 +1,19 @@
 # WhatIs: aClick
 
 `click` on an `<a href>` element.
+`click` on a `<input type="checkbox">`
+`<check-box>`
+
+`click` on a button on an `<summary>` element
+`click` on a button on an `<option>` element
 
 `click` on a `<input type="color">`
 `click` on a `<input type="time">`
-`click` on a `<input type="checkbox">`
 `click` on a `<input type="radio">`
 `click` on a `<input type="file">`
 `click` on a `<input type="reset">` or `<button type="reset">`
 `click` on a `<input type="submit">` or `<button type="submit">`
 `click` on a button on an `<audio>` or `<video>` element
-`click` on a button on an `<option>` element
-`click` on a button on an `<summary>` element
 `click` on a button on an `<img usemap>` element
 
 
