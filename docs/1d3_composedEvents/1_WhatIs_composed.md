@@ -55,6 +55,8 @@ Examples of events that should be `composed: false`, but that are instead `compo
 
 Examples of events that are `composed: false`, but should be `composed: true`, is:
   `submit`,
+  
+The `composed: false` events only reflect a DOM state mutation. Therefore, they usually do not need to relay any information other than which DOM elements has/will change. As a web developer, you can therefore expect to only receive two pieces of information from an `composed: false` event: the event `type` (name) and the `target` element.
     
 ## References
 

@@ -1,0 +1,40 @@
+<script>
+  class CheckBox extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `<input type="checkbox" style="cursor: crosshair;">`;
+      this._check = shadow.children[0];
+      shadow.addEventListener("change", this.onChange.bind(this));
+    }
+
+    onChange(e) {
+      this._check.style.cursor = (this._check.style.cursor === "crosshair") ? "grab" : "crosshair";
+    }
+
+    bounceEvent(e){
+      //1. make the bounceEvent clone
+      const bounceEvent = new Event("change", {composed: false, bubbles: true});
+      //2. copy props from e to bounceEvent
+      //change has no valuable properties outside of its `target'
+      //3. dispatch the bounceEvent on the host node
+      this.dispatchEvent(bounceEvent);
+    }
+
+    //When we bounce events from an inner element,
+    //we also need to mirror the properties of
+    //the inner element that those events alert has been changed.
+    //In the case of the checkbox, that is the `.checked` property.
+    //This is a problem for the input and beforeinput events. the target can't tell its parent context about its state. which the event reflects. which breaks in mode: closed.
+    //4. mirroring the properties that the composed event notifies has changed.
+    get checked(){
+      return this._check.checked;
+    }
+    set checked(value){
+      this._check.checked = value;
+    }
+  }
+  customElements.define("check-box", CheckBox);
+</script>
+
+<check-box onchange="console.log(this.checked)"></check-box>
