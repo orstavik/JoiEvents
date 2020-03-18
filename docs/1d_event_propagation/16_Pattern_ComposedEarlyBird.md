@@ -2,15 +2,166 @@
 
 > gets another worm!
 
-When a `composed: false` event is dispatched inside a `shadowRoot` inside a web component, then that event only propagates down from the `shadowRoot` node, and *not* from the `window` node.
- 
-This produce the following scenarios. To intercept events directed at:
-1. a DOM node in the **topmost, "main" lightDOM** you can intercept both **composed** and **non-composed** events on the **`window`** node,
-2. a DOM node inside a `shadowRoot` you must intercept:
-   1. **composed** events on the **`window`** node, while
-   2. **non-composed** events on the **`shadowRoot`** node.
+When a `composed: false` event is dispatched inside a `shadowRoot` inside a web component, then that event propagates down from the `shadowRoot` node, and *not* from the `window` node.
+
+This means that:
+1. in the **topmost, "main" lightDOM** all EarlyBird event listeners (ie. for both **composed** and **non-composed** events) are attached to the **`window`** node, but
+2. **inside a shadowDOM**:
+   * **composed** events on the **`window`** node, while
+   * **non-composed** events on the **`shadowRoot`** node.
    
-> All EarlyBird event listeners in the "main" document should listen on the `window` element. This chapter *only* discuss strategies needed when event listeners are added from a) multiple js modules and b) for `composed` events dispatched to/from nodes *under* a `shadowRoot` (inside a web component).
+## Demo: A `composed: false` event inside a shadowDOM
+
+In the demo below we add a simple web component with an `open` `shadowRoot` that contains a `<details>` element. We then add multiple event listeners to both the `window`, the host node, the `shadowRoot` and the `<details>` element, and then trigger the `toggle` event by turning the `open` property on the `<details>` element to `true`. 
+
+```html
+<script>
+
+  class WebComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML =`
+        <details>
+          <summary>hello</summary>
+          sunshine!
+        </details>
+      `;
+    }
+  }
+
+  customElements.define("web-component", WebComponent);
+</script>
+<web-component></web-component>
+<script>
+  const webComponent = document.querySelector("web-component");
+  const shadowRoot = webComponent.shadowRoot;
+  const details = shadowRoot.children[0];
+
+  //capture phase event listeners
+  window.addEventListener("toggle", e=> console.log("window listener"), true);         //no, because the toggle event is non-composed
+  webComponent.addEventListener("toggle", e=> console.log("host node listener"), true);//no, because the host node is not inside the shadowRoot
+  shadowRoot.addEventListener("toggle", e=> console.log("shadowRoot listener"), true); //yes, this shadowRoot is the topmost target for this composed event
+
+  //bubble phase event listeners
+  details.addEventListener("toggle", e=> console.log("details listener bubble"));      //yes, the details is the target of the toggle event
+  shadowRoot.addEventListener("toggle", e=> console.log("shadowRoot listener bubble"));//no, because the toggle event does not bubble.
+
+  //trigger a toggle event from JS
+  details.open = true;
+</script>
+```
+
+The demo prints:
+```
+shadowRoot listener
+details listener bubble
+```
+
+Explanation:
+1. the `toggle` event is `composed: false`. This means that the event does not propagate outside the `shadowRoot` when its `target` element is located inside that element. Thus, no event listeners attached to the `window` nor the `details` host element is triggered, neither in the capture phase nor the bubble phase.    
+2. the `toggle` event is `bubbles: false` too. This means that the event does not *bubble* up to the `shadowRoot` neither. Thus, do not forget to add `capture: true` for EarlyBird event listeners.  
+
+## Problem 1: Which events are `composed: false`?
+
+Principally, events should propagate in the *context* in which they occur, and that context only. For events that `target` an element in a DOM above the shadowDOM of a web component, this is not a problem because the event will never propagate into the shadowDOM. But, what about internal events inside a web component? If they propagated from the This is the  
+
+```javascript
+const composedEvents =[
+"blur",
+"focus",
+"focusin",
+"focusout",
+"click",
+"auxclick",
+"contextmenu",
+"dblclick",
+"mousedown",
+"mouseenter",
+"mouseleave",
+"mousemove",
+"mouseout",
+"mouseover",
+"mouseup",
+"wheel",
+"beforeinput",
+"input",
+"keydown",
+"keyup",
+"compositionstart",
+"compositionupdate",
+"compositionend",
+"touchstart",
+"touchend",
+"touchmove",
+"touchcancel",
+"pointerover",
+"pointerenter",
+"pointerdown",
+"pointermove",
+"pointerup",
+"pointercancel",
+"pointerout",
+"pointerleave",
+"gotpointercapture",
+"lostpointercapture",
+"dragstart",
+"dragend",
+"dragenter",
+"dragexit",
+"dragleave",
+"drag",
+"dragover",
+"drop"
+];
+```
+
+
+## Problem 2: EarlyBirds for non-composed events in the `constructor()`
+
+If you add two `<web-component>` elements in the example above, all the event listeners from the host node and down needs to be replicated in order to listen for `toggle` events inside the second element too. The best way to accomplish this, is to add the event listener for non-composed events in the `constructor()` of web components.
+
+```html
+<script>
+
+  class WebComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <details>
+          <summary>hello</summary>
+          sunshine!
+        </details>
+      `;
+      this.shadowRoot.addEventListener("toggle", e => console.log("shadowRoot listener from: ", this.id), true);
+    }
+  }
+
+  customElements.define("web-component", WebComponent);
+</script>
+<web-component id="one"></web-component>
+<web-component id="two"></web-component>
+<script>
+  //trigger a toggle event from JS
+  document.querySelector("web-component#one").shadowRoot.children[0].open = true;
+  document.querySelector("web-component#two").shadowRoot.children[0].open = true;
+</script>
+```
+Results in:
+```
+shadowRoot listener from:  one
+shadowRoot listener from:  two
+```
+
+## Problem 3: Adding essentially the same event listener to the `window` element.
+
+
+## Listening for `composed` events from inside a shadowDOM
+
+The scenario is as follows. You are declaring a web component. And you need to add an EarlyBird event listener.
+
+1. You do not want to add this EarlyBird event listener for all the instances of your web components, ie. one for each element. EarlyBird event listeners always run, they are not filtered based on the propagation path of the event instance, and therefore you should not have more    
 
 ## Problem 1: Listening for the same thing from two places
  

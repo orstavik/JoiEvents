@@ -1,0 +1,28 @@
+<script>
+
+  class WebComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <details>
+          <summary>hello</summary>
+          sunshine!
+        </details>
+      `;
+      this.shadowRoot.addEventListener("toggle", e => console.log("shadowRoot listener from: ", this.id), true);
+    }
+  }
+
+  customElements.define("web-component", WebComponent);
+</script>
+<web-component id="one"></web-component>
+<web-component id="two"></web-component>
+<script>
+  //trigger a toggle event from JS
+  document.querySelector("web-component#one").shadowRoot.children[0].open = true;
+  document.querySelector("web-component#two").shadowRoot.children[0].open = true;
+  //
+  // shadowRoot listener from:  one
+  // shadowRoot listener from:  two
+</script>

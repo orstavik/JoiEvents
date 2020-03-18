@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+<nor-textarea>hoer haar haer</nor-textarea>
+
+<script>
+  class NorwegianTextarea extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <style>
+          div {
+            width: 100px;
+            height: 100px;
+            border: 2px solid green;
+            position:relative;
+            background: white;
+          }
+          textarea {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+          }
+          div > div {
+            width: 100%;
+            height: 100%;
+
+          }
+        </style>
+        <div tabindex="-1">
+          <textarea>hidden value</textarea>
+          <div></div>
+        </div>
+      `;
+      this._textarea = this.shadowRoot.children[1].children[0];
+      this._innerDiv = this.shadowRoot.children[1].children[1];
+      this.shadowRoot.addEventListener("focusin", e => this._textarea.focus());
+      //due to the strange composed behavior of focus events, this event will not leak out.
+      this.shadowRoot.addEventListener("input", e => this.writeNorwegian(e));
+      //this event leaks out, unfortunately.
+    }
+
+    connectedCallback() {
+      window.addEventListener("DOMContentLoaded", function () {
+        this._textarea.innerHTML = this.innerHTML.replace("ae", "æ").replace("oe", "ø").replace("aa", "å");
+        this._textarea.value = this._textarea.innerHTML;
+        this._innerDiv.innerText = this._textarea.value;
+      }.bind(this));
+    }
+
+    //double-tap "aa"/"ae"/"oe" gives the Norwegian "å"/"æ"/"ø".
+    //300ms delay like with the good old double-tap to zoom
+    writeNorwegian(e) {
+      const two = e.data;
+      if (this._delayed) {
+
+        const one = this._delayed.data;
+        clearTimeout(this._delayed.timer);
+        this._delayed = undefined;
+        if (one === "a" && two === "a")
+          this.updateText("å");
+        else if (one === "a" && two === "e")
+          this.updateText("æ");
+        else if (one === "o" && two === "e")
+          this.updateText("ø");
+        else {
+          this.updateText(one);
+          this.updateText(two);
+        }
+      } else if (two === "a" || two === "o") {
+        this._delayed = {
+          timer: setTimeout(function () {
+            this.updateText(e.data);
+            this._delayed = undefined;
+          }.bind(this), 300),
+          data: two
+        };
+      } else {
+        this.updateText(two);
+      }
+    }
+
+    updateText(txt) {
+      const beforeInput = new CustomEvent("my-beforeinput", {composed: false, bubbles: true, detail: {data: txt}});
+      this.dispatchEvent(beforeInput);
+      if (beforeInput.defaultPrevented)
+        return;
+      this._innerDiv.innerText += txt;
+      const input = new CustomEvent("my-input", {composed: false, bubbles: true, detail: {data: txt}});
+      this.dispatchEvent(input);
+    }
+  }
+
+  customElements.define("nor-textarea", NorwegianTextarea);
+
+  function log(e) {
+    console.log(e);
+  }
+
+  window.addEventListener("beforeinput", log, true);
+  window.addEventListener("input", log, true);
+  window.addEventListener("my-beforeinput", log, true);
+  window.addEventListener("my-input", log, true);
+</script>
+</body>
+</html>

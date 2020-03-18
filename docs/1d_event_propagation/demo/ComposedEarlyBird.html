@@ -1,0 +1,38 @@
+<script>
+
+  class WebComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML =`
+        <details>
+          <summary>hello</summary>
+          sunshine!
+        </details>
+      `;
+    }
+  }
+
+  customElements.define("web-component", WebComponent);
+</script>
+<web-component></web-component>
+<script>
+  const webComponent = document.querySelector("web-component");
+  const shadowRoot = webComponent.shadowRoot;
+  const details = shadowRoot.children[0];
+
+  //capture phase event listeners
+  window.addEventListener("toggle", e=> console.log("window listener"), true);         //no, because the toggle event is non-composed
+  webComponent.addEventListener("toggle", e=> console.log("host node listener"), true);//no, because the host node is not inside the shadowRoot
+  shadowRoot.addEventListener("toggle", e=> console.log("shadowRoot listener"), true); //yes, this shadowRoot is the topmost target for this composed event
+
+  //bubble phase event listeners
+  details.addEventListener("toggle", e=> console.log("details listener bubble"));      //yes, the details is the target of the toggle event
+  shadowRoot.addEventListener("toggle", e=> console.log("shadowRoot listener bubble"));//no, because the toggle event does not bubble.
+
+  //trigger a toggle event from JS
+  details.open = true;
+  //prints:
+  //   shadowRoot listener
+  //   details listener bubble
+</script>

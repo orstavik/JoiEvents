@@ -1,0 +1,33 @@
+<web-component></web-component>
+
+<script>
+  function log(e) {
+    console.log(e.type, e.composed, e.target)
+  }
+
+  class WebComponent extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <input type="text" value="one">
+        <input type="text" value="two">
+      `;
+      this.shadowRoot.addEventListener("change", log, true);
+      this.shadowRoot.addEventListener("beforeinput", log, true);
+      this.shadowRoot.addEventListener("input", log, true);
+      this.shadowRoot.addEventListener("cut", log, true);
+      this.shadowRoot.addEventListener("copy", log, true);
+      this.shadowRoot.addEventListener("paste", log, true);
+    }
+  }
+
+  customElements.define("web-component", WebComponent);
+
+  window.addEventListener("change", log, true);     //never triggers, because "change" is composed: false
+  window.addEventListener("beforeinput", log, true);
+  window.addEventListener("input", log, true);
+  window.addEventListener("copy", log, true);
+  window.addEventListener("cut", log, true);
+  window.addEventListener("paste", log, true);
+</script>

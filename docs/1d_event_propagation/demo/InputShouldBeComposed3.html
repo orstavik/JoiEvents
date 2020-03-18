@@ -1,0 +1,64 @@
+<hotkey-textarea></hotkey-textarea>
+<p>write "if" and then enter to see a hotkey in action!</p>
+
+<script>
+  class HotkeyTextarea extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host {
+            display: block;
+            width: 100px;
+            height: 100px;
+          }
+          textarea {
+            width: 100%;
+            height: 100%;
+          }
+        </style>
+        <textarea></textarea>
+      `;
+      this._textarea = this.shadowRoot.children[1];
+      // this.shadowRoot.addEventListener("focusin", e => this._textarea.focus());
+      // //due to the strange composed behavior of focus events, this event will not leak out.
+      this.shadowRoot.addEventListener("beforeinput", e => this.maybeHotkey(e));
+      //input events leaks out, unfortunately.
+    }
+
+    //"enter" is a hotkey after the word "if"
+    // otherwise, enter produces a normal enter
+    maybeHotkey(e) {
+      if (e.inputType === "insertLineBreak") {
+        if (this._textarea.value.endsWith("if")) {
+          e.preventDefault();
+          return this.updateText(e, "(){}");
+        }
+      }
+      return this.updateText(e, undefined);
+    }
+
+    updateText(e, txt) {
+      const beforeInput = new CustomEvent("my-beforeinput", {composed: false, bubbles: true});
+      beforeInput.data = txt || e.data;
+      beforeInput.inputType = e.inputType;
+      this.dispatchEvent(beforeInput);
+      if (beforeInput.defaultPrevented)
+        return e.preventDefault();
+      if (txt)
+        this._textarea.value += txt;
+      const input = new CustomEvent("my-input", {composed: false, bubbles: true});
+      input.data = txt || e.data;
+      input.inputType = e.inputType;
+      this.dispatchEvent(input);
+    }
+  }
+
+  customElements.define("hotkey-textarea", HotkeyTextarea);
+
+  window.addEventListener("beforeinput", e => console.log(e.type, e.inputType, e.data), true);
+  window.addEventListener("input", e => console.log(e.type, e.inputType, e.data), true);
+  window.addEventListener("my-beforeinput", e => console.log(e.type, e.inputType, e.data), true);
+  window.addEventListener("my-input", e => console.log(e.type, e.inputType, e.data), true);
+</script>
