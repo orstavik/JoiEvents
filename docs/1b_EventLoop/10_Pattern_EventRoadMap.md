@@ -2,7 +2,7 @@
 
 An event cascade is a series of events and actions that trigger each other with a domino-effect. When one event occurs another might or must follow.
  
-In this chapter we make a JS map of these events with the key being the trigger event. We need two different maps:
+In this chapter we make a JS map of these events with the key being the trigger event. We need three different maps:
 1. `EventRoadMap.UNPREVENTABLES`: all the different possible events that an event might trigger that CANNOT be stopped using `.preventDefault()`.    
 2. `EventRoadMap.PREVENTABLES`: all the different possible events that an event might trigger that CAN be stopped using `.preventDefault()`.    
 3. `EventRoadMap.ALL`: all the different possible events that an event might trigger.
