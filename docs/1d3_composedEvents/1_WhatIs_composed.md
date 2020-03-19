@@ -1,25 +1,33 @@
 # WhatIs: `composed`
 
-When we make web components (or native elements with shadowDOM), the DOM actually gets broken off into multiple contexts which doesn't know nor care about each other. The main context is the main, topmost `document`. This is the dynamic DOM of the "app", the HTML being mutated by javascript that "normal" web developer makes.
+## Why shadowDOM?
 
-However, there are other DOM contexts that are woven into the DOM that is presented to the user that is made by *other* developers. This is the shadowDOM contexts. The shadowDOM contexts are the inside of an HTML element, which also is made up of other HTML elements (and CSS and JS). You can think of it this way: at the outset, all element types are just simple `<span>` elements, but then they get filled with itsy-bitsy pieces of both HTML, CSS, and JS that make them unique. If you break elements up in this way, recursively, all you would be left with are `<span>` elements and JS and CSS code. More or less.
+With web components the DOM actually gets broken off into multiple contexts which doesn't care about each other. First, there is the **main DOM context**: the "normal DOM" that "normal" web developer makes; the main topmost `document`; the app's HTML that is changed by the app's javascript. Second, there are the **shadowDOM contexts**: small pieces of DOM inside web components (and native elements) that contain their own, separate HTML, JS, and CSS; small pieces of DOM that are nested into the main DOM and each other; potentially reusable web components that do not know the context of the main DOM, nor each other, and whose insides the main DOM should not need to worry about; web components made by other developers.
 
-Now, it is obvious that we want to hide away these itsy-bitsy pieces of inner HTML structure,  javascript, and CSS code in the shadowDOM of a native element. For example, in a `<video>` element, we don't want the developer to access nor alter the structure, layout, and functions of the control panel: outside developers should only be able to tune, adjust and possibly select features for this control panel. The whole point of elements is exactly to hide those details to avoid the developer to tamper with them and get confused.
+The shadowDOM contexts are the inside of an HTML element. The inside of an element is made up of other HTML elements, some added CSS style and some custom JS properties, methods, and reactions. If you analyze a piece of HTML template to its roots, you would break it down into layers upon layers of shadowDOM with gradually simpler elements with some CSS and JS until you end up with a shadowDOM that only contain simple `<span>` elements with some added JS and CSS. More or less.
 
-What is not so obvious, is that we also want to hide *events* that fly around inside the shadowDOM. If there are events that occur between two elements inside an element, we do not want to "disturb" the outside context with such inner events: we do not want inner event sequences to bleed out just as we don't want inner style nor functionality nor structure to bleed out of an element. Both HTML, CSS, JS *and events* should be encapsulated inside web components.   
+Now, it is obvious that we want to hide away these itsy-bitsy pieces of inner HTML structure,  javascript, and CSS code in the shadowDOM of a native element. First, it would be impossibly complex if web developers had to work only with the low level `<span>` elements and lots of CSS and JS code. Second, we want to encapsulate in structure, layout, and functions of many different elements to prevent styles, functions and structures from mixing up. For example, it is good to not expose all the template, functions, and style of the control panel in a `<video>` element, as it would both swamp the code where the `<video>` element is used and potentially leak both in and out style and functionality. The whole point of web components and HTML elements is this: to hide generic stylistic, structural and functional details to prevent them from confusing the developer and get their references mixed up with the rest of the code where it is used. *The purpose of web components (and native elements) is to encapsulate HTML, CSS, and JS*.  
 
-By default, all events should be kept within the shadowDOM when they target an element inside the shadowDOM of another element; by default, all events are `composed: false` ("not composed"). `composed: true` is the name/property for events that can travel *up/down* and *in/out* of an element's shadowDOM. `composed: false` are all events that only propagate within shadowDOM borders, ie. local to the `shadowRoot` ancestor of their `target`. Keeping events `composed: false` prevent the flow of events inside an element from *bleeding* out and disturbing the flow of events in the "outer" contexts.  
-
+But, we forgot one thing! We forgot that we also want to **encapsulate internal events**. Web components (and native elements) can have lots of events flying around inside their shadowDOM that are internal details, that has nothing to do with the elements outside. It can be just as important to hide and shield internal events as it is to hide and shield internal style and functionality. Some events therefore needs to be contained inside the shadowDOM context, while other events should be able to fly between shadowDOMs. We do not want the inner event sequences of an element to bleed out from an element (and we don't want irrelevant outer event sequences  to bleed into an element's insides neither). *The purpose of web components (and native elements) is to encapsulate HTML, CSS, JS, **and events***.  
+ 
 ## Which events are `composed`?
 
-**`composed` events are *global***. They originate *outside* the DOM and then hit an element inside the DOM, both outside and inside the shadowDOM context. For example, a `click` on a play button in the shadowDom of a `<video>` element is a *global* event that hits an element deep inside the shadowDOM of an element in the DOM. Events that are *global* include:
-1. user-generated events (`UIEvent`s such as `click` or `keypress`),
-2. OS/browser-app events (commonly `target` the `window` node such as `resize` and `online`), and 
-3. external custom events such as a custom app-specific or organization-specific, server-driven or state-driven event (which also commonly `target` the `window` or `document`).
+**External events**. External events represent *a state change that occur outside of the DOM*. For example, a `keydown` event represents a state change of the user's finger, a change of the mouse buttons position, a primitive UI event in the OS; the `offline` event represents a state change in a cut cable, a router loosing power, the OS loosing wifi connection. 
 
-In principal, all the native events listed above should be considered *global* and therefore *`composed`*. But, the browsers only mark the native events that might be targeted at an inner element with `composed: true`, so for example the `resize` and `online` events are still marked as `composed: false`.
+External events can be relevant for any element anywhere in the DOM. And therefore, they should be accessible to all DOM layers. For example, a `click` is an external event that can be directed at elements in both the main *and* shadowDOM contexts. In an app, a `click` can `target` both a play button in the shadowDOM of a `<video>` element or a regular button in the main DOM. Another example is the `resize` event. When the `window` `resize`, a reaction might be triggered that both control the layout of the control panel inside a `<video>` element or the content of the footer at the bottom of the screen. Therefore, the external `click` event needs to be accessible in all DOM contexts.
 
-Thus, currently, for native events only the user-driven events that can `target` elements down in the DOM are marked `composed: true`. Below is the full list of all these events set up as an array:    
+There are two mechanisms to make external events accessible from all DOM contexts:
+1. `target` the `window` node which is accessible from all contexts. OS/browser-app events such as `resize` and `online` often do not `target` any particular element in the DOM. These elements therefore `target` the `window` node, and this makes them directly and equally readable from all DOM contexts, as the `window` node can be read from both the main DOM and shadowDOMs alike. 
+
+2. set `composed: true`. `composed` is the name/property of events that describe if an event can travel across shadowDOM borders. If an event is `composed: true`, the event will propagate *down and up* going in and out of web components. If an event is `composed: false`, the event can *not* propagate *out of* a web component's shadowDOM, but are start at and are stopped at the `shadowRoot` ancestor of their `target`.
+
+   User-generated events such as `click` or `keypress` are `composed: true`. These events represents external state changes that can be directed at a particular element in the DOM. As the `target` here needs to be addressed at a particular element in the DOM, the event needs to signify using some other means (ie. the `composed` property) that it can and will propagate in all DOM contexts.
+
+ * In my opinion, external events that `target` the `window` should be `composed: true`. In principle, `composed: true` better reflect their external origin and target. However, it makes no difference if these events are `composed: true` or `composed: false` as they will only propagate to a single node anyway. The browser/spec runs a policy that all events are `composed: false` until a use-case proves otherwise, and so here we are.
+ 
+We can easily create custom external events. For example, a news service server can receive a new news article, and this might be communicated to the app as a `new-news` event that `target` the `window`. Another example is an online chat app where a `new-msg` event `target` a specific chat window element, and propagate through all the chat apps DOM layers being `composed: true`. Or an tetris style game app might implement a set of multiple timers that generate `new-move` events where the app might like to keep track of all moves while at the same time be able to `target` different `new-move` events to different elements. If you need to `target` the external app-, server-, or timer-driven event at a particular element, then make them `composed: true`. If the external event does not `target` a particular element, `target` it at the `window`.    
+
+Below is a list of all `composed: true` events:    
 
 ```javascript
 const composedEvents =[
@@ -45,18 +53,46 @@ const composedEvents =[
 
 ## Which events are `composed: false`?
 
-As a rule of thumb, all events that alert about a **DOM state mutation** of an element are of interest only in the context of the local to the document/`shadowRoot` of that element. As a rule of thumb, all events that alert about a **DOM state mutation** of an element (or a group of elements) are `composed: false`.
+**Internal events** represent a state change in the DOM itself. The DOM consists of a series of elements and nodes, and many events are dispatched that alert of a change of a state of one such element and one of its properties. Examples of internal events are:
+1. `change`: the value of an input element *has been* changed. The `change` event are sometimes dispatched only when the input element looses focus. The `change` event represent a state change of an input element.
+2. `reset`: the `value` property (or equivalent) of potentially several input elements in a `<form>` *will be* changed. The `reset` event represent a state change internal to a group of elements clustered under a single `<form>` element *all within the same DOM context*.
+3. `toggle`: the `open` property of a `<details>` element *has been* changed. 
 
-Examples include:
-`change`, `reset`, `toggle`
+Both internal and external events announce state changes that:
+1. *has already occurred*, **past tense**, and 
+.2 *will occur*, **future tense**.   
 
-Examples of events that should be `composed: false`, but that are instead `composed: true`, is:
-  `beforeinput`, `input`,
+As a rule of thumb, events that alert about the change of state of an element are of interest only in the context of the local to the document/`shadowRoot` of that element. Internal events are `composed: false`. They `target` the element whose state has/will change, or a root element that contain a group of elements whose state has/will change.  
 
-Examples of events that are `composed: false`, but should be `composed: true`, is:
-  `submit`,
-  
-The `composed: false` events only reflect a DOM state mutation. Therefore, they usually do not need to relay any information other than which DOM elements has/will change. As a web developer, you can therefore expect to only receive two pieces of information from an `composed: false` event: the event `type` (name) and the `target` element.
+By default, the browser/spec flags all events as `composed: false`. The browser/spec does this to ensure that events are kept from flying around to other DOMs that do not need to know about it. Keeping events `composed: false` by default errors on the side of "non-confusion"/"non-leakage" which is better than defaulting to `composed: true` which would err on the side of "developer access". 
+
+Below is a list of all `composed: false` events:    
+
+```javascript
+const nonComposedEvents =[
+  "change", "reset", "toggle",
+  //submit alerts about a coming external state change (navigation/loading of a new document)
+  //submit should be composed: true
+  "submit",
+  //focus events are composed, but often behave as/should be non-composed
+  //"blur", "focus", "focusin", "focusout",
+  //input events should be composed: false
+  //"beforeinput", "input",
+];
+``` 
+
+The `composed: false` events only reflect a DOM state mutation. Therefore, they usually do not need to relay any information other than which DOM elements has/will change. As a web developer, you can therefore expect to only receive two pieces of information from an `composed: false` event: the event `type` name and the `target` element.
+
+## Problems
+
+In later next chapters, we will discuss problems with the `composed` property.
+1. a pattern for making `composed: false` "bounce up" to the above DOM when necessary. 
+2. How focus events are automatically bounced by the browser, and therefore why they should have been flagged `composed: false`.
+3. Why input events should be `composed: false`
+4. Why the submit event should be `composed: true`
+5. Why `composed: false` events should *not* propagate down into "lower shadowDOMs" when their targets are slotted into nested web components. 
+
+> There is a problem that `composed: false` events are allowed to propagate *down into* the shadowDOM border when their `target`s are slotted. We will return to this problem soon. 
     
 ## References
 
