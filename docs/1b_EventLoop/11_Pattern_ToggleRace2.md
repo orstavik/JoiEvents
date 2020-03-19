@@ -12,6 +12,7 @@ The strategy for racing more than one event from a `toggleTick` is more or less 
 function toggleTick(cb, raceEvents) {
   const details = document.createElement("details");
   details.style.display = "none";
+  //todo simplify if raceEvents is undefined.
   const task = {
     cb: function(){
       task.cancel();
@@ -60,7 +61,7 @@ function parseRaceEvents(raceEvents) {
   if (raceEvents === undefined)
     return [];
   if (raceEvents instanceof String || typeof (raceEvents) === "string")
-    return EventRoadMap.UNPREVENTABLES[raceEvents];
+      return EventRoadMap.UNPREVENTABLES[raceEvents] || [];
   throw new Error(
     "The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, " +
     "an array of event names, empty array, or a string with an event name " +
@@ -134,7 +135,7 @@ function toggleTick(cb, raceEvents) {
     if (raceEvents === undefined)
       return [];
     if (raceEvents instanceof String || typeof (raceEvents) === "string")
-      return EventRoadMap.UNPREVENTABLES[raceEvents];
+      return EventRoadMap.UNPREVENTABLES[raceEvents] || [];
     throw new Error(
       "The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, " +
       "an array of event names, empty array, or a string with an event name " +
