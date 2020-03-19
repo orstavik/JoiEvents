@@ -83,14 +83,13 @@ const nonComposedEvents =[
 
 The `composed: false` events only reflect a DOM state mutation. Therefore, they usually do not need to relay any information other than which DOM elements has/will change. As a web developer, you can therefore expect to only receive two pieces of information from an `composed: false` event: the event `type` name and the `target` element.
 
-## Problems
+## In this chapter:
 
-In later next chapters, we will discuss problems with the `composed` property.
-1. a pattern for making `composed: false` "bounce up" to the above DOM when necessary. 
-2. How focus events are automatically bounced by the browser, and therefore why they should have been flagged `composed: false`.
-3. Why input events should be `composed: false`
-4. Why the submit event should be `composed: true`
-5. Why `composed: false` events should *not* propagate down into "lower shadowDOMs" when their targets are slotted into nested web components. 
+1. BounceEvent: a pattern for making `composed: false` "bounce up" and propagate in the above lightDOM when necessary. 
+2. Problem: Why should the `submit` event be `composed: true`?
+3. Problem: Why should `beforeinput` and `input` events be `composed: false`?
+4. Problem: Why do focus events sometimes behave as though they are `composed: false`, when they are always `composed: true`? Are focus events in reality automatically bounced by the browser?
+5. Problem: Why should `composed: false` events *not* propagate down into "lower shadowDOMs"? Should nodes in the propagation path that do not have the same document root as the `target` be removed from the propagation path of `composed: false` events?
 
 > There is a problem that `composed: false` events are allowed to propagate *down into* the shadowDOM border when their `target`s are slotted. We will return to this problem soon. 
     
