@@ -163,4 +163,4 @@ In my opinion, there rarely would be any benefit of using `bubble: false` in a c
 
 ## References
 
-  * todo find this described in the spec.
+  * [MDN: Event.bubbles](https://developer.mozilla.org/en-US/docs/Web/API/Event/bubbles)
