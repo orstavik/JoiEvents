@@ -200,4 +200,4 @@ function callListenersOnElement(currentTarget, event, phase) {
 
 ## References
 
-  * todo find this described in the spec.
+  * [WHATWG: add an event listener](https://dom.spec.whatwg.org/#add-an-event-listener)
