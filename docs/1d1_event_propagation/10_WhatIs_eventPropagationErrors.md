@@ -170,4 +170,4 @@ try {
 
 ## References
 
-  * todo find this described in the spec.
+ [Spec: Runtime script errors](https://html.spec.whatwg.org/#runtime-script-errors)
