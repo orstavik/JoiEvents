@@ -197,4 +197,4 @@ function callListenersOnElement(currentTarget, event, phase) {
 
 ## References
 
-  * todo find this described in the spec.
+  * [W3: stopPropagation()](https://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-Event-stopPropagation)
