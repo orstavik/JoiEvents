@@ -130,4 +130,4 @@ function dispatchEvent(target, event) {
 
 ## References
 
-  * todo find this described in the spec.
+  * [WHATWG: composedpath](https://dom.spec.whatwg.org/#dom-event-composedpath)
