@@ -16,7 +16,6 @@ In the demo below we add a simple web component with an `open` `shadowRoot` that
 
 ```html
 <script>
-
   class WebComponent extends HTMLElement {
     constructor() {
       super();
@@ -239,4 +238,5 @@ function earlyBirdTarget(eventName, node){
 ## Demo: addEarlyBird event listener inside web component
 ## References
 
- * 
+ * [MDN: Event.composed](https://developer.mozilla.org/en-US/docs/Web/API/Event/composed)
+ * [MDN: ShadowRoot.host](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/host)
