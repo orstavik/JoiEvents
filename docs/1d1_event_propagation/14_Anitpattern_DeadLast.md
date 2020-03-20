@@ -28,4 +28,4 @@ The problem with this option is that it is impossible to alter the native event 
    
 ## References
 
- * 
+ * [MDN: bubbling and capturing](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Bubbling_and_capturing_explained)
