@@ -1,0 +1,81 @@
+<check-box></check-box>
+
+<script >
+  function getHostNodeTargets(target) {
+    const targets = [target];
+    let host = target.getRootNode().host;
+    while (host) {
+      targets.push(host);
+      host = host.getRootNode().host;
+    }
+    return targets;
+  }
+
+  function log(e){
+    console.log(e.type, e.eventPhase, e.target.tagName, e.composed, e.currentTarget);
+  }
+
+  function makeBounceEvent(name, dict){
+    const bounceEvent = new CustomEvent(name, dict);
+    bounceEvent.stopPropagation = function(){
+      CustomEvent.prototype.stopPropagation.call(bounceEvent);
+      bounceEvent.isStopped = true;
+    };
+    return bounceEvent;
+  }
+
+  class CheckBox extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      // const shadow = this.attachShadow({mode: "open"});
+      shadow.innerHTML = `<input type="checkbox">`;
+      const input = shadow.children[0];
+
+      shadow.addEventListener("composed-change", log, true);
+      input.addEventListener("composed-change", log);
+      shadow.addEventListener("composed-change", log);
+
+      shadow.addEventListener("noncomposed-change", log, true);
+      input.addEventListener("noncomposed-change", log);
+      shadow.addEventListener("noncomposed-change", log);
+
+      shadow.addEventListener("bounce-change", log, true);
+      input.addEventListener("bounce-change", log);
+      shadow.addEventListener("bounce-change", log);
+
+      input.addEventListener("change", () => {
+        //1. dispatch composed-change
+        input.dispatchEvent(new CustomEvent("composed-change", {composed: true, bubbles: true}));
+        //2. dispatch noncomposed-change
+        input.dispatchEvent(new CustomEvent("noncomposed-change", {composed: false, bubbles: true}));
+        //3. dispatch bounce-change
+        let bounceEvent = makeBounceEvent("bounce-change", {composed: false, bubbles: true});
+        for (let target of getHostNodeTargets(input)){
+          target.dispatchEvent(bounceEvent);
+          if (bounceEvent.isStopped)
+            break;
+          bounceEvent = makeBounceEvent("bounce-change", {composed: false, bubbles: true});
+        }
+      });
+    }
+  }
+  customElements.define("check-box", CheckBox);
+
+  const checkbox = document.querySelector("check-box");
+
+  window.addEventListener("composed-change", log, true);
+  checkbox.addEventListener("composed-change", log, true);
+  checkbox.addEventListener("composed-change", log);
+  window.addEventListener("composed-change", log);
+
+  window.addEventListener("noncomposed-change", log, true);
+  checkbox.addEventListener("noncomposed-change", log, true);
+  checkbox.addEventListener("noncomposed-change", log);
+  window.addEventListener("noncomposed-change", log);
+
+  window.addEventListener("bounce-change", log, true);
+  checkbox.addEventListener("bounce-change", log, true);
+  checkbox.addEventListener("bounce-change", log);
+  window.addEventListener("bounce-change", log);
+</script>
