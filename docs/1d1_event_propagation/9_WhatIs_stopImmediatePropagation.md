@@ -178,4 +178,4 @@ function dispatchEvent(target, event) {
 
 ## References
 
-  * todo find this described in the spec.
+  * [WHATWG: .stopImmediatePropagation()](https://dom.spec.whatwg.org/#dom-event-stopimmediatepropagation)
