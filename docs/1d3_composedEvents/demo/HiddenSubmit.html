@@ -1,0 +1,23 @@
+<script >
+  class HiddenSubmit extends HTMLElement {
+    constructor(){
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `
+        <form>
+          <input type="text" name="hello" value="sunshine">
+          <button type="submit">
+        </form>
+      `;
+      shadow.addEventListener("submit", e => console.log(e.type + " in the shadow", e.composed, e.bubbles));
+    }
+  }
+  customElements.define("hidden-submit", HiddenSubmit);
+</script>
+
+<hidden-submit></hidden-submit>
+<script >
+  window.addEventListener("submit", e => console.log(e.type + " in the light", e.composed, e.bubbles)); // no,
+  window.addEventListener("submit", e=> e.preventDefault(), true);                                      // no..
+  window.addEventListener("beforeunload", e=>{debugger});              //so you can see the log in dev tools
+</script>

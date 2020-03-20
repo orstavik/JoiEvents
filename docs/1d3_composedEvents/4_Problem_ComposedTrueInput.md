@@ -1,5 +1,11 @@
 ## Bug: `composed: true` `input`
 
+Web components with `closed` `shadowRoot` will re-`target` any `composed: true` events that occur inside it to its host node. From this host node there might not be any access to the state properties of the inner element that triggered the state change. If there is no mirroring of the inner elements state properties, then the outer event makes much less sense.  
+
+
+   When the `target` does not contain the state |can't tell its parent context about its state. which the event reflects. which breaks in mode: closed.
+
+
 > The `beforeinput` and `input` events are the "interpretation of primitive user-driven events *within* the context of an input element". `beforeinput` and `input` alert about a coming/occured state change of the input element. Yes, the user-driven events are global, but these events are signified in the system as the more primitive `click`, `keydown`, `paste`, or `mousedown`. Example of native input elements are `<textarea>` and `<select>`. 
 
 Some of the most important HTML elements we have is the form and input elements. Input elements require both a lot of (reusable) JS functions and a lot of (reusable) CSS style. And, there are lots of alternative use-cases for input elements: suggestive writing, spellchecking, hotkeys, automatic translation, AI enhancement, dynamic generation of selections, dynamic visualization during input, wysiwig/code editors, domain specific "pickers" (cf. date and color pickers), and lots lots more.
