@@ -236,7 +236,7 @@ This naivete keeps the FocusController readable.
 ```
 
 ## References
-
+ * [WHATWG: Focus processing model](https://html.spec.whatwg.org/multipage/interaction.html#focus-processing-model)
  * [W3C: focus events](https://w3c.github.io/uievents/#events-focusevent)
  * [MDN: `:focus`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus)
  * [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within) 
