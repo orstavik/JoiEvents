@@ -36,43 +36,46 @@ Browsers *also* do dispatch some events such as `error` *synchronously*.
   inner.addEventListener("click", log.bind({}));
   outer.addEventListener("click", log);
 
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true})); the user must click
+  inner.dispatchEvent(new MouseEvent("click", {bubbles: true})); 
 </script>
 ```
 
-When you `click` on "Click me!" using either mouse or touch, then you will see the following result printed out in the console.
-
-```
-
-1. click on #inner
-2. click on #outer
-3. microtask from #inner
-4. microtask from #inner
-5. microtask from #outer
-6. nested microtask from #inner
-7. nested microtask from #inner
-8. nested microtask from #outer
-
-9.  click on #inner
-10. microtask from #inner
-11. nested microtask from #inner
-12. click on #inner
-13. microtask from #inner
-14. nested microtask from #inner
-15. click on #outer
-16. microtask from #outer
-17. nested microtask from #outer
-
-``` 
-
 In the demo, there are three functionally identical event listeners triggered per click: first two on the `#inner` element, and then one on the `#outer` element. Each event listener prints to the console that they are running and then adds a first, normal task/callback to the microtask queue. Then, when this first task is run from the microtask queue, then it adds a second, nested task/callback to the microtask queue.
 
- * Lines 1-8 is the output from `.dispatchEvent(new MouseEvent("click", {bubbles: true}))` on the "Click on me!" element.
+When the page loads, the first `inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));` runs. This produces the following result:
+
+```
+1. click on #inner
+2. click on #inner
+3. click on #outer
+4. microtask from #inner
+5. microtask from #inner
+6. microtask from #outer
+7. nested microtask from #inner
+8. nested microtask from #inner
+9. nested microtask from #outer
+``` 
+
+Lines 1-9 is the output from `inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));`, a script triggered `click` on the "Click on me!" element.
    1. All the three event listeners are run first.
    2. Then the three normal, "first" microtasks from each event listener run.
    3. At the end the three nested, "second" microtasks run.
-    
- * Lines 9-17 is the output from the "native" reaction to the user action of clicking on "Click on me!" with either mouse or touch. Here, each event listener is run as its own macro task, so that *before* the next event listener is called, the microtask queue is completely emptied.
+
+
+When you `click` on "Click me!" using either mouse or touch, then you will see the following result printed out next in the console.
+``` 
+10. click on #inner
+11. microtask from #inner
+12. nested microtask from #inner
+13. click on #inner
+14. microtask from #inner
+15. nested microtask from #inner
+16. click on #outer
+17. microtask from #outer
+18. nested microtask from #outer
+``` 
+
+Lines 10-18 is the output from the "native" reaction to the user action of clicking on "Click on me!" with either mouse or touch. Here, each event listener is run as its own macro task, so that *before* the next event listener is called, the microtask queue is completely emptied.
  
 ## Problem
 
@@ -296,3 +299,4 @@ However, for async event propagation, expect the browser to disqualify many even
 ## References
 
  * [MDN: sync vs async event listeners](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent#Notes)
+ * [W3: Synchronous and asynchronous events](https://www.w3.org/TR/uievents/#sync-async)
