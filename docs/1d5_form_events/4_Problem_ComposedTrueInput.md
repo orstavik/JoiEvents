@@ -3,14 +3,14 @@
 Web components with `closed` `shadowRoot` will re-`target` any `composed: true` events that occur inside it to its host node. From this host node there might not be any access to the state properties of the inner element that triggered the state change. If there is no mirroring of the inner elements state properties, then the outer event makes much less sense.  
 
 
-   When the `target` does not contain the state |can't tell its parent context about its state. which the event reflects. which breaks in mode: closed.
+   When the `target` does not contain the state or can't tell its parent context about its state which the event reflects, which breaks in `mode: "closed"`.
 
 
-> The `beforeinput` and `input` events are the "interpretation of primitive user-driven events *within* the context of an input element". `beforeinput` and `input` alert about a coming/occured state change of the input element. Yes, the user-driven events are global, but these events are signified in the system as the more primitive `click`, `keydown`, `paste`, or `mousedown`. Example of native input elements are `<textarea>` and `<select>`. 
+> The `beforeinput` and `input` events are the "interpretation of primitive user-driven events *within* the context of an input element". Both `beforeinput` and `input` alert about a coming/occured state change of the input element. Yes, the user-driven events are global, but these events are signified in the system as the more primitive `click`, `keydown`, `paste`, or `mousedown`. Example of native input elements are `<textarea>` and `<select>`. 
 
-Some of the most important HTML elements we have is the form and input elements. Input elements require both a lot of (reusable) JS functions and a lot of (reusable) CSS style. And, there are lots of alternative use-cases for input elements: suggestive writing, spellchecking, hotkeys, automatic translation, AI enhancement, dynamic generation of selections, dynamic visualization during input, wysiwig/code editors, domain specific "pickers" (cf. date and color pickers), and lots lots more.
+Some of the most important HTML elements we have is the `<form>` and `<input>` elements. Input elements require both a lot of (reusable) JS functions and a lot of (reusable) CSS style. And, there are lots of alternative use-cases for input elements: suggestive writing, spellchecking, hotkeys, automatic translation, AI enhancement, dynamic generation of selections, dynamic visualization during input, wysiwig/code editors, domain specific "pickers" (cf. date and color pickers), and lots lots more.
 
-Custom input is one of the most important use-cases for web components, on par with other top domains such as custom output and custom layout. It is as if web components were designed for custom input elements who likely need to encapsulate both custom structure (cf. `<select>`), custom style, and not to mention custom JS functionality. Custom input elements is hand in glove for web components.
+Custom input is one of the most important use-cases for web components, on pair with other top domains such as custom output and custom layout. It is as if web components were designed for custom input elements who likely need to encapsulate both custom structure (cf. `<select>`), custom style, and not to mention custom JS functionality. Custom input elements is hand in glove for web components.
 
 But. There are problems too. Managing user input, especially from keyboard, can be a hornets nest of if-this-then-thats: there are thousands of different languages; there are conventions for deadkeys and hotkeys; and then different OSes have different modal keys too. To (re-)build "normal interpretation" of a series of `keydown` events and turn them into normal characters and commands in an input element will most likely either block progress in the entire app (for the perfectionists among us) or produce a component that will constantly require bug-fixes (for the more trigger-happy developers).
 
@@ -39,16 +39,16 @@ The solution is *not* to avoid making custom input/output elements; the solution
             height: 100%;
           }
         </style>
-        <textarea></textarea>
-      `;
+        <textarea></textarea>`;
+   
       this._textarea = this.shadowRoot.children[1];
-      // this.shadowRoot.addEventListener("focusin", e => this._textarea.focus());
-      // //due to the strange composed behavior of focus events, this event will not leak out.
+      // this.shadowRoot.addEventListener("focusin", () => this._textarea.focus());
+      // due to the strange composed behavior of focus events, this event will not leak out.
       this.shadowRoot.addEventListener("beforeinput", e => this.maybeHotkey(e));
-      //input events leaks out, unfortunately.
+      // input events leaks out, unfortunately.
     }
 
-    //"enter" is a hotkey after the word "if"
+    // "enter" is a hotkey after the word "if"
     // otherwise, enter produces a normal enter
     maybeHotkey(e) {
       if (e.inputType === "insertLineBreak") {
@@ -103,9 +103,7 @@ The better solution if one wishes to avoid lots of boilerplate code for passing 
  
 There are real reasons, as the demo above illustrate that you want to keep `beforeinput` and `input` local to the document in which they are targeted.
 
-
 The input events are from my perspective perfect candidates for being .
-
 
 But, `beforeinput`, `input` are all `composed: `**`true`**.
 
@@ -113,14 +111,12 @@ It is hard to find a good reason why the events associated with input that are t
 
 The `keypress` and `compositionstart` and wheel `click` events are user-generated. The interpreted `beforeinput` and `change` and `cut` and `copy` are not.
 
-
-
 When these events are directed at the `window` node, it is not so simple to see their *global* nature and their potential relevance across multiple DOM contexts to functions inside other DOM contexts. 
  
-These events can have relevance for elements located in any DOM. And if they are     
+These events can have relevance for elements located in any DOM. And if they are  ????   
 In web speak, these events are called **`composed`**.    
 
-This means that some events should propagate both 
+This means that some events should propagate both ??? 
  
 For events that `target` an element in a DOM above the shadowDOM of a web component, this is not a problem because the event will never propagate into the shadowDOM. But, what about internal events inside a web component? If they propagated from the This is the  
 
@@ -131,7 +127,6 @@ In this demo we show the use-case of using a `<textarea>` element inside a shado
 Convert the input into an smart-textarea: 
 1. " hte "=>" the " if written within a second.
 2. "ifj"=>"if(){}". The "j" should produce no "beforeinput" event.   
-
 
 
 ```html
@@ -158,13 +153,13 @@ Convert the input into an smart-textarea:
         <textarea></textarea>
       `;
       this._textarea = this.shadowRoot.children[1];
-      // this.shadowRoot.addEventListener("focusin", e => this._textarea.focus());
-      // //due to the strange composed behavior of focus events, this event will not leak out.
+      // this.shadowRoot.addEventListener("focusin", () => this._textarea.focus());
+      // due to the strange composed behavior of focus events, this event will not leak out.
       this.shadowRoot.addEventListener("beforeinput", e => this.maybeHotkey(e));
       //input events leaks out, unfortunately.
     }
 
-    //"enter" is a hotkey after the word "if"
+    // "enter" is a hotkey after the word "if"
     // otherwise, enter produces a normal enter
     maybeHotkey(e) {
       if (e.inputType === "insertLineBreak") {
@@ -218,28 +213,16 @@ beforeinput insertLineBreak null
 my-beforeinput insertLineBreak (){}
 my-input insertLineBreak (){}
 
-beforeinput insertLineBreak null
-my-beforeinput insertLineBreak null
-my-input insertLineBreak null
-input insertLineBreak null
 ```
-
-
 
 Use case for why input events should be composed false.
 Web component that masks an input. Whenever it receives focus, then it shifts the focus to a hidden textarea inside it, that it then grabs all text changes from, it uses that text to update a custom text output, and then alerts the user.
 
-Filtered-textarea, my-textarea, customized-textarea
+Filtered-textarea, my-textarea, customized-textarea ???
 It is easier to alter a textarea based on the existing interpretation of keydown events than to try to model the same interpretation yourself. Dead keys etc are hard to
 
 ```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<meta charset="UTF-8">
 
 <nor-textarea>hoer haar haer</nor-textarea>
 
@@ -343,10 +326,9 @@ It is easier to alter a textarea based on the existing interpretation of keydown
   window.addEventListener("my-beforeinput", log, true);
   window.addEventListener("my-input", log, true);
 </script>
-</body>
-</html>
 ```
 
 ## References
 
- * 
+ * [MDN: ShadowRoot.mode](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/mode)
+ * [MDN: Event.composed](https://developer.mozilla.org/en-US/docs/Web/API/Event/composed)
