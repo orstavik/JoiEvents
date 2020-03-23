@@ -72,6 +72,7 @@
 
     const SubmitController = {
 
+      // todo does the beforeinput enter produce a click() event, or does it just call the click() method that doesn't dispatch an event?
       beforeinput: function (e) {
         const formElement = e.target.form;
         // we can use only Enter key

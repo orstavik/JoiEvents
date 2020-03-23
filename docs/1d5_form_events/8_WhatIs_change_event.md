@@ -1,5 +1,8 @@
 # WhatIs: `change`?
 
+> todo use focusin instead of focusout in the demo.
+> todo select change events are dispatched before the mouseup (and click), while checkbox and radiobutton change events are dispatched after the (mouseup and) click. 
+
 The change event is fired for `<input>`, `<select>`, and `<textarea>` elements (hereafter: input elements) when an alteration to the element's value is "committed" by the user.
 
 What "committing" means for the browser is a bit nuanced:
@@ -14,21 +17,27 @@ Thus, for `<select>`, `<input type="checkbox">`, and `<input type="radio">` elem
 ## Demo: `change`
 
 ```html
-<input id="normalText" type="text" value="type something ...">
-<textarea id="normalTextarea">type something else</textarea>
-<select id="normalSelect">
-  <option value="a">a</option>
-  <option value="b">b</option>
-  <option value="c">c</option>
-</select>
-<input id="normalCheckbox" type="checkbox">
+<form id="normalForm">
+  <input id="normalText" type="text" value="type something ...">
+  <textarea id="normalTextarea">type something else</textarea>
+  <select id="normalSelect">
+    <option value="a">a</option>
+    <option value="b">b</option>
+    <option value="c">c</option>
+  </select>
+  <input id="normalCheckbox" type="checkbox">
 
-<label for="radioOne">one</label><input id="radioOne" type="radio" name="group1">
-<label for="radioTwo">two</label><input id="radioTwo" type="radio" name="group1">
+  <label for="radioOne">one</label><input id="radioOne" type="radio" name="group1">
+  <label for="radioTwo">two</label><input id="radioTwo" type="radio" name="group1">
+</form>
 
 <script>
+  window.addEventListener("mouseup", e => console.log("mouseup ", e.target.id));
+  window.addEventListener("click", e => console.log("click ", e.target.id));
   window.addEventListener("input", e => console.log("input ", e.target.id));
   window.addEventListener("change", e => console.log("change ", e.target.id));
+  window.addEventListener("focusout", e => console.log("focusout ", e.target.id));
+  window.addEventListener("submit", e => console.log("submit ", e.target.id));
 </script>
 ```
 

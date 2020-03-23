@@ -13,6 +13,8 @@
 </form>
 
 <script>
+  window.addEventListener("mouseup", e => console.log("mouseup ", e.target.id));
+  window.addEventListener("click", e => console.log("click ", e.target.id));
   window.addEventListener("input", e => console.log("input ", e.target.id));
   window.addEventListener("change", e => console.log("change ", e.target.id));
   window.addEventListener("focusout", e => console.log("focusout ", e.target.id));
