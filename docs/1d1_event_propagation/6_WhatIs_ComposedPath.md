@@ -191,6 +191,6 @@ function dispatchEvent(target, event) {
 
 ## References
 
-  * todo find this described in the spec.
+  * [WHATWG: composedPath](https://dom.spec.whatwg.org/#dom-event-composedpath)
   * todo add a chapter about why some events should be `composed: true`
   https://github.com/w3c/webcomponents/issues/513#issuecomment-238447772

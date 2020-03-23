@@ -30,7 +30,7 @@ Results:
 
 ```
 click, #inner, #inner
-click, #inner, #outer
+click, #outer, #inner
 ```
 
 Setting the `target` is done *once* at *the beginning* of each event propagation. Setting the `currentTarget` is done every time the event propagation function calls event listeners on a new node in the event propagation path.
@@ -95,4 +95,4 @@ You might already have detected that we added the currentTarget in the previous 
 
 ## References
 
-  * todo find this described in the spec.
+  * [WHATWG: currentTarget](https://dom.spec.whatwg.org/#dom-event-currenttarget)

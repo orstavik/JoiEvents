@@ -165,4 +165,5 @@ function dispatchEvent(target, event) {
 
 ## References
 
- * []()
+ * [MDN: .eventPhase](https://developer.mozilla.org/en-US/docs/Web/API/Event/eventPhase)
+ * [MDN: .defineProperties()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)
