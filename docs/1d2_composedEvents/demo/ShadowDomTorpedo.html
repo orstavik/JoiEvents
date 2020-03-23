@@ -1,0 +1,26 @@
+<open-comp>
+  <input type="checkbox">
+</open-comp>
+
+<script>
+  class OpenComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `<slot></slot>`;
+      this.shadowRoot.addEventListener("click", e => {
+        console.log("shadowDOM torpedo: calling e.stopPropagation() and e.preventDefault() on event from slotted target.");
+        e.stopPropagation();
+        e.preventDefault();
+      });
+    }
+  }
+
+  customElements.define("open-comp", OpenComp);
+
+  const input = document.querySelector("input");
+  const open = document.querySelector("open-comp");
+  input.addEventListener("click", e => console.log("lightDOM input"));
+  open.addEventListener("click", e => console.log("lightDOM open-comp host node"));
+  input.click();
+</script>
