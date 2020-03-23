@@ -1,20 +1,29 @@
-# Bug: `composed` out of `focus`
+# Problem: `focus` bounces
 
-Let's ask a simple yes-or-no (boolean) question: Is `focus` `composed: true` or `composed: false`? 
+Question: Are focus events `composed: true` or `composed: false`? 
 
-Short answer: it depends..
+Answer: in principle, the focus events are set as `composed: true`; in practice, the focus events kinda bounce.
 
-Long answer: the `focusEvent.composed` property is *always* `true`. But. Quite often, focus events *behave as if `composed === false`.
+## How focus events behave
+
+The `composed` property of focus events are always set to `true`. So, in theory, the focus events should be `composed: true`. But. In practice, the propagation path of focus events are often cut of at a shadowDOM border. As if the focus event were `composed: false` or partially `composed: true/false`. Put simply, the focus events kinda bounce.
+
+
+ * When the "focus-within" property of *all* host nodes in the propagation path changes (or the propagation path contains no host nodes), then the focus events behave as if they were regular `composed: true` events.
+ * when the "focus-within" property of *the lowest* host node in the propagation path does *not* change, then focus events behave as if they were `composed: false` events with a) a `composedPath()` restricted according to `composed: false` criteria, but with b) a buggy `composed` property set to `true`.
+ * otherwise, the focus events will bounce up through all host nodes where the "focus-within" property changes until it reaches a host node whose "focus-within" property has not changed.
+
+
+1. If the 
+Focus events bounce *iff the host node of the current shadowDOM's "focus-within" property has changed*. 
+2. When the browser bounces the focus event, it does not alter the propagation sequence among the DOM contexts in which the element bounces. This means that the capture-phase event listeners of the top-most DOM contexts will run first. As if the focus events were regular `composed: true` events.
+3. The browser (being having God access in its own code) dispatch the same focus event object in all DOM contexts that the focus events bounce.
+
+Thus,
  
-Focus events *only propagate past `shadowRoot` borders when the "focus-within" property changes for the host node too*. Put simply, focus events only behave as if `composed === true` when the focus-within changes for *all* host nodes in the propagation path. When the `focus-within` property of one host node in the propagation path does not change, then the focus event will *only* propagate upto the `shadowRoot` of that host node.
- 
-Put simply, focus events *behave* as if:
-1. `composed: false`, and
-2. the focus event was re-dispatched on all the host nodes in the propagation path whose `focus-within` property also changes as a consequence of the inner focus change.  
+Focus events **only propagate in DOM context where the lowest `target` element or a host node containing this `target` whose "focus-within" property has changed**. 
 
-We can see this behavior played out in a couple of demos:
-
-## Demo: focus events are strange I
+## Demo: focus events bounce
 
 ```html
 <web-component></web-component>

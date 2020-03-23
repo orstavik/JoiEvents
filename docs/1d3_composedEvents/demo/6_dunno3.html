@@ -1,0 +1,81 @@
+<style>
+  div, open-comp {
+    border: 5px solid green;
+    display: block;
+  }
+</style>
+
+<open-comp>
+  <div>
+    light DOM
+    <input type="checkbox">
+  </div>
+</open-comp>
+
+<script>
+  class OpenComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <style>div{border: 3px dotted red;}</style>
+        <div>
+          (shadowDOM)
+          <slot></slot>
+        </div>
+      `;
+      this.shadowRoot.addEventListener("change", e => {
+        console.log("shadowDOM calling stopPropagation on event coming from slotted element.");
+        e.stopPropagation();
+      });
+    }
+  }
+
+  customElements.define("open-comp", OpenComp);
+
+  const input = document.querySelector("input");
+  const open = document.querySelector("open-comp");
+  input.addEventListener("change", e => console.log("lightDOM input"));
+  open.addEventListener("change", e => console.log("lightDOM open-comp host node"));
+</script>
+
+<pre>
+The main DOM:
+=============
+&lt;open-comp>
+  &lt;div>
+    light DOM
+    &lt;input type="checkbox">
+  &lt;/div>
+&lt;/open-comp>
+
+The flattened DOM:
+==================
+  open-comp             \       -   (event listener: doesn't run)
+    $shadowRoot          \     *  (event listener: calls stopPropagation())
+       $slot              \   /
+         div               \ /
+           input[checkbox]  *   (event listener: print)
+
+(true propagation path when you click on and "change" the checkbox)
+
+
+The developer's DOM
+==================
+  open-comp           \   -    (event listener: doesn't run)
+    div                \ /
+       input[checkbox]  *    (event listener: print)
+
+(the perceived propagation path from the point of view of the main DOM developer)
+
+</pre>
+1. you never want to listen for events that come from the slot element. This will be very confusing.
+you might torpedo the outside propagation causing confusion.
+you might prevent default on something you shouldn't. You might listen to events you didn't expect would come.
+you might forget that you will not get composed: false events from the slot. These can only be gotten in the
+2. instead, you should either add the listener as a default action, like the `click` in an `< a href>`
+3. or, you should add the event listener on the host node, in connectedCallback()/and remove in disconnectedCallback()
+the beneift
+
+
+

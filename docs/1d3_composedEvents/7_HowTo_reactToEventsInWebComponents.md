@@ -10,4 +10,10 @@ You have two sets of events:
 
    They are quite simple. You can listen normally. State changes that happen inside the web component *can* sometimes be done sync. If the action is "finished" when you need to dispatch the event, then you can dispatch the event sync at the tail end of the action. This might be what you want, if you can make it so. But, if the action is not finished, ie. the action might be able to trigger other side-effects too later in its execution, then you must delay the event dispatch in the event loop as a toggleTick task so that you ensure that you events propagation does not nest into an ongoing state change.
    
+   
+```html
+
+
+```
+   
     

@@ -1,4 +1,8 @@
-# Problem: 
+# Problem: ComposedFalse crosses shadowDom borders when slotted 
+
+MDN says that if and event is `composed: false`, it will *not* propagate across the shadow DOM boundary into the standard DOM*. This is wrong. Composed false events do propagate across shadowDOM borders. When slotted.
+
+
 
 There is a problem that `composed: false` events are allowed to propagate *down into* the shadowDOM border when their `target`s are slotted. 
 

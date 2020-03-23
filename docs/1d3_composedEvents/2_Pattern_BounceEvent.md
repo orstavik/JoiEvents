@@ -211,8 +211,37 @@ bounce-change 2 CHECK-BOX false CHECK-BOX
 bounce-change 2 CHECK-BOX false CHECK-BOX
 bounce-change 3 CHECK-BOX false window
 ```
+
+## Why bounce?
+
+The native focus events bounce. Or kinda bounce. So to understand the focus events, it is useful to understand the hypothetical concept of event bouncing.
+
+But. The two propagation orders of `composed: true` and `composed: bubble` overlap. They fulfill many of the same use-cases. So. Which is better? And, can we replace one with the other?
+
+1. If we look at the propagation order of target and bubble phase event listeners, then their propagation order remain the same both in sequence `composed: true` and `composed: bubble`. As the majority of event listeners are added in the bubble phase, there would be little difference for a majority of use cases. This means that for target and bubble event listeners only `.stopPropagation()` would work the same way for `composed: true` and `composed: bubble`. Ergo: Ergo: if we disregard capture phase event listeners, then `composed: true` could be replaced by `composed: bubble`.
+
+2.  The `composed: true` vs `composed: false` dichotomy doesn't support having an event both a) cross shadowDOM borders *and* b) be dispatched from a root node that is *not* the top `window` node. This means that there are several use cases, such as those present for focus events, that require some kind of hack solution in order to have the same event propagate across shadowDOM borders but also be stopped at a shadowRoot higher up in the DOM.  
+
+3. If we look at the propagation order of capture phase event listeners, then there is a clear difference. `composed: true` enable a higher DOM context event listeners to capture an event *before* an event listener in a lower DOM context. This cannot be replicated in `composed: bubble`, and so for example EarlyBird event listeners would be impossible. Thus, `composed: bubble` would require:
+   1. the existence of `addDefaultAction()` or some other kind of post-propagation callback to control which default action is set up, and 
+   2. some type of pre-propagation callback (particularly for UIEvents) that would enable web developers to:
+      * grab certain event types, as the native drag'n'drop events do mouse events, and/or 
+      * block/stop the propagation of certain events to lower DOM contexts when needed.   
+
+4. The property `capture: bubble` is only hypothetical. But, if all `composed: true` events were made to bounce instead, then all events could be set as `composed: false`. Thus, if all functions that today dispatch `composed: true` events were to instead dispatch bouncing events, then all events could be set to `composed: false` and presto: there would be no need for the `composed` property on events at all and it could simply be removed.
+  
+5.  Which conceptual model is more or less orderly/understandable?
+   * If you look at all the nodes in a flattened DOM, then the `composed: true` with its straight line down and straight line up looks nice. But, if you look at the flattened DOM as a group of nested DOM contexts, then `composed: bubble` is simpler as it would present the overall propagation as a single line between DOM contexts, from inner to outer. When web components are slotted or nested inside each other, the `composed: bubble` has clear conceptual advantages over `composed: true` as developers can at best be expected to envisage the flattened DOM context and not all the flattened DOM nodes. 
+   * When you develop a reusable web component, you do *not* know what the surrounding DOM looks like. From the perspective of a reusable web component, the propagation path thus has other, external event listeners running **before and after** if `composed: true`, while in `composed: bubble` the propagation path of " access to the above DOM propagation path. Hence, from the perspective of the web component, then the `capture: bubble` is simpler.
+   * When you make a web component or main document using web components, you are *not* expected to understand the inside of the web component. It could therefore be very confusing if an event propagated into a web component, but not out of it. So, also from the developer of an upper level DOM context, it is simpler to know that the inner propagation has completed before any of your own event listeners run (both capture phase and bubble phase).
+   
+6. Should events propagate into the shadowDOM when an event is dispatched on the  
+       
+
    
 ## Discussion
+
+
 
 Would it have been better to bounce all `composed: true` events? Would it be better, more understandable sequencing, if `click` for example was bounced? 
 

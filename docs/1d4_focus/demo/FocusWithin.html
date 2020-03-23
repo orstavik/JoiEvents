@@ -1,0 +1,107 @@
+<script>
+  // there is no direct way to read the CSS :focus property when there are possible closed shadowRoots in use.
+  function elementHasFocus(element){
+    let root = element.getRootNode();
+    const style = document.createElement("style");
+    style.textContent = ":focus{--this-is-just-a:test;}";
+    (root !== document ? root : root.body).appendChild(style);
+    const active = root.activeElement;
+    const activeStyle = getComputedStyle(active).getPropertyValue("--this-is-just-a");
+    style.remove();
+    return activeStyle === "test";
+  }
+
+  // the target is different from the rootTarget when an event propagates out of an open shadowRoot.
+  // this is because the target is always set to be the host node, when an event propagates out from a shadowDOM,
+  // both for open and closed elements, but the open shadowRoots don't cut of the composedPath as it can still be read
+  // from the lightDOM context of the host node of an open shadowRoot.
+  function getRootTarget(e){
+    return e.composedPath()[0];
+  }
+
+  // getRootNode() returns the first closed shadowRoot
+  // document fragment or the document in the elements ancestor path.
+  // getRootNode will not "stop" on  open shadowRoots.
+  function getRootTargetDocument(e){
+    return getRootTarget(e).getRootNode();
+  }
+
+  function log(e) {
+    console.log(e);
+    const currentTarget = e.currentTarget;
+    const target = e.target;
+    const rootTarget = e.composedPath()[0];
+    const targetDocument = target.getRootNode();
+    console.log("from ", currentTarget);
+    console.log("target ", target);
+    console.log("rootTarget ", rootTarget);
+    console.log("document.activeElement ", document.activeElement, elementHasFocus(document.activeElement));
+    console.log("targetDocument.activeElement ", targetDocument.activeElement, elementHasFocus(targetDocument.activeElement));
+    console.log("---");
+  }
+
+  // when the :focus is on a node in a closed shadowRoot element, then that element should also be marked as :focus in its lightDOM.
+  // i think.
+
+  class OpenComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host, slot {display: block;}
+          * { border: 5px solid yellow; margin: 5px }
+          :focus{ border-left-color: red; }
+          :focus-within{ border-right-color: orange; }
+        </style>
+        <div class="shadowRoot imitator">
+          shadowRoot open
+          <div tabindex="10"> an open mind </div>
+          <slot></slot>
+        </div>
+      `;
+      this.shadowRoot.addEventListener("focusin", log);
+    }
+  }
+
+  class ClosedComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "closed"});
+      shadowRoot.innerHTML = `
+        <style>
+          :host, slot {display: block; }
+          * { border: 5px solid lightgreen; margin: 5px; }
+          :focus{ border-left-color: red; }
+          :focus-within{ border-right-color: darkgreen; }
+        </style>
+        <div class="shadowRoot imitator">
+          shadowRoot closed
+          <div tabindex="100"> a closed mind </div>
+          <slot></slot>
+        </div>
+      `;
+      shadowRoot.addEventListener("focusin", log);
+    }
+  }
+
+  customElements.define("open-comp", OpenComp);
+  customElements.define("closed-comp", ClosedComp);
+
+  window.addEventListener("focusin", log);
+</script>
+<body>
+body
+<style>
+  * { border: 5px solid grey; margin: 5px }
+  :focus { border-left-color: red; }
+  :focus-within { border-right-color: blue; }
+</style>
+<div tabindex="1">hello sunshine</div>
+<open-comp>
+  <div tabindex="2">hello world</div>
+  <closed-comp>
+    <div tabindex="3">hello complexity</div>
+  </closed-comp>
+</open-comp>
+</body>
