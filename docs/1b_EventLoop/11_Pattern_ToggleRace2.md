@@ -38,8 +38,7 @@ function toggleTick(cb, raceEvents) {
 
 ## `toggleTick` race using the `EventRoadMap`
 
-Knowing which other events might lead to which other unpreventable events can be a tedious study. Therefore, we can automate the ability to race all other events by allowing   
- `toggleTick(cb, raceEvents=eventName)` to mean adding all the unpreventable cascade events for that `eventName` from the `EventRoadMap.UNPREVENTABLES`.
+Knowing which other events might lead to which other unpreventable events can be a tedious study. Therefore, we can automate the ability to race all other events by allowing `toggleTick(cb, raceEvents=eventName)` to mean adding all the unpreventable cascade events for that `eventName` from the `EventRoadMap.UNPREVENTABLES`.
 
 Here we use the `EventRoadMap.UNPREVENTABLES` map to enable developers to automatically queue `toggleTick` callbacks before any other racing events by only specifying the `raceEvents` attribute as a string, whose value is the name of the triggering event whose cascading events we wish to race.
 
