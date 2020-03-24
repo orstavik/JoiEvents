@@ -19,9 +19,7 @@ Focus events bounce *iff the host node of the current shadowDOM's "focus-within"
 2. When the browser bounces the focus event, it does not alter the propagation sequence among the DOM contexts in which the element bounces. This means that the capture-phase event listeners of the top-most DOM contexts will run first. As if the focus events were regular `composed: true` events.
 3. The browser (being having God access in its own code) dispatch the same focus event object in all DOM contexts that the focus events bounce.
 
-Thus,
- 
-Focus events **only propagate in DOM context where the lowest `target` element or a host node containing this `target` whose "focus-within" property has changed**. 
+Thus, focus events **only propagate in DOM context where the lowest `target` element or a host node containing this `target` whose "focus-within" property has changed**. 
 
 ## Demo: focus events bounce
 
@@ -143,8 +141,7 @@ Focus events should have been implemented like so:
 
 If you implement your own focus like events, use this method: dispatch a non-composed event on the `target`, and then cast a second, different non-composed event on the host node of the shadowDOM that contains that target if the property changes reflect recursively upwards as "focus-within" does.  
 
-
-
 ## References
 
- * 
+ * [WHATWG: The focusing steps](https://html.spec.whatwg.org/multipage/interaction.html#focusing-steps);
+ * [W3: Document Focus and Focus Context](https://www.w3.org/TR/uievents/#events-focusevent-doc-focus)
