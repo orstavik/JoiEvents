@@ -171,7 +171,7 @@ This is likely to cause confusion for the developer viewing only the context of 
 
 To avoid a) torpedoing events from above and b) being confused by slotted events, a web component should actively avoid listening for slotted events. The best practice for doing so, is to:
 
-* *never* listen for any events on or above a `<slot>` element inside a shadowDOM (except `slotchange` events). (And when you listen for `slotchange` events, be certain that you check that the `target` of the `slotchange` event is the `<slot>` element inside you shadowDOM, as `slotchange` events can also be slotted.)
+ * *never* listen for any events on or above a `<slot>` element inside a shadowDOM (except `slotchange` events). (And when you listen for `slotchange` events, be certain that you check that the `target` of the `slotchange` event is the `<slot>` element inside you shadowDOM, as `slotchange` events can also be slotted.)
 
 However. Sometimes your web component needs to react to an external event on a `target` element that should be slotted into your web component. For example, an `<a href>` intentionally wraps around a slotted `target` and its whole purpose of being is to react to the slotted events. But, the twist here is that the `<a href>` element *does not listen for slotted events*; the `<a href>` element adds a default action to the `click` event. This will be explained more in depth in the following chapters, and so we concluded here that if your element needs a default action, this should be implemented as a default action and not as a slotted event listener. (Default actions should not be implemented as slotted event listeners because these event listeners might be torpedoed both from other event listeners above and below).
 

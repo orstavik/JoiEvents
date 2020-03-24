@@ -29,8 +29,8 @@ window
 |   shadowRoot                          |
 |     inner-comp                        |
 |     --------------------InnerComp-    |
-|     | shadowRoot  \c/b           |    |
-|     |   details    *             |    |
+|     | shadowRoot  \c/b           |    |  capture  bubble
+|     |   details    *             |    |       target
 |     |     summary                |    |
 |     ------------------------------    |
 -----------------------------------------
