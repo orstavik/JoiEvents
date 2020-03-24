@@ -1,7 +1,11 @@
 <script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
 
-<my-input id="one" type="text"></my-input>
-<my-input id="two" type="text"></my-input>
+<my-input id="one" type="text" value="something"></my-input>
+<my-input id="two" type="text" value=""></my-input>
+
+// repeat of beforeinput, input, change events (change is composed: false, beforeinput, input are composed: true)
+// repeat of value attributes, when does changing the
+// this is it, no other attributes or events.
 
 <script>
   (function () {
@@ -14,10 +18,16 @@
 
       constructor() {
         super();
+        // const shadow = this.attachShadow({mode: "closed"});//todo make it closed
         this.attachShadow({mode: "open"});
         this.shadowRoot.innerHTML = `<div tabindex="-1" style="border: 1px solid grey; border-radius: 2px; width: 100px; height: 1.2em;"></div>`;
-
-        //todo observe the value element when for the first setup, is a double prt enough? Should we wait for the raf? or attributeChanged
+        // this._beingProcessed = true;
+        // Promise.resolve().then(()=>{
+        //   Promise.resolve().then(()=>{
+        //     //post constructor callback: here you have the element constructed WITH attribute values.
+        //     delete this._beingProcessed;
+        //   });
+        // });
       }
 
       get value() {
@@ -32,9 +42,15 @@
 
       attributeChangedCallback(name, oldValue, newValue) {
         if (name === "value") {
+          // if (!this._beingProcessed)
+          //   return;
           if (this.value !== newValue)
             this.value = newValue;
         }
+      }
+
+      reset(){
+        this.value = this.getAttribute("value");
       }
 
       //if the tabindex attribute is different from the .tabIndex property, and they are -1, would that mean that focusable is removed?
