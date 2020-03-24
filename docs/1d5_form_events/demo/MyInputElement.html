@@ -1,0 +1,106 @@
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+
+<my-input id="one" type="text"></my-input>
+<my-input id="two" type="text"></my-input>
+
+<script>
+  (function () {
+
+    class MyInput extends HTMLElement {
+
+      static get observedAttributes() {
+        return ["value"];
+      }
+
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `<div tabindex="-1" style="border: 1px solid grey; border-radius: 2px; width: 100px; height: 1.2em;"></div>`;
+
+        //todo observe the value element when for the first setup, is a double prt enough? Should we wait for the raf? or attributeChanged
+      }
+
+      get value() {
+        return this.shadowRoot.children[0].innerText;
+      }
+
+      set value(newValue) {
+        this.shadowRoot.children[0].innerText = newValue;
+        //todo should the event be dispatched from here??
+        // find out exactly if/when changing the value attribute causes the value property to change
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (name === "value") {
+          if (this.value !== newValue)
+            this.value = newValue;
+        }
+      }
+
+      //if the tabindex attribute is different from the .tabIndex property, and they are -1, would that mean that focusable is removed?
+
+      requestTextChange(txt) {
+        const beforeInputEvent = new InputEvent("my-beforeinput", {composed: true, bubbles: true, cancelable: true}); //composed should be false
+        beforeInputEvent.key = txt;          //todo this property should be immutable
+        this.dispatchEvent(beforeInputEvent);
+        if (!beforeInputEvent.defaultPrevented)
+          this.changeText(txt);
+      }
+
+      changeText(txt) {
+        if (txt === "Backspace")
+          this.shadowRoot.children[0].innerText = this.shadowRoot.children[0].innerText.substr(0, this.shadowRoot.children[0].innerText.length - 1);
+        else
+          this.shadowRoot.children[0].innerText += txt;
+        const inputEvent = new InputEvent("my-input", {composed: true, bubbles: true, cancelable: true});//composed should be false
+        inputEvent.key = txt;      //todo this property should be immutable
+        this.dispatchEvent(inputEvent);
+      }
+
+      checkForChange() {
+        if (this._previousValue === this.value)
+          return;
+        this._previousValue = this.value;
+        const myChangeEvent = new CustomEvent("my-change", {composed: false, bubbles: true, cancelable: false});
+        this.dispatchEvent(myChangeEvent);
+      }
+    }
+
+    customElements.define("my-input", MyInput);
+
+    function firstInPath(path, query) {
+      for (let element of path) {
+        if (element instanceof HTMLElement && element.matches(query))
+          return element;
+      }
+      return null;
+    }
+
+    window.addEventListener("keypress", function (e) {
+      if (e.key === "Enter")
+        return;
+      const el = firstInPath(e.composedPath(), "my-input");
+      if (el)
+        e.addDefaultAction(el.requestTextChange.bind(el, e.key), {preventable: el});
+    }, true);
+
+    window.addEventListener("keydown", function (e) {
+      if (e.key !== "Backspace")
+        return;
+      const el = firstInPath(e.composedPath(), "my-input, my-textarea, my-select");
+      if (el)
+        e.addDefaultAction(el.requestTextChange.bind(el, e.key), {preventable: el});
+    }, true);
+
+    window.addEventListener("focusout", function (e) {
+      const el = firstInPath(e.composedPath(), "my-input, my-textarea, my-select");
+      if (el)
+        e.addDefaultAction(el.checkForChange.bind(el), {raceEvents: e.type});//todo how to make this event run sync. update the raceEvents for focusout
+    }, true);
+
+    window.addEventListener("my-beforeinput", e => console.warn(e));
+    window.addEventListener("my-input", e => console.warn(e));
+
+    document.querySelector("#two").addEventListener("my-beforeinput", e => e.preventDefault());
+  })();
+</script>
