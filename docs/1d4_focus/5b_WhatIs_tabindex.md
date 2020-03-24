@@ -1,17 +1,5 @@
 # WhatIs: `tab-index` attribute?
 
- * https://medium.com/javascript-in-plain-english/what-is-the-javascript-nodeiterator-api-c4443b79b492
- * https://github.com/whatwg/html/issues/2071#issuecomment-263736022
-```javascript
-const treeWalker = Document.createTreeWalker(
-   document.body,
-   NodeFilter.SHOW_ELEMENT,
-   { acceptNode: function(node) { return (node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP); } },
-   false
-);
-const nextFocusableNode = treeWalker.nextNode();
-```
-
 ## `tabindex` order
 
 The `tabindex` attribute is used to control the order of focus shifts when the user "tab" around on the page. Every time the focus is shifted using "tab", the focus event controller checks its current tabindex, and then finds the next element in the tabindex order. 
@@ -78,7 +66,7 @@ The tabindex sequence responds to the DOM dynamically, ie. it holds no state out
 
 Some native elements react to certain events. These elements are referred to as ["interactive content"](https://html.spec.whatwg.org/multipage/dom.html#interactive-content-2). Most commonly, such interactive elements react when the user `click`s on them ("clickable elements"), but they can also respond to `keypress` enter, `wheel`, and other events.
 
-Elements that can gain focus are considered interactive. This means that all the native element types that have their own reactions to user events *and* focusable elements with a valid `tabindex` attribute are interactive. But, as described above, non The functions below finds all interactive elements that are focusable or tab-able: 
+Elements that can gain focus are considered interactive. This means that all the native element types that have their own reactions to user events *and* focusable elements with a valid `tabindex` attribute are interactive. But, as described above, none of the functions below finds all interactive elements that are focusable or tab-able: 
 
 ```javascript
 function interactiveElements(doc, tabbableOnly) {
@@ -94,7 +82,32 @@ function interactiveElements(doc, tabbableOnly) {
       return true;
     });
 }
+```                              
+
+The familiar `querySelector(...)` uses the CSS properties to select elements. But, we can do a similar search using a `TreeWalker` which can select elements efficiently based on regular JS properties. And, the browsers do calculate a `.tabIndex` property of `0` for elements that implicitly tabbable. Thus, tabbable elements can be retrieved more accurately like so: 
+
+```javascript
+function tabbableElements(contextRoot){
+  const treeWalker = Document.createTreeWalker(
+     contextRoot,
+     NodeFilter.SHOW_ELEMENT,
+     { acceptNode: function(node) { 
+       return node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } 
+     },
+     false
+  );
+  const res = [];
+  for (let next = treeWalker.nextNode(); next; next = treeWalker.nextNode()) {
+    res.push(next);
+  }
+  return res;
+}
+
+const tabbablesThatAreGloballyVisible = tabbableElements(document);
+const tabbablesFromClosedShadowRoot = tabbableElements(shadow); 
 ```
+
+As tabbable elements might be hidden inside a `closed` shadowRoot, not all tabbable elements can be found from all DOM contexts. 
                                                                          
 ## Demo: `FocusController` using `tabindex`
 
@@ -267,3 +280,5 @@ Below is a demo that builds on the previous `FocusController` from the previous 
 ## References
 
  * [WHATWG: The tabindex attribute](https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute)
+ * https://medium.com/javascript-in-plain-english/what-is-the-javascript-nodeiterator-api-c4443b79b492
+ * https://github.com/whatwg/html/issues/2071#issuecomment-263736022
