@@ -1,48 +1,18 @@
 # Problem: SlottedEvents 
 
-When an element is slotted into a web component, we get a *BIG* problem: the propagation path will cross *down into* the shadowDOM border, both for `composed: false` and `composed: true` events. This is very complex, and so this time might be a good time to beer with us;)
+When an element is slotted into a web component, a strange circumstance occur: the propagation path will cross *down into* the shadowDOM border, both for `composed: false` and `composed: true` events, and trigger event listeners on elements that are positioned at a lower level than the `target` element. Events that propagate *down into* another shadowDOM context when a `target` element we call SlottedEvents.
 
-## HowTo: check for slotted events
+SlottedEvents cause two problems:
 
-To check if an event is slotted into a web component, you can use the following method.
+1. **ShadowDOM event torpedo**. `.stopPropagation()` and `.preventDefault()` *mutates an event's propagation*. If a web component listens for an event on one of its `<slot>` node, or one of these nodes ancestors (including `this.shadowRoot` or equivalent), then these event listeners would be triggered by events dispatched on any `target` element slotted into web component. And if that event listener happens to call `.stopPropagation()` and `.preventDefault()`, then the propagation of that slotted event would be mutated.
+ 
+    Such a mutation would effectively be invisible from the outside lightDOM in which the `target` reside. Hence, the mutation of the event's propagation would be unexpected, a torpedo from the shadows, for the developer who otherwise controls both the `target` element and the host node of the web component the `target` is slotted into. This problem is escalated by the fact that `.stopPropagation()` and `.preventDefault()` might only be called in some rare circumstances/states of the web component or DOM. These circumstances might not occur during development, but only in production, thus causing freak, edge case errors. The worst kind. The ShadowDomTorpedo demo illustrate this.
 
-```javascript
-function getComposedPath(target, composed) {
-  const path = [];
-  while (true) {
-    path.push(target);
-    if (target.parentNode) {
-      target = target.parentNode;
-    } else if (target.host) {
-      if (!composed)
-        return path;
-      target = target.host;
-    } else if (target.defaultView) {
-      target = target.defaultView;
-    } else {
-      break;
-    }
-  }
-  return path;
-}
+2. **SlotLeakingEvents**. When you develop a web component, you often attach event listeners to `this.shadowRoot` instead of the actual element in the shadowDOM. This practice would require less boilerplate code (ie. your web component JS would not be filled with `this.shadowRoot.children[1].children[2]` or `shadow.querySelector("select")`).
 
-function isSlottedEvent(event, listenerContext) {
-  const path = getComposedPath(event.target, false);
-  const eventContext = path[path.length - 1];
-  return eventContext !== listenerContext && (eventContext === window || eventContext.contains(listenerContext));
-} 
-```
-
-Then, inside a web component, you can ensure that the event is not slotted against the `this.shadowRoot` or equivalent.
-
-```javascript
-this.shadowRoot.addEventListener("event", function(e){
-  if (isSlottedEvent(e, this.shadowRoot))
-    return;
-  //the event is now safe, it is not slotted into the element
-});
-```
-If the event is slotted, you should not process it in the web component. We discuss this at the end of this chapter.
+   But, if your shadowDOM also contains a `<slot>` element, then these event listeners would also be triggered by events stemming from slotted elements. These SlottedEvents could trigger the web component's inner event listeners that were only intended for internal events in the web component. Events leaking *down from the lightDOM* into the shadowDOM are not only bad because they can be torpedoed, it is also bad because the leaking event might trigger internal functions in the shadowDOM that were intended for internal events only. The second demo SlottedEventConfusion illustrate this.
+   
+Thus, slotted events are bad from both the perspective of the lightDOM (the slotted event could be torpedoed) and from the perspective of the shadowDOM (the slotted event might trigger event listeners intended for shadowDOM elements only). 
 
 ## Demo: ShadowDomTorpedo
 
@@ -102,6 +72,47 @@ The conceptual DOM and propagation path:
        input[checkbox]  *   (event listener: print)
 ```
 
+## HowTo: find SlottedEvents
+
+To check if an event is slotted into a web component, use the following method:
+
+```javascript
+function getComposedPath(target, composed) {
+  const path = [];
+  while (true) {
+    path.push(target);
+    if (target.parentNode) {
+      target = target.parentNode;
+    } else if (target.host) {
+      if (!composed)
+        return path;
+      target = target.host;
+    } else if (target.defaultView) {
+      target = target.defaultView;
+    } else {
+      break;
+    }
+  }
+  return path;
+}
+
+function isSlottedEvent(event, listenerContext) {
+  const path = getComposedPath(event.target, false);
+  const eventContext = path[path.length - 1];
+  return eventContext !== listenerContext && (eventContext === window || eventContext.contains(listenerContext));
+} 
+```
+
+Then, inside event listeners inside a web component, you can ensure that the event is not slotted against the `this.shadowRoot` (or equivalent in a `closed` shadowDOM).
+
+```javascript
+this.shadowRoot.addEventListener("event", function(e){
+  if (isSlottedEvent(e, this.shadowRoot))
+    return;
+  //the event is now safe, it is not slotted into the element
+});
+```
+
 ## Demo: SlottedEventConfusion
 
 ```html
@@ -156,28 +167,17 @@ propagation path for change (composed: false)
 
 This is likely to cause confusion for the developer viewing only the context of the shadowDOM. From this perspective, `change` events would likely only occur from the `<input id="shadow">` element. The developer is likely to think that "`<slot>` elements only dispatch `slotchange` events", while the truth is that `<slot>` elements can dispatch any bubbling events in the bubble phase, and *all* events that target regular elements in the capture phase.
 
-## Conceptual consequences
-
-When events propagate *down into* shadowDOM context when a `target` element is slotted into it, several problems arise:
-
-1. If an event listener inside a shadowDOM calls `.stopPropagation()` or `.preventDefault()` on the event, then this is invisible to the outer context. The event would suddenly be torpedoed and disappear from the DOM, or something might remove a default action in some circumstances. This is likely totally unacceptable, from the viewpoint of the lightDOM context. The first demo illustrate this best.
-
-2. If you attach an event listener for another element in your shadowDOM and this same event is "slotted" into your shadowDOM, then this "slotted" event might trigger functionality inside your web component that were not intended. The slotted event "leaks down into" your shadowDOM. This is bad, from the viewpoint of the shadowDOM context. The second demo illustrate this best. 
-
-## Solution
-
-For internal events, a web component must therefore actively avoid listening for "slotted" events, ie. `composed: true` and `composed: false` events leaking down from above. If your shadowDOM contains `<slot>` elements, this means that all event listeners inside the shadowDOM should either:
-1. Be attached to sibling elements of the `<slot>` elements (or their descendants). This is an OK solution.
-2. Filter out `<slot>` elements from their event listeners. This is not a pretty solution.
- 
-If your web component needs to react to external events from slotted elements, such as `<a href>` do, best practice is to:
-> add a default actions (see later chapters). This is the only way for reusable web components to try to prevent their "default reaction" from being torpedoed by a `stopPropagation()` torpedo *and* to add a reaction that the users of the web component can turn on/off using the same conventions as the reactions of native elements (such as `<a href>`).
-
-Technically, it is also possible to add/remove an event listener for the slotted events on the host node during `connectCallback()`/`disconnectedCallback()`. However, this method could also torpedo the lightDOM event by either calling `stopPropagation()` or `preventDefault()` without the lightDOM context being aware.     
-
 ## Discussion
 
-No events should propagate via `<slot>` elements. If a web component wishes to react to a slotted, `composed: true` event, it should instead a) add a default action, b) use an EarlyBird event listener, or c) listen for the element on the host node, as a last resort. Thus, all events that are slotted in should be ignored.
+To avoid a) torpedoing events from above and b) being confused by slotted events, a web component should actively avoid listening for slotted events. The best practice for doing so, is to:
+
+* *never* listen for any events on or above a `<slot>` element inside a shadowDOM (except `slotchange` events). (And when you listen for `slotchange` events, be certain that you check that the `target` of the `slotchange` event is the `<slot>` element inside you shadowDOM, as `slotchange` events can also be slotted.)
+
+However. Sometimes your web component needs to react to an external event on a `target` element that should be slotted into your web component. For example, an `<a href>` intentionally wraps around a slotted `target` and its whole purpose of being is to react to the slotted events. But, the twist here is that the `<a href>` element *does not listen for slotted events*; the `<a href>` element adds a default action to the `click` event. This will be explained more in depth in the following chapters, and so we concluded here that if your element needs a default action, this should be implemented as a default action and not as a slotted event listener. (Default actions should not be implemented as slotted event listeners because these event listeners might be torpedoed both from other event listeners above and below).
+
+If you still desperately need to listen for slotted events, the third option is to *listen for the slotted event on the host node*, not from within the shadowDOM. These event listeners should be added/removed in the web component's `connectCallback()`/`disconnectedCallback()`, and when they are added during `connectionCallback()` they will always be first in line on the host node. The benefit of doing this is explicitly to reach into the lightDOM when you listen for events in the lightDOM, so that your code better signals its (unorthodox) practice.   
+
+To conclude: No events should propagate via `<slot>` elements. It would have been better if the browser had disallowed events from propagating down. If a web component wishes to react to a slotted, `composed: true` event, it should instead a) add a default action, b) use an EarlyBird event listener, or c) listen for the element on the host node, as a last resort. Thus, all events that are slotted in can and should be ignored.
 
 ## References
 
