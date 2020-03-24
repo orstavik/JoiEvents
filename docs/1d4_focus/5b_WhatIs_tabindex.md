@@ -1,5 +1,17 @@
 # WhatIs: `tab-index` attribute?
 
+ * https://medium.com/javascript-in-plain-english/what-is-the-javascript-nodeiterator-api-c4443b79b492
+ * https://github.com/whatwg/html/issues/2071#issuecomment-263736022
+```javascript
+const treeWalker = Document.createTreeWalker(
+   document.body,
+   NodeFilter.SHOW_ELEMENT,
+   { acceptNode: function(node) { return (node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP); } },
+   false
+);
+const nextFocusableNode = treeWalker.nextNode();
+```
+
 ## `tabindex` order
 
 The `tabindex` attribute is used to control the order of focus shifts when the user "tab" around on the page. Every time the focus is shifted using "tab", the focus event controller checks its current tabindex, and then finds the next element in the tabindex order. 
