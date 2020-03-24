@@ -126,7 +126,7 @@ But. This is *not* the case when `.focus()` is triggered by script for `focus` a
 The `activeElement` in focus, and all its ancestors, are marked with a CSS pseudo-class called `:focus`. A CSS pseudo-class is essentially a CSS class that can only be added and removed from an element by the browser itself. It is protected from developer interference, and reflect consistently another aspect of the DOM into the CSSOM. The `:focus` pseudo-class *always* reflect the state of the `document.activeElement`, which would otherwise not be able to query from CSS.
 
 CSS pseudo-classes are:
-1. not that many: `:focus`, `:focus-within`, `:hover`, `:visited`, `:active`,  todo full list of CSS pseudo-classes.
+1. not that many: `:focus`, `:focus-within`, `:hover`, `:visited`, `:active`,  `:link`.
 2. session dependent. They often reflect the state of a session (or the expanded session history as reflected by the browsing history and `:visited` pseudo-class).
 3. universal. Yes, they represent a state in a particular DOM (and browsing history), but they do reflect that state in the same way always, for all browsers and users.
 4. completely controlled by the browser('s event controllers or actions that they control). It is not possible for the developer to directly manipulate them. Developers can only do so sometimes by indirectly by manipulating the DOM (and/or browsing history).
@@ -239,4 +239,5 @@ This naivete keeps the FocusController readable.
 
  * [W3C: focus events](https://w3c.github.io/uievents/#events-focusevent)
  * [MDN: `:focus`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus)
- * [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within) 
+ * [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within)
+ * [CSSWG: User Action Pseudo-classes](https://drafts.csswg.org/selectors-4/#useraction-pseudos)
