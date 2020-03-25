@@ -1,5 +1,7 @@
 # WhatIs: `input`?
 
+> todo 2. via user-driven `keypress` or `keypress` (`event.isTrusted === true`)
+
 The `input` event fires **after** the value of an `<input>`, `<select>`, or `<textarea>` element has changed. We call `<input>`, `<select>`, or `<textarea>` element here "input elements". 
 
 The browser dispatches the `input` event **only** when the user has changed the input element via either **mouse, keyboard** or another input device. Att! `input` events are **not** dispatched when the element's value is changed by a **script**. Hence, changing the `.value` property on an input element object in JS will not trigger an `input` event.

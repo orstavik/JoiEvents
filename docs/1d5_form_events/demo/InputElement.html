@@ -1,0 +1,50 @@
+<form>
+  <input id="one" type="text" value="original">
+  <input id="two" type="text">
+</form>
+
+<script>
+  const form = document.querySelector("form");
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+
+  console.log("----normal case, attribute changes does not affect property changes, and vice versa.");
+  one.value = "updated";
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  one.setAttribute("value", "updated-attribute");
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  //connectedCallback doesn't reset the input value the value
+  one.remove();
+  form.prepend(one);
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  //even when the attribute is removed, the element disconnected and then set up anew
+  one.removeAttribute("value");
+  one.remove();
+  form.prepend(one);
+  one.setAttribute("value", "updated-attribute");
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  form.reset();
+  console.log(one.value + " === updated-attribute");
+
+  console.log("----alternativeState, the attribute changes DO change the property, but not the other way round");
+  two.value = "hello";
+  console.log(two.value + " !== " + two.getAttribute("value"));
+  form.reset();
+  console.log(two.value + " === ''");
+  two.setAttribute("value", "sunshine");
+  console.log(two.value + " === sunshine");
+  two.setAttribute("value", "world");
+  console.log(two.value + " === world");
+
+  console.log("----created from script behaves as ");
+  const three = document.createElement("input");
+  three.setAttribute("type", "text");
+  three.setAttribute("value", "alternativeState");
+  console.log(three.value + " === alternativeState");
+  three.value = "hello";
+  console.log(three.value + " !== " + three.getAttribute("value"));
+
+  window.addEventListener("beforeinput", e => console.log(e)); //trigger only from user-driven keypress
+  window.addEventListener("input", e => console.log(e));       //trigger only from user-driven keypress
+  window.addEventListener("change", e => console.log(e));       //trigger only from user-driven keypress
+</script>
