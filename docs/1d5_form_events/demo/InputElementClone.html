@@ -11,20 +11,6 @@
         const shadow = this.attachShadow({mode: "closed"});
         shadow.innerHTML = `<div tabindex="-1" style="border: 1px solid grey; width: 200px; height: 1.2em;"></div>`;
         this._innerDiv = shadow.children[0];
-        this._valueNotSetup = true;
-        Promise.resolve().then(() => {
-          Promise.resolve().then(() => {
-            if (document.readyState === 'complete') {
-              if (this.hasAttribute("value"))
-                delete this._valueNotSetup;
-            } else {
-              window.addEventListener("DOMContentLoaded", e => {
-                if (this.hasAttribute("value"))
-                  delete this._valueNotSetup;
-              });
-            }
-          });
-        });
       }
 
       get value() {
@@ -36,7 +22,9 @@
       }
 
       attributeChangedCallback(name, oldValue, newValue) {
-        if (name === "value" && this._valueNotSetup) {
+        //The browser can implicitly detect if an element was constructed with a value attribute at startup.
+        //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
+        if (name === "value" && !this.hasAttribute("_value_at_startup_")) {
           this.value = newValue;
         }
       }
@@ -93,8 +81,10 @@
 </script>
 
 <!--<form>-->
-<my-input id="one" type="text" value="original"></my-input>
+<my-input id="one" type="text" value="original" _value_at_startup_></my-input>
 <my-input id="two" type="text"></my-input>
+<!--The browser can implicitly detect if an element was constructed with a value attribute at startup.-->
+<!--Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.-->
 <!--</form>-->
 
 
@@ -134,6 +124,9 @@
   console.log("----created from script behaves as ");
   const three = document.createElement("input");
   three.setAttribute("type", "text");
+  three.setAttribute("_no_value_at_startup_", "");
+  //The browser can implicitly detect if an element was constructed with a value attribute at startup.
+  //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
   three.setAttribute("value", "alternativeState");
   console.log(three.value + " === alternativeState");
   three.value = "hello";

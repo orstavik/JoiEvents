@@ -100,6 +100,150 @@ The purpose of the `change` event is to provide a simplified hook for a series o
 
 To illustrate the basic functionality of the `<input type="text">` element, we implement a `<my-input>` element which essentially duplicates the functionality of the native `<input type="text">` element.
 
+There is one major problem making the demo. The browser can implicitly detect if an element was constructed with a value attribute at startup. Regular JS functions cannot. From the `constructor()` of a web component, or its `attributeChangedCallback(...)`, we cannot find out if the element's constructor is being triggered by the parser (during loading, upgrading, or from `.innerHTML`) or from a normal script (`new WebComponent()` or `document.createElement()`). Instead, in this demo, we mark the elements that are hypothetically created with a `value` attribute at startup with another attribute: `_value_at_startup_`.  
+
+```html
+<script>
+  (function () {
+    class MyInput extends HTMLElement {
+
+      static get observedAttributes() {
+        return ["value"];
+      }
+
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<div tabindex="-1" style="border: 1px solid grey; width: 200px; height: 1.2em;"></div>`;
+        this._innerDiv = shadow.children[0];
+      }
+
+      get value() {
+        return this._innerDiv.innerText;
+      }
+
+      set value(newValue) {
+        this._innerDiv.innerText = newValue;
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        //The browser can implicitly detect if an element was constructed with a value attribute at startup.
+        //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
+        if (name === "value" && !this.hasAttribute("_value_at_startup_")) {
+          this.value = newValue;
+        }
+      }
+
+      _native_reset() {
+        this.value = this.getAttribute("value");
+      }
+
+      _native_requestInput(data) {
+        let insertType = "insertText";
+        if (data === "Backspace") {
+          insertType = "deleteContentBackward";
+          data = null;
+        }
+        const beforeInputEvent = new InputEvent("my-beforeinput", {
+          composed: true,
+          bubbles: true,
+          cancelable: true,
+          insertType,
+          data,
+        }); //composed should be false
+        this.dispatchEvent(beforeInputEvent);
+        if (!beforeInputEvent.defaultPrevented)
+          this._native_updateValue(data, insertType);
+      }
+
+      //simplified
+      _native_updateValue(data, insertType) {
+        if (insertType === "deleteContentBackward")
+          this._innerDiv.innerText = this._innerDiv.innerText.substr(0, this._innerDiv.innerText.length - 1);
+        else
+          this._innerDiv.innerText += data;
+        const inputEvent = new InputEvent("my-input", {
+          composed: true,
+          bubbles: true,
+          cancelable: true,
+          data,
+          insertType
+        });//composed should be false
+        this.dispatchEvent(inputEvent);
+      }
+
+      _native_requestChange() {
+        if (this._previousValue === this.value)
+          return;
+        this._previousValue = this.value;
+        const myChangeEvent = new Event("my-change", {composed: false, bubbles: true, cancelable: false});
+        this.dispatchEvent(myChangeEvent);
+      }
+    }
+
+    customElements.define("my-input", MyInput);
+  })();
+</script>
+
+<!--<form>-->
+<my-input id="one" type="text" value="original" _value_at_startup_></my-input>
+<my-input id="two" type="text"></my-input>
+<!--The browser can implicitly detect if an element was constructed with a value attribute at startup.-->
+<!--Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.-->
+<!--</form>-->
+
+
+<script>
+  // const form = document.querySelector("form");
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+
+  console.log("----normal case, attribute changes does not affect property changes, and vice versa.");
+  one.value = "updated";
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  one.setAttribute("value", "updated-attribute");
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  //connectedCallback doesn't reset the input value the value
+  one.remove();
+  document.body.prepend(one);
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  //even when the attribute is removed, the element disconnected and then set up anew
+  one.removeAttribute("value");
+  one.remove();
+  document.body.prepend(one);
+  one.setAttribute("value", "updated-attribute");
+  console.log(one.value + " !== " + one.getAttribute("value"));
+  one._native_reset();
+  console.log(one.value + " === updated-attribute");
+
+  console.log("----alternativeState, the attribute changes DO change the property, but not the other way round");
+  two.value = "hello";
+  console.log(two.value + " !== " + two.getAttribute("value"));
+  two._native_reset();
+  console.log(two.value + " === ''");
+  two.setAttribute("value", "sunshine");
+  console.log(two.value + " === sunshine");
+  two.setAttribute("value", "world");
+  console.log(two.value + " === world");
+
+  console.log("----created from script behaves as ");
+  const three = document.createElement("input");
+  three.setAttribute("type", "text");
+  three.setAttribute("_no_value_at_startup_", "");
+  //The browser can implicitly detect if an element was constructed with a value attribute at startup.
+  //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
+  three.setAttribute("value", "alternativeState");
+  console.log(three.value + " === alternativeState");
+  three.value = "hello";
+  console.log(three.value + " !== " + three.getAttribute("value"));
+
+  // see next chapter
+  // window.addEventListener("beforeinput", e => console.log(e)); //trigger only from user-driven keypress
+  // window.addEventListener("input", e => console.log(e));       //trigger only from user-driven keypress
+  // window.addEventListener("change", e => console.log(e));       //trigger only from user-driven keypress
+</script>
+```
+
 ## References
 
  * 
