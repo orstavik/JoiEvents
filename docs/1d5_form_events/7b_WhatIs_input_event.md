@@ -1,28 +1,49 @@
-# WhatIs: `input`?
+# WhatIs: `beforeinput` and `input` event?
 
-> todo 2. via user-driven `keypress` or `keypress` (`event.isTrusted === true`)
+The `beforeinput` event propagates **before** a mouse or keyboard input changes the value of the input elements; the `input` event propagates **after** the state change. The sequence is:
 
-The `input` event fires **after** the value of an `<input>`, `<select>`, or `<textarea>` element has changed. We call `<input>`, `<select>`, or `<textarea>` element here "input elements". 
-
-The browser dispatches the `input` event **only** when the user has changed the input element via either **mouse, keyboard** or another input device. Att! `input` events are **not** dispatched when the element's value is changed by a **script**. Hence, changing the `.value` property on an input element object in JS will not trigger an `input` event.
-
-The input event is **sync**. The `input` event is dispatched *immediately* after the DOM update of the element. This means that the `input` event *will be* the very first thing that happens after a *user-driven* change of the value of an input element. Hence, any task queued in the event loop from a `beforeinput` event listener, should run AFTER the input event dispatch. 
-
-Unlike keyboard events, the `input` event is triggered by any changes in values, even those not related to keyboard actions: pasting text with a mouse or using speech recognition to dictate text. 
-
-On the other hand, the `input` event is not triggered by typing from the keyboard and other actions that doesn't change the value of the input element, such as pressing the arrow keys during input or pressing "enter/new line" when the focus is on an `<input>`.
-
-> The `input` event is similar to the [`change` event](WhatIs_change.md). The difference is that the `input` event occurs immediately after the value of the element has changed, and the `change` occurs when the element loses focus after the content has been changed.
+    -> mouse or keyboard event  
+     -> beforeinput event 
+      -> change of the `.value` property of the input element in the DOM
+       -> input event.
 
 ## The `beforeinput` event
 
-The `beforeinput` event is a newer addition to the `input` event cascade. The `beforeinput` event is dispatched **before** the mouse or keyboard input changes the value of the input elements. The sequence is:
+The `beforeinput` event is dispatched **before** the following properties of native input elements will change:
+1. the `.value` property an `<input type="text">`
+2. the `.checked` property an `<input type="checkbox">`
+3. the `.value` property a `<textarea>`
+4. the `.selectedIndex` property of a `<select>`
+* and several other properties to different input elements such as `<input type="radiobox, date, ...">` etc.
 
-    mouse or keyboard event -> beforeinput event -> change of the `.value` property of the input element in the DOM -> input event.
+The `beforeinput` event is **future-tense**. This means that the `beforeinput` event describes a state change that is about to be performed. If you call `.preventDefault()` on the `beforeinput` event, this state change will be cancelled. (The `beforeinput` event is therefore `cancelable: false`.)
 
-Furthermore, the action of changing the `.value` property on the input element is added as the default action of the `beforeinput` event. This means that if you call `.preventDefault()` on a `beforeinput` event, then the input element's value will not be changed and you will not get an `input` event neither. 
+The `beforeinput` event is triggered **only** by **user-driven** state changes, and not **script-driven** state changes. This means that the state change must be effected directly by a user event such as a `click`, `keypress`, or similar. The trigger events must be `.isTrusted = true`: it is not possible to bypass this criteria by for example dispatching `MouseEvent` created by a script. (Many different user-driven events can trigger `beforeinput`: keyboard, mouse, speech recognition, cut'n'paste, and text composition.)
 
-> `beforeinput` will be supported in Firefox 74.
+But. `beforeinput` events are not triggered by keyboard events and other user actions that doesn't change the value of the input element: pressing the arrow keys during input or pressing "enter/new line" when the focus is on an `<input>` will not trigger a `beforeinput` event.
+
+The "beforeinput-task", ie. the task that dispatches the `beforeinput` event, runs immediately after the propagation of the trigger event has finished. For example, if you `click` on an `<input type="checkbox">`, this will create a task that dispatches a `beforeinput` event that `target` this input element. This beforeinput-task functions as the default action for the preceding `click` event. 
+
+The `beforeinput` event is **sync**. This means that any micro-task queued from a `beforeinput` event listener will be run after the propagation of the `beforeinput` event has concluded (after all the `beforeinput` event listeners has run). But, these microtask queue from `beforeinput` event listeners run *before* the value on the input element is updated.
+
+The `beforeinput` event is a newer addition to the `input` event cascade (Firefox 74 will support `beforeinput` by default). When `beforeinput` is not supported, the state change of the input element can be prevented by calling `preventDefault()` on the user-driven event preceding the `beforeinput`, such as `click` or `keypress`.
+
+## The `input` event
+
+The `input` event is dispatched **after** the following properties of native input elements has changed:
+1. the `.value` property an `<input type="text">`
+2. the `.checked` property an `<input type="checkbox">`
+3. the `.value` property a `<textarea>`
+4. the `.selectedIndex` property of a `<select>`
+* and several other propertis to different input elements such as `<input type="radiobox, date, ...">` etc.
+
+The `input` event is **past-tense**. This means that the `input` event describes a state change that has already occured/is completed. Calling `.preventDefault()` on `input` therefore has no effect (and would make no sense), and the `input` event is therefore `cancelable: false`.
+
+The `input` event is dispatched **only** when the state of the DOM is announced by a `beforeinput` event (or equivalent user-driven event in older browsers). You might have a `beforeinput` event without an `input` event (ie. when the `beforeinput` is prevented), but you can never have an `input` event that is not preceded by a `beforeinput`. The `input` event is **not** dispatched when the element's property value is changed by a **script**. Thus, only a `UIEvent` that is `.isTrusted = true` can indirectly trigger the `input` event.
+
+The input event is queued **sync**. The `input` event is dispatched *immediately* after the property of the input element has changed. This means that if the `beforeinput` event is not prevented, the `input` event *must be* the very first event to follow it:
+1. The task that alters the value property is the default action of `beforeinput` event (and therefore runs sync after it has completed its propagation). 
+2. The task of dispatching the `input` event runs sync/immediately after the input element has changed its state (when it was initiated by a `beforeinput` event).
 
 ## Demo: `input` and `beforeinput` event
 
@@ -31,23 +52,30 @@ Furthermore, the action of changing the `.value` property on the input element i
 <input id="two" type="text" value="Nothing can stop you!">
 <input id="three" type="text" value="Or could it?">
 
-<script >
-(function() {
-  const one = document.querySelector("#one");
-  const two = document.querySelector("#two");
-  const three = document.querySelector("#three");
-  
-  one.addEventListener("beforeinput", e => 
-    console.log("When this message is printed, the input's value is NOT YET updated.")
-  );
-  one.addEventListener("input", e => 
-    console.log("When this message is printed, the input's value HAS BEEN updated.")
-  );
-  two.addEventListener("input", e => e.preventDefault()); 
-  // the text is updated in the DOM, the input event is dispatched AFTER the DOM is updated. 
-  three.addEventListener("beforeinput", e => e.preventDefault()); 
-  // you try to make changes to input #three, but you can't.
-})();
+<script>
+  (function () {
+    const one = document.querySelector("#one");
+    const two = document.querySelector("#two");
+    const three = document.querySelector("#three");
+
+    one.addEventListener("beforeinput", e => {
+      const beforeValue = e.target.value;
+      console.log("When this message is printed, the input's value is NOT YET updated.");
+      Promise.resolve().then(function () {
+          console.log("Microtasks queued from beforeinput event listener runs BEFORE the input value is updated: " +
+            (beforeValue === e.target.value)
+          );
+        }
+      );
+    });
+    one.addEventListener("input", e =>
+      console.log("When this message is printed, the input's value HAS BEEN updated.")
+    );
+    two.addEventListener("input", e => e.preventDefault());
+    // the text is updated in the DOM, the input event is dispatched AFTER the DOM is updated.
+    three.addEventListener("beforeinput", e => e.preventDefault());
+    // you try to make changes to input #three, but you can't.
+  })();
 </script>
 ```
 
@@ -140,6 +168,8 @@ In the demo below a function `InputController` recreates the logic of the `input
 ```
 
 You will see both the `my-beforeinput` and `my-input` events each time you set new values to the `<input>` element.
+
+> The `input` event is similar to the [`change` event](WhatIs_change.md). The difference is that the `input` event occurs immediately after the value of the element has changed, and the `change` occurs when the element loses focus after the content has been changed.
 
 ## References
 

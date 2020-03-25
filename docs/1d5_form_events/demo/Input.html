@@ -2,15 +2,22 @@
 <input id="two" type="text" value="Nothing can stop you!">
 <input id="three" type="text" value="Or could it?">
 
-<script >
-  (function() {
+<script>
+  (function () {
     const one = document.querySelector("#one");
     const two = document.querySelector("#two");
     const three = document.querySelector("#three");
 
-    one.addEventListener("beforeinput", e =>
-      console.log("When this message is printed, the input's value is NOT YET updated.")
-    );
+    one.addEventListener("beforeinput", e => {
+      const beforeValue = e.target.value;
+      console.log("When this message is printed, the input's value is NOT YET updated.");
+      Promise.resolve().then(function () {
+          console.log("Microtasks queued from beforeinput event listener runs BEFORE the input value is updated: " +
+            (beforeValue === e.target.value)
+          );
+        }
+      );
+    });
     one.addEventListener("input", e =>
       console.log("When this message is printed, the input's value HAS BEEN updated.")
     );
