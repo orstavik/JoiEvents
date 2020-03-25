@@ -20,13 +20,13 @@ const EventRoadMap = {
     wheel: ["scroll"],
     keypress: ["beforeinput"],
     beforeinput: ["input"],
-    focusout: ["change"],
   },
   UNPREVENTABLES: { 
     mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
     mouseup: ["click", "auxclick", "dblclick"],
     click: ["dblclick"],
-    keydown: ["keypress", "beforeinput"]
+    keydown: ["keypress", "beforeinput"],
+    focusout: ["change"],
   }
 };
 EventRoadMap.ALL = {};
