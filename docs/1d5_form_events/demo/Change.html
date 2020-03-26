@@ -15,11 +15,13 @@
 <script>
   window.addEventListener("mouseup", e => console.log("mouseup ", e.target.id));
   window.addEventListener("click", e => console.log("click ", e.target.id));
-  window.addEventListener("input", e => console.log("input ", e.target.id));
-  window.addEventListener("change", e => console.log("change ", e.target.id));
-  window.addEventListener("focusout", e => console.log("focusout ", e.target.id));
-  window.addEventListener("focusin", e => console.log("focusin ", e.target.id));
-  window.addEventListener("submit", e => console.log("submit ", e.target.id));
+  window.addEventListener("input", e => console.log(e.type, e.target.id));
+  window.addEventListener("submit", e => console.log(e.type, e.target.id));
+  window.addEventListener("change", e => console.log(e.type, e.target.id));
+  document.addEventListener("focus", e => console.log(e.type, e.target.id), true);
+  window.addEventListener("focusin", e => console.log(e.type, e.target.id));
+  document.addEventListener("blur", e => console.log(e.type, e.target.id), true);
+  window.addEventListener("focusout", e => console.log(e.type, e.target.id));
 
   const input = document.querySelector("input[type='text'");
   const textarea = document.querySelector("textarea");

@@ -21,18 +21,15 @@
         this.target = undefined;
         this.startValue = undefined;
         this._onInputNormal = this.onInputNormal.bind(this);
-        this._onFocusin = this.onFocusin.bind(this);
-        this._onFocusout = this.onFocusout.bind(this);
+        this._onFocusin = this.onFocusin.bind(this);//we need to listen for focusin, as the focusin is much more efficient than the focus event (there are often many focus events per focusin event)
+        this._onBlur = this.onBlur.bind(this);//we need to listen for blur, as the focusout is propagates after blur
         this._onInputText = this.onInputText.bind(this);
         this._onSubmit = this.onSubmit.bind(this);
       }
 
       dispatchChange(target) {
-        // debugger;
-        toggleTick(() => {
-          const changeEvent = new InputEvent("my-change", {composed: false, bubbles: true, cancelable: true});
-          target.dispatchEvent(changeEvent);
-        }, ["change"]);
+        const changeEvent = new InputEvent("my-change", {composed: false, bubbles: true, cancelable: false});
+        target.dispatchEvent(changeEvent);
       }
 
       initState() {
@@ -46,9 +43,11 @@
       }
 
       textState(el) {
+        //It would be tempting to add event listeners to the el,
+        //but this would have a bigger risk for the event listener to be hit by a capture torpedo.
         window.addEventListener("input", this._onInputText, true);
         window.addEventListener("submit", this._onSubmit, true);
-        window.addEventListener("focusout", this._onFocusout, true);
+        window.addEventListener("blur", this._onBlur, true);
         this.target = el;
         this.startValue = el.value;
         this.textStateInput = false;
@@ -57,7 +56,7 @@
       removeTextState() {
         window.removeEventListener("input", this._onInputText, true);
         window.removeEventListener("submit", this._onSubmit, true);
-        window.removeEventListener("focusout", this._onFocusout, true);
+        window.removeEventListener("blur", this._onBlur, true);
         this.target = undefined;
         this.startValue = undefined;
         this.textStateInput = undefined;
@@ -92,7 +91,7 @@
         window.removeEventListener("input", this._onInputText, true);
       }
 
-      onFocusout(e) {
+      onBlur(e) {
         const rootTarget = e.composedPath()[0];
         if (this.target !== rootTarget)
           throw new Error("omg.. This wasn't supposed to happen.");
@@ -112,11 +111,12 @@
   })();
 
   window.addEventListener("input", e => console.log(e.type, e.target.id));
-  window.addEventListener("change", e => console.log(e.type, e.target.id));
-  window.addEventListener("focus", e => console.log(e.type, e.target.id), true);
-  window.addEventListener("focusin", e => console.log(e.type, e.target.id));
-  window.addEventListener("blur", e => console.log(e.type, e.target.id), true);
-  window.addEventListener("focusout", e => console.log(e.type, e.target.id));
   window.addEventListener("submit", e => console.log(e.type, e.target.id));
+  window.addEventListener("change", e => console.log(e.type, e.target.id));
+  document.addEventListener("focus", e => console.log(e.type, e.target.id), true);
+  window.addEventListener("focusin", e => console.log(e.type, e.target.id));
+  document.addEventListener("blur", e => console.log(e.type, e.target.id), true);
+  window.addEventListener("focusout", e => console.log(e.type, e.target.id));
+
   window.addEventListener("my-change", e => console.log(e.type, e.target.id));
 </script>
