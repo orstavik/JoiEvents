@@ -18,5 +18,12 @@
   window.addEventListener("input", e => console.log("input ", e.target.id));
   window.addEventListener("change", e => console.log("change ", e.target.id));
   window.addEventListener("focusout", e => console.log("focusout ", e.target.id));
+  window.addEventListener("focusin", e => console.log("focusin ", e.target.id));
   window.addEventListener("submit", e => console.log("submit ", e.target.id));
+
+  const input = document.querySelector("input[type='text'");
+  const textarea = document.querySelector("textarea");
+  input.focus();// move focus to the first text input
+  input.value = "hello sunshine";
+  textarea.focus();
 </script>

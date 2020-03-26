@@ -90,12 +90,6 @@ The purpose of the `beforeinput`, `input` events and thus the `_native_requestIn
  
 When the `.value` property is changed from within a script, then that script can obviously both control and observe the value itself. This is why the `beforeinput` and `input` events are only dispatched from user-driven state changes, and not when the state of the `.value` property is first set up nor when it is altered by a script.
  
-## The `_native_checkChange()` and `change` event
-
-The `change` event is dispatched from the `_native_checkChange()` method on the `<input type="text">` element. The `change` event is past-tense: it follows a *group of* state changes to the `.value` property and is dispatched when the `<input type="text">` element *looses focus*. Calling `preventDefault()` on the `input` event does nothing.
-
-The purpose of the `change` event is to provide a simplified hook for a series of `input` events. When a user updates a text input, he will often write tens or maybe hundreds of characters, make mistakes, edits, etc. within a short period of time. Most observations of `<input type="text">` elements require only that the script reacts when the user has *finished writing* and *moves onto* the next field. `change` is triggered by the `focusout` event, which is works as a proxy for "finished writing".
-
 ## Demo: Naive `<input type="text">` element
 
 To illustrate the basic functionality of the `<input type="text">` element, we implement a `<my-input>` element which essentially duplicates the functionality of the native `<input type="text">` element.
@@ -114,7 +108,7 @@ There is one major problem making the demo. The browser can implicitly detect if
       constructor() {
         super();
         const shadow = this.attachShadow({mode: "closed"});
-        shadow.innerHTML = `<div tabindex="-1" style="border: 1px solid grey; width: 200px; height: 1.2em;"></div>`;
+        shadow.innerHTML = `<div tabindex="0" style="border: 1px solid grey; width: 200px; height: 1.2em;"></div>`;
         this._innerDiv = shadow.children[0];
       }
 
@@ -145,15 +139,20 @@ There is one major problem making the demo. The browser can implicitly detect if
           data = null;
         }
         const beforeInputEvent = new InputEvent("my-beforeinput", {
-          composed: true,
+          composed: true,    //composed should be false
           bubbles: true,
           cancelable: true,
           insertType,
           data,
-        }); //composed should be false
+        });
         this.dispatchEvent(beforeInputEvent);
-        if (!beforeInputEvent.defaultPrevented)
-          this._native_updateValue(data, insertType);
+        // Event listeners in the propagation above might queue microtasks.
+        // These microtasks should be emptied before _native_updateValue is called.
+        // To delay updating the state properly until these microtasks are run, we use toggleTick.
+        toggleTick(() => {
+          if (!beforeInputEvent.defaultPrevented)
+            this._native_updateValue(data, insertType);
+        }, ["keypress"]);   //keydown might trigger keypress.
       }
 
       //simplified
@@ -163,21 +162,13 @@ There is one major problem making the demo. The browser can implicitly detect if
         else
           this._innerDiv.innerText += data;
         const inputEvent = new InputEvent("my-input", {
-          composed: true,
+          composed: true,   //composed should be false
           bubbles: true,
           cancelable: true,
           data,
           insertType
-        });//composed should be false
+        });
         this.dispatchEvent(inputEvent);
-      }
-
-      _native_requestChange() {
-        if (this._previousValue === this.value)
-          return;
-        this._previousValue = this.value;
-        const myChangeEvent = new Event("my-change", {composed: false, bubbles: true, cancelable: false});
-        this.dispatchEvent(myChangeEvent);
       }
     }
 
@@ -240,6 +231,7 @@ There is one major problem making the demo. The browser can implicitly detect if
   // see next chapter
   // window.addEventListener("beforeinput", e => console.log(e)); //trigger only from user-driven keypress
   // window.addEventListener("input", e => console.log(e));       //trigger only from user-driven keypress
+  // see next next chapter
   // window.addEventListener("change", e => console.log(e));       //trigger only from user-driven keypress
 </script>
 ```

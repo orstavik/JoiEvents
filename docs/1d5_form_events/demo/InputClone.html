@@ -1,0 +1,134 @@
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+<script>
+  (function () {
+    class MyInput extends HTMLElement {
+
+      static get observedAttributes() {
+        return ["value"];
+      }
+
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<div tabindex="0" style="border: 1px solid grey; width: 200px; height: 1.2em;"></div>`;
+        this._innerDiv = shadow.children[0];
+      }
+
+      get value() {
+        return this._innerDiv.innerText;
+      }
+
+      set value(newValue) {
+        this._innerDiv.innerText = newValue;
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        //The browser can implicitly detect if an element was constructed with a value attribute at startup.
+        //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
+        if (name === "value" && !this.hasAttribute("_value_at_startup_")) {
+          this.value = newValue;
+        }
+      }
+
+      _native_reset() {
+        this.value = this.getAttribute("value");
+      }
+
+      _native_requestInput(data) {
+        let insertType = "insertText";
+        if (data === "Backspace") {
+          insertType = "deleteContentBackward";
+          data = null;
+        }
+        const beforeInputEvent = new InputEvent("my-beforeinput", {
+          composed: true,    //composed should be false
+          bubbles: true,
+          cancelable: true,
+          insertType,
+          data,
+        });
+        this.dispatchEvent(beforeInputEvent);
+        // Event listeners in the propagation above might queue microtasks.
+        // These microtasks should be emptied before _native_updateValue is called.
+        // To delay updating the state properly until these microtasks are run, we use toggleTick.
+        toggleTick(() => {
+          if (!beforeInputEvent.defaultPrevented)
+            this._native_updateValue(data, insertType);
+        }, ["keypress"]);   //keydown might trigger keypress.
+      }
+
+      //simplified
+      _native_updateValue(data, insertType) {
+        if (insertType === "deleteContentBackward")
+          this._innerDiv.innerText = this._innerDiv.innerText.substr(0, this._innerDiv.innerText.length - 1);
+        else
+          this._innerDiv.innerText += data;
+        const inputEvent = new InputEvent("my-input", {
+          composed: true,   //composed should be false
+          bubbles: true,
+          cancelable: true,
+          data,
+          insertType
+        });
+        this.dispatchEvent(inputEvent);
+      }
+    }
+
+    customElements.define("my-input", MyInput);
+  })();
+
+  function firstInPath(path, query) {
+    for (let element of path) {
+      if (element instanceof HTMLElement && element.matches(query))
+        return element;
+    }
+    return null;
+  }
+
+  window.addEventListener("keypress", function (e) {
+    if (e.key === "Enter")
+      return;
+    const el = firstInPath(e.composedPath(), "my-input");
+    if (el)
+      e.addDefaultAction(el._native_requestInput.bind(el, e.key), {preventable: el});
+  }, true);
+
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key !== "Backspace")
+      return;
+    const el = firstInPath(e.composedPath(), "my-input");
+    if (el)
+      e.addDefaultAction(el._native_requestInput.bind(el, e.key), {preventable: el});
+  }, true);
+</script>
+
+<my-input id="one" type="text" value="Tell us your story ..."></my-input>
+<my-input id="two" type="text"></my-input>
+<my-input id="three" type="text" value="Or could it?"></my-input>
+
+<script>
+  (function () {
+    const one = document.querySelector("#one");
+    const two = document.querySelector("#two");
+    const three = document.querySelector("#three");
+
+    one.addEventListener("my-beforeinput", e => {
+      const beforeValue = e.target.value;
+      console.log("When this message is printed, the input's value is NOT YET updated.");
+      Promise.resolve().then(function () {
+          console.log("Microtasks queued from my-beforeinput event listener runs BEFORE the input value is updated: " +
+            (beforeValue === e.target.value)
+          );
+        }
+      );
+    });
+    one.addEventListener("my-input", e =>
+      console.log("When this message is printed, the input's value HAS BEEN updated.")
+    );
+    two.addEventListener("my-input", e => e.preventDefault());
+    // the text is updated in the DOM, the input event is dispatched AFTER the DOM is updated.
+    three.addEventListener("my-beforeinput", e => e.preventDefault());
+    // you try to make changes to input #three, but you can't.
+  })();
+</script>

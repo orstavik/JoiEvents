@@ -1,4 +1,4 @@
-# WhatIs: `beforeinput` and `input` event?
+# WhatIs: `beforeinput` and `input` events?
 
 The `beforeinput` event propagates **before** a mouse or keyboard input changes the value of the input elements; the `input` event propagates **after** the state change. The sequence is:
 
@@ -79,95 +79,162 @@ The input event is queued **sync**. The `input` event is dispatched *immediately
 </script>
 ```
 
-## Demo: Naive `KeypressInputController`
+## Demo: `<input type="text">` with default actions
 
-In the demo below a function `InputController` recreates the logic of the `input` event cascade. This is a simplified version of the browsers native input controller as it only handles normal letters and backspace. This demo doesn't support:
+In the demo below we add default actions to the `<input type="text">` element to enable it to react to `keypress`/`keydown` events. This is a simplified version of the browsers native `<input type="text">` element. This demo doesn't support:
  * pasting and cutting text selections, and
  * mouse driven changes for `<select>` elements,
  * etc. etc. etc. 
 
-1. Block the native `beforeinput` event to avoid duplicate character input.
-2. The `toggleTick` function enablea queueing of events in the event loop.
-3. The `InputController` listens for keydown and keypress events.
-4. `Backspace` does not trigger a `keypress` event. Therefore, we use a `keydown` event listener to handle `Backspace`.
-5. Once the `InputController` receives an appropriate trigger event, it
-   1. creates and dispatches a new `my-beforeinput` event,
-   2. updates the value of the current target, and
-   3. creates and dispatches a new `my-input event`.
-
 ```html
-<input type="text" value="I have mirrored input events"/>
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+<script>
+  (function () {
+    class MyInput extends HTMLElement {
+
+      static get observedAttributes() {
+        return ["value"];
+      }
+
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<div tabindex="0" style="border: 1px solid grey; width: 200px; height: 1.2em;"></div>`;
+        this._innerDiv = shadow.children[0];
+      }
+
+      get value() {
+        return this._innerDiv.innerText;
+      }
+
+      set value(newValue) {
+        this._innerDiv.innerText = newValue;
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        //The browser can implicitly detect if an element was constructed with a value attribute at startup.
+        //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
+        if (name === "value" && !this.hasAttribute("_value_at_startup_")) {
+          this.value = newValue;
+        }
+      }
+
+      _native_reset() {
+        this.value = this.getAttribute("value");
+      }
+
+      _native_requestInput(data) {
+        let insertType = "insertText";
+        if (data === "Backspace") {
+          insertType = "deleteContentBackward";
+          data = null;
+        }
+        const beforeInputEvent = new InputEvent("my-beforeinput", {
+          composed: true,    //composed should be false
+          bubbles: true,
+          cancelable: true,
+          insertType,
+          data,
+        });
+        this.dispatchEvent(beforeInputEvent);
+        // Event listeners in the propagation above might queue microtasks.
+        // These microtasks should be emptied before _native_updateValue is called.
+        // To delay updating the state properly until these microtasks are run, we use toggleTick.
+        toggleTick(() => {
+          if (!beforeInputEvent.defaultPrevented)
+            this._native_updateValue(data, insertType);
+        }, ["keypress"]);   //keydown might trigger keypress.
+      }
+
+      //simplified
+      _native_updateValue(data, insertType) {
+        if (insertType === "deleteContentBackward")
+          this._innerDiv.innerText = this._innerDiv.innerText.substr(0, this._innerDiv.innerText.length - 1);
+        else
+          this._innerDiv.innerText += data;
+        const inputEvent = new InputEvent("my-input", {
+          composed: true,   //composed should be false
+          bubbles: true,
+          cancelable: true,
+          data,
+          insertType
+        });
+        this.dispatchEvent(inputEvent);
+      }
+
+      _native_requestChangeStart() {
+        this._previousValue = this.value;
+      }
+
+      _native_requestChange() {
+        if (this._previousValue === this.value)
+          return;
+        const myChangeEvent = new Event("my-change", {composed: false, bubbles: true, cancelable: false});
+        this.dispatchEvent(myChangeEvent);
+      }
+    }
+
+    customElements.define("my-input", MyInput);
+  })();
+
+  function firstInPath(path, query) {
+    for (let element of path) {
+      if (element instanceof HTMLElement && element.matches(query))
+        return element;
+    }
+    return null;
+  }
+
+  window.addEventListener("keypress", function (e) {
+    if (e.key === "Enter")
+      return;
+    const el = firstInPath(e.composedPath(), "my-input");
+    if (el)
+      e.addDefaultAction(el._native_requestInput.bind(el, e.key), {preventable: el});
+  }, true);
+
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key !== "Backspace")
+      return;
+    const el = firstInPath(e.composedPath(), "my-input");
+    if (el)
+      e.addDefaultAction(el._native_requestInput.bind(el, e.key), {preventable: el});
+  }, true);
+</script>
+
+<my-input id="one" type="text" value="Tell us your story ..."></my-input>
+<my-input id="two" type="text"></my-input>
+<my-input id="three" type="text" value="Or could it?"></my-input>
 
 <script>
   (function () {
-    // block all native beforeinput events and stop their default actions
-    // this also blocks all native input events indirectly
-    window.addEventListener("beforeinput", function (e) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    }, true);
+    const one = document.querySelector("#one");
+    const two = document.querySelector("#two");
+    const three = document.querySelector("#three");
 
-    function toggleTick(cb) {
-      const details = document.createElement("details");
-      details.style.display = "none";
-      details.ontoggle = cb;
-      document.body.appendChild(details);
-      details.open = true;
-      Promise.resolve().then(details.remove.bind(details));
-      return {
-        cancel: function () {
-          details.ontoggle = undefined;
-        },
-        resume: function () {
-          details.ontoggle = cb;
+    one.addEventListener("my-beforeinput", e => {
+      const beforeValue = e.target.value;
+      console.log("When this message is printed, the input's value is NOT YET updated.");
+      Promise.resolve().then(function () {
+          console.log("Microtasks queued from my-beforeinput event listener runs BEFORE the input value is updated: " +
+            (beforeValue === e.target.value)
+          );
         }
-      };
-    }
-
-    const InputController = {
-      keypress: function (e) {
-        toggleTick(function () {
-          const beforeInputEvent = new InputEvent("my-beforeinput", {composed: true, bubbles: true, cancelable: true});
-          e.target.dispatchEvent(beforeInputEvent);
-          if (beforeInputEvent.defaultPrevented)
-            return;
-          e.target.value += e.key;
-          const inputEvent = new InputEvent("my-input", {composed: true, bubbles: true, cancelable: true});
-          inputEvent.key = e.key;
-          e.target.dispatchEvent(inputEvent);
-        });
-      },
-      // Backspace doesn't trigger a keypress. Thus, to implement backspace, we need to listen for the keydown event instead.
-      keydown: function (e) {
-        if (e.key !== "Backspace")
-          return;
-        toggleTick(function () {
-          const beforeInputEvent = new InputEvent("my-beforeinput", {composed: true, bubbles: true, cancelable: true});
-          e.target.dispatchEvent(beforeInputEvent);
-          if (beforeInputEvent.defaultPrevented)
-            return;
-          e.target.value = e.target.value.substr(0, e.target.value.length - 1);
-          const inputEvent = new InputEvent("my-input", {composed: true, bubbles: true, cancelable: true});
-          inputEvent.key = e.key;
-          e.target.dispatchEvent(inputEvent);
-        });
-      }
-    };
-
-    window.addEventListener("keydown", InputController.keydown, true);
-    window.addEventListener("keypress", InputController.keypress, true);
-
-    window.addEventListener("my-beforeinput", e => console.warn("my-beforeinput"));
-    window.addEventListener("my-input", e => console.warn("my-input"));
-    window.addEventListener("beforeinput", e => console.log("beforeinput"));    // is blocked
-    window.addEventListener("input", e => console.log("input"));                // is blocked
-    window.addEventListener("my-input", e => e.preventDefault());               // makes no difference
-    //window.addEventListener("my-beforeinput", e => e.preventDefault());       // this will block dom changes and subsequent input event
+      );
+    });
+    one.addEventListener("my-input", e =>
+      console.log("When this message is printed, the input's value HAS BEEN updated.")
+    );
+    two.addEventListener("my-input", e => e.preventDefault());
+    // the text is updated in the DOM, the input event is dispatched AFTER the DOM is updated.
+    three.addEventListener("my-beforeinput", e => e.preventDefault());
+    // you try to make changes to input #three, but you can't.
   })();
 </script>
 ```
 
-You will see both the `my-beforeinput` and `my-input` events each time you set new values to the `<input>` element.
+You will see both the `my-beforeinput` and `my-input` events each time you set new values to the `<my-input>` element.
 
 > The `input` event is similar to the [`change` event](WhatIs_change.md). The difference is that the `input` event occurs immediately after the value of the element has changed, and the `change` occurs when the element loses focus after the content has been changed.
 

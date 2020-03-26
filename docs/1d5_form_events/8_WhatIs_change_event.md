@@ -1,4 +1,29 @@
-# WhatIs: `change`?
+## The `_native_checkChange()` and `change` event
+
+The `change` event is dispatched from the `_native_checkChange()` method on the `<input type="text">` element. The `change` event is past-tense: it follows a *group of* state changes to the `.value` property and is dispatched when the `<input type="text">` element *looses focus*. Calling `preventDefault()` on the `input` event does nothing.
+
+The purpose of the `change` event is to provide a simplified hook for a series of `input` events. When a user updates a text input, he will often write tens or maybe hundreds of characters, make mistakes, edits, etc. within a short period of time. Most observations of `<input type="text">` elements require only that the script reacts when the user has *finished writing* and *moves onto* the next field. `change` is triggered by the `focusout` event, which is works as a proxy for "finished writing".
+
+
+
+# WhatIs: `change` event?
+
+The `change` event is dispatched:
+1. just as an input element looses focus when
+2. the state of that input element has changed by a user-driven action
+3. since the element gained focus.
+
+The `change` event is **past-tense**. The `change` event only describes a state change that has already occurred/is completed. It is more retrospective and built for observation/reaction, not prevention. `change` is `cancelable: false` with an empty `.preventDefault()` function.
+
+The `change` event is **only** dispatched when:
+1. A state change of the input element is announced by an `input` event. Thus, at least one `.isTrusted = true` user-driven event must occur for a `change` event to occur. The `change` event is **not** dispatched when the element's property value is *only* changed by **scripts**.
+2. When the state of the input element changes from the start to the end of a focus session. A focus session is the period that passes between the time the element gains focus until the element looses focus. For example, if a text input gains focus, "a" is added to the end of its `.value`, a "Backspace" removes that "a" character again, and then the text input looses focus, then no `change` event will be dispatched on the text input.
+
+The `change` event works as if it is queued **sync**: it is not possible to queue a task in between the `focusout` and the `change` event. The `change` event most likely runs **sync** too:  The `input` event is dispatched *immediately* after the property of the input element has changed. This means that if the `beforeinput` event is not prevented, the `input` event *must be* the very first event to follow it:
+1. The task that alters the value property is the default action of `beforeinput` event (and therefore runs sync after it has completed its propagation). 
+2. The task of dispatching the `input` event runs sync/immediately after the input element has changed its state (when it was initiated by a `beforeinput` event).
+
+
 
 > todo use focusin instead of focusout in the demo.
 > todo select change events are dispatched before the mouseup (and click), while checkbox and radiobutton change events are dispatched after the (mouseup and) click. 
