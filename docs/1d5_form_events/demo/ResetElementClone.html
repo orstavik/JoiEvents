@@ -1,0 +1,93 @@
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+
+<script>
+  (function () {
+    class ResetButton extends HTMLElement {
+
+      // static get observedAttributes() {
+      //   return ["value"];
+      // }
+      //
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<span tabindex="0" style="background-color: lightgrey; border: 1px solid grey; margin: 2px; width: 250px; height: 1.2em;"><slot>Reset</slot></span>`;
+        this._innerDiv = shadow.children[0];
+      }
+
+      get value() {
+        return this._innerDiv.innerText;
+      }
+
+      set value(newValue) {
+        this._innerDiv.innerText = newValue;
+      }
+
+      get form() {
+        for (let parent = this.parentNode; parent instanceof HTMLElement; parent = parent.parentNode) {
+          if (parent instanceof HTMLFormElement)
+            return parent;
+        }
+      }
+
+      set form(ignore) {
+        //ignore
+      }
+
+      //this would be for the <input type="reset"> variant
+      // attributeChangedCallback(name, oldValue, newValue) {
+      //   if (name === "value") {
+      //     this.value = newValue;
+      //   }
+      // }
+    }
+
+    customElements.define("reset-button", ResetButton);
+
+
+    //default action on click on the submit-button or one of its descendants
+    window.addEventListener("click", function (e) {
+      if ((!e.isTrusted && !e.isTrustedSimulation) || e.defaultPrevented)
+        return;
+      for (let el of e.composedPath()) {
+        if (el instanceof HTMLElement && el.matches("reset-button")) {
+          e.addDefaultAction(() => !e.defaultPrevented && el.form.reset(), {preventable: el});
+        }
+      }
+    }, true);
+
+    //default action on keypress on the submit-button or one of its descendants
+    window.addEventListener("keypress", function (e) {
+      if (!e.isTrusted || e.defaultPrevented)
+        return;
+      for (let el of e.composedPath()) {
+        if (el instanceof HTMLElement && el.matches("reset-button")) {
+          const clickSimulation = new MouseEvent("click", {composed: true, bubbles: true});
+          clickSimulation.isTrustedSimulation = true;
+          e.addDefaultAction(() => !e.defaultPrevented && el.dispatchEvent(clickSimulation), {preventable: el});
+        }
+      }
+    }, true);
+  })();
+</script>
+
+<form>
+  <reset-button>
+    hello
+    <a href="#sunshine">sunshine</a>
+    and
+    <span tabindex="0">blue skies!</span>
+  </reset-button>
+
+  <a href="#world">
+    <reset-button type="reset">hello</reset-button>
+    world
+  </a>
+</form>
+<script>
+  //todo test for preventDefault()
+  window.addEventListener("keydown", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("keypress", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("click", e => console.log(e.type, e.target.tagName, e.isTrusted, e.isTrustedSimulation, e));
+  window.addEventListener("reset", e => console.log(e.type, e.target.tagName, e));
+</script>

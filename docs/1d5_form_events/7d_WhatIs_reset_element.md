@@ -1,5 +1,6 @@
-# WhatIs: `<button type="submit">`?
+# WhatIs: `<button type="reset">`?
 
+todo
 `<button type="submit">` and `<input type="submit">` are more or less identical elements. When the two elements behave the same, we will describe their behavior as using `<button type="submit">` element. When `<input type="submit">` differs from `<button type="submit">`, we will highlight this.
 
 The `<button type="submit">` element is a button to submit a form. To put text on the button, you add it as a text node child: `<button type="submit">Click here!</button>`. To add text to an `<input type="submit">`, the `value` attribute is used: `<input type="submit" value="Click here!">`. 
