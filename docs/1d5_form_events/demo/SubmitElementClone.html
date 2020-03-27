@@ -4,14 +4,14 @@
   (function () {
     class SubmitButton extends HTMLElement {
 
-      static get observedAttributes() {
-        return ["value"];
-      }
-
+      // static get observedAttributes() {
+      //   return ["value"];
+      // }
+      //
       constructor() {
         super();
         const shadow = this.attachShadow({mode: "closed"});
-        shadow.innerHTML = `<span tabindex="0" style="background-color: lightgrey; border: 1px solid grey; margin: 2px; width: 250px; height: 1.2em;"><slot></slot></span>`;
+        shadow.innerHTML = `<span tabindex="0" style="background-color: lightgrey; border: 1px solid grey; margin: 2px; width: 250px; height: 1.2em;"><slot>Submit</slot></span>`;
         this._innerDiv = shadow.children[0];
       }
 
@@ -33,12 +33,12 @@
       set form(ignore) {
         //ignore
       }
-
-      attributeChangedCallback(name, oldValue, newValue) {
-        if (name === "value") {
-          this.value = newValue;
-        }
-      }
+      //this would be for the <input type="submit"> variant
+      // attributeChangedCallback(name, oldValue, newValue) {
+      //   if (name === "value") {
+      //     this.value = newValue;
+      //   }
+      // }
     }
 
     customElements.define("submit-button", SubmitButton);
