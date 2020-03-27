@@ -22,6 +22,17 @@
         this._innerDiv.innerText = newValue;
       }
 
+      get form() {
+        for (let parent = this.parentNode; parent instanceof HTMLElement; parent = parent.parentNode) {
+          if (parent instanceof HTMLFormElement)
+            return parent;
+        }
+      }
+
+      set form(ignore) {
+        //ignore
+      }
+
       attributeChangedCallback(name, oldValue, newValue) {
         //The browser can implicitly detect if an element was constructed with a value attribute at startup.
         //Regular JS functions cannot, so instead we add an explicit attribute (_value_at_startup_) to flag this state.
@@ -86,11 +97,13 @@
   }
 
   window.addEventListener("keypress", function (e) {
-    if (e.key === "Enter")
-      return;
     const el = firstInPath(e.composedPath(), "my-input");
-    if (el)
-      e.addDefaultAction(el._native_requestInput.bind(el, e.key), {preventable: el});
+    if (!el)
+      return;
+    const action = e.key === "Enter" ?
+      HTMLFormElement.prototype.requestSubmit.bind(el.form):
+      el._native_requestInput.bind(el, e.key);
+    e.addDefaultAction(action, {preventable: el});
   }, true);
 
 

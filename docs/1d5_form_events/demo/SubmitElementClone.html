@@ -56,13 +56,17 @@
 
     //default action on keypress on the submit-button or one of its descendants
     window.addEventListener("keypress", function (e) {
-      if (!e.isTrusted|| e.defaultPrevented)
+      if (!e.isTrusted || e.defaultPrevented || e.key !== "Enter")
         return;
       for (let el of e.composedPath()) {
         if (el instanceof HTMLElement && el.matches("submit-button")) {
-          const clickSimulation = new MouseEvent("click", {composed: true, bubbles: true});
-          clickSimulation.isTrustedSimulation = true;
-          e.addDefaultAction(() => !e.defaultPrevented && el.dispatchEvent(clickSimulation), {preventable: el});
+          e.addDefaultAction(function () {
+            if (e.defaultPrevented)
+              return;
+            const clickSimulation = new MouseEvent("click", {composed: true, bubbles: true});
+            clickSimulation.isTrustedSimulation = true;
+            el.dispatchEvent(clickSimulation);
+          }, {preventable: el});
         }
       }
     }, true);

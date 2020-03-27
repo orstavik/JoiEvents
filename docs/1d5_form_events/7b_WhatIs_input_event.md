@@ -79,6 +79,18 @@ The input event is queued **sync**. The `input` event is dispatched *immediately
 </script>
 ```
 
+## "keypress-enter-to-submit"
+
+`<input>` elements have a special default action associated with "Enter" `keypress`: it causes the `<input>` element to call `requestSubmit()` on its parent `.form`. To implement this feature, the `<input>` element needs:
+1. process "Enter" `keypress` events,
+2. to retrieve the parent `.form` element, and
+3. call `requestSubmit()` on that `<form>` element.
+
+In the demo below, this is implemented as: 
+1. a default action added to the `keypress` event,
+2. that rely on a getter method for the `.form` element on the `<input>` element, and
+3. call this `<form>`'s `requestSubmit()` method within this default action.  
+
 ## Demo: `<input type="text">` with default actions
 
 In the demo below we add default actions to the `<input type="text">` element to enable it to react to `keypress`/`keydown` events. This is a simplified version of the browsers native `<input type="text">` element. This demo doesn't support:
@@ -109,6 +121,17 @@ In the demo below we add default actions to the `<input type="text">` element to
 
       set value(newValue) {
         this._innerDiv.innerText = newValue;
+      }
+
+      get form() {
+        for (let parent = this.parentNode; parent instanceof HTMLElement; parent = parent.parentNode) {
+          if (parent instanceof HTMLFormElement)
+            return parent;
+        }
+      }
+
+      set form(ignore) {
+        //ignore
       }
 
       attributeChangedCallback(name, oldValue, newValue) {
@@ -161,17 +184,6 @@ In the demo below we add default actions to the `<input type="text">` element to
         });
         this.dispatchEvent(inputEvent);
       }
-
-      _native_requestChangeStart() {
-        this._previousValue = this.value;
-      }
-
-      _native_requestChange() {
-        if (this._previousValue === this.value)
-          return;
-        const myChangeEvent = new Event("my-change", {composed: false, bubbles: true, cancelable: false});
-        this.dispatchEvent(myChangeEvent);
-      }
     }
 
     customElements.define("my-input", MyInput);
@@ -186,11 +198,13 @@ In the demo below we add default actions to the `<input type="text">` element to
   }
 
   window.addEventListener("keypress", function (e) {
-    if (e.key === "Enter")
-      return;
     const el = firstInPath(e.composedPath(), "my-input");
-    if (el)
-      e.addDefaultAction(el._native_requestInput.bind(el, e.key), {preventable: el});
+    if (!el)
+      return;
+    const action = e.key === "Enter" ?
+      HTMLFormElement.prototype.requestSubmit.bind(el.form):
+      el._native_requestInput.bind(el, e.key);
+    e.addDefaultAction(action, {preventable: el});
   }, true);
 
 
@@ -236,7 +250,7 @@ In the demo below we add default actions to the `<input type="text">` element to
 
 You will see both the `my-beforeinput` and `my-input` events each time you set new values to the `<my-input>` element.
 
-> The `input` event is similar to the [`change` event](WhatIs_change.md). The difference is that the `input` event occurs immediately after the value of the element has changed, and the `change` occurs when the element loses focus after the content has been changed.
+> The `input` event is similar to the [`change` event](WhatIs_change.md). The difference is that the `input` event occurs immediately after each time the value of the element has changed, while the `change` occurs for a group of text inputs and is dispatched when the element loses focus or the form is indirectly submitted.
 
 ## References
 
