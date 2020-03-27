@@ -10,19 +10,30 @@
 
   <label for="radioOne">one</label><input id="radioOne" type="radio" name="group1">
   <label for="radioTwo">two</label><input id="radioTwo" type="radio" name="group1">
+  <input type="submit" id="submit">
 </form>
 
 <script>
-  window.addEventListener("mouseup", e => console.log("mouseup ", e.target.id));
-  window.addEventListener("click", e => console.log("click ", e.target.id));
+  window.addEventListener("submit", e => e.preventDefault());
+
+  window.addEventListener("mousedown", e => console.log(e.type, e.target.id));
+  window.addEventListener("mouseup", e => console.log(e.type, e.target.id));
+  window.addEventListener("click", e => console.log(e.type, e.target.id));
+  window.addEventListener("keypress", e => console.log(e.type, e.target.id));
   window.addEventListener("input", e => console.log(e.type, e.target.id));
   window.addEventListener("submit", e => console.log(e.type, e.target.id));
-  window.addEventListener("change", e => console.log(e.type, e.target.id));
   document.addEventListener("focus", e => console.log(e.type, e.target.id), true);
   window.addEventListener("focusin", e => console.log(e.type, e.target.id));
   document.addEventListener("blur", e => console.log(e.type, e.target.id), true);
   window.addEventListener("focusout", e => console.log(e.type, e.target.id));
 
+  //test showing change event is run async
+  document.addEventListener("change", e => console.log(e.type + " from document listener", e.target.id));
+  document.addEventListener("change", e => Promise.resolve().then(() => console.log("change microtask from document listener")));
+  window.addEventListener("change", e => console.log(e.type + " from window listener", e.target.id));
+  window.addEventListener("change", e => Promise.resolve().then(() => console.log("change microtask from window listener")));
+
+  //test showing that at least one `input` event must be dispatched for the `change` event to occur.
   const input = document.querySelector("input[type='text'");
   const textarea = document.querySelector("textarea");
   input.focus();// move focus to the first text input

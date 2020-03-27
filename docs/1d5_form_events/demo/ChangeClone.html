@@ -1,17 +1,3 @@
-<form>
-  <input id="normalText" type="text" value="type something ...">
-  <textarea id="normalTextarea">type something else</textarea>
-  <select id="normalSelect">
-    <option value="a">a</option>
-    <option value="b">b</option>
-    <option value="c">c</option>
-  </select>
-  <input id="normalCheckbox" type="checkbox">
-
-  <label for="radioOne">one</label><input id="radioOne" type="radio" name="group1">
-  <label for="radioTwo">two</label><input id="radioTwo" type="radio" name="group1">
-</form>
-
 <script src="../../1b_EventLoop/demo/toggleTick.js"></script>
 <script>
   (function () {
@@ -24,7 +10,7 @@
         this._onFocusin = this.onFocusin.bind(this);//we need to listen for focusin, as the focusin is much more efficient than the focus event (there are often many focus events per focusin event)
         this._onBlur = this.onBlur.bind(this);//we need to listen for blur, as the focusout is propagates after blur
         this._onInputText = this.onInputText.bind(this);
-        this._onSubmit = this.onSubmit.bind(this);
+        this._onClick = this.onClick.bind(this);
       }
 
       dispatchChange(target) {
@@ -38,15 +24,15 @@
       }
 
       removeInitState() {
-        window.addEventListener("focusin", this._onFocusin, true);
-        window.addEventListener("input", this._onInputNormal, true);
+        window.removeEventListener("focusin", this._onFocusin, true);
+        window.removeEventListener("input", this._onInputNormal, true);
       }
 
       textState(el) {
         //It would be tempting to add event listeners to the el,
         //but this would have a bigger risk for the event listener to be hit by a capture torpedo.
         window.addEventListener("input", this._onInputText, true);
-        window.addEventListener("submit", this._onSubmit, true);
+        window.addEventListener("click", this._onClick, true);
         window.addEventListener("blur", this._onBlur, true);
         this.target = el;
         this.startValue = el.value;
@@ -55,7 +41,7 @@
 
       removeTextState() {
         window.removeEventListener("input", this._onInputText, true);
-        window.removeEventListener("submit", this._onSubmit, true);
+        window.removeEventListener("click", this._onClick, true);
         window.removeEventListener("blur", this._onBlur, true);
         this.target = undefined;
         this.startValue = undefined;
@@ -72,7 +58,7 @@
       onInputNormal(e) {
         const el = e.composedPath()[0];
         if (el instanceof HTMLElement && el.matches("select, input:not([type='text'])"))
-          return this.dispatchChange(el);
+          return toggleTick(() => this.dispatchChange(el), ["mouseup", "click"]);
       }
 
       onFocusin(e) {
@@ -98,9 +84,11 @@
         this.fromTextToInit();
       }
 
-      onSubmit(e) {
+      onClick(e) {
         const rootTarget = e.composedPath()[0];
-        if (this.target.form !== rootTarget)
+        if (rootTarget === this.target)
+          return;
+        if (this.target.form !== rootTarget.form)
           throw new Error("omg.. This wasn't supposed to happen.");
         this.fromTextToInit();
       }
@@ -109,14 +97,46 @@
     const changeController = new ChangeController();
     changeController.initState();
   })();
+</script>
 
+<form id="normalForm">
+  <input id="normalText" type="text" value="type something ...">
+  <textarea id="normalTextarea">type something else</textarea>
+  <select id="normalSelect">
+    <option value="a">a</option>
+    <option value="b">b</option>
+    <option value="c">c</option>
+  </select>
+  <input id="normalCheckbox" type="checkbox">
+
+  <label for="radioOne">one</label><input id="radioOne" type="radio" name="group1">
+  <label for="radioTwo">two</label><input id="radioTwo" type="radio" name="group1">
+  <input type="submit" id="submit">
+</form>
+
+<script>
+  window.addEventListener("submit", e => e.preventDefault());
+
+  window.addEventListener("mousedown", e => console.log(e.type, e.target.id));
+  window.addEventListener("mouseup", e => console.log(e.type, e.target.id));
+  window.addEventListener("click", e => console.log(e.type, e.target.id));
+  window.addEventListener("keypress", e => console.log(e.type, e.target.id));
   window.addEventListener("input", e => console.log(e.type, e.target.id));
   window.addEventListener("submit", e => console.log(e.type, e.target.id));
-  window.addEventListener("change", e => console.log(e.type, e.target.id));
   document.addEventListener("focus", e => console.log(e.type, e.target.id), true);
   window.addEventListener("focusin", e => console.log(e.type, e.target.id));
   document.addEventListener("blur", e => console.log(e.type, e.target.id), true);
   window.addEventListener("focusout", e => console.log(e.type, e.target.id));
 
-  window.addEventListener("my-change", e => console.log(e.type, e.target.id));
+  //test showing change event runs ASYNC
+  document.addEventListener("change", e => console.log(e.type + " from document listener", e.target.id));
+  document.addEventListener("change", e => Promise.resolve().then(() => console.log("change microtask from document listener")));
+  window.addEventListener("change", e => console.log(e.type + " from window listener", e.target.id));
+  window.addEventListener("change", e => Promise.resolve().then(() => console.log("change microtask from window listener")));
+
+  //test showing my-change event runs SYNC
+  document.addEventListener("my-change", e => console.log(e.type + " from document listener", e.target.id));
+  document.addEventListener("my-change", e => Promise.resolve().then(() => console.log("my-change microtask from document listener")));
+  window.addEventListener("my-change", e => console.log(e.type + " from window listener", e.target.id));
+  window.addEventListener("my-change", e => Promise.resolve().then(() => console.log("my-change microtask from window listener")));
 </script>
