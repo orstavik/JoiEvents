@@ -1,0 +1,94 @@
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+
+<script>
+  (function () {
+    class SubmitButton extends HTMLElement {
+
+      static get observedAttributes() {
+        return ["value"];
+      }
+
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<span tabindex="0" style="background-color: lightgrey; border: 1px solid grey; margin: 2px; width: 250px; height: 1.2em;"><slot></slot></span>`;
+        this._innerDiv = shadow.children[0];
+      }
+
+      get value() {
+        return this._innerDiv.innerText;
+      }
+
+      set value(newValue) {
+        this._innerDiv.innerText = newValue;
+      }
+
+      get form() {
+        for (let parent = this.parentNode; parent instanceof HTMLElement; parent = parent.parentNode) {
+          if (parent instanceof HTMLFormElement)
+            return parent;
+        }
+      }
+
+      set form(ignore) {
+        //ignore
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (name === "value") {
+          this.value = newValue;
+        }
+      }
+    }
+
+    customElements.define("submit-button", SubmitButton);
+
+    //default action on click on the submit-button or one of its descendants
+    window.addEventListener("click", function (e) {
+      if ((!e.isTrusted && !e.isTrustedSimulation)|| e.defaultPrevented)
+        return;
+      for (let el of e.composedPath()) {
+        if (el instanceof HTMLElement && el.matches("submit-button")) {
+          e.addDefaultAction(() => !e.defaultPrevented && el.form.requestSubmit(/*el*/), {preventable: el});
+        }
+      }
+    }, true);
+
+    //default action on keypress on the submit-button or one of its descendants
+    window.addEventListener("keypress", function (e) {
+      if (!e.isTrusted|| e.defaultPrevented)
+        return;
+      for (let el of e.composedPath()) {
+        if (el instanceof HTMLElement && el.matches("submit-button")) {
+          const clickSimulation = new MouseEvent("click", {composed: true, bubbles: true});
+          clickSimulation.isTrustedSimulation = true;
+          e.addDefaultAction(() => !e.defaultPrevented && el.dispatchEvent(clickSimulation), {preventable: el});
+        }
+      }
+    }, true);
+  })();
+</script>
+
+<form>
+  <submit-button>
+    hello
+    <a href="#sunshine">sunshine</a>
+    and
+    <span tabindex="0">blue skies!</span>
+  </submit-button>
+  <hr>
+  <a href="#world">
+    <submit-button>hello</submit-button>
+    world
+  </a>
+
+</form>
+<script>
+  //todo test for preventDefault()
+  window.addEventListener("submit", e => e.preventDefault());
+
+  window.addEventListener("keydown", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("keypress", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("click", e => console.log(e.type, e.target.tagName, e.isTrusted, e.isTrustedSimulation, e));
+  window.addEventListener("submit", e => console.log(e.type, e.target.tagName, e));
+</script>

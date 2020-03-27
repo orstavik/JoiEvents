@@ -6,6 +6,8 @@ The `<input type="text">` element has two key aspects:
 1. the **`.value` property** and
 2. the **`value` attribute**.
 
+todo In addition to the `name` attribute, which is by the form when it generates the HTTPS request to the server.
+
 ## The `.value` property
 
 The `.value` **property** is the *current, updated* value of the `<input type="text">` element that you see on screen. If the app updates this value:

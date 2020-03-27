@@ -1,0 +1,26 @@
+<form>
+  <input type="submit" value="Click me!">
+
+  <button type="submit">
+    hello
+    <a href="#sunshine">sunshine</a>
+    and
+    <span tabindex="0">blue skies!</span>
+  </button>
+
+  <a href="#world">
+    <button type="submit">hello</button>
+    world
+  </a>
+
+  <input type="image" src="https://via.placeholder.com/150" width="50">
+
+</form>
+<script>
+  window.addEventListener("submit", e => e.preventDefault());
+
+  window.addEventListener("keydown", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("keypress", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("click", e => console.log(e.type, e.target.tagName, e));
+  window.addEventListener("submit", e => console.log(e.type, e.target.tagName, e));
+</script>
