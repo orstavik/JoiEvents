@@ -1,0 +1,41 @@
+<h1>Hello sync world!</h1>
+<h2>Hello async sunshine!</h2>
+<script>
+
+  function log(e){
+    console.log(e.type, e.currentTarget, e.target.innerText);
+  }
+
+  const h1 = document.querySelector("h1");
+  const h2 = document.querySelector("h2");
+
+  h1.addEventListener("mouseup", log);
+  h2.addEventListener("mouseup", log);
+  document.addEventListener("mouseup", log);
+  window.addEventListener("mouseup", log);
+
+  h1.addEventListener("click", log);
+  h2.addEventListener("click", log);
+  document.addEventListener("click", log);
+  window.addEventListener("click", log);
+
+  h1.addEventListener("change-state", log);
+  h2.addEventListener("change-state", log);
+  document.addEventListener("change-state", log);
+  window.addEventListener("change-state", log);
+
+  //SYNC event dispatch
+  h1.addEventListener("click", function(e){
+    e.target.dispatchEvent(new CustomEvent("change-state", {composed: false, bubbles: true}));
+  });
+  //ASYNC event dispatch
+  h2.addEventListener("click", function(e){
+    setTimeout(function(){
+      e.target.dispatchEvent(new CustomEvent("change-state", {composed: false, bubbles: true}));
+    }, 0);
+  });
+
+  //changing change in the lightDOM from lightDOM event listeners, this is normal
+  document.addEventListener("click", e => e.target.innerText += "$");
+  document.addEventListener("change-state", e => e.target.innerText += "?");
+</script>
