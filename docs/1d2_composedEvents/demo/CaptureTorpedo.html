@@ -7,17 +7,18 @@
       this.attachShadow({mode: "open"});
       this.shadowRoot.innerHTML = `<input type="checkbox">`;
       this._input = this.shadowRoot.children[0];
+      //from the perspective of the web component, these event listeners should run on click
       this._input.addEventListener("click", e => console.log("shadowDOM target click."));
+      this.shadowRoot.addEventListener("click", e => e.preventDefault());
     }
   }
 
   customElements.define("open-comp", OpenComp);
 
   const open = document.querySelector("open-comp");
-  open.addEventListener("click", e => console.log("lightDOM bubble click."));
   open.addEventListener("click", e => console.log("lightDOM capture click."), true);
-  open.addEventListener("click", e => e.stopPropagation(), true);          //torpedo
-  open.addEventListener("click", e => e.preventDefault(), {capture: true});//torpedo゜
+  open.addEventListener("click", e => e.stopPropagation(), true); //captureTorpedo
+  open.addEventListener("click", e => console.log("lightDOM bubble click."));
 
   open._input.click();
 </script>
