@@ -1,0 +1,223 @@
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+
+<my-form action="#go">
+  <my-input id="one" type="text" value="I have mirrored input events"></my-input>
+  <my-input id="two" type="text" value="I have mirrored input events"></my-input>
+</my-form>
+
+
+<script>
+  (function () {
+
+    function hackToMakePostNavigate(queryParams, settings) {
+      var form = document.createElement('form');
+      form.style.visibility = 'hidden';
+      form.method = 'POST';
+      form.action = settings.action;
+      form.enctype = settings.enctype;
+      for (let param of queryParams) {
+        var input = document.createElement('input');
+        input.name = param.name;
+        input.value = param.value;
+        form.appendChild(input);
+      }
+      document.body.appendChild(form);
+      form.submit();
+      form.remove();
+    }
+
+    function _native_getInputElements2(form) {
+      return form.querySelector(
+        ":root > input[type='text'], " +
+        ":root > input[type='checkbox'], " +
+        ":root > select, " +
+        ":root > textarea, " +
+        ":not(form) > input[type='text'], " +
+        ":not(form) > input[type='checkbox'], " +
+        ":not(form) > select, " +
+        ":not(form) > textarea, "
+      );
+    }
+
+    function _native_filterQueryParams(form) {
+      return Array.from(_native_getInputElements2(form)).filter(el => {
+        //we don't pass non-checked checkboxes as query param
+        return el.name && !(el instanceof HTMLInputElement && el.type === "checkbox" && !el.checked);
+      });
+    }
+
+    function _native_getSubmitterSettings(submitter) {
+      const res = {};
+      if (submitter.hasAttribute("formaction"))
+        res["action"] = submitter.getAttribute("formaction");
+      if (submitter.hasAttribute("formnovalidate"))
+        res["novalidate"] = submitter.getAttribute("formnovalidate");
+      if (submitter.hasAttribute("formmethod"))
+        res["method"] = submitter.getAttribute("formmethod");
+      if (submitter.hasAttribute("formenctype"))
+        res["enctype"] = submitter.getAttribute("formenctype");
+      return res;
+    }
+
+    function _native_getFormSettings(form) {
+      return {
+        action: form.getAttribute("action") || "",
+        method: form.getAttribute("method") || "GET",
+        enctype: form.getAttribute("enctype") || "what should this be",
+        novalidate: form.getAttribute("novalidate") || false,
+        //todo are there any other
+      };
+    }
+
+    function _native_getRequestSettings(form, submitter) {
+      return Object.assign(_native_getFormSettings(form), _native_getSubmitterSettings(submitter));
+    }
+
+    function _native_getDefaultSubmitter(form) {
+      const submits = form.querySelectorAll("input[type='submit'], button[type='submit']");
+      return submits.length === 1 ? submits[0] : undefined;
+    }
+
+    function _native_formNavigate(settings, queryParams) {
+      const url = new URL(settings.action);
+      for (let param of queryParams)
+        url.searchParams.append(param.name, param.value);
+      if (settings.method.toUpperCase() === "GET")
+        return location.href = url.href;
+      hackToMakePostNavigate(settings, queryParams);
+    }
+
+    //todo these methods are actually embodied in the HTMLTextAreaElement and the HTMLInputElement and the HTMLSelectElement
+    function _native_resetInputElements(el) {
+      const inputs = _native_getInputElements2(form);
+      for (let input of inputs)
+        _native_resetInputElement(input);
+    }
+
+    //todo these methods should have been on the elements, i think. maybe not for radio inputs though..
+    function _native_resetInputElement(el) {
+      if (el instanceof HTMLSelectElement) {
+        const options = el.querySelectorAll("option");
+        for (let i = 0; i < options.length; i++) {
+          let option = options[i];
+          if (option.hasAttribute("selected"))
+            return el.selectedIndex = i;
+        }
+        return el.selectedIndex = -1;
+      } else if (el instanceof HTMLTextAreaElement) {
+        el.value = el.innerText;
+      } else if (el instanceof HTMLInputElement && el.getAttribute("type") === "checkbox") {
+        el.checked = el.hasAttribute("checked");
+      } else if (el instanceof HTMLInputElement && el.getAttribute("type") === "text") {
+        el.value = el.getAttribute("value");
+      }
+    }
+
+
+    class MyForm extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `<slot></slot>`;
+      }
+
+      requestSubmit(submitter) {
+        const submit = new InputEvent("my-submit", {composed: false, bubbles: true, cancelable: true}); //composed should be true
+        //mark the default action added to the my-submit event as the form target element,
+        //if other elements try to add their own default action to this event.
+        submit.defaultActionElement = this;
+        this.dispatchEvent(submit);
+        //below is the default action
+        if (submit.defaultPrevented)
+          return;
+        submitter = submitter || _native_getDefaultSubmitter(this);
+        const settings = _native_getRequestSettings(this, submitter);
+        const params = _native_filterQueryParams(this);
+        _native_formNavigate(settings, params);
+      }
+
+      submit() {
+        const settings = _native_getRequestSettings(this, undefined);
+        const params = _native_filterQueryParams(this);
+        _native_formNavigate(settings, params);
+      }
+
+      reset() {
+        _native_resetInputElements(this);
+        // the dispatch of this reset event is started/queued sync
+        const reset = new InputEvent("my-reset", {composed: false, bubbles: true, cancelable: true});
+        this.dispatchEvent(reset);
+      }
+    }
+
+    customElements.define("my-form", MyForm);
+
+    class MyInput extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `<div tabindex="-1" style="border: 1px solid grey; border-radius: 2px; width: 100px; height: 1.2em;"></div>`;
+      }
+
+      //if the tabindex attribute is different from the .tabIndex property, and they are -1, would that mean that focusable is removed?
+
+      requestTextChange(txt) {
+        const beforeInputEvent = new InputEvent("my-beforeinput", {composed: true, bubbles: true, cancelable: true}); //composed should be false
+        beforeInputEvent.key = txt;          //todo this property should be immutable
+        this.dispatchEvent(beforeInputEvent);
+        if (!beforeInputEvent.defaultPrevented)
+          this.changeText(txt);
+      }
+
+      changeText(txt) {
+        if (txt === "Backspace")
+          this.shadowRoot.children[0].innerText = this.shadowRoot.children[0].innerText.substr(0, this.shadowRoot.children[0].innerText.length - 1);
+        else
+          this.shadowRoot.children[0].innerText += txt;
+        const inputEvent = new InputEvent("my-input", {composed: true, bubbles: true, cancelable: true});//composed should be false
+        inputEvent.key = txt;      //todo this property should be immutable
+        this.dispatchEvent(inputEvent);
+      }
+    }
+
+    customElements.define("my-input", MyInput);
+
+    function firstInPath(path, query) {
+      for (let element of path) {
+        if (element instanceof HTMLElement && element.matches(query))
+          return element;
+      }
+      return null;
+    }
+
+    window.addEventListener("keypress", function (e) {
+      if (e.key !== "Enter")
+        return;
+      const el = firstInPath(e.composedPath(), "my-form");
+      if (el)
+        e.addDefaultAction(el.requestSubmit.bind(el), {preventable: el});
+    }, true);
+
+    window.addEventListener("keypress", function (e) {
+      if (e.key === "Enter")
+        return;
+      const el = firstInPath(e.composedPath(), "my-input");
+      if (el)
+        e.addDefaultAction(el.requestTextChange.bind(el, e.key), {preventable: el});
+    }, true);
+
+    window.addEventListener("keydown", function (e) {
+      if (e.key !== "Backspace")
+        return;
+      const el = firstInPath(e.composedPath(), "my-input");
+      if (el)
+        e.addDefaultAction(el.requestTextChange.bind(el, e.key), {preventable: el});
+    }, true);
+
+    window.addEventListener("my-beforeinput", e => console.warn(e));
+    window.addEventListener("my-input", e => console.warn(e));
+    window.addEventListener("my-submit", e => console.warn(e));
+
+    document.querySelector("#two").addEventListener("my-beforeinput", e => e.preventDefault());
+  })();
+</script>

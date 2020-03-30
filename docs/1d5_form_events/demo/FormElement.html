@@ -1,0 +1,52 @@
+<form id="formOne">
+  <input type="text" id="one" name="oneName" value="original">
+  <input type="text" id="noName" value="no name">
+
+  <input type="checkbox" id="two" name="twoName">
+  <input type="checkbox" id="twoB" name="twoName" checked>
+  <input type="checkbox" id="three" name="threeName" value="three" checked>
+  <input type="checkbox" id="four" name="threeName" value="four" checked>
+  <input type="checkbox" id="five" name="threeName" value="five" checked>
+
+  <input type="submit" id="submitOne" name="threeName" value="submit">
+
+  <select name="selectOne" id="selectOne">
+    <option disabled selected value>blank</option>
+    <option value>blank too?</option>
+    <option value="a">a</option>
+    <option value="b">b</option>
+    <option value="c">c</option>
+  </select>
+</form>
+<input type="submit" id="submitTwo" form="formOne" name="threeName" value="submit">
+
+<script>
+  const form = document.querySelector("form");
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const twoB = document.querySelector("#twoB");
+  const three = document.querySelector("#three");
+  const four = document.querySelector("#four");
+  const five = document.querySelector("#five");
+
+  const selectOne = document.querySelector("#selectOne");
+
+  console.log("----checking name value from input elements");
+  console.log(one.name);
+  console.log(one.value);
+  console.log(two.name);
+  console.log(two.value);
+  console.log(twoB.name);
+  console.log(twoB.value);
+  console.log(three.name);
+  console.log(three.value);
+  console.log(four.name);
+  console.log(four.value);
+  console.log(five.name);
+  console.log(five.value);
+
+  console.log("----checking name value for select elements");
+  console.log(selectOne.name);
+  console.log(selectOne.value);
+
+</script>
