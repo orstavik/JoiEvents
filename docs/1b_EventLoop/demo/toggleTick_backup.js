@@ -42,8 +42,6 @@ function toggleTick(cb, raceEvents) {
       details.ontoggle = undefined;
     },
     reuse: function (newCb, raceEvents) {
-      if (details.ontoggle === undefined)
-        throw new Error("toggleTick has already run and then cannot be reused.");
       raceEvents = parseRaceEvents(raceEvents);
       internals.cb = newCb;
       for (let raceEvent of internals.events)
@@ -54,9 +52,6 @@ function toggleTick(cb, raceEvents) {
     },
     isActive: function () {
       return !!details.ontoggle;
-    },
-    flush: function () {
-      return wrapper();
     }
   };
   details.ontoggle = wrapper;

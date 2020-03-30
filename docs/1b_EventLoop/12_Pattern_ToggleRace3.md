@@ -1,3 +1,10 @@
+# Pattern: ToggleRace 3
+
+The final chapter on `toggleTick` is the ability to flush the task, ie. run it before it was originally set up.
+
+## `toggleTick.flush()`
+
+```javascript
 const EventRoadMap = {
   UNPREVENTABLES: {
     mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
@@ -43,7 +50,7 @@ function toggleTick(cb, raceEvents) {
     },
     reuse: function (newCb, raceEvents) {
       if (details.ontoggle === undefined)
-        throw new Error("toggleTick has already run and then cannot be reused.");
+        throw new Error("toggleTick has already run. Cannot reuse a toggleTick after it has run.");
       raceEvents = parseRaceEvents(raceEvents);
       internals.cb = newCb;
       for (let raceEvent of internals.events)
@@ -67,3 +74,30 @@ function toggleTick(cb, raceEvents) {
     window.addEventListener(raceEvent, wrapper, {capture: true});
   return task;
 }
+```
+
+## Demo: `toggleTick.flush()`  
+
+todo. untested. pseudo-code only.
+
+```html
+<script src="toggleTick.js"></script>
+
+<h1 tabindex="1">Hello sunshine!</h1>
+
+<script>
+  window.addEventListener("mouseup", e => console.log(e.type));
+  window.addEventListener("click", e => console.log(e.type));
+
+  document.addEventListener("mouseup", function () {
+    toggleTask = toggleTick(() => console.log("toggleTick task from mouseup that race click"), ["click"]);
+  });
+  window.addEventListener("mouseup", function () {
+    toggleTask.flush();
+  });
+</script>
+```
+ 
+## References
+
+ * dunno
