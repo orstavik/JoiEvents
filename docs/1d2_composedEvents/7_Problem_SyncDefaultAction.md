@@ -66,4 +66,27 @@ You might think: "OK, fine! I just have to remember that `submit` events are dis
 
 The NestedPropagation and SyncDefaultAction of the `requestSubmit()` method is further complicated by the fact that `submit` events are *most often* dispatched **sync**. When `submit` events are initiated by a user-driven event such as a `click` on an `<input type="submit">`, both the `submit` event's event listeners and its default action are dispatched and run async. Therefore, when `click`ing on the submit button, all the (-) tasks in the demo below will run *before* the default action of the `submit` event (as you likely expected all the time).
 
+## Implementation
+
+The SyncDefaultAction for future-tense events is very simple to set up. Here it is in pseudo-code:
+
+```javascript
+function syncDefaultAction(){
+  const anyEvent = new Event("any-event", {composed: trueOrFalse, bubbles: trueOrFalse});
+  targetElement.dispatchEvent(anyEvent);
+  if(!anyEvent.defaultPrevented)
+    doDefaultAction(); // usually targetElement.anAction() or browserResource.anAction();
+}
+```
+
+There are some things to note here:
+1. the call to `.dispatchEvent(..)` is not queued async in the event loop. This means that `any-event` might propagate nested if `syncDefaultAction()` is triggered from an event listener not first or last in its queue.
+2. the call to `doDefaultAction()` is not queued async in the event loop. This means that any state changes this method makes will be done asap, meaning before any other tasks in the microtask queue, such as for example a microtask or a later event listener for the nesting event.
+
+## Benefits of SyncDefaultAction
+
+There are benefits to the SyncDefaultAction. The developer might expect that the state *has changed* when he calls a `syncDefaultAction()` method. For example, the developer might expect that the form *has already been* submitted as soon as the `requestSubmit()` event was called.
+
+However, I would argue that this benefit is wrong. I would argue that such an anticipation is correct for the developer to hold when he calls `submit()`. The `requestSubmit()` on the other hand emulate the behavior of a user pressing a submit button, and therefore should behave accordingly. Dispatching this event and running its default action sync is bad practice.    
+
 ## References
