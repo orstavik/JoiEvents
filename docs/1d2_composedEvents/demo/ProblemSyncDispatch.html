@@ -1,0 +1,38 @@
+<form>
+  <input type="text" name="hello" value="dblclick anywhere to requestSubmit()">
+  <button type="submit">async dispatch</button>
+</form>
+<script>
+  //When the submit event is dispatched ASYNC, ie. the user click on the submit button,
+  //all tasks, both (+) and (-), run *before* the default action of the submit event.
+  //
+  //When the submit event is dispatched SYNC, ie. from requestSubmit(),
+  //then only the (+) tasks are run before the default action of the submit event,
+  //and the (-) tasks are run after the default action of the submit event.
+
+  // to see the (-) tasks run for the sync dispatched submit event, enable preventDefault() on the submit event.
+  document.addEventListener("dblclick", function (e) {
+    console.log("dblclick 1 (pre dispatch)");                                              //+
+    Promise.resolve().then(() => console.log("dblclick 1 (microtask from pre dispatch)")); //-
+
+    const form = document.querySelector("form");                                           //+
+    form.requestSubmit();                                                                  //+
+
+    debugger;                                                                              //-
+    console.log("dblclick 1 post dispatch");                                               //-
+  });
+
+  window.addEventListener("dblclick", function (e) {
+    debugger;                                                                              //-
+    console.log("dblclick 2");                                                             //-
+  });
+
+  window.addEventListener("submit", function (e) {
+    // e.preventDefault(); //disable loading new page and thus enable (-) tasks
+    console.log(" - submit propagates");                                                   //+
+    Promise.resolve().then(() => {
+      debugger;                                                                            //-
+      console.log(" - microtask submit propagates");                                       //-
+    });
+  });
+</script>
