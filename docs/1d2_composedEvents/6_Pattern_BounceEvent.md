@@ -1,6 +1,6 @@
 # Pattern: BounceEvent
 
-In this chapter, we will look at three different models for how an event can propagate across shadowDOM borders: `composed: true`, `composed: false`, and `composed: bounce`. Of course, there is no such thing as a `composed: bounce` property, but here we will pretend there is and describe how it could/should work.
+In this chapter, we will look at three different models for how an event can propagate across shadowDOM borders: `composed: true`, `composed: false`, and `composed: bounce`. Of course, there is no such thing as a `composed: bounce` property, but its usefulness is not only to understand the nature of `composed`, but especially complex events such as focus events.
 
 We use the following demo:
 
@@ -18,7 +18,7 @@ We use the following demo:
 </script>
 ```
 
-When this is rendered, we see a simple checkbox on screen, the inner `<input type="checkbox">` inside the `<check-box>`. When we `click` on the checkbox, we imagine three different `change` events being dispatched: `composed-change`, `noncomposed-change`, and `bounce-change`. All three events are more or less the same: they are dispatched when the checkbox is toggled; they bubble; and they `target` the inner `<input type="checkbox">` element. The only difference between the three events is in their `composed` property:
+When this is rendered, we see a simple checkbox on screen, the inner `<input type="checkbox">` inside the `<check-box>`. When we `click` on the checkbox, we *imagine* three different `change` events being dispatched: `composed-change`, `noncomposed-change`, and `bounce-change`. All three events are more or less the same: they are dispatched when the checkbox is toggled; they bubble; and they `target` the inner `<input type="checkbox">` element. The only difference between the three events is in their `composed` property:
 * `composed-change` is `composed: true`.
 * `noncomposed-change` is `composed: false`.
 * `bounce-change` is `composed: bounce` (which is a hypothetical property here).
@@ -83,7 +83,7 @@ Calling `stopPropagation()` on a `composed: bounce` event will also block all ev
 
 > `stopPropagation()` will also stop any subsequent `bounce`.
 
-## `composed: false` vs. `composed: bounce`
+## `composed: true` vs. `composed: bounce`
 
 `composed: bounce` is very much similar to `composed: true`. For example:
 
@@ -91,7 +91,7 @@ Calling `stopPropagation()` on a `composed: bounce` event will also block all ev
  
 But, there are a few subtle differences that make sense.
 
-1. `stopPropagation()` on elements in upper DOM contexts can no longer "torpedo" and silence an event *before* an event listener inside the web component has had a chance to listen for it. This is a double-edged sword: 
+1. `stopPropagation()` from event listeners in the capture phase in upper DOM contexts can no longer "torpedo" and silence an event *before* an event listener inside the web component has had a chance to listen for it. This is a double-edged sword: 
    * On one side, it means that within the web component, you can be certain that you will be notified of any events when you listen for it, but 
    * On the other side, this robs the outer context of its ability to use `stopPropagation()` calls in `capture` phase event listeners above an inner web component to stop the web component from doing something.
 
@@ -234,13 +234,22 @@ But. The two propagation orders of `composed: true` and `composed: bubble` overl
    * If you look at all the nodes in a flattened DOM, then the `composed: true` with its straight line down and straight line up looks nice. But, if you look at the flattened DOM as a group of nested DOM contexts, then `composed: bubble` is simpler as it would present the overall propagation as a single line between DOM contexts, from inner to outer. When web components are slotted or nested inside each other, the `composed: bubble` has clear conceptual advantages over `composed: true` as developers can at best be expected to envisage the flattened DOM context and not all the flattened DOM nodes. 
    * When you develop a reusable web component, you do *not* know what the surrounding DOM looks like. From the perspective of a reusable web component, the propagation path thus has other, external event listeners running **before and after** if `composed: true`, while in `composed: bubble` the propagation path of " access to the above DOM propagation path. Hence, from the perspective of the web component, then the `capture: bubble` is simpler.
    * When you make a web component or main document using web components, you are *not* expected to understand the inside of the web component. It could therefore be very confusing if an event propagated into a web component, but not out of it. So, also from the developer of an upper level DOM context, it is simpler to know that the inner propagation has completed before any of your own event listeners run (both capture phase and bubble phase).
-   
-6. Should events propagate into the shadowDOM when an event is dispatched on the  
-       
+      
+## Discussion: bouncing events that are not slotted
 
-   
-## Discussion
+Problem_CapturedTorpedo, that is `composed: true` events that are caught at a lightDOM higher up and stop.propagated before it reaches the element in which the `target` resides.
 
+this gives us a reason to make the event propagate partially? no.. This is a reason to have events be composed: false;...
+
+
+Problem_PartialPropagation, we need a three level shadowDOM where the event is relevant two layers, but not three. this is the use case behind focus.
+
+
+Problem chapter, sometimes internal state changes represents external state changes, sometimes not. The focus event is an excellent example of this.
+
+Todo should I split up this chapter to describe a capture phase torpedo for composed events?
+Then we would have two problem chapters, and one solution chapter for the bounce event.
+And then we could have as solution, to use bounce instead of composed true in the event controller function, plus add the restriction of never responding to slotted events.
 
 
 Would it have been better to bounce all `composed: true` events? Would it be better, more understandable sequencing, if `click` for example was bounced? 
