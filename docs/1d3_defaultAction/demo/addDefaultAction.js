@@ -3,7 +3,8 @@ const EventRoadMap = {
     mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
     mouseup: ["click", "auxclick", "dblclick"],
     click: ["dblclick"],
-    keydown: ["keypress"]
+    keydown: ["keypress"],
+    focusout: ["change"],
   }
 };
 
@@ -13,7 +14,7 @@ function parseRaceEvents(raceEvents) {
   if (raceEvents === undefined)
     return [];
   if (raceEvents instanceof String || typeof (raceEvents) === "string")
-    return EventRoadMap.UNPREVENTABLES[raceEvents];
+    return EventRoadMap.UNPREVENTABLES[raceEvents] || [];
   throw new Error(
     "The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, " +
     "an array of event names, empty array, or a string with an event name " +
@@ -41,6 +42,8 @@ function toggleTick(cb, raceEvents) {
       details.ontoggle = undefined;
     },
     reuse: function (newCb, raceEvents) {
+      if (details.ontoggle === undefined)
+        throw new Error("toggleTick has already run. Cannot reuse a toggleTick after it has run.");
       raceEvents = parseRaceEvents(raceEvents);
       internals.cb = newCb;
       for (let raceEvent of internals.events)
@@ -51,6 +54,9 @@ function toggleTick(cb, raceEvents) {
     },
     isActive: function () {
       return !!details.ontoggle;
+    },
+    flush: function () {
+      return wrapper();
     }
   };
   details.ontoggle = wrapper;
@@ -92,18 +98,20 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
       return toggleTick(() => cb(this), raceEvents);
     if (this.defaultPrevented)
       return null;
+    if (this.eventPhase > 0) { //defaultAction added after propagation begins
+      if (this.composedPath().indexOf(preventable) === -1)
+        throw new Error("The preventable option in the addDefaultAction is not an element in this event's propagation path.");
 
-    if (this.composedPath().indexOf(preventable) === -1)
-      throw new Error("The preventable option in the addDefaultAction is not an element in this event's propagation path.");
+      //patch in the associated element of native default actions.
+      if (!this._defaultAction)
+        mark_defaultActionElement(this);
 
-    //patch in the associated element of native default actions.
-    if (!this._defaultAction)
-      mark_defaultActionElement(this);
-
-    // the preventable element is above the  previously added default action happened below in the DOM
-    // and therefore essentially calls preventDefault() on the one attempted to be added here.
-    if (this._defaultActionElement && preventable.contains(this._defaultActionElement) && preventable !== this._defaultActionElement)
-      return null;
+      // the preventable element is above the  previously added default action happened below in the DOM
+      // and therefore essentially calls preventDefault() on the one attempted to be added here.
+      // todo .contains doesn't work past shadowDom borders. must make new and better check here.
+      if (this._defaultActionElement && preventable.contains(this._defaultActionElement) && preventable !== this._defaultActionElement)
+        return null;
+    }
 
     this.preventDefault();
     this._defaultActionElement = preventable;

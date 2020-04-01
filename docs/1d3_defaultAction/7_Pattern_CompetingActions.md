@@ -21,7 +21,7 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
     let {preventable, raceEvents} = options instanceof Object ? options : {};
     if (!preventable)
       return toggleTick(() => cb(this), raceEvents);
-    if (this.defaultPrevented)
+    if (this.defaultPrevented)//todo maybe this should not be the case. maybe addDefaultAction() should be allowed to override preventDefault()?
       return null;
     if (this.composedPath().indexOf(preventable) === -1)
       throw new Error("The preventable option in the addDefaultAction is not an element in this event's propagation path.");
