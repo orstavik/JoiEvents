@@ -1,0 +1,36 @@
+<form>
+  <input id="one" type="text" value="abc" pattern="abc" required>
+  <input id="two" type="text" value="cab" pattern="abc" required>
+  <input id="three" type="text" value="" pattern="abc" required>
+</form>
+
+<script>
+  const form = document.querySelector("form");
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+
+  //validation api
+  window.addEventListener("invalid", function (e) {
+    console.log(e, e.target.validity);
+  }, true);
+
+  console.log("one");
+  one.checkValidity(); //this is ok, no invalid event
+  console.log("two");
+  two.checkValidity(); //pattern mismatch
+  //#two invalid event
+  console.log("three");
+  three.checkValidity(); //value missing
+  //#three invalid event
+
+  console.log("form");
+  form.reportValidity();
+  //will essentially run `checkValidity()` on all the input elements,
+  //and these multiple calls to checkValidity will dispatch multiple invalid events
+  //#two invalid event
+  //#three invalid event
+
+  //the dispatch of the invalid event is sync.
+  //the execution of the default action is "sync", but you don't see it because the browser will only display it in the next render
+</script>

@@ -1,0 +1,61 @@
+<form>
+  <input id="one" type="text" value="abc" pattern="abc" required>
+  <input id="two" type="text" value="cab" pattern="abc" required>
+  <input id="three" type="text" value="" pattern="abc" required>
+</form>
+
+<script>
+  const form = document.querySelector("form");
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+
+  let visualTask;
+  let visualTaskMode = 0;
+  let visualTaskExecutor;
+
+  const og = HTMLFormElement.prototype.reportValidity;
+  Object.defineProperty(HTMLFormElement.prototype, "reportValidity", {
+    value: function () {
+      visualTaskMode = 1;
+      og.call(this);
+      visualTaskMode = 0;
+    }
+  });
+
+  //invalid visualizer controller
+  window.addEventListener("invalid", function (e) {
+    if (visualTaskMode === 2)
+      return;
+    if (visualTaskMode === 1) {
+      visualTaskMode = 2;
+      visualTask = e.target.id + 666;
+      if (!visualTaskExecutor)
+        visualTaskExecutor = requestAnimationFrame(() => console.log(visualTask));
+    }
+    if (visualTaskMode === 0) {
+      if (!visualTaskExecutor)
+        visualTaskExecutor = requestAnimationFrame(() => console.log(visualTask));
+      visualTask = e.target.id + 666;
+    }
+  }, true);
+
+  console.log("one");
+  one.checkValidity(); //this is ok, no invalid event
+  console.log("two");
+  two.checkValidity(); //pattern mismatch
+  //#two invalid event
+  console.log("three");
+  three.checkValidity(); //value missing
+  //#three invalid event
+
+  console.log("form");
+  form.reportValidity();
+  //will essentially run `checkValidity()` on all the input elements,
+  //and these multiple calls to checkValidity will dispatch multiple invalid events
+  //#two invalid event
+  //#three invalid event
+
+  //the dispatch of the invalid event is sync.
+  //the execution of the default action is "sync", but you don't see it because the browser will only display it in the next render
+</script>
