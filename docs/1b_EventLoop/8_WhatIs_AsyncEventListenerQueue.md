@@ -6,6 +6,8 @@ The AsyncListenerQueue *always* has a:
 1. *lower* priority than the microtask queue and
 2. *higher* priority than the UI event macrotask queue.
 
+The AsyncListenerQueue only applies to events that run *async*. Events that run *sync* are not queued in the AsyncListenerQueue; sync events run a) all their event listeners, b) their default action, before c) any microtask queued from any event listener. This causes problems such as NestedPropagation and SyncDefaultActions, which we will look more in depth at soon.
+
 ## Demo 1: AsyncListenerQueue vs. the microtask queue
 
 In this demo, we add three event listeners that will be triggered when the user clicks on "Click me!". In each event listener we queue both a normal microtask and a nested microtask. A nested microtask is a microtask that is added from within a microtask.    

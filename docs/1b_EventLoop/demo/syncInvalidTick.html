@@ -1,0 +1,17 @@
+<h1>.checkValidity() to invalid is sync</h1>
+
+<script>
+  function invalidTick(cb) {
+    const input = document.createElement("input");
+    input.setAttribute("value", "");
+    input.setAttribute("required", "");
+    input.style.display = "none";
+    input.oninvalid = cb;
+    document.body.appendChild(input);
+    input.checkValidity();
+  }
+  console.log("one");
+  invalidTick(()=> console.log("task"));
+  console.log("two");
+  Promise.resolve().then(()=>console.log("three"));
+</script>

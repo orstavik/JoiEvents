@@ -1,0 +1,17 @@
+<h1>dispatchEvent(new Event) to event on window is sync</h1>
+
+<script>
+  function dispatchTick(cb) {
+    const event = new Event("custom-event");
+    const fun = function(){
+      window.removeEventListener("custom-event", fun);
+      cb();
+    };
+    window.addEventListener("custom-event", fun);
+    window.dispatchEvent(event);
+  }
+  console.log("one");
+  dispatchTick(()=> console.log("task"));
+  console.log("two");
+  Promise.resolve().then(()=>console.log("three"));
+</script>

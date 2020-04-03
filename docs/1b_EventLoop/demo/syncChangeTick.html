@@ -1,0 +1,16 @@
+<h1>.click() to change is sync</h1>
+
+<script>
+  function changeTick(cb) {
+    const input = document.createElement("input");
+    input.setAttribute("type", "checkbox");
+    input.style.display = "none";
+    input.onchange = cb;
+    document.body.appendChild(input);
+    input.click();
+  }
+  console.log("one");
+  changeTick(()=> console.log("task"));
+  console.log("two");
+  Promise.resolve().then(()=>console.log("three"));
+</script>

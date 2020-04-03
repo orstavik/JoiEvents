@@ -58,31 +58,31 @@ for (let i = 0; i < 5; i++){
 }
 ```  
 
-Results: 
+A result: 
 
 ```
-Firefox 71            Safari IOS 13.3      Chrome 79
+Firefox 71            Chrome 79            Safari IOS 13.3
 
-toggleTickTrick 1     loadOnImg 1          toggleTickTrick 1
-toggleTickTrick 2     loadOnImg 2          toggleTickTrick 2
-toggleTickTrick 1     loadOnImg 1          toggleTickTrick 1
-toggleTickTrick 2     loadOnImg 2          toggleTickTrick 2
-toggleTickTrick 1     loadOnImg 1          toggleTickTrick 1
-toggleTickTrick 2     loadOnImg 2          toggleTickTrick 2
-toggleTickTrick 1     loadOnImg 1          toggleTickTrick 1
-toggleTickTrick 2     loadOnImg 2          toggleTickTrick 2
-toggleTickTrick 1     loadOnImg 1          toggleTickTrick 1
-toggleTickTrick 2     loadOnImg 2          toggleTickTrick 2
-loadOnImg 1           toggleTickTrick 1    loadOnImg 1
-loadOnImg 2           toggleTickTrick 2    loadOnImg 2
-loadOnImg 1           toggleTickTrick 1    loadOnImg 1
-loadOnImg 2           toggleTickTrick 2    loadOnImg 2
-loadOnImg 1           toggleTickTrick 1    loadOnImg 1
-loadOnImg 1  !!       toggleTickTrick 2    loadOnImg 2
-loadOnImg 2  !!       toggleTickTrick 1    loadOnImg 1
-loadOnImg 2           toggleTickTrick 2    loadOnImg 2
-loadOnImg 1           toggleTickTrick 1    loadOnImg 1
-loadOnImg 2           toggleTickTrick 2    loadOnImg 2
+toggleTickTrick 1     toggleTickTrick 1    loadOnImg 1
+toggleTickTrick 2     toggleTickTrick 2    loadOnImg 2
+toggleTickTrick 1     toggleTickTrick 1    loadOnImg 1
+toggleTickTrick 2     toggleTickTrick 2    loadOnImg 2
+toggleTickTrick 1     toggleTickTrick 1    loadOnImg 1
+toggleTickTrick 2     toggleTickTrick 2    loadOnImg 2
+toggleTickTrick 1     toggleTickTrick 1    loadOnImg 1
+toggleTickTrick 2     toggleTickTrick 2    loadOnImg 2
+toggleTickTrick 1     toggleTickTrick 1    loadOnImg 1
+toggleTickTrick 2     toggleTickTrick 2    loadOnImg 2
+loadOnImg 1           loadOnImg 1          toggleTickTrick 1
+loadOnImg 2           loadOnImg 2          toggleTickTrick 2
+loadOnImg 1           loadOnImg 1          toggleTickTrick 1
+loadOnImg 2           loadOnImg 2          toggleTickTrick 2
+loadOnImg 1           loadOnImg 1          toggleTickTrick 1
+loadOnImg 1  !!       loadOnImg 2          toggleTickTrick 2
+loadOnImg 2  !!       loadOnImg 1          toggleTickTrick 1
+loadOnImg 2           loadOnImg 2          toggleTickTrick 2
+loadOnImg 1           loadOnImg 1          toggleTickTrick 1
+loadOnImg 2           loadOnImg 2          toggleTickTrick 2
 setTimeout 1          setTimeout 1         setTimeout 1
 setTimeout 2          setTimeout 2         setTimeout 2
 setTimeout 1          setTimeout 1         setTimeout 1
@@ -101,7 +101,7 @@ Safari gives higher and different priority to loadOnImg tasks than it gives to T
 
 ## `load` on `<link>` 
 
-What happens if we add the load event on a `<link rel="stylesheet">`? To do so, we a valid, but empty CSS rule "A{}" as base64 (`btoa("a{}") === "YXt9"`). 
+What happens if we add the load event on a `<link rel="stylesheet">`? To do so, we a valid, but empty CSS rule "a{}" as base64 (`btoa("a{}") === "YXt9"`). 
 
 ```javascript
 function loadOnLink(cb) {
@@ -156,38 +156,38 @@ for (let i = 0; i < 5; i++){
 Results:
 
 ```
-Firefox 71            Safari IOS 13.3      Chrome 79
-
-toggleTickTrick 1     loadOnLink 1         toggleTickTrick 1
-toggleTickTrick 2     loadOnLink 2         loadOnImg 1
-toggleTickTrick 1     loadOnLink 1         toggleTickTrick 2
-toggleTickTrick 2     loadOnLink 2         loadOnImg 2
-toggleTickTrick 1     loadOnLink 1         toggleTickTrick 1
-toggleTickTrick 2     loadOnLink 2         loadOnImg 1
-toggleTickTrick 1     loadOnLink 1         toggleTickTrick 2
-toggleTickTrick 2     loadOnLink 2         loadOnImg 2
-toggleTickTrick 1     loadOnLink 1         toggleTickTrick 1
-toggleTickTrick 2     loadOnLink 2         loadOnImg 1
-loadOnLink 1          toggleTickTrick 1    toggleTickTrick 2
-loadOnLink 2          toggleTickTrick 2    loadOnImg 2
-loadOnLink 1          toggleTickTrick 1    toggleTickTrick 1
-loadOnLink 2          toggleTickTrick 2    loadOnImg 1
-loadOnLink 1          toggleTickTrick 1    toggleTickTrick 2
-loadOnLink 2          toggleTickTrick 2    loadOnImg 2
-loadOnLink 1          toggleTickTrick 1    toggleTickTrick 1
-loadOnLink 2          toggleTickTrick 2    loadOnImg 1
-loadOnLink 1          toggleTickTrick 1    toggleTickTrick 2
-loadOnLink 2          toggleTickTrick 2    loadOnImg 2
-setTimeout 1          setTimeout 1         setTimeout 1
-setTimeout 2          setTimeout 2         setTimeout 2
-setTimeout 1          setTimeout 1         setTimeout 1
-setTimeout 2          setTimeout 2         setTimeout 2
-setTimeout 1          setTimeout 1         setTimeout 1
-setTimeout 2          setTimeout 2         setTimeout 2
-setTimeout 1          setTimeout 1         setTimeout 1
-setTimeout 2          setTimeout 2         setTimeout 2
-setTimeout 1          setTimeout 1         setTimeout 1
-setTimeout 2          setTimeout 2         setTimeout 2
+Firefox 71            Chrome 79             Safari IOS 13.3
+                                          
+toggleTickTrick 1     toggleTickTrick 1     loadOnLink 1
+toggleTickTrick 2     loadOnImg 1           loadOnLink 2
+toggleTickTrick 1     toggleTickTrick 2     loadOnLink 1
+toggleTickTrick 2     loadOnImg 2           loadOnLink 2
+toggleTickTrick 1     toggleTickTrick 1     loadOnLink 1
+toggleTickTrick 2     loadOnImg 1           loadOnLink 2
+toggleTickTrick 1     toggleTickTrick 2     loadOnLink 1
+toggleTickTrick 2     loadOnImg 2           loadOnLink 2
+toggleTickTrick 1     toggleTickTrick 1     loadOnLink 1
+toggleTickTrick 2     loadOnImg 1           loadOnLink 2
+loadOnLink 1          toggleTickTrick 2     toggleTickTrick 1
+loadOnLink 2          loadOnImg 2           toggleTickTrick 2
+loadOnLink 1          toggleTickTrick 1     toggleTickTrick 1
+loadOnLink 2          loadOnImg 1           toggleTickTrick 2
+loadOnLink 1          toggleTickTrick 2     toggleTickTrick 1
+loadOnLink 2          loadOnImg 2           toggleTickTrick 2
+loadOnLink 1          toggleTickTrick 1     toggleTickTrick 1
+loadOnLink 2          loadOnImg 1           toggleTickTrick 2
+loadOnLink 1          toggleTickTrick 2     toggleTickTrick 1
+loadOnLink 2          loadOnImg 2           toggleTickTrick 2
+setTimeout 1          setTimeout 1          setTimeout 1
+setTimeout 2          setTimeout 2          setTimeout 2
+setTimeout 1          setTimeout 1          setTimeout 1
+setTimeout 2          setTimeout 2          setTimeout 2
+setTimeout 1          setTimeout 1          setTimeout 1
+setTimeout 2          setTimeout 2          setTimeout 2
+setTimeout 1          setTimeout 1          setTimeout 1
+setTimeout 2          setTimeout 2          setTimeout 2
+setTimeout 1          setTimeout 1          setTimeout 1
+setTimeout 2          setTimeout 2          setTimeout 2
 ``` 
 
 Here, we get three different priorities:

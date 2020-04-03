@@ -1,0 +1,15 @@
+<h1>.reset() to reset is sync</h1>
+
+<script>
+  function resetTick(cb) {
+    const form = document.createElement("form");
+    form.style.display = "none";
+    form.onreset = cb;
+    document.body.appendChild(form);
+    form.reset();
+  }
+  console.log("one");
+  resetTick(()=> console.log("task"));
+  console.log("two");
+  Promise.resolve().then(()=>console.log("three"));
+</script>
