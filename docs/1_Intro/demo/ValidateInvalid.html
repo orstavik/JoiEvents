@@ -1,0 +1,13 @@
+<input value="ABC" pattern="[a-z]*">
+<script>
+  const input = document.querySelector("input");
+  input.addEventListener("invalid", function(e){
+    console.log(e.target.validity.patternMismatch);
+    if(e.target.validity.patternMismatch)
+      e.target.value = e.target.value.toLowerCase();
+  });
+  input.addEventListener("invalid", function(e){
+    console.log(e.target.validity.patternMismatch);
+  });
+  input.checkValidity();
+</script>

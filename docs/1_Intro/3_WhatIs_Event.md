@@ -9,6 +9,28 @@ The purpose of the event system is to pass messages about state changes between 
 ## Why immutable data?
 
 The event data should be immutable. The reason for this is that when an event propagates, the event listeners most commonly use the event to trigger some other reactive state change in the application. These state changes occur in the DOM, but if the event itself also contained mutable data that later event listeners would read and respond to, each event listener would have two sources of mutable state to contend with. By keeping the data in the event immutable, and by convention specify that event listeners mutate the DOM only, event listeners only need to contend with one domain of mutable data structures: the DOM. 
+
+## Demo: Validate the invalid
+
+```html
+<input value="ABC" pattern="[a-z]*">
+<script>
+  const input = document.querySelector("input");
+  input.addEventListener("invalid", function(e){
+    console.log(e.target.validity.patternMismatch);
+    if(e.target.validity.patternMismatch)
+      e.target.value = e.target.value.toLowerCase();
+  });
+  input.addEventListener("invalid", function(e){
+    console.log(e.target.validity.patternMismatch);
+  });
+  input.checkValidity();
+</script>
+```
+
+The `invalid` event has no event specific data, only its `type` name and its `target` element.  the `.validity` property on the `<input>` element (the `target` for the `invalid` event) holds the data about why/how the value fails to comply with the `.checkValidity()` function. This means that if the first event listener fixes a validity issue on an `<input>` element, later event listeners for the same `invalid` event will get a correct, up-to-date view of the `<input>` element's `validity` when they query it directly from the `<input>` element as opposed to from the `invalid` event.
+
+It should be noted though, that since a) the event's `type` name is `invalid`, but that b) the `target` `<input>` element is now valid, there is still lots of room for confusion. 
  
 ## Why so little data?
 
