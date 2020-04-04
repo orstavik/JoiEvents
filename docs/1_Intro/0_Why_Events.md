@@ -24,6 +24,20 @@ The **event system** is a *singular function* whose a) location is fixed and tha
 >
 > Components can therefore be developed independently: most often by the same developer, but at different times; but also by different developers in a team, possibly the same time.    
 
+## WhatIs: up?
+ 
+Events up! Attributes and properties down.
+
+But. To understand this expression, you need some context. By "up", the expression means "upper DOM contexts", not elements higher positioned *within* the DOM context the function you are writing is located. We need an example:
+
+Let's say you want to write 
+
+in the 
+
+In the DOM, which locations are known? The location of the events 
+
+
+
 ## References
 
  * 

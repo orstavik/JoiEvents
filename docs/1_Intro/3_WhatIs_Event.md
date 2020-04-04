@@ -82,11 +82,16 @@ When processing events, there are recurring use-cases. For example, many functio
 
 ## Event methods 3: What about `composed: true` events?
 
-When `composed: true` events propagate outside the `shadowRoot` of a web component, then the `target` is re-assigned to the `host` node. For `open` shadowDOMs, the original `target` is still accessible as `event.composedPath()[0]`, but for `closed` shadowDOMs, the original `target` can no longer be found.
+When `composed: true` events propagate outside the `shadowRoot` of a web component, then the `target` is re-assigned to the `host` node. For `open` shadowDOMs, the original `target` is still accessible as `event.composedPath()[0]`, but for `closed` shadowDOMs, the original `target` can no longer be found. In any case, the `target` of the event is no longer the direct source for the state that has/will change.
 
-This breaks the chain that uses the `target` of the event as the source for the state that has/will change.
+Best practice to solve this problem is to:
+ * *not* alter the event object, 
+ * *not* make the internal, original `target` available outside of the shadowDOM, but instead to
+ * **mirror the properties of inner `target` element inside the shadowDOM on host node of the web component that the event is re-`target`ed to. 
+ 
+This makes the `target` of the event behave the same when the event propagates both outside and inside the web component. Note, this require some foresight on the part of the developer of the web component: which `composed: true` events that might `target` some of the elements inside my shadowDOM will likely be listened for outside and around my host node? And, which properties of these `target` elements inside my shadowDOM would be relevant for such event listeners?
 
-The preferred strategy to solve this problem would be to mirror the properties of the element inside the shadowDOM on the web component's host node. This would make no alterations on the event object itself, and keep the event listeners inside and outside the shadowDOM behave the same way. An alternative approach is to add a set of getter functions to the event that relay the query to the element inside the shadowDOM. However, this approach is more cumbersome, has poorer performance, and would lead to different patterns for treating the same event inside and outside the web component in question.  
+An alternative approach is to add a set of getter functions to the event that relay the query to the element inside the shadowDOM. But, this is a poor approach. It is cumbersome to implement. It has poor performance. It breaks the above convention that event objects are pure data. And it would produce different implementations for solving the same task in event listeners inside vs. outside the web component.
 
 ## References
 
