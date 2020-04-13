@@ -1,14 +1,63 @@
 # WhatIs: the Microtask Queue?
 
-> This chapter explains the microtask queue *without* going into the details of Promises. The reason for this is that I find it easier to first understand the concept of microtasks and async callbacks in regular JS, and then understand how the browser implements the async callbacks using Promises.  
-
 There are two main queue levels in the browsers: 
 1. The event loop with its various and varying macrotask queues.
 2. The microtask queue.
 
-In order for the browser to pick a new task from the event loop, the microtask must be completely emptied.
+Thus, we can envisage the flow of control from top down in a web app as:
+1. **a single queue** (the event loop) that consists of
+2. **a series of macrotasks** that in turn consists of
+3. **a series of microtasks**.
 
-It is possible to go on describing the microtask queue in English metaphors for a long time. But. I'm not sure it would help that much in order to understand it. Instead, I will skip the metaphors, and "teach" the microtask queue in JS.
+```
+-- event loop --
+|              |
+|  --MACRO--   |
+|  |       |   |
+|  | micro |   |  1
+|  |       |   |  
+|  | micro |   |  2
+|  |       |   |  
+|  | micro |   |  3
+|  |       |   |
+|  ---------   |
+|              |
+|  --MACRO--   |
+|  |       |   |
+|  | micro |   |  4
+|  |       |   |
+|  ---------   |
+|              |
+|  --MACRO--   |
+|  |       |   |
+|  | micro |   |  5
+|  |       |   |
+|  | micro |   |  6
+|  |       |   |
+|  ---------   |
+|              |
+|     ...      |  ...
+```
+
+In order for the browser to pick a new (macro)task from the event loop, the microtask queue of the previous macrotask must be completely emptied.
+
+> Some microtasks can be upgraded to macrotasks if they are not ready when its their turn. For example, a `fetch(...)` call might take too long to return, thus enabling other, later microtask to be run ahead of it as well as letting other macrotasks run before it. 
+
+## Macrotasks vs. microtasks
+
+Microtasks and macrotasks have much more in common, than what separates them:
+
+1. Both the macrotask and microtask queues are lists of tasks. In the landscape of the JS browser these tasks are callable JS functions (or native equivalents).
+2. Both the individual macrotask queues and the individual microtask queues are FIFO. However, the event loop consists of several macrotask queues, and the event loop can and do prioritize some queues over other, and therefore will run tasks in some macrotask queues before tasks in other macrotask queues, regardless of which one was called first. However, within each individual macrotask and microtask queue, tasks run FIFO.
+3. The same type of tasks can be added to both the macro and the macro queues. Consider for example the loading of an image:
+   * When an `<img>` element has loaded its source, a `load` event is queued as a macro task in the event loop.
+   * When an `fetch` call is made to retrieve the source of the same image file, its result is added to the microtask queue.
+
+The main difference between microtasks and macrotasks is their level: 
+ * macrotasks run one-by-one under the event loop, 
+ * microtasks run one-by-one under each macrotask.
+
+However, it is simpler to understand the makeup of microtask queue in JS than in English. So, in this chapter I will describe the microtask queue directly in JS.
  
 ## Demo 1: A minimalistic microtask queue in JS
 
@@ -31,6 +80,8 @@ startMicroTaskProcessing();                       //flushing microtask queue
 This naively simple microtask queue shows the basic. The microtask queue starts up empty. The queue is then filled with 3 tasks. Each task is in the form of an executable function. The microtask queue is then started (also called "flushed"), and the function processing the microtask queue then simply runs from start to end.
 
 ## Demo x: what happens with errors in microtask queue?
+
+Errors within a microtask do not affect the execution of the next microtask as such.
 
 ```javascript 
 function a(){
@@ -131,7 +182,7 @@ Well, the microtask queue is useful for 2 purposes:
    * It will be much simpler to debug and understand the running of your code if your current process completes first, and then the side-effect/consequence of some of your calls in this process is handled afterwards.
    * You might trigger related side-effects several times during your process. For example, the browser can trigger a side-effect function every time an HTML attribute changes, when that attribute is observed by a `MutationObserver`. If your function is incrementally changing this attribute value several times during its process, you would much rather that the side-effect runs *once after your process has completed* and all your incremental changes has been performed, instead of *several times in the middle of your process* for each increment of the same value.
    
-In the next demo, we will illustrate the `MutationObserver` use case for the microtask queue. We will create our own `mutableObject` with a `count` property. We hide this property behind a pair of get/set methods, and when the set method changes the value of the `count` property, we add a method to the microTask queue. But! We only add one call to the microtask queue. If the `mutableObject` has already triggered such a call, we do nothing. (And to simplify the code example, we strip out the error handling.)
+In the next demo, we will illustrate the `MutationObserver` use case for the microtask queue. We will create our own `mutableObject` with a `count` property. We hide this property behind a pair of get/set methods, and when the set method changes the value of the `count` property, we add a method to the microTask queue. But! We only add one call to the microtask queue. If the `mutableObject` has already triggered such a call, we do nothing. (To simplify the code example, we strip out the error handling.)
 
 ```javascript 
 /** microtask queue start **/
@@ -229,17 +280,6 @@ Result:
    3. The third microtask is run. This prints line 8-10. At this point, the `count === 3`, and so you might expect that the `message` would be updated. But, the process `_updateMessage()` is considered a side-effect, and to avoid this side-effect interfering with the logic of the current process, it is invoked *asynchronously*, ie. the system delays doing this task until it has completed the other tasks it is already working on/knows about. Hence, the message is still: `not yet!`     
    4. The forth microtask is run (`objectMutable._updateMessage()`). This prints line 11 and 12. The task was added during the execution of the first microtask.
 3. The microtask queue is emptied, and the `startMicroTaskProcessing()` returns.
-
-## What's the difference between the macrotask and microtask queues?
-
-First, there is much more in common with the micro and macro task queues, than what distinguish them:
-
-1. Both the macrotask and microtask queues are lists of tasks. In the landscape of the JS browser these tasks are callable JS functions (or native equivalents).
-2. Both the macrotask queues and the microtask queue are FIFO. Sure, the event loop that consists of several macrotask queues can prioritize one queue over another, but within each queue, the tasks are FIFO.
-3. The same type of tasks can be added to both the macro and the macro queues. Consider for example the loading of an image:
-   * When an `<img>` element has loaded its source, a `load` event is queued as a macro task in the event loop.
-   * When an `fetch` call is made to retrieve the source of the same image file, its result is added to the microtask queue.
-   
 
 ## References
 
