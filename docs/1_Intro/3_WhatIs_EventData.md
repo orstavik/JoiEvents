@@ -1,6 +1,6 @@
-# WhatIs: event?
+# WhatIs: event data?
 
-At its heart an event is a small package of pure, immutable data: a small text message.
+At its heart an event is just a small package of pure, immutable data: a small text message.
 
 ## Why pure data?
 
