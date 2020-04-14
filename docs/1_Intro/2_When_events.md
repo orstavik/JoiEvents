@@ -2,6 +2,8 @@
 
 > Normal mail and post also represent state changes. For example, bills are sent to announce a future state change: someone is about to owe someone else some money, soon; Christmas cards are sent to announce past state changes: this family is soooo happy and has evolved soooo much the previous year.
 
+Events are always viewed in relationship to state changes. They always follow a state change, and their raison d'être is to trigger yet other state changes.
+
 Events are not sent in the middle of a state change. Events are always dispatched either *before* or *after* a completed state change. For example, the `contextmenu` event is dispatched *before* the browser shows its native context menu; the `change` event is dispatched *after* an input element has changed its value. We divide such events in two categories:
 
 1. **Past-tense events** announce a past, completed state change. Examples include:
@@ -15,20 +17,20 @@ Events are not sent in the middle of a state change. Events are always dispatche
    * the `submit` event dispatched before the task of submitting a `<form>`s data to a server,
    * the `beforeinput` event dispatched before the task of altering the value of an input element has been carried out,
    * many, many more.
+
+## One man's past is another man's future 
    
-As the astute reader has noticed, can many events play the role of *both* past- and future-tense. In fact, all future-tense events represent a past-tense state change too:
+One event instance can be *both* past- and future-tense. In fact, all future-tense events represent a past-tense state change too:
 * The `click` event not only announce the ensuing `submit` event, but also the preceding `mousedown` and `mouseup` event on a common DOM element.
 * The `submit` event represents both a *past* state change (a submit button *has been* `click`ed) and a *coming* state-change (a form will be submitted).
 
-Similarly, state changing tasks can be associated with any event during its life cycle thus making events that originally only announced *past* state changes, also trigger *future* state changes. In fact, this is the whole point of event listeners, adding potential state changing tasks for certain events. So, what does that make the past- and future-tense events?
+Similarly, new state changing tasks can be associated with any event during its propagation. Hence, any *past*-tense event can be made to trigger *future* state changes. In fact, this is the point of past-tense events: if no one adds any state changing tasks to a past-tense event, it can be ignored/skipped.
 
-Well, *an event* is either past- or future-tense from the standpoint of *a state changing action*. For example:
- * If you add an event listener for `click` events on a node in the DOM, then any `click` events that occur on that node will be a future-tense event from the vantage point of this event listener. If the `click` event's propagation is stopped *before* the event reaches the node for the event listener, then the function will not run.
- * The `reset` event is dispatched at the end of the `.reset()` function that resets a form. The `reset` event *has in essence ended* when the `reset` event propagates. From the vantage point of the `.reset()` function the `reset` event it dispatches when it concludes is *past-tense*.
+But, from the vantage point of the *a state changing task*, different events can precede it or follow it: a function changing some state can choose to dispatch an event before the state is changed (future-tense) or after the state has been changed (past-tense). For example:
+ * If you add an event listener for `click` events on a node in the DOM, then any `click` events that occur on that node will be a future-tense event from the vantage point of this event listener.
+ * The `reset` event is dispatched at the end of the `.reset()` function that resets a form. The state change of the form *has ended* when the `reset` event propagates. From the vantage point of the `.reset()` function the `reset` event is *past-tense*.
 
-Events are always viewed in relationship to state changes. They always follow a state change, and their purpose for being is to trigger yet other state changes. However, when you think about subscribing and dispatching events, having a clear idea of which events should precede and follow which state changing functions is.. a must.    
-
-## What about *ongoing* state changes 
+## *Ongoing* state changes 
 
 Regretfully, state changes often take time and/or have blurry definitions of their beginning/end. In these instances, events often need to be dispatched in what can be perceived like an ongoing state change. Let's look at some examples:
 
