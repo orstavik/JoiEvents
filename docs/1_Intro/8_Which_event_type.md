@@ -1,66 +1,25 @@
+# Which: event `type`?
 
+## What should be the event's `type`?
+## Event `type`s 
 
+An event `type` is a class of state changes, a group of related event instances. But what makes two events part of the same group? What relationships bind event instances together as the same type? Is it your instinct? Actually, no. Event instances form the same type based on these criteria: 
 
+1. the type of the origin of the state change is the same. As described above, the `target` of an event is most often the same as the origin of the state property that changes. For two events to be of the same `type`, then type of the origin of the state change must a) have the same property and b) should be of the same type. For example, every time a `<form>` element is reset, a `reset` event instance is dispatched: the `target` for all `reset` events are `HTMLFormElement` instances. The quite specific `reset` events all share a quite `specific` `target` type. Another example less specific event `type` is the `contextmenu` event: the `target` of all `contextmenu` events are the universal `HTMLElement`. The `contextmenu` state changes is a generic ability associated with all `HTMLElement`s. A third example is the `input` event: the `input` event is associated with a state change of input elements such as `HTMLInputElement` and `HTMLSelectElement`. Although these element types do not share a particular common interface other than `HTMLElement` that do not uniquely distinguish them as `target` type for `input` elements, these elements share behavior related to a potential `.form` parent etc. In essence, they could very well have been set up to     
 
-## where to queue an event dispatch?
+2. the value of the new state is the same. `online` and `offline`.
+ 
+3. the value of the previous state is the same. `focusout`. 
 
-async vs sync event dispatch
+4. the trigger events are the same.
 
-async event dispatch is simply wrapping the `targetEl.dispatchEvent(new CustomEvent(...))` inside a `setTimeout()` or `toggleTick()`.
-
-
-## Event listener = recipient function at an address
-
-When an event "reaches" a `target` node, the text content of the event will be passed to all event listener functions *registered at that address*. This means that even though an event "letter" is dispatched by a single function, it will be read and responded to by a family of recipient functions.
-
-## Event listeners at multiple addresses
-
-A fun concept is that it is not only recipients at the end location that can read and respond to the event. When the event message is sent, it can also be read and reacted to by functions on nodes between the event and the `root` of its DOM world. It is like sending a letter in old East-Germany: other event listeners can open the letter on all the nodes the letter passes on its way to its `target`, and these event listeners on the nodes "on the way to the `target`" can read the content of the event, react to it, and even stop the letter from reaching its `target`.
-
-###  
-
-Event listeners are associated with different event `type`s.  
-
-Events are not really letters. And the postal metaphor only takes us this far. Because a single event dispatched from a single function can reach and trigger multiple other listening functions.
-
-
-Multiple functions (event listeners) can be added to the same address 
-
-## WhatIs: Event `type`s
-
-Event `type` is the class event instances belong to. This  
-   
-a. what is normal event flow. what is async event flow. events are dispatched async, sequential, one by one. the default actions are run sync.
-
-this is what is the event cascade. the flow of one event, to another, to a default action, to a third event. one by one by one.
-
-Worth noting is that 
-
-1. Why dispatch an event?
-what role does an event play in a web app? and what alternative means of communication do we have?
-here, particularly, the alternative of attributes on web components, or js properties.
-
-   2. when not to dispatch an event?
-
-3. grouping. when to group certain changes under the same name, and why do we not give everybody their own name? 
-   4. what consitute a relationship between state changes?  
-       State changes can be related by:
-       1. the element or external property that they they change, such as `input` events are.
-       2. the trigger event type, such as `click`. 
-       3. event semantics, such as `visibilitychange`.
-
-4. why dispatch an event sync? or async? here is the nestedPropagation problem. The conclusion of the nestedPropagation problem is that we always want to dispatch the event as an async task from the event loop.
-
-5. why perform the default action of an event async? That is the SyncDefaultAction problem. that should conclude in the fact that we always want the default action queued in the event loop, so that microtasks and other event listeners for the trigger event are run before the defaultAction runs. 
-
-So, should SyncDefaultAction be moved into the defaultAvtion chpater?
-
-5. when and how to dispatch a past tense event?
-
-6. when and how to dispatch a future tense event?
-
-# WhatIs: related state changes?
-
+5. intentional semantic association. `click` generated by either mousedown+up or keypress=enter. use-case driven. Like `input` becomes `change`.
+  
+  /the element whose state property changes. If an event is addressed at the same element type, then that event is likely to  of  addressee is  
+ * 
+    
+    
+    
 
 ## Grouping state changes under the same event
 
@@ -157,12 +116,10 @@ A native example of a compromise is the `beforeinput` event. The `beforeinput` e
                         
 ## Future-tense, past-tense, or both?
 
-Some state changing actions are both preceded by a future-tense event and 
-
 If you add a state changing reaction to an event, either as an event listener (or as a default action in a web component), then you should strongly consider heralding this state change with its own, future-tense event type (cf. `submit` and `contextmenu`). An extremely diligent, event-oriented developer would likely desire to herald all state changes with their own event.
  
  Similarly, you should try to avoid adding a state change directly to an existing event, without adding a preceding event to distinguish it (cf. `click`). If you have many similar state changing actions that you consider giving an umbrella name, do so primarily if the action can be discerned from the trigger event's `target` directly (cf. `beforeinput`).
     
 ## References
 
- * 
+ *  

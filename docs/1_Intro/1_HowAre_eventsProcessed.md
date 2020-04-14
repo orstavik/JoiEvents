@@ -6,9 +6,30 @@ When an event occurs in the DOM, the browser passes the event through 3 separate
 2. event propagation
 3. default action
 
+```
+event 
+
+controller 1     listener capture 1    lowest default action
+controller 2     listener capture 2    ----
+controller 3     listener target       default action not used 1
+                 listener bubble 1     default action not used 2
+                 listener bubble 2
+```
+
 This is an unfamiliar model for most developers. From the JS perspective, event processing is often viewed as a single process (event propagation) or as a two step process (event propagation + default action). The initial process, event controllers, are not seen by the developers.
 
 So, what is the process of event controllers? When an event occurs, the browser can look at the event and perform some actions that are universal for that event type. For example, the browser runs a function that monitors all `click` events that occur and if two `click`s occur in rapid succession, then the browser will create a `dblclick` event and queue it in the event loop. Another example is the act of `focus`ing on different input elements. The browser will observe `mousedown` and `keydown` events and ensure that whenever a `mousedown` event occurs on an input element or "tab" `keydown` event is made, the `.activeElement` is updated when necessary and dispatch `focusin`, `focusout`, `focus`, and `blur` events. Lots of other event controllers run: `click` created by `mousedown` and `mouseup`; `contextmenu` created by `mousedown` using the right mouse button; drag'n'drop events generated from mouse events; etc. etc.
+
+```
+mousedown event on  <input type="date"> 
+
+event controller   event listener mousedown   default action
+------------
+contextmenu        on window capture          altering date value
+focus              on document capture        ---
+                   on input element
+                   on body element bubble
+```
  
 ## Event processing as triggering functions
 
