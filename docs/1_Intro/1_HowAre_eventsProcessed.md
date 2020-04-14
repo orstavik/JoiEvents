@@ -1,10 +1,36 @@
-# WhatIs: event reactions?
+# HowAre: events processed?
 
-There are three different types of functions that react to events in the browser today:
+When an event occurs in the DOM, the browser passes the event through 3 separate processes:
 
-1. event listeners
-2. default actions
-3. event controllers 
+1. event controllers
+2. event propagation
+3. default action
+
+This is an unfamiliar model for most developers. From the JS perspective, event processing is often viewed as a single process (event propagation) or as a two step process (event propagation + default action). The initial process, event controllers, are not seen by the developers.
+
+So, what is the process of event controllers? When an event occurs, the browser can look at the event and perform some actions that are universal for that event type. For example, the browser runs a function that monitors all `click` events that occur and if two `click`s occur in rapid succession, then the browser will create a `dblclick` event and queue it in the event loop. Another example is the act of `focus`ing on different input elements. The browser will observe `mousedown` and `keydown` events and ensure that whenever a `mousedown` event occurs on an input element or "tab" `keydown` event is made, the `.activeElement` is updated when necessary and dispatch `focusin`, `focusout`, `focus`, and `blur` events. Lots of other event controllers run: `click` created by `mousedown` and `mouseup`; `contextmenu` created by `mousedown` using the right mouse button; drag'n'drop events generated from mouse events; etc. etc.
+ 
+## Event processing as triggering functions
+
+When the browser processes an event it simply passes a small data object to three different types of functions:
+
+1. event controllers. The browser can have *multiple* event controller functions associated with the same type of event, and it will pass the event to all event controllers for that event. It does so in "first registered, first run" sequence. Event controllers should *only* do mutations of the DOM that are universal (that would apply the same in any DOM). To ensure that there will be no confusion regarding these state changes, the event controller should *own* all the properties that it alters. To own a property in the DOM in this way means that it is only the event controller that has write-access to that property and can change it; all other parts of the app that uses this property can only read it. Examples of such owned properties is the `.activeElement` JS properties and the `:invalid` css pseudo-class.
+
+   Event controllers are state machines. They can preserve a state of previously observed events. This means that the `dblclick`-controller can remember the `timeStamp` of the previous `click` event, and that the native drag'n'drop state machine can remember which element a preceding `mousedown` event targeted. 
+
+   Event controllers can and do read the DOM in order to regulate themselves. For example, an event controller that controls scrolling from touch can read the state of the `touch-action` CSS property on the target of a `touchstart` event before the `touchstart` event propagates. Other event controllers read HTML attributes (cf. `tabindex`) or element types (cf. `<input>` element for the event controller that regulate validation pseudo-classes such as `:invalid`).
+
+2. Event propagation. When the browser runs event propagation, it sorts all the functions that the is added to elements in the propagation path according to a capture-target-bubble sequence (more on this later). The browser then runs these functions one by one, passing them the event object, until the list of function is empty or one of the functions stops the propagation by calling `stopPropagation()` or `stopImmediatePropagation()`.
+
+   The browser does not add any native functions as event listeners. It is only the developer that adds event listeners to the DOM. 
+
+3. Default action. After the event propagation process has finished, the browser evaluates if any of the event listeners has called `.preventDefault()` on the event. If not, the browser checks the propagation path to see if there are any default actions associated with the given event for any of the elements in the propagation path. The browser will select and run *only one* default action function per event instance, and it searches for this default action from the target of the event and upwards.
+
+## Async vs. sync
+
+Event controllers and default actions are mostly associated with async events. Sync events are most often void of both event controllers and default actions. However, there are exceptions such as calling `.requestSubmit()` and `.reset()` on a `<form>` element will trigger both default actions and event controllers on sync events.
+
+When making custom event controllers and custom default actions, these should be queued asynchronously from the   
 
 ## WhatIs: Event listeners?
 
