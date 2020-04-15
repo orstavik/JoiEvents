@@ -1,0 +1,19 @@
+<div singleclick-action>
+  default action added to DIV elements with a singleclick-action attribute
+</div>
+
+<script>
+  function singleClickAction(event) {
+    console.log("click default action trigger by ", event.type);
+  }
+
+  window.addEventListener("click", function (e) {
+    const path = e.composedPath();
+    for (let element of path) {
+      if (element instanceof HTMLDivElement && element.hasAttribute("singleclick-action"))
+        return setTimeout(() => singleClickAction(e), 0);
+    }
+  });
+
+  window.addEventListener("click", e => console.log(e.type));
+</script>

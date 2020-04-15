@@ -1,0 +1,43 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script>
+  // //requires the toggleTick function
+  // Object.defineProperty(Event.prototype, "addDefaultAction", {
+  //   value: function (cb) {
+  //     return toggleTick(() => cb(this), this.type);
+  //     // return toggleTick(() => cb.bind(element, this), this.type);
+  //   },
+  //   writable: false
+  // });
+</script>
+
+<div singleclick-action dblclick-action>
+  default action added to both single click and dblclick event for this particular element
+</div>
+
+<script>
+  function singleClickAction(event) {
+    console.log("click default action trigger by ", event.type);
+  }
+
+  function dblclickAction(event) {
+    console.log("dblclick default action trigger by ", event.type);
+  }
+
+  window.addEventListener("click", function (e) {
+    const path = e.composedPath();
+    for (let element of path) {
+      if (element instanceof HTMLDivElement && element.hasAttribute("singleclick-action"))
+        return toggleTick(() => singleClickAction(e));
+    }
+  });
+  window.addEventListener("dblclick", function (e) {
+    const path = e.composedPath();
+    for (let element of path) {
+      if (element instanceof HTMLDivElement && element.hasAttribute("dblclick-action"))
+        return toggleTick(() => dblclickAction(e));
+    }
+  });
+
+  window.addEventListener("click", e => console.log(e.type));
+  window.addEventListener("dblclick", e => console.log(e.type));
+</script>
