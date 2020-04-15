@@ -1,0 +1,91 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script>
+  (function () {
+    //return true if b is the same as a, a doesn`t exists, or b is inside a.
+    function isNested(a, b) {
+      return !a || a === b || a.contains(b);
+      //todo contains is too simple if b is within a shadowDOM. Must replace .contains with a more complex check
+    }
+
+    let _defaultActionElement;
+    let _defaultAction;
+
+    function wrapper(event, cb, element) {
+      _defaultActionElement = undefined;
+      _defaultAction = undefined;
+      cb.call(element, event);
+    }
+
+    window.addDefaultAction = function (event, callback, elementInPath) {
+      //todo this would not work with closed shadowDOM elements...
+      //todo Nothing like this would work with closed shadowDOM elements. because we wouldn't get the complete path.
+      //todo and, we would need to ensure that we are not going down into slotted composed events.
+      //todo is there a way to see if an element is in the propagation path if we have access to it?
+      //todo, yes, we could see it the closed shadowRoot host node is in the element. and then try to make some assumptions..
+      //todo, the problem is the stopPropagation torpedoes..
+      //todo, maybe we should just try to control the stopPropagation() calls instead?
+      //todo, maybe we could ensure that some event listeners are run regardless?
+      //todo, i don't want this...
+      if (event.composedPath().indexOf(elementInPath) === -1)
+        throw new Error("addDefaultAction(..., elementInPath) must be given an element in this event's propagation path.");
+      if (!isNested(_defaultActionElement, elementInPath))
+        return false;
+      _defaultActionElement = elementInPath;
+      _defaultAction ?
+        _defaultAction.reuse(wrapper.bind(null, event, callback, elementInPath), event.type):
+        _defaultAction = toggleTick(wrapper.bind(null, event, callback, elementInPath), event.type);
+      return true;
+    }
+  })();
+</script>
+
+<style>
+  div { border: 2px dotted grey; }
+</style>
+
+<div action-one id="one">
+  default action one
+  <div action-two id="two">
+    default action two
+    <div action-three id="three">
+      default action three
+    </div>
+  </div>
+</div>
+
+<script>
+  function defaultActionOne(e) {
+    console.log("action one:", e.target.id, e.target === this);
+  }
+
+  function defaultActionTwo(e) {
+    console.log("action two:", e.target.id, e.target === this);
+  }
+
+  function defaultActionThree(e) {
+    console.log("action three:", e.target.id, e.target === this);
+  }
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-one"))
+        return addDefaultAction(e, defaultActionOne, el);
+    }
+  }, true);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-two"))
+        return addDefaultAction(e, defaultActionTwo, el);
+    }
+  }, true);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-three"))
+        return addDefaultAction(e, defaultActionThree, el);
+    }
+  }, true);
+
+  window.addEventListener("click", e => console.log(e.type));
+</script>
