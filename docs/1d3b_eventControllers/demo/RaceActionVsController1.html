@@ -1,0 +1,104 @@
+<h1>Test what comes first: default action vs event controllers</h1>
+
+Show the event processing as a three step model. Propagation, event controllers, defaultAction.
+
+<pre>
+  Race detailsToggleDefaultAction vs dblclickEventController.
+
+  First the click runs, the future-tense event for the toggle action and the trigger event for the DblclickEventController.
+  The toggle state has not yet switched, so for click, it is first false, then true.
+
+  The first toggle we ignore, it comes after the first click, and we are only curious about the toggle when it races the dblclick
+
+  After the second click, the dblclick event dispatches first. but, the state of the details element has switched since the click.
+  this means that the default action of the details element has run, as it is this that switches the value of the open property.
+
+  Last the toggle event runs. The toggle event was queued in the event loop from the default action, which is after the event controller was queued.
+
+  ie. the sequence of processing event is as follows:
+  1. event propagation
+  2. default action
+  3. event controller
+</pre>
+
+<details>
+  <summary>hello sunshine</summary>
+  hello world
+</details>
+
+<script>
+  const summary = document.querySelector("summary");
+  const details = document.querySelector("details");
+
+  summary.addEventListener("click", function (e) {
+    console.log("details open on " + e.type + "?", details.open);
+  });
+  summary.addEventListener("dblclick", function (e) {
+    console.log("details open on " + e.type + "?", details.open);
+  });
+  window.addEventListener("toggle", function (e) {
+    console.log("details open on " + e.type + "?", details.open);
+  }, true);
+</script>
+
+<pre id="ctxmenu">
+  Test #2
+
+  Race ContextMenuDefaultAction vs. FocusController
+
+  Add similar test to pseudo-class.
+  focus event controller runs before contextmenu default action.
+  But. contextmenu appears to be implemented as a default action, so this test is not super helpful.
+
+
+</pre>
+
+<script>
+  const ctxmenu = document.querySelector("#ctxmenu");
+
+  ctxmenu.addEventListener("mousedown", function (e) {
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+  });
+  ctxmenu.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+  });
+  ctxmenu.addEventListener("focusin", function (e) {
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+  });
+</script>
+
+
+<pre id="ctxmenu">
+  Race #3
+
+  Input default action vs. FocusController
+
+  focus event controller runs before input default action.
+  the state of the input element has not yet changed when the focus controller runs its focus events.
+
+  Thus, the FocusController runs before the defaultAction, while the dblclick controller runs after the default actions.
+</pre>
+
+<input type="date" value="2020-05-05">
+
+<script>
+  const date = document.querySelector("input[type='date']");
+  date.addEventListener("mousedown", function (e) {
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+    console.log("date.value on " + e.type + "?", date.value);
+  });
+  date.addEventListener("beforeinput", function (e) {
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+    console.log("date.value on " + e.type + "?", date.value);
+  });
+  date.addEventListener("input", function (e) {
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+    console.log("date.value on " + e.type + "?", date.value);
+  });
+  date.addEventListener("focusin", function (e) {
+    console.log("activeElement on " + e.type + "?", document.activeElement);
+    console.log("date.value on " + e.type + "?", date.value);
+  });
+</script>
+

@@ -1,5 +1,25 @@
 # Pattern: AddDefaultAction
 
+## Custom implementation of default actions 
+
+In JS, we do not have access to a `postPropagationCallback`. To ensure that we run a function after an event has finished propagating (ie. so that it is not torpedoed by `stopPropagation()`), we must add it as a new task in the event loop. And to do that, we must evaluate the event to identify any default actions *and* queue the default action task in the event loop *up front*, and stop some of these default actions from being run if `.preventDefault()` has been called on the event during propagation. 
+   
+```
+     ↱------------ queue  ------↴        ↱------------ queue  ------↴
+     ↑                          ↓        ↑                          ↓
+     ↑     prop(eventA)       actionA => ↑     prop(eventB)       actionB
+     ↑        ↓    ↑                     ↑        ↓    ↑
+  DefaultAction    bub                DefaultAction    bub
+              ↓    ↑                              ↓    ↑
+            cap    bub                          cap    bub
+              ↳tar ⮥                              ↳tar ⮥
+```
+
+## 
+
+> todo remove raceEvent and always use the event type name, because the default action proper should always race all other events.
+>todo remove the default actions that are event controllers, and put this in the event controller chapter.
+
 How to add our own default actions to an event or type of events? 
 
 Default actions are best controlled from event instances and not per event type universal to all event instances. This is due to the fact that different, `preventable` default actions might compete with each other for the same trigger event, and in order to solve these conflicts we need to organize the default actions to each events propagation path. This require us working against each individual event object. More on this shortly.
