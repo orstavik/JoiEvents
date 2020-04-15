@@ -75,6 +75,13 @@ Not all native events have default actions associated to them: for example, ther
 
 Event types that in some circumstances *can* have a default action associated with them are called `cancellable`. `cancellable` simply means that if you call `.preventDefault()` on the event instance, the default action associated with the event will be "prevented" from running.
 
+```
+propagate(cancellableEvent)    =>|  DefaultAction(cancellableEvent) 
+    ↓    ↑                       ↑
+  cap    bub ->.preventDefault()⮥     
+    ↳tar ⮥        
+```
+
 ## References
 
  * spec
