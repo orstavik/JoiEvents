@@ -4,7 +4,7 @@ The bubbling phase is the name given for the propagation phase going from the ta
 
 When events are created, they can have the property `bubbles` set to `true` or `false` (`false` is the default value). It is easy to forget about the capture phase and think of non-bubbling events as "target only events". But that is not true. Non-bubbling events also propagates down the propagation path in the capture phase. (To control propagation across all event phases, use `stopPropagation()` and `stopImmediatePropagation()`.)
 
-> Non-bubbling = capture + target phase!! 
+> Non-bubbling = capture phase + target phase!! 
 
 Non-bubbling events operate exactly like normal, bubbling events that has an event listener on its innermost target element that either calls `.stopPropagation()` or sets `cancelBubbles = true`. 
 
