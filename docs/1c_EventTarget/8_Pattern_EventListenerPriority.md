@@ -1,6 +1,6 @@
 # Pattern: EventListenerPriority
 
-In this chapter we look at how we implement an alternative method to set the `priority` for the sequence of event listeners. This is an alternative to using the options `first` and `grab` in the previous chapter. This method is not used in this book, but is added for completion.
+In this chapter we look at how we implement an alternative method to set the `priority` for the sequence of event listeners. This is an alternative to using the options `first` and `grab` in the previous chapter.
 
 ## new EventListenerOption: `priority`
 
