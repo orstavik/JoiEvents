@@ -12,7 +12,8 @@ All web components must listen for composed: false events from within their shad
 
 An alternative practice is to by convention do:
 1. never call `stopPropagation()` on events in the capture phase, unless you also intend and do call `preventDefault()`.
-2. never call `stopPropagation()` on an event inside a shadowRoot. This will cause strange behavior. 
+2. never call `stopPropagation()` on an event inside a shadowRoot. This will cause strange behavior.
+3. If default actions are to be added by web components, stopPropagation() anywhere will also mean preventDefault().
 
 ## Implementation
 
