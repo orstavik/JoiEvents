@@ -1,0 +1,29 @@
+<script>
+  function noCapturePhaseStopPropagation(e) {
+    e.stopPropagation = function () {
+      if (this.eventPhase !== Event.CAPTURING_PHASE)
+        return Event.prototype.stopPropagation.call(this);
+      console.warn("stopPropagation() has been temporarily blocked!!");
+    }.bind(e);
+    e.stopImmediatePropagation = function () {
+      if (this.eventPhase !== Event.CAPTURING_PHASE)
+        return Event.prototype.stopPropagation.call(this);
+      console.warn("stopImmediatePropagation() has been temporarily blocked!!");
+    }.bind(e);
+  }
+
+  window.addEventListener("click", noCapturePhaseStopPropagation, true);
+</script>
+
+<h1>hello sunshine</h1>
+
+<script>
+  const h1 = document.querySelector("h1");
+
+  window.addEventListener("click", e => e.stopImmediatePropagation(), true);
+  document.addEventListener("click", e => console.log("hello"), true);
+  h1.addEventListener("click", e => console.log("sunshine"));
+  h1.addEventListener("click", e => e.stopPropagation());
+  h1.addEventListener("click", e => console.log("!!!!"));
+  document.addEventListener("click", e => console.log("this listener never runs."));
+</script>

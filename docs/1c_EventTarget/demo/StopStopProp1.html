@@ -1,0 +1,41 @@
+<script>
+  (function () {
+    const ogStopProp = Event.prototype.stopPropagation;
+    const ogStopImmProp = Event.prototype.stopImmediatePropagation;
+    Object.defineProperties(Event.prototype, {
+      "stopPropagation": {
+        value: function () {
+          if (!this.composed || this.eventPhase !== Event.CAPTURING_PHASE)
+            return ogStopProp.call(this);
+          console.warn("A stopPropagation() call has been blocked.");
+        }
+      },
+      "stopImmediatePropagation": {
+        value: function () {
+          if (!this.composed || this.eventPhase !== Event.CAPTURING_PHASE)
+            return ogStopImmProp.call(this);
+          console.warn("A stopImmediatePropagation() call has been blocked.");
+        }
+      },
+      "block": {
+        value: function () {
+          ogStopImmProp.call(this);
+          this.preventDefault();
+        }
+      }
+    });
+  })();
+</script>
+
+<h1>hello sunshine</h1>
+
+<script>
+  const h1 = document.querySelector("h1");
+
+  window.addEventListener("click", e => e.stopImmediatePropagation(), true);
+  document.addEventListener("click", e => console.log("hello"), true);
+  h1.addEventListener("click", e => console.log("sunshine"));
+  h1.addEventListener("click", e => e.stopPropagation());
+  h1.addEventListener("click", e => console.log("!!!!"));
+  document.addEventListener("click", e => console.log("this listener never runs."));
+</script>
