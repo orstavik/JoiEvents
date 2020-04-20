@@ -84,7 +84,5 @@ propagate(cancellableEvent)    =>|  DefaultAction(cancellableEvent)
 
 ## References
 
- * spec
- * mdn??
- * good articles?
- * maybe discussion in whatwg
+ * [W3: Default action ](https://www.w3.org/TR/uievents/#default-action)
+ * [W3: Default actions and cancelable events](https://www.w3.org/TR/uievents/#event-flow-default-cancel)
