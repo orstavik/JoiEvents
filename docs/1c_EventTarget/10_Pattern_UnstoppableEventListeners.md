@@ -11,9 +11,9 @@ All web components must listen for composed: false events from within their shad
 `unstoppable` enables the event system to ensure that no accidental `stopPropagation()` in the `capture` phase blocks the event *before* it reaches the closed shadowRoot.
 
 An alternative practice is to by convention do:
-1. never call `stopPropagation()` on events in the capture phase, unless you also intend and do call `preventDefault()`.
-2. never call `stopPropagation()` on an event inside a shadowRoot. This will cause strange behavior.
-3. If default actions are to be added by web components, stopPropagation() anywhere will also mean preventDefault().
+1. Never call `stopPropagation()` on events in the capture phase, unless you also intend and do call `preventDefault()`.
+2. Never call `stopPropagation()` on an event inside a shadowRoot. This will cause strange behavior.
+3. If default actions are to be added by web components, `stopPropagation()` anywhere will also mean `preventDefault()`.
 
 ## Implementation
 
@@ -219,4 +219,4 @@ Note: we need to ensure that the same wrapper function object is used for the sa
 
 ## References
 
- * (discussion about closed shadowDOM intention)[https://github.com/w3c/webcomponents/issues/378#issuecomment-179596975]
+ * [discussion about closed shadowDOM intention](https://github.com/w3c/webcomponents/issues/378#issuecomment-179596975)
