@@ -112,7 +112,7 @@ auxclick five
 
 2. The exact same function can be added via both the onevent handler and `addEventListener(...)`. This is illustrated by the two "click one" of the second click test.
 
-3. The order of the onevent handler follows the same insertion order as event listeners added using the `addEventListener(..)` method. This *strongly* suggests that the onevent handlers relies on the `EventTarget` API in the background. This is illustrated by the third dblclick test.
+3. The order of the onevent handler follows the same insertion order as event listeners added using the `addEventListener(...)` method. This *strongly* suggests that the onevent handlers relies on the `EventTarget` API in the background. This is illustrated by the third dblclick test.
 
 4. If you change an event handler to another event handler, then the insertion order of the *first* onevent handler *still applies*! This means that the onevent handler most likely is a setter function that does not remove the first event listener, but simply replaces the callback variable that the onevent listener applies. This is illustrated by the forth mouseup test.
 
@@ -312,4 +312,5 @@ _w_indow
 
 ## References
 
- * []()
+ * [MDN: GlobalEventHandlers](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers)
+ * [WHATWG: Event handlers on elements](https://html.spec.whatwg.org/multipage/webappapis.html#event-handlers-on-elements,-document-objects,-and-window-objects)
