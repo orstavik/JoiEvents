@@ -18,3 +18,5 @@ When you are assuming that other reusable web components also react to an event,
 +  Only one preventable, conflicting reactions/cascade event run for each trigger event. Singular output of conflict. reactions that can run in parallel with other reactions do so. no conflicts between default actions, not only in the same level of the DOM (inside the same document), but for the entire composed propagation path. good.  
 
 ## References
+
+* [javascript.info: Browser default actions](https://javascript.info/default-browser-action)
