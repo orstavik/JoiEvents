@@ -1,0 +1,118 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script>
+  //dblclick controller
+
+  //1. the dblclick always just uses the last element as target.
+  //it should have been the last common dblclick, but no matter.
+
+  //2. we use a mixin to transport the dblclick into the web componenents (DOM contexts) that needs it.
+  (function () {
+
+    let lastClick;
+    let target;
+
+    function dispatchDblclick() {
+      const dblClick = new CustomEvent("dbl-click", {composed: true, bubbles: true});
+      target.dispatchEvent(dblClick);
+      target = undefined;
+      lastClick = undefined;
+    }
+
+    window.dblclickController = function (e) {
+      //the click is the first or too slow to be a dblclick
+      if (!lastClick || (e.timeStamp - lastClick.timeStamp) > 300)
+        return lastClick = e;
+      if (lastClick === e && !target)
+        return;
+      if(!target)
+        toggleTick(dispatchDblclick);
+      target = e.target;
+      //if the dblclick controller runs on multiple roots in the propagation path, the lowest will be selected
+    }
+
+    window.DblclickControllerMixin = function (clazz) {
+      return class DblclickControllerMixin extends clazz {
+        attachShadow(settings) {
+          const res = super.attachShadow(settings);
+          res.addEventListener("click", dblclickController, true);
+          return res;
+        }
+      }
+    }
+  })();
+
+  //bouncing dblclick
+  (function () {
+
+    let bounceLastClick;
+    let bounceTargets = [];
+
+    function bounceDispatchDblclick() {
+      for (let target of bounceTargets) {
+        const dblClick = new CustomEvent("dbl-click", {composed: false, bubbles: true});
+        target.dispatchEvent(dblClick);
+      }
+      bounceLastClick = undefined;
+      bounceTargets = [];
+    }
+
+    window.bouncingDblclickController = function (e) {
+      const previous = bounceLastClick;
+      bounceLastClick = e;
+      if (!previous || (bounceLastClick.timeStamp - previous.timeStamp) > 300)
+        return;
+      if (!bounceTargets.length)
+        toggleTick(bounceDispatchDblclick);
+      bounceTargets.unshift(bounceLastClick.target);
+    }
+
+    window.BouncingDblclickControllerMixin = function (clazz) {
+      return class DblclickControllerMixin extends clazz {
+        attachShadow(settings) {
+          const res = super.attachShadow(settings);
+          res.addEventListener("click", bouncingDblclickController, true);
+          return res;
+        }
+      }
+    }
+  })();
+
+  window.addEventListener("click", dblclickController, true);
+
+  window.addEventListener("click", e => console.log(e.type, e.target));
+  window.addEventListener("dblclick", e => console.log(e.type, e.target));
+  window.addEventListener("dbl-click", e => console.log(e.type, e.target));
+
+  class WebComp extends DblclickControllerMixin(HTMLElement) {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = "<div>hello darkness</div>";
+      shadow.addEventListener("click", e => console.log("shadow|   ", e.type, e.target));
+      shadow.addEventListener("dblclick", e => console.log("shadow|   ", e.type, e.target));
+      shadow.addEventListener("dbl-click", e => console.log("shadow|   ", e.type, e.target));
+
+    }
+  }
+
+  customElements.define("web-comp", WebComp);
+
+</script>
+
+
+<!--test one-->
+<div>hello sunshine</div>
+
+<div id="container">
+  <div id="a">a</div>
+  <div id="b">b</div>
+</div>
+<script>
+  const a = document.querySelector("#a");
+  const b = document.querySelector("#b");
+  const parent = document.querySelector("#container");
+  a.addEventListener("click", e => parent.appendChild(e.target));
+  b.addEventListener("click", e => parent.appendChild(e.target));
+</script>
+
+<web-comp></web-comp>
