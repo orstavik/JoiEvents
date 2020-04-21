@@ -1,0 +1,109 @@
+<script>
+  (function () {
+
+    function addNativeClick(event) {
+      const path = event.composedPath();
+      for (let target of path) {
+        if (target instanceof HTMLAnchorElement && target.hasAttribute("href"))
+          return addDefaultAction(event, null, target);
+        if (target.tagName === "SUMMARY")//this is implemented via HTMLDetailsElement, but that is not the best strategy.
+          return addDefaultAction(event, null, target);
+        //etc
+      }
+    }
+
+    window.preserveNativeClickMixin = function (clazz) {
+      return class DefaultActionHTMLaElement extends clazz {
+        attachShadow(settings) {
+          const res = super.attachShadow(settings);
+          res.addEventListener("click", addNativeClick, true);
+          return res;
+        }
+      }
+    }
+
+    function getLastPropagationNode(event) {
+      const path = event.composedPath();
+      return event.bubbles ? path[path.length - 1] : path[0];
+    }
+
+    function wrapper(event) {
+      event.preventDefault();                //cancelling native default action
+      event._defaultActionCB(event);
+    }
+
+    /**
+     *  when we add a default action from an external mechanism,
+     *  such as searching the path for an element of a specific type or with an attribute,
+     *  we use the currentTarget parameter to ensure that the default action is associated at a certain depth.
+     *  If not, it is assumed that the owner depth is the same as the current propagation depth.*/
+    window.addDefaultAction = function (event, callback, currentTarget) {
+      const path = event.composedPath();
+      const ownerIndex = path.indexOf(currentTarget || event.currentTarget);
+      if (ownerIndex === -1)
+        throw new Error("the owner argument is not an element in the propagation path of this event");
+      //this returns true iff ownerIndex is bigger than event._defaultActionOwnerIndex and event._defaultActionOwnerIndex is not undefined
+      if (ownerIndex > event._defaultActionOwnerIndex)
+        return;
+      event._defaultActionOwnerIndex = ownerIndex;
+
+      const last = getLastPropagationNode(event);
+      if (!callback) {
+        if (event._defaultAction) {
+          last.removeEventListener(event.type, event._defaultAction);
+          delete event._defaultAction;
+          delete event.preventDefault;
+        }
+        return;
+      }
+      if (!event._defaultAction) {
+        event._defaultAction = wrapper.bind(null, event);
+        event._defaultActionCB = callback;
+        last.addEventListener(event.type, event._defaultAction, {/*once: true,*/ last: true, capture: false});
+        event.preventDefault = function () {
+          Event.prototype.preventDefault.call(event);
+          last.removeEventListener(event.type, event._defaultAction);
+        }
+      } else {
+        event._defaultActionCB = callback;
+      }
+    }
+  })();
+</script>
+
+<div action-one>
+  <hello-sunshine></hello-sunshine>
+  hello world
+</div>
+
+<script>
+  class HelloSunshine extends preserveNativeClickMixin(HTMLElement) {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `
+      <div one-action> still web comp action </div>
+      hello sunshine
+      <a href="#go">gogogogo</a>
+      `;
+      this.addEventListener("click", function (e) {
+        addDefaultAction(e, this.clickAction.bind(this))
+      }, true);
+    }
+
+    clickAction() {
+      console.log("web comp action");
+    }
+  }
+
+  customElements.define("hello-sunshine", HelloSunshine);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-one"))
+        return addDefaultAction(e, () => console.log("action one"));
+    }
+  }, true);
+
+  window.addEventListener("click", e => console.log(e.type));
+</script>
