@@ -143,4 +143,4 @@ window.addEventListener("click", noCapturePhaseStopPropagation, true);
 
 ## References
 
- * (discussion about closed shadowDOM intention)[https://github.com/w3c/webcomponents/issues/378#issuecomment-179596975]
+ * [discussion about closed shadowDOM intention](https://github.com/w3c/webcomponents/issues/378#issuecomment-179596975)
