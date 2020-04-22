@@ -1,0 +1,54 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script>
+  //bouncing dblclick
+  (function () {
+
+    let lastClick;
+    let targets = [];
+
+    function bounceDispatchDblclick() {
+      for (let target of targets)
+        target.dispatchEvent(new CustomEvent("dbl-click", {composed: false, bubbles: true}));
+      lastClick = undefined;
+      targets = [];
+    }
+
+    function bouncingDblclickController(e) {
+      //the click is the first or too slow to be a dblclick
+      if (!lastClick || (e.timeStamp - lastClick.timeStamp) > 300)
+        return lastClick = e;
+      if (lastClick === e && !targets.length)
+        return;
+      if (!targets.length)
+        toggleTick(bounceDispatchDblclick);
+      targets.unshift(e.target);
+    }
+
+    window.addBouncingDblclickController = function (domContextRoot) {
+      domContextRoot.addEventListener("click", bouncingDblclickController, true);
+    };
+  })();
+
+  addBouncingDblclickController(window);
+
+  window.addEventListener("click", e => console.log(e.type, e.target));
+  window.addEventListener("dblclick", e => console.log(e.type, e.target));
+  window.addEventListener("dbl-click", e => console.log(e.type, e.target, e.composedPath()));
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      addBouncingDblclickController(shadow);
+      shadow.innerHTML = "<div>hello shadow</div>";
+      shadow.addEventListener("click", e => console.log("shadow|   ", e.type, e.target));
+      shadow.addEventListener("dblclick", e => console.log("shadow|   ", e.type, e.target));
+      shadow.addEventListener("dbl-click", e => console.log("shadow|   ", e.type, e.target, e.composedPath()));
+    }
+  }
+
+  customElements.define("web-comp", WebComp);
+
+</script>
+
+<web-comp></web-comp>

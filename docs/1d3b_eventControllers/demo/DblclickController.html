@@ -5,7 +5,7 @@
   //1. the dblclick always just uses the last element as target.
   //it should have been the last common dblclick, but no matter.
 
-  //2. we use a mixin to transport the dblclick into the web componenents (DOM contexts) that needs it.
+  //2. we use a mixin to transport the dblclick into the web components (DOM contexts) that needs it.
   (function () {
 
     let lastClick;
@@ -18,101 +18,53 @@
       lastClick = undefined;
     }
 
-    window.dblclickController = function (e) {
+    function dblclickController(e) {
       //the click is the first or too slow to be a dblclick
       if (!lastClick || (e.timeStamp - lastClick.timeStamp) > 300)
         return lastClick = e;
       if (lastClick === e && !target)
         return;
-      if(!target)
+      if (!target)
         toggleTick(dispatchDblclick);
       target = e.target;
       //if the dblclick controller runs on multiple roots in the propagation path, the lowest will be selected
     }
 
-    window.DblclickControllerMixin = function (clazz) {
-      return class DblclickControllerMixin extends clazz {
-        attachShadow(settings) {
-          const res = super.attachShadow(settings);
-          res.addEventListener("click", dblclickController, true);
-          return res;
-        }
-      }
-    }
+    window.addDblclick = function (domContextRoot) {
+      domContextRoot.addEventListener("click", dblclickController, true);
+    };
   })();
 
-  //bouncing dblclick
-  (function () {
-
-    let bounceLastClick;
-    let bounceTargets = [];
-
-    function bounceDispatchDblclick() {
-      for (let target of bounceTargets) {
-        const dblClick = new CustomEvent("dbl-click", {composed: false, bubbles: true});
-        target.dispatchEvent(dblClick);
-      }
-      bounceLastClick = undefined;
-      bounceTargets = [];
-    }
-
-    window.bouncingDblclickController = function (e) {
-      const previous = bounceLastClick;
-      bounceLastClick = e;
-      if (!previous || (bounceLastClick.timeStamp - previous.timeStamp) > 300)
-        return;
-      if (!bounceTargets.length)
-        toggleTick(bounceDispatchDblclick);
-      bounceTargets.unshift(bounceLastClick.target);
-    }
-
-    window.BouncingDblclickControllerMixin = function (clazz) {
-      return class DblclickControllerMixin extends clazz {
-        attachShadow(settings) {
-          const res = super.attachShadow(settings);
-          res.addEventListener("click", bouncingDblclickController, true);
-          return res;
-        }
-      }
-    }
-  })();
-
-  window.addEventListener("click", dblclickController, true);
+  addDblclick(window);
 
   window.addEventListener("click", e => console.log(e.type, e.target));
   window.addEventListener("dblclick", e => console.log(e.type, e.target));
-  window.addEventListener("dbl-click", e => console.log(e.type, e.target));
+  window.addEventListener("dbl-click", e => console.log(e.type, e.target, e.composedPath()));
 
-  class WebComp extends DblclickControllerMixin(HTMLElement) {
+  class WebComp extends HTMLElement {
     constructor() {
       super();
       const shadow = this.attachShadow({mode: "closed"});
+      addDblclick(shadow);
       shadow.innerHTML = "<div>hello darkness</div>";
       shadow.addEventListener("click", e => console.log("shadow|   ", e.type, e.target));
       shadow.addEventListener("dblclick", e => console.log("shadow|   ", e.type, e.target));
-      shadow.addEventListener("dbl-click", e => console.log("shadow|   ", e.type, e.target));
+      shadow.addEventListener("dbl-click", e => console.log("shadow|   ", e.type, e.target, e.composedPath()));
 
     }
   }
 
   customElements.define("web-comp", WebComp);
-
 </script>
 
+<!--test two-->
+<web-comp></web-comp>
 
 <!--test one-->
-<div>hello sunshine</div>
+<div id="a">hello</div>
+<div id="b">sunshine</div>
 
-<div id="container">
-  <div id="a">a</div>
-  <div id="b">b</div>
-</div>
 <script>
-  const a = document.querySelector("#a");
-  const b = document.querySelector("#b");
-  const parent = document.querySelector("#container");
-  a.addEventListener("click", e => parent.appendChild(e.target));
-  b.addEventListener("click", e => parent.appendChild(e.target));
+  document.querySelector("#a").addEventListener("click", e => document.body.appendChild(e.target));
+  document.querySelector("#b").addEventListener("click", e => document.body.appendChild(e.target));
 </script>
-
-<web-comp></web-comp>
