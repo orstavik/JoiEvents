@@ -1,0 +1,25 @@
+<closed-comp></closed-comp>
+
+<script>
+  (function () {
+
+    class ClosedComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<span>Hello sunshine! (dblclick me)</span>`;
+        shadow.addEventListener("click", e => console.log(e.type, "shadowDOM click"));
+        shadow.addEventListener("dblclick", e => console.log(e.type, "shadowDOM dblclick"));
+        shadow.addEventListener("dblclick", e => e.stopPropagation());  //ShadowTorpedo
+      }
+    }
+
+    customElements.define("closed-comp", ClosedComp);
+
+    const wc = document.querySelector("closed-comp");
+    wc.addEventListener("click", e => console.log(e.type, "lightDOM click capture"), true);
+    wc.addEventListener("dblclick", e => console.log(e.type, "lightDOM dblclick"), true);
+    wc.addEventListener("click", e => console.log(e.type, "lightDOM click target"));         //now you see me,
+    wc.addEventListener("dblclick", e => console.log(e.type, "lightDOM dblclick target"));   //now you don't.
+  })();
+</script>
