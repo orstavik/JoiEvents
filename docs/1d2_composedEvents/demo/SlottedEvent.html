@@ -1,0 +1,24 @@
+<script>
+  class ClosedComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `<slot></slot>`;
+      shadow.children[0].addEventListener("click", e => console.log("2 shadowDOM bubble: slot"));
+      shadow.addEventListener("click", e => console.log("3 shadowDOM bubble: shadowRoot"));
+    }
+  }
+
+  customElements.define("closed-comp", ClosedComp);
+</script>
+
+<closed-comp>
+  <h1>Remember, your shadow is your only companion.</h1>
+</closed-comp>
+
+<script>
+  const h1 = document.querySelector("h1");
+  const closed = document.querySelector("closed-comp");
+  h1.addEventListener("click", e => console.log("1 lightDOM at target"));
+  closed.addEventListener("click", e => console.log("4 lightDOM bubble"));
+</script>
