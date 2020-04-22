@@ -11,8 +11,7 @@ However, when used in CSS and JS there are some more nuances that you need to be
 
 The `:focus` is a CSS pseudo-class that enable the CSS developer to add custom style to the element in focus. For example, Chrome adds an orange border around input elements who has `:focus` by default. `:focus` points exclusively to `document.activeElement`.
 
-"The `:focus-within` CSS pseudo-class represents an element that has received focus or contains an element that has received focus. ... (This includes descendants in shadow trees.)" [MDN: 
-|1:focus-within](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within). If an element `.contains()` the `document.activeElement`, that element has `:focus-within`. Note, that this includes the `document.activeElement` itself. Hence, if an element with `:focus`, it will also always have `:focus-within`.
+"The `:focus-within` CSS pseudo-class represents an element that has received focus or contains an element that has received focus. ... (This includes descendants in shadow trees.)" [MDN: `:focus-within`](https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-within). If an element `.contains()` the `document.activeElement`, that element has `:focus-within`. Note, that this includes the `document.activeElement` itself. Hence, if an element with `:focus`, it will also always have `:focus-within`.
 
 ## HowTo: read `:focus` and `:focus-within` elements from JS?  
 

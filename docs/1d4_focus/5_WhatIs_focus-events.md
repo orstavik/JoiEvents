@@ -171,6 +171,7 @@ This naivete keeps the FocusController readable.
       document.myActiveElement = document.body;
       if (previousFocus === undefined || previousFocus === document.myActiveElement)
         return;
+//todo these are sync events, they are not setTimeout. or is it strange behavior 1 or 2?
       setTimeout(() => previousFocus.dispatchEvent(new FocusEvent("my-blur", {composed: true, bubbles: false})));
       setTimeout(() => previousFocus.dispatchEvent(new FocusEvent("my-focusout", {composed: true, bubbles: true})));
     };

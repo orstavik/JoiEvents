@@ -91,8 +91,10 @@ function tabbableElements(contextRoot){
   const treeWalker = Document.createTreeWalker(
      contextRoot,
      NodeFilter.SHOW_ELEMENT,
-     { acceptNode: function(node) { 
-       return node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } 
+     { 
+       acceptNode: function(node) { 
+         return node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; 
+       } 
      },
      false
   );
@@ -107,7 +109,9 @@ const tabbablesThatAreGloballyVisible = tabbableElements(document);
 const tabbablesFromClosedShadowRoot = tabbableElements(shadow); 
 ```
 
-As tabbable elements might be hidden inside a `closed` shadowRoot, not all tabbable elements can be found from all DOM contexts. 
+As tabbable elements might be hidden inside a `closed` shadowRoot, not all tabbable elements can be found from all DOM contexts.
+
+Note: the key to understanding the treeWalker is the `acceptNode(node)` function. This function will match the element (`NodeFilter.FILTER_ACCEPT`), not match the element (`NodeFilter.FILTER_SKIP`) or not match the element nor any of its descendants (`NodeFilter.FILTER_REJECT`).
                                                                          
 ## Demo: `FocusController` using `tabindex`
 
