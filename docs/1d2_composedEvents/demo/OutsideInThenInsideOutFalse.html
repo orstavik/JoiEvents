@@ -1,0 +1,22 @@
+<web-comp></web-comp>
+
+<script>
+  document.addEventListener("bubbles-false", e=> console.log("1 main document capture phase", e.eventPhase), true);
+  document.body.children[0].addEventListener("bubbles-false", e=> console.log("2 host node capture phase (capture become at_target)", e.eventPhase), true);
+  document.body.children[0].addEventListener("bubbles-false", e=> console.log("7 host node bubble phase (bubble become at_target)", e.eventPhase));
+  document.addEventListener("bubbles-false", e=> console.log("8 main document bubble phase", e.eventPhase));
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `<h1>Remember, your shadow will leave you in the dark.</h1>`;
+      shadow.addEventListener("bubbles-false", e=> console.log("3 shadowRoot capture phase", e.eventPhase), true);
+      shadow.children[0].addEventListener("bubbles-false", e=> console.log("4 shadowRoot>element bubble phase (bubble become at_target)", e.eventPhase));
+      shadow.children[0].addEventListener("bubbles-false", e=> console.log("5 shadowRoot>element capture phase (capture become at_target)", e.eventPhase), true);
+      shadow.addEventListener("bubbles-false", e=> console.log("6 shadowRoot bubble phase", e.eventPhase));
+      shadow.children[0].dispatchEvent(new CustomEvent("bubbles-false", {composed: true, bubbles: false}));
+    }
+  }
+  customElements.define("web-comp", WebComp);
+</script>
