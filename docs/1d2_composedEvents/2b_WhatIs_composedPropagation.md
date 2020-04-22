@@ -24,7 +24,7 @@ The problems begin when we look at the propagation sequence of `composed: true` 
       super();
       const shadow = this.attachShadow({mode: "closed"});
       shadow.innerHTML = `<h1>Remember, your shadow will leave you in the dark.</h1>`;
-      shadow.addEventListener("composed-event", e=> console.log("3 shadowRoot capture phase", e.eventPhase), true);
+      shadow.addEventListener("click", e=> console.log("3 shadowRoot capture phase", e.eventPhase), true);
       shadow.children[0].addEventListener("click", e=> console.log("4 shadowRoot>element bubble phase (bubble become at_target)", e.eventPhase));
       shadow.children[0].addEventListener("click", e=> console.log("5 shadowRoot>element capture phase (capture become at_target)", e.eventPhase), true);
       shadow.addEventListener("click", e=> console.log("6 shadowRoot bubble phase", e.eventPhase));
@@ -57,9 +57,9 @@ When we view the lightDOM event listeners in isolation, it looks like this:
 7 host node bubble phase (bubble become at_target) 2
 8 main document bubble phase 3
 ```
-This looks normal: capture phase, then target phase, and then bubble phase. The only anomaly is that the event listeners on the host node during the `AT_TARGET` phase are sorted capture phase before bubble phase, not registration order as they normally would do. However, this is behavior the developer would likely erroneously expect, so it would likely be forgiven.
+This looks normal: capture phase, then target phase, and then bubble phase. The only anomaly is that the event listeners on the host node during the `AT_TARGET` phase are sorted capture phase before bubble phase, not registration order as they normally would do. However, developers would likely expect such behavior (erroneously), so the browser can be forgiven for making it so.
 
-When we view the shadowDOM event listeners in isolation, it looks like this:
+When we view the shadowDOM event listeners in isolation, they look like this:
 ```
 3 shadowRoot capture phase 1
 4 shadowRoot>element bubble phase (bubble become at_target) 2
@@ -68,12 +68,12 @@ When we view the shadowDOM event listeners in isolation, it looks like this:
 ```
 Again, this looks normal: capture phase, then target phase, and then bubble phase. Here, even the `AT_TARGET` event listeners are run in registration order.
 
-The problem is the nested order of the event listeners. The reality is that even though the event phases are ordered per DOM context, viewed over multiple DOM contexts, the event phases weave into each other and intermingle. 
+The problem occurs as the DOM contexts are nested. This creates a different *real* propagation path that has a different propagation order within itself between the different event phases, than what the event has in each individual DOM context. Thus, viewed across multiple DOM contexts, the `AT_TARGET` event phase weaves into and out of both the `CAPTURING_PHASE` and the `BUBBLING_PHASE`. 
 
 Propagation sequence
 ```
 Conceptual          Real        
-c,t,t,b + c,t,t,b   c, t, c, t, t, b, t, b
+c,t,t,b||c,t,t,b    c,t,c,t,t,b,t,b
               
 \c /b               \c       /b
  **t                 *t     *t
@@ -153,7 +153,38 @@ function getLastPropagationNode(event) {
   }
   return last;
 }
+```
+
+## Calling `.composedPath()` and `.target` from different DOM contexts  
+
+For `composed: true` events, the `.composedPath()` and `.target` properties yield different results in different DOM contexts:
+
+1. Event listeners added *inside* a shadowDOM (ie. to an element/node inside a `ShadowRoot`) will get the `target` element as seen in that DOM context and the `composedPath()` that include nodes from both the shadowDOM and the lightDOM context.
+2. Event listeners added to the host node or one of its ancestors will see the host node as the `target`.
+3. If the `ShadowRoot` is `closed`, then the `composedPath()` will only include nodes from the lightDOM context; if the `ShadowRoot` is `open`, then the `composedPath()` will include nodes from both the shadowDOM and lightDOM context (as the event listeners registered inside the shadowDOM would).
+
+```html
+<web-comp></web-comp>
+
+<script>
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `<h1>Remember, your shadow will leave you in the dark.</h1>`;
+      shadow.addEventListener("click", e=> console.log(e.target.tagName, e.composedPath()));
+    }
+  }
+  customElements.define("web-comp", WebComp);
+
+  document.addEventListener("click", e=> console.log(e.target.tagName, e.composedPath()));
+</script>
 ```                                                           
+Results in:
+```
+h1, [h1, shadowRoot, web-comp, body, document, window]
+web-comp, [web-comp, body, document, window]
+```
 
 ## References
 
