@@ -6,29 +6,17 @@
 </closed-comp>
 
 <script>
-  function getComposedPath(target, composed) {
-    const path = [];
-    while (true) {
-      path.push(target);
-      if (target.parentNode) {
-        target = target.parentNode;
-      } else if (target.host) {
-        if (!composed)
-          return path;
-        target = target.host;
-      } else if (target.defaultView) {
-        target = target.defaultView;
-      } else {
-        break;
-      }
+  function isSlottedEvent(event){
+    let slots = 0;
+    for (let target of event.composedPath()) {
+      if (target === event.currentTarget)
+        return slots > 0;
+      if (target instanceof HTMLSlotElement)
+        slots++;
+      if (slots > 0 && target instanceof ShadowRoot)
+        slots--;
     }
-    return path;
-  }
-
-  function isSlottedEvent(event, listenerContext) {
-    const path = getComposedPath(event.target, false);
-    const eventContext = path[path.length - 1];
-    return eventContext !== listenerContext && (eventContext === window || eventContext.contains(listenerContext));
+    throw new Error("isSlottedEvent(event) should only be called on an event during propagation.");
   }
 
   class ClosedComp extends HTMLElement {
@@ -44,7 +32,7 @@
       shadow.addEventListener("change", e => {
         console.log("how can this be true? ", e.target.checked);
         console.log("when this is false? ", this._checkBox.checked);
-        console.log("because the event is slotted? ", isSlottedEvent(e, shadow));
+        console.log("because the event is slotted? ", isSlottedEvent(e));
       });
     }
   }

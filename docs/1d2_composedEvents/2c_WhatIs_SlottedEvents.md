@@ -4,7 +4,7 @@ When an element is slotted into a web component, a strange circumstance occur:
  * the propagation path for events that `target` the slotted element will cross *down into* the shadowDOM border, 
  * for both `composed: false` and `composed: true` events.
 
-A "slotted event" is an event that is *currently* propagating/sent into another shadowDOM context via a `<slot>`. This shadowDOM will have a lower DOM context than the DOM context of the original, innermost `target`. Both `composed: false` and `composed: true` events can be slotted events (yes, you heard right! `composed: false` events can cross shadowDOM borders *going down into a `<slot>`). When the same event is propagating in the DOM context of the slotted element `target` (the events original DOM context) or a DOM context above, we do not refer the event as being slotted.
+A "slotted event" is an event that is *currently* propagating/sent into another shadowDOM context via a `<slot>`. This shadowDOM will have a lower DOM context than the DOM context of the original, innermost `target`. Both `composed: false` and `composed: true` events can be slotted events (yes, you heard right! **`composed: false` events can cross shadowDOM borders going *down* into a `<slot>`**). When the same event is propagating in the DOM context of the slotted element `target` (the events original DOM context) or a DOM context above, we do not refer to the event as being slotted.
 
 ## Demo: slotted events
 
@@ -197,20 +197,6 @@ This demo nests two `<slot>` elements in order to test the `isSlottedEvent(event
 This demo illustrates how the `isSlottedEvent(..)` function:
  * separates between a) slotted event listeners and b) event listeners that are associated with elements inside a shadowRoot, and
  * is necessary for both `composed: true` and `composed: false` events. 
-
-## AlternativeTo: slotted events?
-
-Slotted events are bad. But, are they a necessary evil? Or is there another "lesser evil" alternative?
-
-The alternative to listening for slotted events is **host node event listeners**. A host node event listener is an event listener that the web component adds/removes/controls on its host node. By adding host node event listeners instead, all slotted event listeners can in principle be excluded. But, is this strategy any better? Are host node event listeners a lesser evil than slotted event listeners? 
- 
-Host node event listeners have several mayor drawbacks:
-1. A host node event listener will receive *all* the events a slotted event listener would receive, and then some. In addition to all the `composed: false` and `composed: true` events that would be slotted, a host node element would also receive all events from any slottable element that used an inactive slot name. So, a host node event listener would not really provide any benefit.
-2. A host node event listener would not distinguish between different `<slot>` elements automatically. Thus, if there are several named `<slot>` elements in use, adding an event listener on the host node will not be able to distinguish between them.
-3. A host node event listener would not be able to distinguish between different elements inside the shadowDOM. This means that if the `<slot>` element is wrapped inside a `<div>`, a host node event listener would receive the event, but not be able to distinguish between different targets and thus sequence event listeners in the same way as slotted event listeners would.
-4. Finally, slotted event listeners and host node event listeners have different `.composedPath()` output. This would commonly not be a big problem, as the host node event listener could easily reference properties inside the web component by for example binding the event listener `this` property to the web component object.  
-
-Thus. Slotted event listeners are better than host node event listeners. However, they are still bad, so: be careful; distinguish between slotted events and other internal events; and avoid adding event listeners directly on the `shadowRoot` if you are uncertain if it will catch intercept any slotted events.
 
 ## References
 

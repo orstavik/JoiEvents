@@ -31,7 +31,34 @@ If you call `.stopPropagation()` on a slotted event, this will stop the propagat
 </script>
 ```
 
-## SlotTorpedoes are bad
+Result:
+```
+If you say A,
+```
+
+It doesn't `say B!`. But why?
+ 
+The reason is that the `composed-false` event propagates down into the `shadowRoot` of `<closed-comp>` via the `<slot>` element. We can view the flattened DOM and the real propagation path of the `composed-false` event like this:
+
+```
+The flattened DOM and propagation path:
+=======================================
+  closed-comp      \     -  (event listener: "you must say B!")
+    $shadowRoot     \   *  (event listener: .stopPropagation())   /*SlotTorpedo*/
+       $slot         \ /
+         h1           *  (event listener: "If you say A,")
+```
+
+The problem is that the inner workings of the `<closed-comp>` element should be hidden from the lightDOM context. This means that the DOM and the expected propagation path from the point of view of the lightDOM developer looks like this: 
+
+```
+The expected propagation path in the lightDOM:
+==============================================
+  closed-comp   \ *   (event listener: "you must say B!")  //Why doesn't this listener run?!?!
+    h1           *   (event listener: "If you say A,")
+```
+
+## SlotTorpedoes are bad.
 
 Very bad. And here is why:
 
