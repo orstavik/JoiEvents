@@ -1,0 +1,96 @@
+<script>
+  (function () {
+
+    function isSlottedEvent(event) {
+      let slots = 0;
+      for (let target of event.composedPath()) {
+        if (target === event.currentTarget)
+          return slots > 0;
+        if (target instanceof HTMLSlotElement)
+          slots++;
+        if (slots > 0 && target instanceof ShadowRoot)
+          slots--;
+      }
+      throw new Error("isSlottedEvent(event) should only be called on an event during propagation.");
+    }
+
+    class OuterComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<inner-comp><slot></slot></inner-comp>`;
+        shadow.children[0].addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("4 shadowDOM bubble: slot");
+        });
+        shadow.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("5 shadowDOM bubble: shadowRoot");
+        });
+      }
+    }
+
+    customElements.define("outer-comp", OuterComp);
+
+    class InnerComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<slot></slot>`;
+        shadow.children[0].addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("2 shadowDOM bubble: slot");
+        });
+        shadow.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("3 shadowDOM bubble: shadowRoot");
+        });
+      }
+    }
+
+    customElements.define("inner-comp", InnerComp);
+
+    class WebComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<h1>You are your shadow's shadow.</h1>`;
+        this.innerElement = shadow.children[0];
+        this.innerElement.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("1a shadowDOM bubble: slot");
+        });
+        shadow.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("1b shadowDOM bubble: shadowRoot");
+        });
+      }
+    }
+
+    customElements.define("web-comp", WebComp);
+  })();
+</script>
+
+<outer-comp>
+  <h1>Remember, your shadow will leave you in the dark.</h1>
+  <web-comp></web-comp>
+</outer-comp>
+
+<script>
+  const h1 = document.querySelector("h1");
+  const web = document.querySelector("web-comp");
+  const outer = document.querySelector("outer-comp");
+  h1.addEventListener("custom-event", e => console.log("1 lightDOM at target"));
+  web.addEventListener("custom-event", e => console.log("1c lightDOM at target"));
+  outer.addEventListener("custom-event", e => console.log("6 lightDOM bubble"));
+
+  h1.dispatchEvent(new CustomEvent("custom-event", {composed: false, bubbles: true}));
+  console.log("--------")
+  web.innerElement.dispatchEvent(new CustomEvent("custom-event", {composed: true, bubbles: true}));
+</script>

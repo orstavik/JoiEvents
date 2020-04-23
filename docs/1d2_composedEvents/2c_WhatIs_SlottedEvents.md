@@ -1,10 +1,10 @@
 # WhatIs: slotted events?
 
 When an element is slotted into a web component, a strange circumstance occur: 
- * the propagation path will cross *down into* the shadowDOM border, 
+ * the propagation path for events that `target` the slotted element will cross *down into* the shadowDOM border, 
  * for both `composed: false` and `composed: true` events.
-  
-This means that events can trigger event listeners inside a shadowDOM that is positioned at a lower level than the original `target` element. When an event is sent to event listeners *down inside* another shadowDOM context via a `<slot>`, we call it a "slotted event".
+
+A "slotted event" is an event that is *currently* propagating/sent into another shadowDOM context via a `<slot>`. This shadowDOM will have a lower DOM context than the DOM context of the original, innermost `target`. Both `composed: false` and `composed: true` events can be slotted events (yes, you heard right! `composed: false` events can cross shadowDOM borders *going down into a `<slot>`). When the same event is propagating in the DOM context of the slotted element `target` (the events original DOM context) or a DOM context above, we do not refer the event as being slotted.
 
 ## Demo: slotted events
 
@@ -15,8 +15,8 @@ This means that events can trigger event listeners inside a shadowDOM that is po
       super();
       const shadow = this.attachShadow({mode: "closed"});
       shadow.innerHTML = `<slot></slot>`;
-      shadow.children[0].addEventListener("click", e => console.log("2 shadowDOM bubble: slot"));
-      shadow.addEventListener("click", e => console.log("3 shadowDOM bubble: shadowRoot"));
+      shadow.children[0].addEventListener("composed-false", e => console.log("2 shadowDOM bubble: slot"));
+      shadow.addEventListener("composed-false", e => console.log("3 shadowDOM bubble: shadowRoot"));
     }
   }
 
@@ -30,8 +30,10 @@ This means that events can trigger event listeners inside a shadowDOM that is po
 <script>
   const h1 = document.querySelector("h1");
   const closed = document.querySelector("closed-comp");
-  h1.addEventListener("click", e => console.log("1 lightDOM at target"));
-  closed.addEventListener("click", e => console.log("4 lightDOM bubble"));
+  h1.addEventListener("composed-false", e => console.log("1 lightDOM at target"));
+  closed.addEventListener("composed-false", e => console.log("4 lightDOM bubble"));
+
+  h1.dispatchEvent(new CustomEvent("composed-false", {composed: false, bubbles: true}));
 </script>
 ```
 
@@ -46,11 +48,22 @@ Results in:
 
 The event is "slotted" when it is passed to the event listeners inside the ShadowDOM. 
 
+```
+original DOM context
+
+1) h1 ->                             4) closed-comp
+---------------------------------------------------
+         2) slot -> 3) shadowRoot ->
+
+slotted event context      
+```
+
 ## Function: `isSlottedEvent(event)`
 
 To detect if an event listener is called on a slotted event, ie. if an event listener inside a DOM context that is lower than the DOM context of the innermost `target` is currently being invoked, we check if *the `.currentTarget` has propagated into more shadowDOMs via `<slot>` elements than it has yet to propagate out of. Technically, this is achieved by counting `<slot>` elements stepped into against subsequent `ShadowRoot`s stepped out of in the propagation path.
  
 ```javascript
+//the instanceof check in this function does not work with the web component polyfill.
 function isSlottedEvent(event){
   let slots = 0;
   for (let target of event.composedPath()) {
@@ -63,8 +76,127 @@ function isSlottedEvent(event){
   }
   throw new Error("isSlottedEvent(event) should only be called on an event during propagation.");
 }
-//this method will not work with the web component polyfill.
 ```
+
+The use-case for `isSlottedEvent(event)` is fairly simple:
+1. `isSlottedEvent(event)` should be used by **all** "slotted event listeners". A "slotted event listener" is any event listener that *might* intercept slotted events, ie. event listeners that are added to a) a `<slot>` element  inside a shadowRoot or b) an ancestor of such a `<slot>` element. This means that *all* `this.shadowRoot.addEventListener(...)` calls inside a shadowDOM with a `<slot>` should include it.
+2. if `isSlottedEvent(event)` returns `true`, the event listener should abort. This means that all "slotted event listeners" should begin with the same check to abort:
+
+```javascript
+this.shadowRoot.addEventListener("any-event-type", function(e){
+  if(isSlottedEvent(e))
+    return;
+  //here goes the code for your normal event listener
+
+}, true||false);
+```
+
+## Demo: isSlottedEvent(...)
+
+This demo nests two `<slot>` elements in order to test the `isSlottedEvent(event)` function. 
+
+```html
+<script>
+  (function () {
+
+    function isSlottedEvent(event) {
+      let slots = 0;
+      for (let target of event.composedPath()) {
+        if (target === event.currentTarget)
+          return slots > 0;
+        if (target instanceof HTMLSlotElement)
+          slots++;
+        if (slots > 0 && target instanceof ShadowRoot)
+          slots--;
+      }
+      throw new Error("isSlottedEvent(event) should only be called on an event during propagation.");
+    }
+
+    class OuterComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<inner-comp><slot></slot></inner-comp>`;
+        shadow.children[0].addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("4 shadowDOM bubble: slot");
+        });
+        shadow.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("5 shadowDOM bubble: shadowRoot");
+        });
+      }
+    }
+
+    customElements.define("outer-comp", OuterComp);
+
+    class InnerComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<slot></slot>`;
+        shadow.children[0].addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("2 shadowDOM bubble: slot");
+        });
+        shadow.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("3 shadowDOM bubble: shadowRoot");
+        });
+      }
+    }
+
+    customElements.define("inner-comp", InnerComp);
+
+    class WebComp extends HTMLElement {
+      constructor() {
+        super();
+        const shadow = this.attachShadow({mode: "closed"});
+        shadow.innerHTML = `<h1>You are your shadow's shadow.</h1>`;
+        this.innerElement = shadow.children[0];
+        this.innerElement.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("1a shadowDOM bubble: slot");
+        });
+        shadow.addEventListener("custom-event", function (e) {
+          if (isSlottedEvent(e))
+            return;
+          console.log("1b shadowDOM bubble: shadowRoot");
+        });
+      }
+    }
+
+    customElements.define("web-comp", WebComp);
+  })();
+</script>
+
+<outer-comp>
+  <h1>Remember, your shadow will leave you in the dark.</h1>
+  <web-comp></web-comp>
+</outer-comp>
+
+<script>
+  const h1 = document.querySelector("h1");
+  const web = document.querySelector("web-comp");
+  const outer = document.querySelector("outer-comp");
+  h1.addEventListener("custom-event", e => console.log("1 lightDOM at target"));
+  web.addEventListener("custom-event", e => console.log("1c lightDOM at target"));
+  outer.addEventListener("custom-event", e => console.log("6 lightDOM bubble"));
+
+  h1.dispatchEvent(new CustomEvent("custom-event", {composed: false, bubbles: true}));
+  console.log("--------")
+  web.innerElement.dispatchEvent(new CustomEvent("custom-event", {composed: true, bubbles: true}));
+</script>
+```
+
+This demo illustrates how the `isSlottedEvent(..)` function:
+ * separates between a) slotted event listeners and b) event listeners that are associated with elements inside a shadowRoot, and
+ * is necessary for both `composed: true` and `composed: false` events. 
 
 ## References
 
