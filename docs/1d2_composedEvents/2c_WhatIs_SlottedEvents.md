@@ -198,6 +198,20 @@ This demo illustrates how the `isSlottedEvent(..)` function:
  * separates between a) slotted event listeners and b) event listeners that are associated with elements inside a shadowRoot, and
  * is necessary for both `composed: true` and `composed: false` events. 
 
+## AlternativeTo: slotted events?
+
+Slotted events are bad. But, are they a necessary evil? Or is there another "lesser evil" alternative?
+
+The alternative to listening for slotted events is **host node event listeners**. A host node event listener is an event listener that the web component adds/removes/controls on its host node. By adding host node event listeners instead, all slotted event listeners can in principle be excluded. But, is this strategy any better? Are host node event listeners a lesser evil than slotted event listeners? 
+ 
+Host node event listeners have several mayor drawbacks:
+1. A host node event listener will receive *all* the events a slotted event listener would receive, and then some. In addition to all the `composed: false` and `composed: true` events that would be slotted, a host node element would also receive all events from any slottable element that used an inactive slot name. So, a host node event listener would not really provide any benefit.
+2. A host node event listener would not distinguish between different `<slot>` elements automatically. Thus, if there are several named `<slot>` elements in use, adding an event listener on the host node will not be able to distinguish between them.
+3. A host node event listener would not be able to distinguish between different elements inside the shadowDOM. This means that if the `<slot>` element is wrapped inside a `<div>`, a host node event listener would receive the event, but not be able to distinguish between different targets and thus sequence event listeners in the same way as slotted event listeners would.
+4. Finally, slotted event listeners and host node event listeners have different `.composedPath()` output. This would commonly not be a big problem, as the host node event listener could easily reference properties inside the web component by for example binding the event listener `this` property to the web component object.  
+
+Thus. Slotted event listeners are better than host node event listeners. However, they are still bad, so: be careful; distinguish between slotted events and other internal events; and avoid adding event listeners directly on the `shadowRoot` if you are uncertain if it will catch intercept any slotted events.
+
 ## References
 
  *
