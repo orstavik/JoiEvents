@@ -1,0 +1,22 @@
+<closed-comp>
+  <h1>Remember, your shadow is your only true companion.</h1>
+</closed-comp>
+
+<script>
+  class ClosedComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "closed"});
+      shadowRoot.innerHTML = `<slot></slot>`;
+      shadowRoot.addEventListener("composed-false", e => e.stopPropagation());  //SlotTorpedo
+    }
+  }
+
+  customElements.define("closed-comp", ClosedComp);
+
+  const h1 = document.querySelector("h1");
+  const closed = document.querySelector("closed-comp");
+  h1.addEventListener("composed-false", e => console.log("If you say A,"));
+  closed.addEventListener("composed-false", e => console.log("you must say B!")); //Where did the composed-false event go?!?!
+  h1.dispatchEvent(new CustomEvent("composed-false", {composed: false, bubbles: true}));
+</script>

@@ -50,6 +50,8 @@ Such behavior is not likely to be very useful.
 
 The solution is simple. In the same way as calling `stopPropagation()` on events in the capture phase should be banned so as not to disturb state changes in web components, calling `stopPropagation()` on `composed: true` event listeners should be banned for all event listeners added to web components.
 
+> Never call `.stopPropagation()` on `composed: true` events inside a shadowDOM
+
 ## References
 
  *
