@@ -17,7 +17,17 @@
       super();
       const shadow = this.attachShadow({mode: "closed"});
       shadow.innerHTML = `
-        <style>div{border: 5px solid gray;}</style>
+        <style>
+          div{
+            border: 5px solid gray;
+          }
+          div:focus{
+            border-style: dotted;
+          }
+          div:focus-within{
+            background-color: lightgreen;
+          }
+        </style>
 
         <div tabindex="3">three
           <slot></slot>
@@ -32,13 +42,28 @@
 <style>
   div {
     border: 10px solid red;
+    padding: 10px;
+  }
+  web-comp {
+    display: block;
+    border: 10px solid orange;
+    padding: 10px;
+  }
+  div:focus {
+    color: blue;
+    border-style: dashed;
+  }
+  :focus-within {
+    background-color: lightblue;
   }
 </style>
 
 <div id="one" tabindex="1">one</div>
-<web-comp>
-  <a href="#lala">Hello sunshine</a>
-</web-comp>
+<div>
+  <web-comp>
+    <a href="#lala">Hello sunshine</a>
+  </web-comp>
+</div>
 <div id="two" tabindex="2">two</div>
 
 <script>
@@ -55,7 +80,7 @@
       console.log("inside", shadow.activeElement);
     });
   });
-  document.addEventListener("focusin", e => {
+  shadow.addEventListener("focusin", e => {
     console.log("-----------");
     console.log("--focusin---------", e.relatedTarget);
     console.log("outside", document.activeElement);
@@ -66,7 +91,7 @@
       console.log("inside", shadow.activeElement);
     });
   });
-  document.addEventListener("focusout", e => {
+  shadow.addEventListener("focusout", e => {
     console.log("-----------");
     console.log("--focusout---------", e.relatedTarget);
     console.log("outside", document.activeElement);
