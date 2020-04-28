@@ -1,0 +1,159 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script>
+  const og = HTMLElement.prototype.attachShadow;
+  Object.defineProperty(HTMLElement.prototype, "attachShadow", {
+    value: function (opts) {
+      const shadow = og.call(this, opts);
+      this.__closedShadowRoot = shadow;
+      return shadow;
+    }
+  })
+</script>
+
+<script>
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `
+        <style>div{border: 5px solid gray;}</style>
+
+        <div tabindex="3">three
+          <slot></slot>
+        </div>
+        <div tabindex="4">four</div>`;
+      addSetMyActiveElement(shadow);
+    }
+  }
+
+  customElements.define("web-comp", WebComp);
+
+  (function () {
+
+    function removeMyActiveElement(root, newTarget, doFocusout) {
+      root.myActiveElement = newTarget;
+      //do blur, focusout
+      //update css pseudoclasses
+    }
+
+    function addMyActiveElement(root, newTarget, doFocusin) {
+      root.myActiveElement = newTarget;
+      //do blur, focusout
+      //update css pseudoclasses
+    }
+
+    function findFocusable(path) {
+      for (let target of path) {
+        if (target.tabIndex >= 0 || target === document.body)
+          return target;
+      }
+      throw new Error("Can you mousedown on something not connected to the body? You shouldn't mutate the DOM during the capture phase...");
+    }
+
+    function getTargetRoot(target) {
+      if (!target)
+        return [];
+
+      const result = [];
+      let root = target.getRootNode();
+      while (root.host) {
+        result.push({target, root});
+        target = root.host;
+        root = target.getRootNode();
+      }
+      result.push({target, root});
+      return result;
+    }
+
+    function diffFromStart(toBeReduced, lookup) {
+      for (let i = 0; i < toBeReduced.length; i++) {
+        if (i >= lookup.length)
+          return toBeReduced.slice(i);
+        let toBeReducedElement = toBeReduced[i];
+        let lookupPair = lookup[i];
+        if (toBeReducedElement.root !== lookupPair.root || toBeReducedElement.target !== lookupPair.target)
+          return toBeReduced.slice(i);
+      }
+      return [];
+    }
+
+    let myActiveElementGlobal = null;
+
+    function setMyActiveElement(path) {
+      const focusable = findFocusable(path);
+      if (focusable === myActiveElementGlobal)
+        return;
+      const targetRootList = getTargetRoot(focusable);
+      const oldTargetRootList = getTargetRoot(myActiveElementGlobal);
+      myActiveElementGlobal = focusable;
+      const reverseNew = targetRootList.reverse();
+      const reverseOld = oldTargetRootList.reverse();
+      //reduce the list of old to only include the elements that are not the same as in the new
+      const toBeBlurred = diffFromStart(reverseOld, reverseNew);
+
+      let doFocusout = true;
+      for (let {root, target} of toBeBlurred) {
+        removeMyActiveElement(root, target, doFocusout); //this should trigger a blur event and a focusout event.
+        doFocusout = false;
+      }
+      //reduce the list of new to only include the elements that are not the same as in the old
+      const toBeFocused = diffFromStart(reverseNew, reverseOld);
+      let doFocusin = true;
+      for (let {root, target} of toBeFocused) {
+        addMyActiveElement(root, target, doFocusin); //this should trigger a blur event and a focusout event.
+        doFocusin = false;
+      }
+    }
+
+    let task;
+
+    function addSetMyActiveElementWindow() {
+      window.addEventListener("mousedown", function (e) {
+        const path = e.composedPath();
+        task = toggleTick(() => setMyActiveElement(path))
+      }, true);
+    }
+
+    window.addSetMyActiveElement = function (root) {
+      root.addEventListener("mousedown", function (e) {
+        const path = e.composedPath();
+        task.reuse(() => setMyActiveElement(path))
+      }, true);
+    }
+
+    addSetMyActiveElementWindow();
+  })();
+</script>
+
+<style>
+  div {
+    border: 10px solid red;
+  }
+</style>
+
+<div id="one" tabindex="1">one</div>
+<web-comp>
+  <a href="#lala">Hello sunshine</a>
+</web-comp>
+<div id="two" tabindex="2">two</div>
+
+<script>
+  //script for debugging purposes
+  const shadow = document.querySelector("web-comp").__closedShadowRoot;
+  document.addEventListener("mousedown", e => {
+    console.log("-----------")
+    console.log("-----------")
+    console.log("outside", document.activeElement);
+    console.log("MY outside", document.myActiveElement);
+    console.log("inside", shadow.activeElement);
+    console.log("MY inside", shadow.myActiveElement);
+    toggleTick(() => {
+      console.log("-----------")
+      console.log("outside toggle", document.activeElement);
+      console.log("MY outside toggle", document.myActiveElement);
+      console.log("inside toggle", shadow.activeElement);
+      console.log("MY inside toggle", shadow.myActiveElement);
+    });
+  });
+</script>
