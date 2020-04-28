@@ -31,16 +31,85 @@
 
   (function () {
 
-    function removeMyActiveElement(root, newTarget, doFocusout) {
-      root.myActiveElement = newTarget;
-      //do blur, focusout
-      //update css pseudoclasses
+    //function that bounces the "my-focusout" event
+    function blur(targetRoots) {
+      //blur, no bounce
+      //blur should most definitively be composed: false.
+      for (let {root, newMyActiveElement, oldMyActiveElement, blurOnly, focusOnly} of targetRoots) {
+        if (focusOnly)
+          continue;
+        let {root, newMyActiveElement, oldMyActiveElement, blurOnly, focusOnly} = targetRoots[0];
+        root.myActiveElement = root === document ? document.body : null;
+        const blur = new CustomEvent("my-blur", {composed: false, bubbles: false});
+        blur.relatedTarget = newMyActiveElement;
+        oldMyActiveElement.dispatchEvent(blur);
+        //todo do this before of after we dispatch the event?
+        //todo should we add this as an event controller for focusout event?
+        for (let el of getComposedPath(oldMyActiveElement)) {
+          el.classList && el.classList.remove("pseudo-focus", "pseudo-focus-within");
+        }
+        break;
+      }
     }
 
-    function addMyActiveElement(root, newTarget, doFocusin) {
-      root.myActiveElement = newTarget;
-      //do blur, focusout
-      //update css pseudoclasses
+    function focusout(targetRoots) {
+      let first = true;
+      for (let {root, newMyActiveElement, oldMyActiveElement, blurOnly, focusOnly} of targetRoots) {
+        if (focusOnly)
+          continue;
+        if (!first)
+          root.myActiveElement = root === document ? document.body : null;
+        const focusout = new CustomEvent("my-focusout", {composed: false, bubbles: true});
+        focusout.relatedTarget = newMyActiveElement;
+        oldMyActiveElement.dispatchEvent(focusout);
+        //todo do this before of after we dispatch the event?
+        //todo should we add this as an event controller for focusout event?
+        if (!first) {
+          for (let el of getComposedPath(oldMyActiveElement)) {
+            el.classList && el.classList.remove("pseudo-focus", "pseudo-focus-within");
+          }
+        }
+      }
+    }
+
+    function focus(targetRoots) {
+      //focus, no bounce
+      //focus should most definitively be composed: false.
+      for (let {root, newMyActiveElement, oldMyActiveElement, blurOnly, focusOnly} of targetRoots) {
+        if (focusOnly)
+          continue;
+        let {root, newMyActiveElement, oldMyActiveElement, blurOnly, focusOnly} = targetRoots[0];
+        root.myActiveElement = root === document ? document.body : null;
+        const blur = new CustomEvent("my-blur", {composed: false, bubbles: false});
+        blur.relatedTarget = newMyActiveElement;
+        oldMyActiveElement.dispatchEvent(blur);
+        //todo do this before of after we dispatch the event?
+        //todo should we add this as an event controller for focusout event?
+        for (let el of getComposedPath(oldMyActiveElement)) {
+          el.classList && el.classList.remove("pseudo-focus", "pseudo-focus-within");
+        }
+        break;
+      }
+    }
+
+    function focusin(targetRoots) {
+      let first = true;
+      for (let {root, newMyActiveElement, oldMyActiveElement, blurOnly, focusOnly} of targetRoots) {
+        if (focusOnly)
+          continue;
+        if (!first)
+          root.myActiveElement = root === document ? document.body : null;
+        const focusout = new CustomEvent("my-focusout", {composed: false, bubbles: true});
+        focusout.relatedTarget = newMyActiveElement;
+        oldMyActiveElement.dispatchEvent(focusout);
+        //todo do this before of after we dispatch the event?
+        //todo should we add this as an event controller for focusout event?
+        if (!first) {
+          for (let el of getComposedPath(oldMyActiveElement)) {
+            el.classList && el.classList.remove("pseudo-focus", "pseudo-focus-within");
+          }
+        }
+      }
     }
 
     function findFocusable(path) {
@@ -66,63 +135,76 @@
       return result;
     }
 
-    function diffFromStart(toBeReduced, lookup) {
-      for (let i = 0; i < toBeReduced.length; i++) {
-        if (i >= lookup.length)
-          return toBeReduced.slice(i);
-        let toBeReducedElement = toBeReduced[i];
-        let lookupPair = lookup[i];
-        if (toBeReducedElement.root !== lookupPair.root || toBeReducedElement.target !== lookupPair.target)
-          return toBeReduced.slice(i);
+    function blurFocusTaskList(old, nevv) {
+      nevv = getTargetRoot(nevv).reverse();
+      old = getTargetRoot(old).reverse();
+      let i, j, k;
+      const result = [];
+      for (i = 0; i < old.length && i < nevv.length; i++) {
+        if (old[i].root !== nevv[i].root)
+          break;
+        if (old[i].target === nevv[i].target)
+          continue;
+        result.push({root: old[i].root, oldActiveElement: old[i].target, newActiveElement: nevv[i].target});
+        break;
       }
-      return [];
+      for (j = i; j < old.length; j++)
+        result.push({
+          root: old[j].root,
+          oldActiveElement: old[j].target,
+          newActiveElement: nevv[i].target,
+          blurOnly: true
+        });
+      for (k = i; k < nevv.length; k++)
+        result.push({
+          root: nevv[k].root,
+          newActiveElement: nevv[k].target,
+          oldActiveElement: old[i].target,
+          focusOnly: true
+        });
+      return result.reverse();
     }
 
     let myActiveElementGlobal = null;
+    let path;
 
-    function setMyActiveElement(path) {
+    function blurFocus(focusoutTask, focusTask, focusinTask) {
       const focusable = findFocusable(path);
       if (focusable === myActiveElementGlobal)
-        return;
-      const targetRootList = getTargetRoot(focusable);
-      const oldTargetRootList = getTargetRoot(myActiveElementGlobal);
+        return;//here we could cancel the tasks, but we don't have to
+      //we make the task list of the DOM contexts in which the myActiveElement property has changed.
+      const taskList = blurFocusTaskList(myActiveElementGlobal, focusable);
       myActiveElementGlobal = focusable;
-      const reverseNew = targetRootList.reverse();
-      const reverseOld = oldTargetRootList.reverse();
-      //reduce the list of old to only include the elements that are not the same as in the new
-      const toBeBlurred = diffFromStart(reverseOld, reverseNew);
 
-      let doFocusout = true;
-      for (let {root, target} of toBeBlurred) {
-        removeMyActiveElement(root, target, doFocusout); //this should trigger a blur event and a focusout event.
-        doFocusout = false;
-      }
-      //reduce the list of new to only include the elements that are not the same as in the old
-      const toBeFocused = diffFromStart(reverseNew, reverseOld);
-      let doFocusin = true;
-      for (let {root, target} of toBeFocused) {
-        addMyActiveElement(root, target, doFocusin); //this should trigger a blur event and a focusout event.
-        doFocusin = false;
-      }
+      blur(taskList);             //do blur sync in the current toggleTick macro task
+      focusoutTask.reuse(focusout.bind(null, taskList));
+      focusTask.reuse(focus.bind(null, taskList));
+      focusinTask.reuse(focusin.bind(null, taskList));
     }
 
-    let task;
+    const noOp = () => "no op";
 
     function addSetMyActiveElementWindow() {
       window.addEventListener("mousedown", function (e) {
-        const path = e.composedPath();
-        task = toggleTick(() => setMyActiveElement(path))
+        path = e.composedPath();
+        //make 4 macroTasks
+        let blurTask = toggleTick(noOp);
+        let focusoutTask = toggleTick(noOp);
+        let focusinTask = toggleTick(noOp);
+        let focusTask = toggleTick(noOp);
+        blurTask.reuse(() => blurFocus(focusoutTask, focusTask, focusinTask));
       }, true);
     }
 
     window.addSetMyActiveElement = function (root) {
       root.addEventListener("mousedown", function (e) {
-        const path = e.composedPath();
-        task.reuse(() => setMyActiveElement(path))
+        path = e.composedPath();
       }, true);
     }
 
     addSetMyActiveElementWindow();
+
+
   })();
 </script>
 
@@ -143,13 +225,28 @@
   const shadow = document.querySelector("web-comp").__closedShadowRoot;
   document.addEventListener("mousedown", e => {
     console.log("-----------")
-    console.log("-----------")
+    console.log("--click---------")
     console.log("outside", document.activeElement);
     console.log("MY outside", document.myActiveElement);
     console.log("inside", shadow.activeElement);
     console.log("MY inside", shadow.myActiveElement);
     toggleTick(() => {
-      console.log("-----------")
+      console.log("--click---------")
+      console.log("outside toggle", document.activeElement);
+      console.log("MY outside toggle", document.myActiveElement);
+      console.log("inside toggle", shadow.activeElement);
+      console.log("MY inside toggle", shadow.myActiveElement);
+    });
+  });
+  document.addEventListener("focusout", e => {
+    console.log("-----------")
+    console.log("--focusout---------")
+    console.log("outside", document.activeElement);
+    console.log("MY outside", document.myActiveElement);
+    console.log("inside", shadow.activeElement);
+    console.log("MY inside", shadow.myActiveElement);
+    toggleTick(() => {
+      console.log("--focusout---------")
       console.log("outside toggle", document.activeElement);
       console.log("MY outside toggle", document.myActiveElement);
       console.log("inside toggle", shadow.activeElement);

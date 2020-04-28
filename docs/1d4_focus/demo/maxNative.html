@@ -46,15 +46,57 @@
   const shadow = document.querySelector("web-comp").__closedShadowRoot;
   document.addEventListener("mousedown", e => {
     console.log("-----------")
-    console.log("-----------")
+    console.log("--mousedown---------")
     console.log("outside", document.activeElement);
     console.log("inside", shadow.activeElement);
     toggleTick(() => {
-      console.log("-----------")
-      console.log("outside toggle", document.activeElement);
-      console.log("inside toggle", shadow.activeElement);
+      console.log("--mousedown toggle---------")
+      console.log("outside", document.activeElement);
+      console.log("inside", shadow.activeElement);
     });
   });
-  shadow.addEventListener("focusout", e=> console.log("shadow focusout"));
-  document.addEventListener("focusout", e=> console.log("light focusout"));
+  document.addEventListener("focusin", e => {
+    console.log("-----------");
+    console.log("--focusin---------", e.relatedTarget);
+    console.log("outside", document.activeElement);
+    console.log("inside", shadow.activeElement);
+    toggleTick(() => {
+      console.log("--focusin toggle---------")
+      console.log("outside", document.activeElement);
+      console.log("inside", shadow.activeElement);
+    });
+  });
+  document.addEventListener("focusout", e => {
+    console.log("-----------");
+    console.log("--focusout---------", e.relatedTarget);
+    console.log("outside", document.activeElement);
+    console.log("inside", shadow.activeElement);
+    toggleTick(() => {
+      console.log("--focusout toggle---------")
+      console.log("outside", document.activeElement);
+      console.log("inside", shadow.activeElement);
+    });
+  });
+  // document.addEventListener("focus", e => {
+  //   console.log("-----------");
+  //   console.log("--focus---------", e.relatedTarget);
+  //   console.log("outside", document.activeElement);
+  //   console.log("inside", shadow.activeElement);
+  //   toggleTick(() => {
+  //     console.log("--focus toggle---------")
+  //     console.log("outside", document.activeElement);
+  //     console.log("inside", shadow.activeElement);
+  //   });
+  // }, true);
+  // document.addEventListener("blur", e => {
+  //   console.log("-----------");
+  //   console.log("--blur---------", e.relatedTarget);
+  //   console.log("outside", document.activeElement);
+  //   console.log("inside", shadow.activeElement);
+  //   toggleTick(() => {
+  //     console.log("--blur toggle---------")
+  //     console.log("outside", document.activeElement);
+  //     console.log("inside", shadow.activeElement);
+  //   });
+  // }, true);
 </script>
