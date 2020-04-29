@@ -30,18 +30,43 @@ input.checkValidity(): false
 
 ## WhatIs: `required` and `pattern` and other HTML validation attributes? 
 
-There are ten?? HTML attributes that can be added to an input element to constrain its validity.
+There are several HTML attributes that can be added to an input element to constrain its validity.
 
-Validity attributes that apply to `<input>`, `<textarea>` and `<select>` elements: 
- * `required`: the input element must be selected or have text content when the form is submitted.
- * 
- *
+#### Validity attributes that apply to:
+1. `<input>`, `<textarea>` and `<select>` elements: 
+    * `required`: the element must be selected or have text content when the form submitted.
+
+2. `<input type="text">` and `<textarea>` elements: 
+    * `pattern`: specifies a regular expression the form control's value should match.
+    * `minlength/maxlength`: ensure that the length of the element is greater/less than or equal to the specified value.
  
-Validity attributes that apply only to `<input type="text">` and `<textarea>` elements: 
- * `pattern`: this input 
- `email`, `url`, or `tel`
+3. `<input>` 
+    * `type`: specifying the type of control to render. All available values presented [here](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#%3Cinput%3E_types).
+ 
+4. `<input type="number"> <input type="range">`
+    * `min`: number value must be greater or equal the value.
+    * `max`: number value must be less or equal the value.
+    * `step`: number value must be a multiple of this number.
+  
+```html
+<form>
+    <label for="login">Nickname (4 to 10 characters):</label>
+    <input id="login" type="text" minlength="3" maxlength="10" required>
+    <label for="phone">Phone number:</label>
+    <input id="phone" type="tel" required>
+    <input type="submit">
+</form>
 
-
+<script>
+  window.addEventListener("invalid", e => {
+    const validity = e.target.validity;
+    for (let key in validity) {
+      if (validity[key])
+        console.log("Wrong #" + e.target.id, key);
+    }
+  }, true);
+</script>
+```
 one big demo
 
 
@@ -98,11 +123,56 @@ input:invalid:not(:focus){
 
 ## `.setCustomValidity()`
 
-On the `invalid` event there is a special method for setting the user feedback message on the native user feedback element: `.setCustomValidity()`.
-blabla.
+If an `invalid` event activated, the browser will display an error message stored in the `validationMessage` property of the target. The _only way_ to change its value is to call `setCustomValidity()` with the message text as an argument value. 
+
+To make sure that it is impossible use other methods to determine the new value of error message, consider a demo. In the first case we try to use `.defineProperty()` method to change the `validationMessage` value, but the browser will ignore it and display the default message. The second method uses `setCustomValidity()` and changes the text of the message causing the browser to display the new value correctly.
 
 ```html 
-big demo
+<form>
+    <label for="login">Nickname (4 to 10 characters):</label>
+    <input id="login" type="text" minlength="3" maxlength="10" required>
+    <label for="password">Password:</label>
+    <input id="password" type="password" required>
+
+
+    <input type="submit">
+</form>
+
+<script>
+  let login = document.querySelector("#login");
+  let password = document.querySelector("#password");
+
+  login.addEventListener("invalid", e => {
+    const validity = e.target.validity;
+    for (let key in validity) {
+      if (validity[key]) {
+        Object.defineProperty(e.target, "validationMessage", {
+          value: "Error: " + key,
+          writable: true
+        });
+      }
+    }
+    console.log(e.target.validationMessage); // Error: valueMissing
+
+  }, true);
+
+
+  password.addEventListener("invalid", e => {
+
+    const validity = e.target.validity;
+
+    for (let key in validity) {
+      if (validity[key]) {
+        e.target.setCustomValidity("Error: " + key);
+        return
+      }
+    }
+    console.log(e.target.validationMessage); // Error: valueMissing
+
+  }, true)
+
+</script>
+``` 
 ``` 
 
 ### References
