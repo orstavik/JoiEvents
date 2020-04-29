@@ -1,4 +1,4 @@
-<form id="formOne">
+<form id="formOne" action="https://bbc.com">
   <input type="text" id="one" name="oneName" value="original">
   <input type="text" id="noName" value="no name">
 
@@ -8,7 +8,7 @@
   <input type="checkbox" id="four" name="threeName" value="four" checked>
   <input type="checkbox" id="five" name="threeName" value="five" checked>
 
-  <input type="submit" id="submitOne" name="threeName" value="submit">
+  <input type="submit" id="submitOne" name="threeName" value="submit" formmethod="post">
 
   <select name="selectOne" id="selectOne">
     <option disabled selected value>blank</option>
@@ -18,7 +18,7 @@
     <option value="c">c</option>
   </select>
 </form>
-<input type="submit" id="submitTwo" form="formOne" name="threeName" value="submit">
+<input formaction="https://cnn.com" type="submit" id="submitTwo" form="formOne" name="threeName" value="submit">
 
 <script>
   const form = document.querySelector("form");
@@ -29,6 +29,11 @@
   const four = document.querySelector("#four");
   const five = document.querySelector("#five");
 
+  const data = new FormData(form);
+  for (let x of data) {
+    console.log(x)
+  }
+  debugger;
   const selectOne = document.querySelector("#selectOne");
 
   console.log("----checking name value from input elements");
@@ -49,4 +54,9 @@
   console.log(selectOne.name);
   console.log(selectOne.value);
 
+  window.addEventListener("submit", function (e) {
+
+    console.log(e);
+    debugger;
+  })
 </script>

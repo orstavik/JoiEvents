@@ -1,88 +1,43 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
 <script>
-  const EventRoadMap = {
-    UNPREVENTABLES: {
-      mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
-      mouseup: ["click", "auxclick", "dblclick"],
-      click: ["dblclick"],
-      keydown: ["keypress"]
-    }
-  };
-
-  function parseRaceEvents(raceEvents) {
-    if (raceEvents instanceof Array)
-      return raceEvents;
-    if (raceEvents === undefined)
-      return [];
-    if (raceEvents instanceof String || typeof (raceEvents) === "string")
-      return EventRoadMap.UNPREVENTABLES[raceEvents];
-    throw new Error(
-      "The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, " +
-      "an array of event names, empty array, or a string with an event name " +
-      "for the trigger event in the event cascade.");
-  }
-
-  function toggleTick(cb, raceEvents) {
-    raceEvents = parseRaceEvents(raceEvents);
-    const details = document.createElement("details");
-    details.style.display = "none";
-    const internals = {
-      events: raceEvents,
-      cb: cb
-    };
-
-    function wrapper() {
-      task.cancel();
-      internals.cb();
-    }
-
-    const task = {
-      cancel: function () {
-        for (let raceEvent of internals.events)
-          window.removeEventListener(raceEvent, wrapper, true);
-        details.ontoggle = undefined;
-      },
-      reuse: function (newCb, raceEvents) {
-        raceEvents = parseRaceEvents(raceEvents);
-        internals.cb = newCb;
-        for (let raceEvent of internals.events)
-          window.removeEventListener(raceEvent, wrapper, true);
-        internals.events = raceEvents;
-        for (let raceEvent of internals.events)
-          window.addEventListener(raceEvent, wrapper, {capture: true});
-      },
-      isActive: function () {
-        return !!details.ontoggle;
-      }
-    };
-    details.ontoggle = wrapper;
-    document.body.appendChild(details);
-    details.open = true;
-    Promise.resolve().then(details.remove.bind(details));
-    for (let raceEvent of internals.events)
-      window.addEventListener(raceEvent, wrapper, {capture: true});
-    return task;
-  }
-
-  //requires the toggleTick function
-  Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, options) {
-      let raceEvents = options ? options.raceEvents : undefined;
-      if (raceEvents === true)
-        raceEvents = this.type;
-      return toggleTick(() => cb(this), raceEvents);
-    },
-    writable: false
-  });
+  // //requires the toggleTick function
+  // Object.defineProperty(Event.prototype, "addDefaultAction", {
+  //   value: function (cb) {
+  //     return toggleTick(() => cb(this), this.type);
+  //     // return toggleTick(() => cb.bind(element, this), this.type);
+  //   },
+  //   writable: false
+  // });
 </script>
 
-<div id="one">click.addDefaultAction(trigger => console.log("action ONE triggered by ", trigger.type));</div>
-<div id="two">click.addDefaultAction(trigger => console.log("action TWO triggered by ", trigger.type), {raceEvents: ["dblclick"]});</div>
+<div singleclick-action dblclick-action>
+  default action added to both single click and dblclick event for this particular element
+</div>
 
 <script>
+  function singleClickAction(event) {
+    console.log("click default action trigger by ", event.type);
+  }
+
+  function dblclickAction(event) {
+    console.log("dblclick default action trigger by ", event.type);
+  }
+
+  window.addEventListener("click", function (e) {
+    const path = e.composedPath();
+    for (let element of path) {
+      if (element instanceof HTMLDivElement && element.hasAttribute("singleclick-action"))
+        return toggleTick(() => singleClickAction(e));
+    }
+  });
+  window.addEventListener("dblclick", function (e) {
+    const path = e.composedPath();
+    for (let element of path) {
+      if (element instanceof HTMLDivElement && element.hasAttribute("dblclick-action"))
+        return toggleTick(() => dblclickAction(e));
+    }
+  });
+
   window.addEventListener("click", e => console.log(e.type));
   window.addEventListener("dblclick", e => console.log(e.type));
-  const one = document.querySelector("#one");
-  const two = document.querySelector("#two");
-  one.addEventListener("click", e => e.addDefaultAction(trigger => console.log("action ONE triggered by ", trigger.type)));
-  two.addEventListener("click", e => e.addDefaultAction(trigger => console.log("action TWO triggered by ", trigger.type), {raceEvents: ["dblclick"]}));
 </script>

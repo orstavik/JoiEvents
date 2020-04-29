@@ -1,0 +1,74 @@
+if you click many times on the same element, then no new clicked event is dispatched.
+This also applies to the host nodes, so that the host nodes only respond when they are
+clicked the first time. Ie. the event must propagate or remake itself for each new element clicked.
+
+<one-comp></one-comp>
+
+<script>
+  class OneComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <div>one</div>
+        <div>two</div>
+        <two-comp></two-comp>
+      `;
+      this.shadowRoot.addEventListener("clicked", function (e) {
+        if (this.shadowRoot === e.root)
+          e.stopPropagation();
+        console.log("one clicked");
+      }.bind(this));
+    }
+  }
+
+  class TwoComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `
+        <div>three</div>
+        <div>four</div>
+      `;
+      this.shadowRoot.addEventListener("clicked", function (e) {
+        if (this.shadowRoot === e.root)
+          e.stopPropagation();
+        console.log("two clicked");
+      }.bind(this));
+    }
+  }
+
+  customElements.define("two-comp", TwoComp);
+  customElements.define("one-comp", OneComp);
+
+  function findLastCommonRoot(pathA, pathB) {
+    let lastRoot = pathA[1];
+    for (let i = 2; i < pathA.length && pathA[i] === pathB[i]; i++) {
+      if (pathA[i] instanceof ShadowRoot)
+        lastRoot = pathA[i];
+    }
+    return lastRoot;
+  }
+
+  let lastClickPath = [];
+  window.addEventListener("click", function (e) {
+    let path = e.composedPath().reverse();
+    const capRoot = findLastCommonRoot(path, lastClickPath);
+    lastClickPath = path;
+    //dispatch the event on the element, but restrain the `clicked` event to the hostNode
+    const clickedEvent = new CustomEvent("clicked", {composed: true, bubbles: true});
+    clickedEvent.root = capRoot;
+    e.composedPath()[0].dispatchEvent(clickedEvent);
+  }, true);
+
+  window.addEventListener("clicked", e => console.log("clicked changed in main DOM"));
+
+  const oneComp = document.querySelector("one-comp");
+  const one = oneComp.shadowRoot.children[0];
+  const two = oneComp.shadowRoot.children[1];
+  const twoComp = oneComp.shadowRoot.children[2];
+  const three = twoComp.shadowRoot.children[0];
+  const four = twoComp.shadowRoot.children[1];
+  one.click();
+  three.click();
+</script>

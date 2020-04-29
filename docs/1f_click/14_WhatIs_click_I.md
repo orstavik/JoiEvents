@@ -1,4 +1,4 @@
-# WhatIs: `click`?
+# WhatIs: `click`? (part I)
 
 auxclick and dblclick and click. Here, the problem is to find the common hit target. only one mouse button, or is it ok with more thasn one button at the same time, and is that for all events, or is it just for one event?
 

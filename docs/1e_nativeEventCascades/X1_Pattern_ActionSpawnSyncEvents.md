@@ -9,7 +9,7 @@ Actions can spawn:
  
 ## Demo: How does `.focus()` work?
 
-The focus events are an important group of elements that are driven by a function: `HTMLElement.focus()`. Focus is used to signal which `<input>` or `<textarea>` that will receive any `keypress` events.
+The focus events are an important group of elements that are driven by a function: `HTMLElement.focus()`. Focus is used to signal which `<input>` or `<textarea>` that will receive any `keypress` events, or which `<a href>` will be activated on the next `keypress` enter or space. 
  
 There are four focus events:
 1. `blur`. A non-bubbling, sync event that is dispatched on an element when it looses focus.
@@ -19,7 +19,7 @@ There are four focus events:
 
 And when the focus is shifted between two input elements, then the events will be dispatched in the order above.
 
-The focus events are **sync**. This means that they are dispatched as part of the same JS frame, ie. that any microtask that are scheduled during their execution is run after their dispatch have completed. This is true not only of each event, but also for all four events if they are triggered to be dispatched by the same change of focus.  
+The focus events are **sync**. This means that they are dispatched as part of the same JS frame, ie. that any microtask that are scheduled during their execution is run after their dispatch have completed. This is true for all four events as a whole, if one event is not only of each event, but also for all four events if they are triggered to be dispatched by the same change of focus.  
 
 ```html
 <input id="one" type="text" value="Hello sunshine!"/>

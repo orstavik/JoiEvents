@@ -24,7 +24,7 @@ So, what is the process of event controllers? When an event occurs, the browser 
 mousedown event on  <input type="date"> 
 
 event controller   event listener mousedown   default action
-------------
+------------------------------------------------------------------
 contextmenu        on window capture          altering date value
 focus              on document capture        ---
                    on input element

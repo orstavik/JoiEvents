@@ -11,67 +11,6 @@ When *two* or more events produce *one* or more other events, the browser needs 
 
 The browser needs to store *state* information about the *sequence* of events that has occurred in *the current session*. 
 
-## Demo: `dblclick`
-
-`dblclick` is another good example of an EventSequence because it:
-1. only listens for *one* trigger event, but
-2. still has to *store* the state of the previous `click`
-3. in order to calculate if *two* `click`s are close enough in time to be a `dblclick`.
-
-```html
-<h1>Hello sunshine!</h1>
-
-<script>
-  (function () {
-    function log(e) {
-      console.log(e.type + ": " + e.timeStamp);
-    }
-
-    window.addEventListener("click", log);
-    window.addEventListener("dblclick", log);
-  })();
-</script>
-```
-Results in:
-```
-click: 2351.519999996526
-click: 2519.5200000016484
-dblclick: 2523.300000000745
-```        
-
-To implement our custom DblclickController is simple:
-
-```html
-<h1>Hello sunshine!</h1>
-
-<script>
-  const DblclickController = {
-    lastTime: undefined,          /**STATE**/
-    onClick: function (e) {
-      if (!DblclickController.lastTime)
-        return DblclickController.lastTime = e.timeStamp;
-      const duration = e.timeStamp - DblclickController.lastTime;
-      if (duration > 300)
-        return DblclickController.lastTime = e.timeStamp;
-      DblclickController.lastTime = undefined;
-      setTimeout(function () {
-        e.target.dispatchEvent(new MouseEvent("my-dblclick", {bubbles: true, composed: true}));
-      });
-    }
-  };
-
-  window.addEventListener("click", DblclickController.onClick, true);
-
-  (function () {
-    function log(e) {
-      console.log(e.type + ": " + e.timeStamp);
-    }
-
-    window.addEventListener("click", log);
-    window.addEventListener("my-dblclick", log);
-  })();
-</script>
-```
 
 ## Event controller & state
 

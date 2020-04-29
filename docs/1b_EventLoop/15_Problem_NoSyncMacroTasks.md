@@ -42,6 +42,8 @@ The output is `a d e b c`.
 
 We can't scope a group of function calls as a macrotask and have it run immediately. The only means we have to generate macrotask scope, such as `setTimeout(...)` or `toggleTick(...)` will inevitably *also delay* the macrotask in time by queueing it in the event loop.
 
+The browser has this ability. Of course. And it uses it when it makes the `focus` event controller that is triggered by `mousedown` run its events sync, but in their own macrotask scope.
+
 ## References
 
  * dunno

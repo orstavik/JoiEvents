@@ -6,3 +6,5 @@ However, adding an `Event.prePropagationCallback()` leaves many questions withou
  * What should we do when we need more than one `prePropagationCallback()`? 
  * How can we access shadowRoots/documents for `composed: false` events handled?
  * Isn't it a source of complexity to have more than one queue for event listeners per target? Isn't that why the GlobalEventHandlers feel somewhat redundant and complexing? 
+
+There can be many prePropagationCallbacks(), but only one postPropagationCallback()??

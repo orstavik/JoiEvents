@@ -1,4 +1,95 @@
-# Pattern: Competing DefaultAction
+# Pattern: Choosing custom DefaultAction
+
+The algorithm for selecting a default action for an event instance is:
+1. find the nea
+When choosing a default action, the browser selects the default action associated with the element *nearest* the original `target` element. The browser looks through the propagation path of the event bottom-up, and tries to match each element in the propagation path with its register of default actions until it finds a match. This default action will then be chosen to run, and all the other default actions will be skipped for this particular event.
+
+## Demo: 
+
+```html
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script>
+  (function () {
+    //return true if b is the same as a, a doesn`t exists, or b is inside a.
+    function isNested(a, b) {
+      return !a || a === b || a.contains(b);
+      //todo contains is too simple if b is within a shadowDOM. Must replace .contains with a more complex check
+    }
+
+    let _defaultActionElement;
+    let _defaultAction;
+
+    function wrapper(event, cb, element) {
+      _defaultActionElement = undefined;
+      _defaultAction = undefined;
+      cb.call(element, event);
+    }
+
+    window.addDefaultAction = function (event, callback, elementInPath) {
+      if (event.composedPath().indexOf(elementInPath) === -1)
+        throw new Error("addDefaultAction(..., elementInPath) must be given an element in this event's propagation path.");
+      if (!isNested(_defaultActionElement, elementInPath))
+        return false;
+      _defaultActionElement = elementInPath;
+      _defaultAction ?
+        _defaultAction.reuse(wrapper.bind(null, event, callback, elementInPath), event.type):
+        _defaultAction = toggleTick(wrapper.bind(null, event, callback, elementInPath), event.type);
+      return true;
+    }
+  })();
+</script>
+
+<style>
+  div { border: 2px dotted grey; }
+</style>
+
+<div action-one id="one">
+  default action one
+  <div action-two id="two">
+    default action two
+    <div action-three id="three">
+      default action three
+    </div>
+  </div>
+</div>
+
+<script>
+  function defaultActionOne(e) {
+    console.log("action one:", e.target.id, e.target === this);
+  }
+
+  function defaultActionTwo(e) {
+    console.log("action two:", e.target.id, e.target === this);
+  }
+
+  function defaultActionThree(e) {
+    console.log("action three:", e.target.id, e.target === this);
+  }
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-one"))
+        return addDefaultAction(e, defaultActionOne, el);
+    }
+  }, true);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-two"))
+        return addDefaultAction(e, defaultActionTwo, el);
+    }
+  }, true);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-three"))
+        return addDefaultAction(e, defaultActionThree, el);
+    }
+  }, true);
+
+  window.addEventListener("click", e => console.log(e.type));
+</script>
+```
 
 To resolve conflicting actions, the `addDefaultAction(...)` method needs remember which element each default action is associated with. In the previous chapter about PreventableActions we saw how we could create preventable actions. In this chapter, we will extend this function slightly so that it will remember which element in the propagation path the default action is associated with and therefore be able to only register a) automatically select the conflicting default action associated with the lowest-most element in the trigger event's propagation path, and b) prevent the other conflicting default actions from being activated.
 
@@ -193,4 +284,42 @@ Object.defineProperty(Event.prototype, "addDefaultAction", {
   }));
   two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), {preventable: e.currentTarget}));
   three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), {raceEvents: ["dblclick"]}));</script>
-```
+```                     
+
+
+## old drafts
+
+Default actions are best controlled from event instances and not per event type universal to all event instances. This is due to the fact that different, `preventable` default actions might compete with each other for the same trigger event, and in order to solve these conflicts we need to organize the default actions to each events propagation path. This require us working against each individual event object. More on this shortly.
+  
+To add a default action to an event we need to extend the `Event` interface with an `.addDefaultAction(...)` method. This method needs two arguments: `cb` and `options`.
+
+## Implementation: `event.addDefaultAction(cb, options)`
+
+The `.addDefaultAction(...)` method heavily relies on the `toggleTick` method described in detail in a preceding chapter.
+
+1. **`cb`**: `function`. `event.addDefaultAction(...)` runs the `cb` function after the event cascade of the `event` has been completed.
+   * The `cb` function is passed the trigger `event` object that has completed its propagation as its first argument. 
+2. **`options`**: `{raceEvents}`. 
+   * **`raceEvents`**:
+      * `true`: the default action function (`cb`) runs immediately after the `event` has finished its propagation, but **before** any of the `event`'s `unpreventable` events have begun their propagation.
+      * `undefined`: the default action function (`cb`) runs after the `event` has finished its propagation *and* after all the `event`'s `EventRoadMap.UNPREVENTABLES` events have finished their propagation.
+      * `[eventNames]`: the default action function (`cb`) runs after the `event` has finished its propagation, but **before** any of the events listed in the `[eventNames]` array.
+      * `eventName` string: the default action function (`cb`) runs after the `event` has finished its propagation, but before any of the `eventName`'s `EventRoadMap.UNPREVENTABLES` events have begun their propagation. You should likely use `true` instead of `eventName` here.
+
+> We assume that normal use of `addDefaultAction()` would not be to specify `raceEvents`. But, if your use-case require or benefit from your default action coming ahead of for example `focus` or `dblclick` event, then the `addDefaultAction()` has the facilities to help you out.
+      
+The return value is the `toggleTick` task object that can for example be cancelled.
+
+```javascript
+//requires the toggleTick function
+Object.defineProperty(Event.prototype, "addDefaultAction", {
+  value: function (cb, options) {
+    let raceEvents = options ? options.raceEvents : undefined;
+    if (raceEvents === true)
+      raceEvents = this.type;
+    return toggleTick(() => cb(this), raceEvents);
+  },
+  writable: false
+});
+``` 
+

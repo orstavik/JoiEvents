@@ -1,0 +1,19 @@
+<h1>hello sunshine!</h1>
+<script>
+  document.addEventListener("click", function (e) {
+    console.log("click document 4");
+    Promise.resolve().then(()=> console.log("click document microtask 5"));
+    const myEvent = new CustomEvent("my-event", {bubbles: true});
+    e.target.dispatchEvent(myEvent);
+    if(!myEvent.defaultPrevented)                 //running the default action sync
+      console.log("my-event default action 10");
+  });
+
+  window.addEventListener("click", e => console.log("click window 13"));
+
+  document.addEventListener("my-event", e => console.log("my-event document 15"));
+  document.addEventListener("my-event", e => Promise.resolve().then(()=> console.log("my-event document microtask 16")));
+  window.addEventListener("my-event", e => console.log("my-event window 17"));
+</script>
+
+//Chrome: 4, 15, 17, 10, 5, 16, 13

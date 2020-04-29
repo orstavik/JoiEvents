@@ -1,10 +1,39 @@
+PrePropagation callback.
+1. EarlyBird, just how to capture all instances of composed: true events with the same event listener. EarlyBirds should not stopPropagation(), unless they grab/block the event, and then they should be runnable in all instances. That makes them useful for event controllers that can be generalized and reusable.
+
+1b. Problem of composed:true EarlyBird: Closed path. the original target is within a closed shadowRoot. This limits the EarlyBird. We cannot add event controller functionality for patterns of an event that occur within a closed root. This limitation is however probably good. As it helps limit the scope of elements inside each other. But sometimes it would be good, for example as when you add pseudo-classes. Here, we need a use-case when its bad, and a use-case when its good. This shouldn't be changed.
+
+2. CagedEarlyBird captures all instances of composed:false events within a web component. This illustrate why event controllers cannot be added to composed: false events in a universal fashion. You can make event controllers for a scope, but never an event controller that works inside the scope of a closed shadowRoot.
+
+PostPropagation callback.
+1. use an earlyBird to add a toggleTick task in the event loop. Works, but is a bit heavy as we need a toggleTick or setTimeout. And, it makes all default actions async, even though default actions on sync events are not async.
+
+2. this works for composed: false events where the event listener begins on the shadowRoot. But this is not really that necessary for composed: false events.
+ 
+3.  EarlyBirdFail. But it doesn't work for closed shadowRoots for composed:true events. an earlybird event listener can never, ever read the full propagation path. Thus, if you want to add a default action when someone clicks on an element inside your shadowDom for the closed shadowRoot, that is not possible. This is never possible. The *only* way the path inside a closed shadowRoot can be read is from an event listener *inside* the shadowRoot. And the only way to avoid having that event listener torpedoed by stopPropagation, is to have an unstoppable eventlisteneroption that apply to all event listener.
+
+
+  
+Default actions cannot be added to elements and events within a closed shadowRoot. This is good, because that scope should be off limits. It is a question if default actions should ever be added "into" another web component..
+
+Event controllers cannot read the path of closed ShadowRoots neither. This is also probably good.  
+
+But.. We can't see native defaultActions inside closed shadowDoms of custom elements...
+The EarlyBird is failing me..
+It lost the worm...
+
+
+We can patch the native defaultActions of native events, and we can show how to patch the native defaultActions of custom web components. But custom web components can't do this. So there is nothing to patch. Custom web components can't make defaultActions. So its ok.
+
+
+
 # Pattern: EarlyBird
 
 > gets the worm!
 
-An EarlyBird captures an event *before* any other event listener. This is now quite simple.
+An EarlyBird captures any instance of an event type *before* all other event listener.
  
-1. As we saw in the chapter about bubbling, the first target for *all* events is the **`window` node** in the **capture phase**. 
+1. As we saw in the chapter "WhatIs: Bubbles?", the first target for all `{composed: true}` events is the **`window` node** in the **capture phase**. 
 
    `window.addEventListener("click", fun, {capture: true})`
 

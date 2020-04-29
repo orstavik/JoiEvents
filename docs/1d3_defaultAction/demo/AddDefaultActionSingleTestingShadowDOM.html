@@ -43,6 +43,37 @@
     </div>
   </div>
 </div>
+<closed-comp>
+
+</closed-comp>
+
+<script>
+  class ClosedComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `
+      <div>hello darkness</div>
+      `;
+      window.addEventListener("click", e=>{
+        const wrapper = function(){
+          console.log("one", e.composedPath());
+          debugger;
+        };
+        wrapper.bind(shadow);
+        wrapper();
+      }, true);
+      shadow.addEventListener("click", e=>{
+        console.log("three", e.composedPath());
+      }, true);
+
+    }
+  }
+  customElements.define("closed-comp", ClosedComp);
+  window.addEventListener("click", e=>{
+    console.log("two", e.composedPath());
+  }, true);
+</script>
 
 <script>
   function defaultActionOne(e) {

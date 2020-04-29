@@ -1,0 +1,15 @@
+<h1>Right click me!</h1>
+<div>Right click me (no context menu)</div>
+
+<input type="text" value="test">
+<script>
+  (function () {
+    document.querySelector('input').focus();
+    window.addEventListener("mousedown", e => console.log(e.type));
+    window.addEventListener("contextmenu", e => console.log(e.type));
+    document.body.addEventListener("focusout", e => console.log(e.type), true);
+
+    const div = document.querySelector("div");
+    div.addEventListener("contextmenu", e => e.preventDefault());
+  })();
+</script>

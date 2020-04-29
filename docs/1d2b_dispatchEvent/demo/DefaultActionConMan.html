@@ -1,0 +1,30 @@
+<a href="#go">hello sunshine! Calling preventDefault() on an link click can be done from a microtask.</a>
+<script>
+  const a = document.querySelector("a");
+  a.addEventListener("click", e => Promise.resolve().then(() => e.preventDefault()));
+</script>
+
+<h1>hello DefaultActionConMan!</h1>
+<p>When you use dispatchEvent(...) be aware that microtasks have not run when the method returns.</p>
+<script>
+  const h1 = document.querySelector("h1");
+  const a = document.querySelector("a");
+  h1.addEventListener("click", e => {
+    const myEvent = new CustomEvent("my-event", {cancelable: true});
+    console.log("A");
+    e.target.dispatchEvent(myEvent);
+    if (!myEvent.defaultPrevented) {
+      console.log(" - D");
+      console.log(" - Hello DefaultActionConMan");
+      console.log(" - when defaultPrevented is checked, we assume that event propagation is completed.");
+    }
+  });
+
+  h1.addEventListener("my-event", e => console.log("B"));
+  h1.addEventListener("my-event", e => Promise.resolve().then(function () {
+    console.log("C");
+    console.log("but in this microtask, I might assume that I could still call .preventDefault()");
+    e.preventDefault();
+  }));
+</script>
+

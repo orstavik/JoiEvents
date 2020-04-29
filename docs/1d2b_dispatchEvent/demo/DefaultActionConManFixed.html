@@ -1,0 +1,30 @@
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
+<h1>hello DefaultAction sunshine!</h1>
+<h2>hello world of preventDefault!</h2>
+<p>When you use addDefaultAction(...), microtasks established during event propagation will run before the default action.</p>
+<script>
+  const h1 = document.querySelector("h1");
+  const h2 = document.querySelector("h2");
+  window.addEventListener("click", e => {
+    const myEventTarget = e.target;
+    const myEvent = new CustomEvent("my-event", {cancelable: true});
+    myEvent.addDefaultAction(function(){
+      console.log(" - D1");
+      console.log(" - Hello DefaultAction");
+      console.log(" - when defaultPrevented is checked, the event propagation is completed.");
+    }, {preventable: myEventTarget});
+    //be aware that the preventable element should be set as the target you plan to dispatch the event at
+    console.log("A");
+    myEventTarget.dispatchEvent(myEvent);
+  });
+
+  window.addEventListener("my-event", e => console.log("B"), true);
+  h1.addEventListener("my-event", e => Promise.resolve().then(function () {
+    console.log("C1");
+  }));
+  h2.addEventListener("my-event", e => Promise.resolve().then(function () {
+    console.log("C2");
+    console.log("I can still call .preventDefault() from microtasks");
+    e.preventDefault();
+  }));
+</script>

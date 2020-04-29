@@ -13,7 +13,7 @@
     }
 
     window.preserveNativeClickMixin = function (clazz) {
-      return class DefaultActionHTMLaElement extends clazz {
+      return class ClickDefaultActionHTMLElement extends clazz {
         attachShadow(settings) {
           const res = super.attachShadow(settings);
           res.addEventListener("click", addNativeClick, true);
@@ -24,7 +24,16 @@
 
     function getLastPropagationNode(event) {
       const path = event.composedPath();
-      return event.bubbles ? path[path.length - 1] : path[0];
+      if (event.bubbles)
+        return path[path.length - 1];
+      if (!event.composed)//todo check that this applies to focus events, that they have composed.true
+        return path[0];
+      let last = event.target;
+      for (let i = 1; i < path.length-1; i++) {
+        if (path[i] instanceof ShadowRoot)
+          last = path[i+1];
+      }
+      return last;
     }
 
     function wrapper(event) {

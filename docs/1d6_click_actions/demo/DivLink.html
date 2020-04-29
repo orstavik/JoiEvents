@@ -1,4 +1,4 @@
-<script src="../../1d2_defaultAction/demo/addDefaultAction.js"></script>
+<script src="../../1d3_defaultAction/demo/addDefaultAction.js"></script>
 
 <div href="#hello">
   hello
@@ -10,7 +10,8 @@
 </a>
 
 <script>
-  function addDivHrefAction(e) {
+
+  window.addEventListener("click", function (e) {
     for (let element of e.composedPath()) {
       if (element instanceof HTMLElement && element.matches("div[href], span[href]")) {
         e.addDefaultAction(function (e) {
@@ -20,7 +21,5 @@
         return;
       }
     }
-  }
-
-  window.addEventListener("click", addDivHrefAction, true);
+  }, true);
 </script>

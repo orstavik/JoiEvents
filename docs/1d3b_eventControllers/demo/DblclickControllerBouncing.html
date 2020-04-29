@@ -19,6 +19,10 @@
         return lastClick = e;
       if (lastClick === e && !targets.length)
         return;
+      //todo use the toggleTick methods to separate the event dispatches as separate macro tasks.
+      //     This will ensure that event controllers for the inner dom context runs before the outer event context.
+      //todo would this be better? or would it cause problems in that macrotasks from the inner propagation
+      //     can be queued before the event controllers of the outer propagation?
       if (!targets.length)
         toggleTick(bounceDispatchDblclick);
       targets.unshift(e.target);

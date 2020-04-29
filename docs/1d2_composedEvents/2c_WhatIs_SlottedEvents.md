@@ -198,6 +198,20 @@ This demo illustrates how the `isSlottedEvent(..)` function:
  * separates between a) slotted event listeners and b) event listeners that are associated with elements inside a shadowRoot, and
  * is necessary for both `composed: true` and `composed: false` events. 
 
+## Discussion: can slotted events also bounce?
+
+Can slotted events also bounce, ie. be queued to propagate *after* or *before* the original event? 
+
+   The problem is defaultActions. How should that be interpreted?
+
+demo 1: set up a web comp that gets slotted in a `<a href>`. this web comp puts the `<a href>` inside a `<details> <summary>`. The link from the lightDOM should set the defaultAction first.
+   
+demo 2: set up a web comp with a `<details> <summary>`. It gets slotted in a `<h1>`. But, outside in the lightDOM, the web comp is wrapped inside an `<a href>`. The summary from the shadowDOM should hold set the defaultAction first.
+   
+Running slotted events in the flattened DOM structure seems hard to avoid. Slotted events are not associated with composed: true or false; on the contrary, they are explicitly both composed: true and false. So, it might make sense that they cannot bounce, as they have nothing to do with composed: true.
+
+Slotted events can't bounce?  
+
 ## References
 
  *

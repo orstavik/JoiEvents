@@ -35,6 +35,10 @@
    function is activated, and deactivated when the composed event function is deactivated. 
    Secondary trigger functions are commonly added to the `window` in the capture phase.
 
+## the role of DOM events
+
+Custom elements are controlled by their lightDOM parents via HTML attributes, JS object properties(which includes methods), and CSS properties going down. To communicate out/up from an element, the element uses events. 
+
 ## Introduction
 
 1. [HowTo: Compose Events](docs/1_Intro/HowTo1_composeWithEvents)

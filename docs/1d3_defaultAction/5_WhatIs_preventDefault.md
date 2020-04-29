@@ -6,7 +6,8 @@ The principal difference between `.stopPropagation()` and `.preventDefault()` is
 1. `stopPropagation()` halts the inner cycle of event propagation, without affecting the outer cycle of the EventCascade, and 
 2. `preventDefault()` stops an event in the outer cycle of the EventCascade from triggering its default actions, without affecting the current, ongoing inner cycle of event propagation.
 
-Conceptually, `.preventDefault()` is like a scissor that once-and-for-all will cut the ties between an event and its ensuing action(s).
+Conceptually, `.preventDefault()` is like a pair of scissors that once and for all will cut the ties between an event and its ensuing default action.
+
 ``` 
      ↱queue -- x
    prop(A)     x    run(B)
@@ -43,6 +44,7 @@ auxclick
 ```
 
 ## Non-`cancelable` events
+//todo this is a bit outdated
 
 Some events cannot be called `.preventDefault()` on. These events have their `cancelable` property set to `false`. Event cascades that flow from such events are essentially unstoppable/unpreventable. `mousedown` is one such event.
 

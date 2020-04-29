@@ -1,12 +1,15 @@
-# Antipattern: DeadLast
+# Problem: DeadLast
 
-An EarlyBird captures an event *before* any other event listener. But, what if we wanted to do the opposite, catch an event at the very end? Naively, this might seem straight forward. To add an event last, we simply add an event listener on `window` in the bubble phase (or the shadowRoot for non-composed events).
+An EarlyBird captures an event *before* any other event listener. But, what if we wanted to do the opposite, catch an event at the very end? Naively, this might seem straight forward. To add an event last, we simply add a normal (`{capture: false}`) event listener on:
+ * `window` for `{composed: true, bubbles: true}` events,
+ * the shadowRoot for `{composed: false, bubbles: true}` events,
+ * the `target` for `{bubbles: false}` events.
 
-But. There are *two* reasons this doesn't work:
+But. There are *two* problems with this strategy:
 
-1. `bubbles = false`. Some events such as `toggle` doesn't bubble. The last element to be propagated on such events is the target. For non-bubbling events, any and all elements might be the last propagation target.  
+1. For non-bubbling events (ie. `{bubbles: false}`) the `target` can be anywhere. This means you can't add *one* event listener to *one* element that would run DeadLast for all instances of the requested event type.  
 
-2. `stopPropagation()` and `stopImmediatePropagation()`. If any other event listener calls either one of these methods *before* the event reaches the last target, then the *last* event listener will not run. It has been torpedoed. Thus, by adding an event listener last in the propagation path, you are only certain of two things:
+2. StopPropagationTorpedoes. `stopPropagation()` and `stopImmediatePropagation()`. If any other event listener calls either one of these methods *before* the event reaches the last target, then the *last* event listener will not run. It has been torpedoed. Thus, by adding an event listener last in the propagation path, you are only certain of two things:
  * it might not run as other event listeners might `stopPropagation()`, but
  * if it runs, it will run last.  
 

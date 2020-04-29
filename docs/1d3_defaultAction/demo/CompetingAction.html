@@ -1,133 +1,95 @@
+<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
 <script>
-  const EventRoadMap = {
-    UNPREVENTABLES: {
-      mousedown: ["contextmenu", "focusin", "focus", "focusout", "blur"],
-      mouseup: ["click", "auxclick", "dblclick"],
-      click: ["dblclick"],
-      keydown: ["keypress"]
-    }
-  };
-
-  function parseRaceEvents(raceEvents) {
-    if (raceEvents instanceof Array)
-      return raceEvents;
-    if (raceEvents === undefined)
-      return [];
-    if (raceEvents instanceof String || typeof (raceEvents) === "string")
-      return EventRoadMap.UNPREVENTABLES[raceEvents];
-    throw new Error(
-      "The raceEvent argument in toggleTick(cb, raceEvents) must be undefined, " +
-      "an array of event names, empty array, or a string with an event name " +
-      "for the trigger event in the event cascade.");
+  //return true if b is the same as a, a doesn`t exists, or b is inside a.
+  function isNested(a, b) {
+    return !a || a === b || a.contains(b);
+    //todo contains is too simple if b is within a shadowDOM. Must replace .contains with a more complex check
   }
 
-  function toggleTick(cb, raceEvents) {
-    raceEvents = parseRaceEvents(raceEvents);
-    const details = document.createElement("details");
-    details.style.display = "none";
-    const internals = {
-      events: raceEvents,
-      cb: cb
-    };
-
-    function wrapper() {
-      task.cancel();
-      internals.cb();
-    }
-
-    const task = {
-      cancel: function () {
-        for (let raceEvent of internals.events)
-          window.removeEventListener(raceEvent, wrapper, true);
-        details.ontoggle = undefined;
-      },
-      reuse: function (newCb, raceEvents) {
-        raceEvents = parseRaceEvents(raceEvents);
-        internals.cb = newCb;
-        for (let raceEvent of internals.events)
-          window.removeEventListener(raceEvent, wrapper, true);
-        internals.events = raceEvents;
-        for (let raceEvent of internals.events)
-          window.addEventListener(raceEvent, wrapper, {capture: true});
-      },
-      isActive: function () {
-        return !!details.ontoggle;
-      }
-    };
-    details.ontoggle = wrapper;
-    document.body.appendChild(details);
-    details.open = true;
-    Promise.resolve().then(details.remove.bind(details));
-    for (let raceEvent of internals.events)
-      window.addEventListener(raceEvent, wrapper, {capture: true});
-    return task;
-  }
-
-  //requires the toggleTick function
+  // //requires the toggleTick function
   Object.defineProperty(Event.prototype, "addDefaultAction", {
-    value: function (cb, options) {
-      let {preventable, raceEvents} = options instanceof Object ? options : {};
-      if (!preventable)
-        return toggleTick(() => cb(this), raceEvents);
-      if (this.defaultPrevented)
-        return null;
-
-      if (this.composedPath().indexOf(preventable) === -1)
-        throw new Error("The preventable option in the addDefaultAction is not an element in this event's propagation path.");
+    value: function (cb, elementInPath) {
+      //todo this would not work with closed shadowDOM elements...
+      //todo Nothing like this would work with closed shadowDOM elements. because we wouldn't get the complete path.
+      //todo and, we would need to ensure that we are not going down into slotted composed events.
+      //todo is there a way to see if an element is in the propagation path if we have access to it?
+      //todo, yes, we could see it the closed shadowRoot host node is in the element. and then try to make some assumptions..
+      //todo, the problem is the stopPropagation torpedoes..
+      //todo, maybe we should just try to control the stopPropagation() calls instead?
+      //todo, maybe we could ensure that some event listeners are run regardless?
+      //todo, i don't want this...
+      //todo https://github.com/w3c/webcomponents/issues/378#issuecomment-179596975
+      //todo, this means that defaultActions must be added via an EarlyBird event listener on the shadowRoot of the closed shadowDOM.
+      //todo, such an event listener can be captureTorpedoed.
+      //todo, this again points to the need for a workaround to fix the stopPropagation() and stopImmediatePropagation()
+      //todo, I need to test how much time that would take.
+      //todo, we can assume that there will be at most 5 event listeners for any event. How much time is lost when stopPropagation is ignored as a platform issue
+      //todo, to enable a
+      if (this.composedPath().indexOf(elementInPath) === -1)
+        throw new Error("addDefaultAction(..., elementInPath) must be given an element in this event's propagation path.");
       // the preventable element is above the  previously added default action happened below in the DOM
       // and therefore essentially calls preventDefault() on the one attempted to be added here.
-      if (this._defaultActionElement && preventable.contains(this._defaultActionElement) && preventable !== this._defaultActionElement)
-        return null;
-
-      this.preventDefault();
-      this._defaultActionElement = preventable;
+      if (!isNested(this._defaultActionElement, elementInPath))
+        return false;
+      this._defaultActionElement = elementInPath;
       if (this._defaultAction) {
-        this._defaultAction.reuse(() => cb(this), raceEvents);
+        this._defaultAction.reuse(cb.bind(elementInPath, this), this.type);
         return true;
       }
-
-      this._defaultAction = toggleTick(() => cb(this), raceEvents);
-      Object.defineProperties(this, {
-        preventDefault: {
-          value: function () {
-            this._defaultAction.cancel();
-          }.bind(this),
-          writable: false
-        },
-        defaultPrevented: {
-          get: function () {
-            !this._defaultAction.isActive();
-          }.bind(this),
-          set: function () {
-          }
-        }
-      });
+      this._defaultAction = toggleTick(cb.bind(elementInPath, this), this.type);
       return true;
     },
     writable: false
   });
 </script>
 
-<div id="one">
-  click.addDefaultAction(#one, ()=> console.log("one"), target, [dblclick]);
-  <div id="two">
-    click.addDefaultAction(#two, ()=> console.log("two"), target);
-    <div id="three">
-      click.addDefaultAction(#three, ()=> console.log("three"), undefined, [dblclick]);
+<style>
+  div { border: 2px dotted grey; }
+</style>
+
+<div action-one id="one">
+  default action one
+  <div action-two id="two">
+    default action two
+    <div action-three id="three">
+      default action three
     </div>
   </div>
 </div>
 
 <script>
-  // window.addEventListener("click", e => e.preventDefault());
+  function defaultActionOne(e) {
+    console.log("action one:", e.target.id, e.target === this);
+  }
+
+  function defaultActionTwo(e) {
+    console.log("action two:", e.target.id, e.target === this);
+  }
+
+  function defaultActionThree(e) {
+    console.log("action three:", e.target.id, e.target === this);
+  }
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-one"))
+        return e.addDefaultAction(defaultActionOne, el);
+    }
+  }, true);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-two"))
+        return e.addDefaultAction(defaultActionTwo, el);
+    }
+  }, true);
+
+  window.addEventListener("click", function (e) {
+    for (let el of e.composedPath()) {
+      if (el instanceof HTMLDivElement && el.hasAttribute("action-three"))
+        return e.addDefaultAction(defaultActionThree, el);
+    }
+  }, true);
+
   window.addEventListener("click", e => console.log(e.type));
-  window.addEventListener("dblclick", e => console.log(e.type));
-  const one = document.querySelector("#one");
-  const two = document.querySelector("#two");
-  const three = document.querySelector("#three");
-  one.addEventListener("click", e => e.addDefaultAction(() => console.log("one"), {
-    preventable: e.currentTarget,
-    raceEvents: ["dblclick"]
-  }));
-  two.addEventListener("click", e => e.addDefaultAction(() => console.log("two"), {preventable: e.currentTarget}));
-  three.addEventListener("click", e => e.addDefaultAction(() => console.log("three"), {raceEvents: ["dblclick"]}));</script>
+</script>

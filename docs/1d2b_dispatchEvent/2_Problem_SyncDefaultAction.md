@@ -60,6 +60,85 @@ In the demo below, we will see the nested propagation and sync default action ca
 </script>
 ```
 
+## Problem distilled: SyncDefaultAction 
+
+Below is a microscopic description of the SyncDefaultAction problem.
+
+When the defaultAction of the submit event is dispatched SYNC, ie. run as soon as the normal tasks from the last event listener of the submit event has run, then the microtasks of the event's listeners, will run after the defaultAction.
+* (+) tasks are run before the default action of the submit event, and 
+* (-) tasks are run after the default action of the submit event.
+
+To see the (-) tasks run for the sync dispatched submit event, enable preventDefault() on the submit event.
+
+## Demo using `requestSubmit()`
+
+```html
+<form></form>
+<script>
+  window.addEventListener("click", function (e) {
+    document.querySelector("form").requestSubmit();
+  });
+  window.addEventListener("submit", function (e) {
+    console.log("normal task from submit");                           //+
+    Promise.resolve().then(()=>console.log("microtask from submit")); //-   
+    //e.preventDefault();
+  });
+</script>
+```
+
+## Demo using `.dispatchEvent(new CustomEvent(...))`
+
+```html
+<script>
+  window.addEventListener("my-event", function(e){
+    console.log("B main");
+    Promise.resolve().then(()=> console.log("B micro"));
+  });
+
+  console.log("A main");
+  Promise.resolve().then(()=> console.log("A micro"));
+  const myEvent = new CustomEvent("my-event", {bubbles: true});
+  window.dispatchEvent(myEvent);
+  //running the default action sync
+  if(!myEvent.defaultPrevented)
+    console.log("my-event default action");
+</script>
+```    
+
+Results in:
+
+```
+A main
+B main
+my-event default action
+A micro
+B micro
+```
+
+## Demo 2: sync event dispatch (and default action) from inside an async event listener
+
+```html
+<h1>hello sunshine</h1>
+<script>
+  document.addEventListener("click", function (e) {
+    console.log("click document");
+    Promise.resolve().then(()=> console.log("click document microtask"));
+    const myEvent = new CustomEvent("my-event", {bubbles: true});
+    e.target.dispatchEvent(myEvent);
+    //running the default action sync
+    if(!myEvent.defaultPrevented)
+      console.log("my-event default action");
+  });
+
+  window.addEventListener("click", e => console.log("click window"));
+
+  document.addEventListener("my-event", e => console.log("my-event document"));
+  document.addEventListener("my-event", e => Promise.resolve().then(()=>{console.log("my-event document")}));
+  window.addEventListener("my-event", e => console.log("my-event window"));
+</script>
+```
+
+
 ## Insult to injury: async submit events
 
 You might think: "OK, fine! I just have to remember that `submit` events are dispatched sync, and that any microtasks run from it are lost, as are upper, nesting event listeners, and any statements after calls to `requestSubmit(...)`." But. I am sorry to say, that is not enough. 
