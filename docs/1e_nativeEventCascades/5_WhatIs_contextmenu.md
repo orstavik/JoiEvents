@@ -62,11 +62,11 @@ In the demo below a function `ContextMenuController` essentially recreates the l
     const ContextmenuController = {
       onMousedown: function (mousedownEvent) {
         if (mousedownEvent.button === 2)
-          this.triggerContextMenu(mousedownEvent);
+          ContextmenuController.triggerContextMenu(mousedownEvent);
         else if (mousedownEvent.button === 1/*and this mouse only has a primary mouse button*/) 
           //setTimeout to trigger the contextmenu on long press
           //cancel timeout if the mouseup is given before this time.
-          this.triggerContextMenu(mousedownEvent);
+          ContextmenuController.triggerContextMenu(mousedownEvent);
       },
       onTouchstart: function (mousedownEvent) {
         if (onlyOne)
@@ -74,11 +74,11 @@ In the demo below a function `ContextMenuController` essentially recreates the l
         if (mousedownEvent.button === 1/*and this mouse only has a primary mouse button*/) 
           //setTimeout to trigger the contextmenu on long press
           //cancel timeout if the mouseup is given before this time.
-          this.triggerContextMenu(mousedownEvent);
+          ContextmenuController.triggerContextMenu(mousedownEvent);
       },
       onKeydown: function (keydownEvent) {
         if (keydownEvent.key === "meta key wtf?")
-          this.triggerContextMenu(keydownEvent);
+          ContextmenuController.triggerContextMenu(keydownEvent);
       },
       triggerContextMenu: function (triggerEvent) {
         setTimeout(function () {
