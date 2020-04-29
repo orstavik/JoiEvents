@@ -78,7 +78,7 @@
       focusWithins = newFocusWithins;
     }
 
-    function bounceFocusEvent(targets, relatedTargets, name, bubbles) {
+    function bounceFocusEvent(name, targets, relatedTargets, bubbles) {
       if (!targets)
         return;
       for (let [root, target] of targets.entries()) {
@@ -106,19 +106,19 @@
       let blurRoots = removeMyActiveElement();
       //if no blurRoots, cancel the focusoutTask?? and skip calling bounceFocusEvent for blur
       //if no focusRoots, cancel the focus and focusin tasks??
-      bounceFocusEvent(blurRoots, focusRoots, "my-blur", false);
+      bounceFocusEvent("my-blur", blurRoots, focusRoots, false);
 
       //focusOut macrotask
-      focusoutTask.reuse(() => bounceFocusEvent(blurRoots, focusRoots, "my-focusout", true));
+      focusoutTask.reuse(() => bounceFocusEvent("my-focusout", blurRoots, focusRoots, true));
 
       //focus macrotask
       focusTask.reuse(() => {
         setMyActiveElement(focusRoots, newFocusWithins);
-        bounceFocusEvent(focusRoots, blurRoots, "my-focus", false);
+        bounceFocusEvent("my-focus", focusRoots, blurRoots, false);
       });
 
       //focusin macrotask
-      focusinTask.reuse(() => bounceFocusEvent(focusRoots, blurRoots, "my-focusin", true));
+      focusinTask.reuse(() => bounceFocusEvent("my-focusin", focusRoots, blurRoots, true));
     }
 
     const noOp = () => "no op";
@@ -126,7 +126,9 @@
     function addSetMyActiveElementWindow() {
       window.addEventListener("mousedown", function (e) {
         path = e.composedPath();
-        //make 4 macroTasks
+        //preserve 4 macroTasks in the event loop, one for each focus event that might be dispatched.
+        //You do not know at this time, because of shadowDOM borders,
+        //if there are some events that will not be dispatched.
         let blurTask = toggleTick(noOp);
         let focusoutTask = toggleTick(noOp);
         let focusTask = toggleTick(noOp);
@@ -138,6 +140,21 @@
     window.addSetMyActiveElement = function (root) {
       root.addEventListener("mousedown", function (e) {
         path = e.composedPath();
+      }, true);
+    }
+
+    function addSetMyActiveElementKeypress() {
+      window.addEventListener("keypress", function (e) {
+        if (e.key !== "Tab")
+          return;
+        // const nextTab = getNextTab(focusWithins && focusWithins.length ? focusWithins[0] : null, e.shiftKey);
+        // path = getComposedPath(nextTab, true);
+        // //make 4 macroTasks
+        // let blurTask = toggleTick(noOp);
+        // let focusoutTask = toggleTick(noOp);
+        // let focusTask = toggleTick(noOp);
+        // let focusinTask = toggleTick(noOp);
+        // blurTask.reuse(() => blurFocus(focusoutTask, focusTask, focusinTask));
       }, true);
     }
 

@@ -23,6 +23,8 @@
     const one = document.querySelector("input");
     const div = document.querySelector("div");
     div.addEventListener("click", function () {
+      Promise.resolve().then(()=>{
+        console.log("microtask from caller context")});
       one.focus();
     });
   })();

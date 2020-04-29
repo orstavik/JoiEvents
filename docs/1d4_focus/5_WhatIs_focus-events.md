@@ -78,7 +78,7 @@ The focus events are **sync**. This means that all the event listeners run first
 
 But. This should apply per event only. Any microtask queued from an event listener for one event *should* run before the next event is dispatched.
 
-And. This always applies to the `blur` and `focusout` event. Any microtask queued from `blur` will run *before* `focusout` is dispatched
+And. This always applies to the `blur` and `focusout` event. Any microtask queued from `blur` will run *before* `focusout` is dispatched.
 
 And. This always applies when focus is shifted by a user-driven event such as `mousedown` or a "tab" `keypress`.
 
