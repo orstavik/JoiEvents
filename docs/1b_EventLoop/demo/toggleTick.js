@@ -40,6 +40,12 @@ function toggleTick(cb, raceEvents) {
       for (let raceEvent of internals.events)
         window.removeEventListener(raceEvent, wrapper, true);
       details.ontoggle = undefined;
+      // return internals.cb;
+      // todo add this everywhere?? It is good to have the cancel method return the callback being cancelled??
+      // todo can this return replace flush?
+      //  Instead of calling flush(), we call task.cancel()()?
+      //  (or  let x; (x = task.cancel()) && x();
+      //  simpler interface?
     },
     reuse: function (newCb, raceEvents) {
       if (details.ontoggle === undefined)
