@@ -7,11 +7,21 @@
 </a-link>
 
 <script>
-  window.addEventListener("click", e =>
-    console.log("click on window bubble")//this event listener should run before the ゜
-  );
-  // const a = document.querySelector("#two");
-  // a.addEventListener("click", function (e) {
-  //   e.preventDefault();
-  // });
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added before defaultAction ---, and I run before it.");
+    console.log("state of the checkbox", e.target.checked);
+  }, true);
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added after defaultAction ---, still I run before it.");
+    console.log("state of the checkbox", e.target.checked);
+  });
+
+  const aLink = document.querySelector("a-link");
+  aLink.addEventListener("click", function (e) {
+    window.addEventListener("click", e => {
+      console.log("--- dynamically added after defaultAction ---, still I run before it.");
+      console.log("state of the checkbox", e.target.checked);
+      /*debugger;*/
+    }, {once: true});
+  });
 </script>

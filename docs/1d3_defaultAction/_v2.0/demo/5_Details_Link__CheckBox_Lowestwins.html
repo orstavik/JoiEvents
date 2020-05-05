@@ -11,3 +11,54 @@ bobobo
   <h2>sunshine</h2>
 </details-open>
 </a-link>
+
+<script>
+  const details = document.querySelector("details-open");
+  const innerLink = document.querySelector("a-link[href='#gogogo']");
+  const outerLink = document.querySelector("a-link[href='#bobobo']");
+
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added before defaultAction ---, and I run before it.");
+    console.log("state of the navigation", location.hash);
+    console.log("state of the details", details.open);
+  }, true);
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added after defaultAction ---, still I run before it.");
+    console.log("state of the navigation", location.hash);
+    console.log("state of the details", details.open);
+  });
+
+  details.addEventListener("click", function (e) {
+    window.addEventListener("click", e => {
+      console.log("--- dynamically added after defaultAction ---, still I run before it.");
+      console.log("state of the navigation", location.hash);
+      console.log("state of the details", details.open);
+      /*debugger;*/
+    }, {once: true});
+  });
+
+  innerLink.addEventListener("click", function (e) {
+    window.addEventListener("click", e => {
+      console.log("--- dynamically added after defaultAction ---, still I run before it.");
+      console.log("state of the navigation", location.hash);
+      console.log("state of the details", details.open);
+      /*debugger;*/
+    }, {once: true});
+  });
+
+  outerLink.addEventListener("click", function (e) {
+    window.addEventListener("click", e => {
+      console.log("--- dynamically added after defaultAction ---, still I run before it.");
+      console.log("state of the navigation", location.hash);
+      console.log("state of the details", details.open);
+      /*debugger;*/
+    }, {once: true});
+  });
+
+  window.addEventListener("toggle", function (e) {
+      console.log("toggle on window capture")//this event listener should run after the default action
+      console.log("state of the navigation", location.hash);
+      console.log("state of the details", details.open);
+    }
+    , true);
+</script>
