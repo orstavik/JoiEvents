@@ -1,0 +1,58 @@
+<pre>
+  Why the closed-mode shadowDOM breaks, and cannot be used?
+
+  When a composed: true event such as a click happens inside a closed shadowDOM,
+  then from the lightDOM it is not possible to see the composedPath() *inside* the shadowDOM.
+  If the shadowDOM contains different elements, and one of these elements has a default action,
+  then there is no means to see if/which the element with the default action is clicked.
+
+  This means that when an upper DOM context needs to evaluate if it can add a default action,
+  it has no way of knowing if there is another default action already added "nearer the target".
+
+  The only way to see this is either to add information about a default action added already to the
+  event object (event.hasDefault() or something similar) or by examining the full composedPath().
+
+
+</pre>
+
+<script>
+  class ClosedComp extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = `<h1>Hello </h1> <a href="#uncertainty">sunshine</a>`;
+    }
+  }
+  customElements.define("closed-comp", ClosedComp);
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `<closed-comp></closed-comp><div>I have a click action</div>`;
+      this.shadowRoot.addEventListener("click", this._onClick.bind(this));
+    }
+
+    _onClick(e){
+      console.log(e.composedPath()); //would not allow me to look inside the shadowRoot.
+      // e.hasDefaultAction();//doesn't exist.
+      debugger;
+
+      //here I would like to add a default action, but I do not have any way of knowing if the click event
+      //already contains a default action from the click hitting the link (which I would not like to override)
+      //or has no default action, in which case I would like to add a default action.
+      //This irreconcilably breaks when
+      // a) the needs of adding default action for custom web components and
+      // b) closed-mode shadowRoot restrictions meets.
+      // When there was a way to identify *if* a native default action exist for an event,
+      // then the closed-mode shadowRoot could be reinstated, successfully.
+
+      // The composed: true events should instead bounce.
+      // In such instances, the default action would simply be appended from the inner DOM context to the event
+      // dispatched on the outer.
+    }
+  }
+  customElements.define("web-comp", WebComp);
+</script>
+
+<web-comp></web-comp>

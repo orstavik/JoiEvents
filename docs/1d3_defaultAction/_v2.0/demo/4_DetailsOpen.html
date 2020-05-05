@@ -1,0 +1,17 @@
+<script src="joi.js"></script>
+<script src="../../../1b_EventLoop/demo/toggleTick.js"></script>
+<script src="DetailsOpen.js"></script>
+
+<details-open>
+  <span slot="summary">summary</span>
+  <span>Hello content.</span>
+</details-open>
+
+<script>
+  window.addEventListener("click", e =>
+    console.log("click on window bubble")//this event listener should run before the default action
+  );
+  window.addEventListener("toggle", e =>
+    console.log("toggle on window capture")//this event listener should run after the default action
+  , true);
+</script>
