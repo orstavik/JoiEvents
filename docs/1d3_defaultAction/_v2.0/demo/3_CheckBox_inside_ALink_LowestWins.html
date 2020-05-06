@@ -7,21 +7,19 @@
 </a-link>
 
 <script>
+
   const checkbox = document.querySelector("check-box");
-  window.addEventListener("click", function (e) {
-    console.log("--- statically added before defaultAction ---, and I run before it.");
+
+  function log(e, msg) {
+    console.log("-------", e.type, msg);
+    console.log("state of the navigation", location.hash);
     console.log("state of the checkbox", checkbox.checked);
-  }, true);
-  window.addEventListener("click", function (e) {
-    console.log("--- statically added after defaultAction ---, still I run before it.");
-    console.log("state of the checkbox", checkbox.checked);
-  });
+  }
+
+  window.addEventListener("click", e => log(e, "window capture"), true);
+  window.addEventListener("click", e => log(e, "window bubble"));
 
   document.addEventListener("click", function (e) {
-    window.addEventListener("click", e => {
-      console.log("--- dynamically added after defaultAction ---, still I run before it.");
-      console.log("state of the checkbox", checkbox.checked);
-      /*debugger;*/
-    }, {once: true});
+    window.addEventListener("click", e => log(e, "window bubble dynamic"), {once: true});
   });
 </script>

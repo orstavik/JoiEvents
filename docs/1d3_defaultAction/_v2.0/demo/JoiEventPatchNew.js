@@ -22,52 +22,34 @@
     return last;
   }
 
-  //ensure that we have proper ordering for event listeners on the window node.
-  //add last
-  //a post propagation callback is a callback that will run once for an event.
-  //it will throw an Error if there is already a postPropagationListener added
   const firstSymbol = Symbol("firstSymbol");
 
-  const postPropagationCallbacks = new WeakMap();
-
-  function removePostPropagationListener(event) {
-    const {wrapper, cb} = postPropagationCallbacks.get(event);
-    postPropagationCallbacks.delete(event);
-    const node = getLastPropagationNode(event);
-    node.removeEventListener(event.type, wrapper);
-    delete node.addEventListener;
-    return cb;
-  }
-
-  function addPostPropagationCallback(event, cb) {
-    const wrapper = function (e) {
-      cb.call(this, e);
-      removePostPropagationListener(event);
+  function addPostPropagationCallback(event) {
+    event._wrapper = function (e) {
+      event._defaultAction && event._defaultAction.call(this, e);
+      const node = getLastPropagationNode(event);
+      node.removeEventListener(event.type, event._wrapper);
+      delete node.addEventListener;
     };
-    postPropagationCallbacks.set(event, {wrapper, cb});
     const lastNode = getLastPropagationNode(event);
-    lastNode.addEventListener(event.type, wrapper);
+    lastNode.addEventListener(event.type, event._wrapper);
     const addEventListenerOG = lastNode.addEventListener;
 
     lastNode.addEventListener = function (type, listener, options) {
       const res = addEventListenerOG.call(this, type, listener, options);
       if (event.type === type) {
-        lastNode.removeEventListener(event.type, wrapper);
-        addEventListenerOG.call(this, event.type, wrapper);
+        lastNode.removeEventListener(event.type, event._wrapper);
+        addEventListenerOG.call(this, event.type, event._wrapper);
       }
       return res;
     }.bind(lastNode);
   }
 
-  function findLowerNativeAction(event) {
-    for (let el of event.composedPath()) {
-      if (el === event.currentTarget)
-        return null;
-      let nativeAction;
-      if (el.joiGetNativeAction && (nativeAction = el.joiGetNativeAction(event)))
-        return nativeAction;
-    }
-    return null;
+  function findLowerNativeAction(path, start, end, event) {
+    start = !start ? 0 : path.indexOf(start);
+    path = path.slice(start, path.indexOf(end));
+    path = path.filter(n => n.joiGetNativeAction && n.joiGetNativeAction(event));
+    return path.length && path[0];
   }
 
   const stopOG = Event.prototype.stopImmediatePropagation;
@@ -81,26 +63,34 @@
         if (!(cb instanceof Function))
           throw new Error("event.setDefault(cb) must be given a function as an argument. If you want to 'null out' a defaultAction, call preventDefault().");
         //already have a custom defaultAction placed from a lower DOM context, this should override the lightDOM default action unless the lightDOM specifically calls preventDefault().
-        if (postPropagationCallbacks.has(this))
+        if (this._defaultAction)
           return;
         //already have a native defaultAction placed from a lower DOM context, this should override the lightDOM default action unless the lightDOM specifically calls preventDefault().
-        //todo this search should be limited to the last node that called preventDefault()
-        const nativeAction = findLowerNativeAction(this);
-        if (nativeAction)
-          return postPropagationCallbacks.set(this, {wrapper: null, cb: nativeAction});
-        //there is no defaultAction set, that has not also been cancelled before. You are free to add your own default action
-        addPostPropagationCallback(this, cb);
-        preventedEvents.delete(this);
-        //to add a default action to an event that already has a default action, call preventDefault(), and then setDefault()
+        const nativeAction = findLowerNativeAction(this.composedPath(), this._lastPrevented, this.currentTarget, this);
+        if (nativeAction) {
+          this._defaultAction = nativeAction;
+          return;
+        }
+        //there is no lower defaultAction set, that has not also been cancelled before. You are free to add your own default action
+        preventDefaultOG.call(this);
+        this._defaultAction = cb;
+        if (this._wrapper)
+          return;
+        addPostPropagationCallback(this);
       }
     },
     "preventDefault": {
       value: function () {
-        preventedEvents.add(this);
         preventDefaultOG.call(this);
-        return postPropagationCallbacks.has(this) ?
-          removePostPropagationListener(this) :
-          findLowerNativeAction(this);
+        preventedEvents.add(this);
+        const previousPrevent = this._lastPrevented;
+        this._lastPrevented = this.currentTarget;
+        if (this._defaultAction) {
+          const res = this._defaultAction;
+          delete this._defaultAction;
+          return res;
+        }
+        return findLowerNativeAction(this.composedPath(), previousPrevent, this._lastPrevented, this);
       }
     },
     "defaultPrevented": {

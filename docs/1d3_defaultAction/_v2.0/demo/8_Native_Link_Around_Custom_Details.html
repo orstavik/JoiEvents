@@ -1,0 +1,77 @@
+<script type="module" src="joi2.js"></script>
+<script src="ALink.js"></script>
+<script src="DetailsOpen.js"></script>
+<script src="CheckBox.js"></script>
+
+<web-comp>
+  <h1>hello sunshine</h1>
+  <a href="#cococo">cococo</a>
+  <details>
+    <summary>native summary</summary>
+    native details
+  </details>
+  <a-link href="#dumdidum">dumdidum</a-link>
+  <details-open>
+    <h4 slot="summary">custom summary</h4>
+    custom details
+  </details-open>
+</web-comp>
+
+<a href="#whatNow">
+  <web-comp>
+    <h1>hello what now</h1>
+  </web-comp>
+</a>
+
+
+<script>
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `<slot></slot>`;
+      this.shadowRoot.addEventListener("click", e => {
+        const previousDefaultAction = e.preventDefault();
+        e.setDefault(function () {
+          console.log("####BEFORE");
+          console.log("state of the navigation", location.hash);
+          console.log("state of the details", details1.open);
+          console.log("state of the details", details2.open);
+          if (!previousDefaultAction)
+            console.log("no previous default action");
+          else {
+            console.log("YES previous default action");
+            previousDefaultAction();
+          }
+          console.log("####AFTER");
+          console.log("state of the navigation", location.hash);
+          console.log("state of the details", details1.open);
+          console.log("state of the details", details2.open);
+        });
+      });
+    }
+  }
+
+  customElements.define("web-comp", WebComp);
+
+  function log(e, msg) {
+    console.log("-------", e.type, msg);
+    console.log("state of the navigation", location.hash);
+    console.log("state of the details", details1.open);
+    console.log("state of the details", details2.open);
+  }
+
+  const details1 = document.querySelector("details-open");
+  const details2 = document.querySelector("details");
+  const link = document.querySelector("a");
+
+  window.addEventListener("click", e => log(e, "window capture"), true);
+  window.addEventListener("click", e => log(e, "window bubble"));
+  window.addEventListener("toggle", e => log(e, "window capture"), true);
+
+  document.addEventListener("click", function (e) {
+    window.addEventListener("click", e => log(e, "dynamic on window bubble"), {once: true});
+  });
+
+</script>

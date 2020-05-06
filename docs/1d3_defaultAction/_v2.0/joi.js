@@ -1,5 +1,7 @@
 (function () {
 
+  //todo test setDefault(), then preventDefault(), then setDefault() again.
+  //todo test for event grabbing / first event listener option
 
   const firstSymbol = Symbol("firstSymbol");
 
