@@ -46,9 +46,9 @@
   }
 
   function findLowerNativeAction(path, start, end, event) {
-    start = !start ? 0 : path.indexOf(start);
-    path = path.slice(start, path.indexOf(end));
-    path = path.filter(n => n.joiGetNativeAction && n.joiGetNativeAction(event));
+    start = /*!start ? 0 : */path.indexOf(start);
+    path = path.slice(start+1, path.indexOf(end));
+    path = path.filter(n => n.joiGetNativeAction).map(n => n.joiGetNativeAction(event)).filter(fun => fun);
     return path.length && path[0];
   }
 
@@ -73,6 +73,7 @@
         }
         //there is no lower defaultAction set, that has not also been cancelled before. You are free to add your own default action
         preventDefaultOG.call(this);
+        preventedEvents.delete(this);
         this._defaultAction = cb;
         if (this._wrapper)
           return;
