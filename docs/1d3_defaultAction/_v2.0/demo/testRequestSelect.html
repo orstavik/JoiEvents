@@ -1,0 +1,47 @@
+<select>
+  <option value="a">a</option>
+  <option value="b">b</option>
+</select>
+
+<script>
+  Object.defineProperties(HTMLSelectElement.prototype, {
+    requestSelect: function (option) {
+      const beforeInput = new InputEvent("beforeinput", {composed: true, bubbles: true});
+      //todo beforeInput.optionElement = option;
+      // i don't know the properties on the beforeinput or input events that says something about which option is selected
+      this.dispatchEvent(beforeInput);
+      if (beforeInput.defaultPrevented)
+        return;
+      //set :selected pseudo-classes??
+      this.selectedIndex = this.children.indexOf(this);
+      const inputEvent = new InputEvent("input", {composed: true, bubbles: true});
+      //todo inputEvent.data = previousOption;
+      this.dispatchEvent(inputEvent);
+
+    },
+    "joiGetNativeAction": {
+      value: function (e) {
+        if (e instanceof MouseEvent && e.isTrusted && e.type === "mousedown" && e.button === 0 && e.target instanceof HTMLOptionElement)
+          return () => this.requestSelect(e.target);
+        //that way, we would reduce the need for checking if the .parent is alive, and
+        //we would only access the host node to do the action, not look upwards in the DOM.
+        //This same could be said of the FORM submit and reset actions. It would reduce the need for this kind of action.
+      }
+    }
+  });
+
+  const select = document.querySelector("select");
+  //test 1
+  select.addEventListener(e => {
+    e.preventDefault();
+    const defaultAction = e.currentTarget.joiGetNativeAction(e);
+    defaultAction();
+  })
+  //test 2
+  select.addEventListener(e => {
+    e.preventDefault();
+    e.currentTarget.requestSelect(e.target);
+  })
+  window.addEventListener("beforeinput", e => console.log(e));
+  window.addEventListener("input", e => console.log(e));
+</script>
