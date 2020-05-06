@@ -113,6 +113,19 @@ For the second `click`, this happens:
 4. the race event listener for `dblclick` is triggered for the second toggleTask. This is added as an EarlyBird event listener, so it runs at the very beginning of the event propagation of `dblclick`. This task also removes the toggleTask it was racing against.
 5. the `dblclick` event propagates.
 6. the toggleTick task that raced against no other event runs.
+
+## Using `task.cancel()()` to flush the task
+
+The `.cancel()` method returns the callback function that will no longer run. This means that the `cancel()` method can be used to *flush* the task if a script needs to force it to run before its scheduled time. There are two ways to accomplish this, the very short'n'snappy 
+
+```
+task.cancel()()
+```
+or the null-safe alternative: 
+```
+let cb = task.cancel();
+if (cb) cb();
+```  
  
 ## References
 

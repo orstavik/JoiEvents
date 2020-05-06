@@ -11,7 +11,11 @@
     const task = {
       cancel: function () {
         raceEvent && window.removeEventListener(raceEvent, wrapper, true);
+        const cb = details.ontoggle;
         details.ontoggle = undefined;
+        return cb;
+
+
       }
     };
 
