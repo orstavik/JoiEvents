@@ -1,10 +1,6 @@
 (function () {
 
-  //todo test setDefault(), then preventDefault(), then setDefault() again.
-  //todo test for event grabbing / first event listener option
-
   const lastNodeCache = new WeakMap();
-
   function getLastPropagationNode(event) {
     if (lastNodeCache.has(event))
       return lastNodeCache.get(event);
