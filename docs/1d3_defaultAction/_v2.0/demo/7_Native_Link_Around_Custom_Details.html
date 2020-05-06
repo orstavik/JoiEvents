@@ -3,17 +3,17 @@
 <script src="DetailsOpen.js"></script>
 <script src="CheckBox.js"></script>
 
-<a-link href="#bobobo">
-  custom link
-  <details>
-    <summary>native summary</summary>
-    native details content
-  </details>
-</a-link>
+<a href="#bobobo">
+  native link
+  <details-open>
+    <h4 slot="summary">native summary</h4>
+    custom details content
+  </details-open>
+</a>
 
 <script>
-  const details = document.querySelector("details");
-  const link = document.querySelector("a-link");
+  const details = document.querySelector("details-open");
+  const link = document.querySelector("a");
 
   window.addEventListener("click", function (e) {
     console.log("--- statically added before defaultAction ---, and I run before it.");

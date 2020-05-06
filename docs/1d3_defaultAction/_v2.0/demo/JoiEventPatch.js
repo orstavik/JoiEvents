@@ -1,7 +1,6 @@
 (function () {
 
   //todo test setDefault(), then preventDefault(), then setDefault() again.
-  //todo test against native default actions for click
   //todo test for event grabbing / first event listener option
 
   const lastNodeCache = new WeakMap();
@@ -67,55 +66,12 @@
     return postPropagationCallbacks.has(event) || lowestNativeAction(event, nativeCutOff)
   }
 
-  function getNativeMousedown0Action(element) {
-    if (element instanceof HTMLOptionElement)
-      return function () {
-        const select = this.parent;
-        const beforeInput = new InputEvent("beforeinput", {composed: true, bubbles: true});
-        select.dispatchEvent(beforeInput);
-        if (beforeInput.defaultPrevented)
-          return;
-        //set :selected pseudo-classes??
-        select.selectedIndex = select.children.indexOf(this);
-        select.dispatchEvent(new InputEvent("input", {composed: true, bubbles: true}));
-      }.bind(element);
-  }
-
-  function getNativeClick0Action(element) {
-    if (element instanceof HTMLAnchorElement && element.hasAttribute("href"))
-      return function () {
-        location.href = this.getAttribute("href");
-      }.bind(element);
-    if (element instanceof HTMLDetailsElement)
-      return function () {
-        details.open = !details.open;
-        //set pseudo-class??
-        details.dispatchEvent(new Event("toggle"));
-      }.bind(element);
-  }
-
-  function getNativeClick1Action(element) {
-    if (element instanceof HTMLAnchorElement && element.hasAttribute("href"))
-      return function () {
-        window.open(this.getAttribute("href"), "_blank");
-      }.bind(element);
-  }
-
-  function getNativeDefaultAction(event, element) {
-    if (event.type === "click" && event.button === 0)
-      return getNativeClick0Action(element);
-    if (event.type === "click" && event.button === 1)
-      return getNativeClick1Action(element);
-    if (event.type === "mousedown" && event.button === 0)
-      return getNativeMousedown0Action(element);
-  }
-
   function lowestNativeAction(event, cutoffPoint) {
     for (let el of event.composedPath()) {
-      if (cutoffPoint && el === cutoffPoint)
+      if (el === cutoffPoint)
         return null;
-      const nativeAction = getNativeDefaultAction(event, el);
-      if (nativeAction)
+      let nativeAction;
+      if (el.joiGetNativeAction && (nativeAction = el.joiGetNativeAction(event)))
         return nativeAction;
     }
     return null;
@@ -143,8 +99,6 @@
         preventDefaultOG.call(this);
         if (hasPostPropagationCallback(this))
           return removePostPropagationListener(this);
-        // else
-        //   return lowestNativeAction(this);
       }
     },
     "defaultPrevented": {
@@ -169,7 +123,7 @@
     }
   });
 
-  //disable closed shadowDOM.
+//disable closed shadowDOM.
   const shadowOg = HTMLElement.prototype.attachShadow;
   const alwaysOpen = {mode: "open"};
   Object.defineProperty(HTMLElement.prototype, "attachShadow", {
@@ -178,68 +132,69 @@
     }
   });
 
-  // const registry = new Map();        //this is a weak map, as it will die when the window dies  =8-)
-  // const wrapperRegistry = new WeakMap(); //this is a weak map, as it will die when the window dies  =8-)
-  // const captureOptions = {capture: true}, bubbleOptions = {};
-  // const addEventListenerOg = Window.prototype.addEventListener;
-  // const removeEventListenerOg = Window.prototype.removeEventListener;
-  // Object.defineProperty(Window.prototype, "removeEventListener", {
-  //   value: function (type, listener, options) {
-  //     options = options instanceof Object ? options : options ? captureOptions : bubbleOptions;
-  //     if (options.first)
-  //       listener = wrapperRegistry.get(listener);
-  //     const prevListeners = registry[type] || (registry[type] = []);
-  //     const index = prevListeners.findIndex(entry =>
-  //       entry.listener === listener && entry.options.capture === options.capture
-  //     );
-  //     prevListeners.splice(index, 1);
-  //     return removeEventListenerOg.call(this, type, listener, options);
-  //   }
-  // });
-  // Object.defineProperty(Window.prototype, "addEventListener", {
-  //   value: function (type, listener, options) {
-  //     options = options instanceof Object ? options : options ? captureOptions : bubbleOptions;
-  //     const prevListeners = registry[type] || (registry[type] = []);
-  //     const hasOtherListeners = prevListeners.length > 0;
-  //     const alreadyHasFirst = hasOtherListeners && prevListeners[0].first;
-  //
-  //     if (options.first && !options.capture)
-  //       throw new Error("'first' event listeners must be added with the capture event listener option.");
-  //     if (alreadyHasFirst && options.first)
-  //       throw new Error(
-  //         "There can be only one 'first' event listener. " +
-  //         "The first event listener must be removed first " +
-  //         "before another first event listener can be added.");
-  //
-  //     if (options.first) {
-  //       const wrapper = function (e) {
-  //         e[firstSymbol] = true;
-  //         listener.call(this, e);
-  //         delete e[firstSymbol];
-  //       }
-  //       wrapperRegistry.set(listener, wrapper);
-  //
-  //       for (let listener of prevListeners)
-  //         removeEventListenerOg.call(this, listener.type, listener.listener, listener);
-  //       prevListeners.unshift(Object.assign({}, options, {listener: wrapper, type}));
-  //       for (let listener of prevListeners)
-  //         addEventListenerOg.call(this, listener.type, listener.listener, listener);
-  //       return;
-  //     }
-  //
-  //     if (!options.first) {
-  //       prevListeners.push(Object.assign({}, options, {listener, type}));
-  //       return addEventListenerOg.call(this, type, listener, options);
-  //     }
-  //   }
-  // });
+// const registry = new Map();        //this is a weak map, as it will die when the window dies  =8-)
+// const wrapperRegistry = new WeakMap(); //this is a weak map, as it will die when the window dies  =8-)
+// const captureOptions = {capture: true}, bubbleOptions = {};
+// const addEventListenerOg = Window.prototype.addEventListener;
+// const removeEventListenerOg = Window.prototype.removeEventListener;
+// Object.defineProperty(Window.prototype, "removeEventListener", {
+//   value: function (type, listener, options) {
+//     options = options instanceof Object ? options : options ? captureOptions : bubbleOptions;
+//     if (options.first)
+//       listener = wrapperRegistry.get(listener);
+//     const prevListeners = registry[type] || (registry[type] = []);
+//     const index = prevListeners.findIndex(entry =>
+//       entry.listener === listener && entry.options.capture === options.capture
+//     );
+//     prevListeners.splice(index, 1);
+//     return removeEventListenerOg.call(this, type, listener, options);
+//   }
+// });
+// Object.defineProperty(Window.prototype, "addEventListener", {
+//   value: function (type, listener, options) {
+//     options = options instanceof Object ? options : options ? captureOptions : bubbleOptions;
+//     const prevListeners = registry[type] || (registry[type] = []);
+//     const hasOtherListeners = prevListeners.length > 0;
+//     const alreadyHasFirst = hasOtherListeners && prevListeners[0].first;
+//
+//     if (options.first && !options.capture)
+//       throw new Error("'first' event listeners must be added with the capture event listener option.");
+//     if (alreadyHasFirst && options.first)
+//       throw new Error(
+//         "There can be only one 'first' event listener. " +
+//         "The first event listener must be removed first " +
+//         "before another first event listener can be added.");
+//
+//     if (options.first) {
+//       const wrapper = function (e) {
+//         e[firstSymbol] = true;
+//         listener.call(this, e);
+//         delete e[firstSymbol];
+//       }
+//       wrapperRegistry.set(listener, wrapper);
+//
+//       for (let listener of prevListeners)
+//         removeEventListenerOg.call(this, listener.type, listener.listener, listener);
+//       prevListeners.unshift(Object.assign({}, options, {listener: wrapper, type}));
+//       for (let listener of prevListeners)
+//         addEventListenerOg.call(this, listener.type, listener.listener, listener);
+//       return;
+//     }
+//
+//     if (!options.first) {
+//       prevListeners.push(Object.assign({}, options, {listener, type}));
+//       return addEventListenerOg.call(this, type, listener, options);
+//     }
+//   }
+// });
 
-  // const dispatchOg = DocumentFragment.prototype.dispatchEvent;
-  // Object.defineProperty(DocumentFragment.prototype, "dispatchEvent", {
-  //   value: function (event) {
-  //     if (!event.composed)
-  //       throw new Error("shadowRoot.dispatchEvent() is disabled for composed: false events.");
-  //     return dispatchOg.call(this, event);
-  //   }
-  // });
-})();
+// const dispatchOg = DocumentFragment.prototype.dispatchEvent;
+// Object.defineProperty(DocumentFragment.prototype, "dispatchEvent", {
+//   value: function (event) {
+//     if (!event.composed)
+//       throw new Error("shadowRoot.dispatchEvent() is disabled for composed: false events.");
+//     return dispatchOg.call(this, event);
+//   }
+// });
+})
+();
