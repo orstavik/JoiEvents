@@ -1,0 +1,24 @@
+<script type="module" src="OriginalA.js"></script>
+
+<h1>All three are active links(!!) see especially the third link for strange behavior.</h1>
+<original-a id="one" href="#sunshine">hello</original-a>
+<original-a id="two" href="#sunshine">hello</original-a>
+<original-a id="three">hello</original-a>
+
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  one.addEventListener("click", function (e) {
+    e.target.removeAttribute("href");
+    //the state changes the styling of the element immediately, and the default action is cancelled
+  }, true);
+  two.addEventListener("click", function (e) {
+    e.target.setAttribute("href", "#world");
+    //changes the target of the default action navigation
+  }, true);
+  three.addEventListener("click", function (e) {
+    e.target.setAttribute("href", "#sunshine");
+    //changes the target of the default action navigation
+  }, true);
+</script>

@@ -4,9 +4,7 @@ class ALink extends HTMLElement {
     this.attachShadow({mode: "open"});
     this.shadowRoot.innerHTML = `
 <style>
-  div{
-    color: blue;
-  }
+  div{ color: blue;  }
 </style>
 <slot></slot>
       `;
@@ -18,6 +16,7 @@ class ALink extends HTMLElement {
     const link = this.getAttribute("href");
     if (!link)
       return;
+    //here it should have dispatched a "navigate" event, so that it would be possible to distinguish from the rest of the click actions.
     location.href = link;//todo new URL(link, document.baseURI).href instead??
   }
 }
