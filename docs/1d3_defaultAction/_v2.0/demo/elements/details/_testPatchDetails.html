@@ -1,0 +1,25 @@
+<script src="PatchDetails.js"></script>
+
+<details id="one">
+  <summary>hello</summary>
+  sunshine
+</details>
+
+<details id="two">
+  <summary>hello</summary>
+  world
+</details>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  one.addEventListener("click", e => {
+    e.preventDefault();
+    const nativeAction = e.currentTarget.joiGetNativeAction(e);
+    nativeAction();
+  });
+  two.addEventListener("click", e=>{
+    e.preventDefault();
+    e.currentTarget.requestToggle();
+  });
+</script>

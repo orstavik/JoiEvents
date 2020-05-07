@@ -1,4 +1,5 @@
 <details id="one">
+  beautiful
   <summary>hello</summary>
   sunshine
 </details>
@@ -8,6 +9,6 @@
   const two = document.querySelector("#two");
   one.addEventListener("click", function () {
     console.log(one.open, one.hasAttribute("open"), one);
-    setTimeout(()=>console.log(one.open, one.hasAttribute("open"), one));
+    setTimeout(() => console.log(one.open, one.hasAttribute("open"), one));
   });
 </script>

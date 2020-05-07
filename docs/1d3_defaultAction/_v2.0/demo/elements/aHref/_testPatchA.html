@@ -1,0 +1,31 @@
+<script src="PatchA.js"></script>
+
+<h1>All three are active links(!!) see especially the third link for strange behavior.</h1>
+<a id="one" href="#sunshine">hello</a>
+<a id="two" href="#sunshine">hello</a>
+<a id="three">hello</a>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+  one.addEventListener("click", function (e) {
+    e.target.removeAttribute("href");
+    e.preventDefault();
+    const nativeAction = one.joiGetNativeAction(e);
+    nativeAction();
+  }, true);
+  two.addEventListener("click", function (e) {
+    e.target.setAttribute("href", "#world");
+    e.preventDefault();
+    const nativeAction = two.joiGetNativeAction(e);
+    nativeAction();
+  }, true);
+  three.addEventListener("click", function (e) {
+    e.target.setAttribute("href", "#sunshine");
+    e.preventDefault();
+    const nativeAction = three.joiGetNativeAction(e);
+    nativeAction();
+  }, true);
+  window.addEventListener("click", e=>{debugger;});
+</script>
