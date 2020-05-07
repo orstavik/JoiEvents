@@ -1,0 +1,13 @@
+<details id="one">
+  <summary>hello</summary>
+  sunshine
+</details>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  one.addEventListener("click", function () {
+    console.log(one.open, one.hasAttribute("open"), one);
+    setTimeout(()=>console.log(one.open, one.hasAttribute("open"), one));
+  });
+</script>

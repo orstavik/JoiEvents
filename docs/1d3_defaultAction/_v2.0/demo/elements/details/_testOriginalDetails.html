@@ -1,0 +1,15 @@
+<script type="module" src="OriginalDetails.js"></script>
+
+<original-details id="one">
+  <summary slot="summary">hello</summary>
+  sunshine
+</original-details>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  one.addEventListener("click", function () {
+    console.log(one.open, one.hasAttribute("open"), one);
+    setTimeout(()=>console.log(one.open, one.hasAttribute("open"), one));
+  });
+</script>
