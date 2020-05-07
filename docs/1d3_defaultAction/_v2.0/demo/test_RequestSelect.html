@@ -1,47 +1,116 @@
-<select>
+<!--
+The select element grabs all mouse events when it is activated.
+It does so in two ways:
+
+1. you mousedown, move to a new entry and then mouseup on the select.
+This will return a mousedown with the correct coordinates, and then only a mouseup and click with coordinates 0,0.
+The target is the `<select>` element, and you cannot find the `<option>` chosen from the composedPath() list.
+All the in between mousemove events are blocked.
+
+2. you mousedown, move very little and mouseup on the select.
+This first step will activate the <select>, and nothing more. you get one mousedown event with correct coordinates.
+Then, all the mousemove events are blocked.
+You mousedown (and mousemove) and mouseup and click on a select item.
+That will give you only two events, a mouseup and a click: both with 0,0 as coordinates, the select element as target
+and no trace of the option element in the composedPath().
+
+What *must be fixed* for the select to be reusable:
+1. the coordinates of the mouseup and click needs to be corrected for the position in the DOM.
+2. the `composedPath()` should contain a reference to the <option> being clicked.
+This would enable a requestSelect function to be made.
+
+Second, the clickEvent.preventDefault() must be able to cancel the selection. Not being able to do so makes no sense.
+
+Conclusion: <select> element cannot be used inside a reusable web component because its default actions cannot be controlled.
+
+The best approach forward is to make a new web component(s) with controllable default actions.
+And that simply slots in the option elements instead of moving them off the DOM canvas/copying
+them into separate DOM layer like contextmenu.
+-->
+
+<select id="one">
+  <option value="a">a</option>
+  <option value="b">b</option>
+</select>
+
+<select id="two">
   <option value="a">a</option>
   <option value="b">b</option>
 </select>
 
 <script>
   Object.defineProperties(HTMLSelectElement.prototype, {
-    requestSelect: function (option) {
-      const beforeInput = new InputEvent("beforeinput", {composed: true, bubbles: true});
-      //todo beforeInput.optionElement = option;
-      // i don't know the properties on the beforeinput or input events that says something about which option is selected
-      this.dispatchEvent(beforeInput);
-      if (beforeInput.defaultPrevented)
-        return;
-      //set :selected pseudo-classes??
-      this.selectedIndex = this.children.indexOf(this);
-      const inputEvent = new InputEvent("input", {composed: true, bubbles: true});
-      //todo inputEvent.data = previousOption;
-      this.dispatchEvent(inputEvent);
-
+    requestOpen: function () {
+      console.error("The native select element cannot be controlled. See the Select antipattern.");
+    },
+    requestSelect: function (click) {
+      console.error("The native select element cannot be controlled. See the Select antipattern.");
+    },
+    requestSelectKeydown: function (keydown) {
+      console.error("The native select element cannot be controlled. See the Select antipattern.");
+    },
+    requestSelectMouseover: function (keydown) {
+      console.error("The native select element cannot be controlled. See the Select antipattern.");
     },
     "joiGetNativeAction": {
       value: function (e) {
-        if (e instanceof MouseEvent && e.isTrusted && e.type === "mousedown" && e.button === 0 && e.target instanceof HTMLOptionElement)
-          return () => this.requestSelect(e.target);
-        //that way, we would reduce the need for checking if the .parent is alive, and
-        //we would only access the host node to do the action, not look upwards in the DOM.
-        //This same could be said of the FORM submit and reset actions. It would reduce the need for this kind of action.
+        if (!e.isTrusted)
+          return;
+        if (e instanceof MouseEvent) {
+          if (e.button !== 0)
+            return;
+          if (e.type === "mousedown")
+            return () => this.requestOpen();
+          if (e.type === "click" && e.target === this)
+            return () => this.requestSelect(e);
+        }
+        //By attaching the default action to the parent <select> element that should do the default action,
+        // instead of to the child <option> element that is the `target` of the event:
+        // 1. there is no need to process the event if there is no parent element to an orphan `<option>` element, and
+        // 2. we only alter the state of the host node, there is no need to look into the lightDOM above and
+        //    do a state to an element in the lightDOM.
+        //
+        //The same pattern applies to the <form> and the <details> elements.
       }
     }
   });
 
-  const select = document.querySelector("select");
-  //test 1
-  select.addEventListener(e => {
-    e.preventDefault();
-    const defaultAction = e.currentTarget.joiGetNativeAction(e);
-    defaultAction();
-  })
-  //test 2
-  select.addEventListener(e => {
-    e.preventDefault();
-    e.currentTarget.requestSelect(e.target);
-  })
-  window.addEventListener("beforeinput", e => console.log(e));
-  window.addEventListener("input", e => console.log(e));
+  const options = document.querySelectorAll("option");
+  for (let option of options) {
+    option.addEventListener("mouseup", e => console.log("zip"));
+    option.addEventListener("mouseenter", e => console.log("zilch"));
+    option.addEventListener("mouseover", e => console.log("nada"));
+    option.addEventListener("click", e => console.log("bumpkiss"));
+    option.addEventListener("mousedown", e => console.log("nothing"));
+    option.addEventListener("input", e => console.log("null"));
+    option.addEventListener("change", e => console.log("void"));
+    option.addEventListener("keydown", e => console.log("empty"));
+    option.addEventListener("keypress", e => console.log("undefined"));
+  }
+
+  // 1. The input and change events are dispatched *before* the mouseup and click (again bad).
+  // Which also highlight why the events cannot be controlled from the lightDOM using preventDefault().
+
+  // A. use these event listeners to see that only mousedown.preventDefault() has an effect on select element default actions
+  // window.addEventListener("mousedown", e => console.log("mousedown") & e.preventDefault())
+  window.addEventListener("mouseup", e => console.log("mouseup") & e.preventDefault())
+  window.addEventListener("click", e => console.log("click") & e.preventDefault())
+  window.addEventListener("input", e => console.log("input") & e.preventDefault())
+  window.addEventListener("change", e => console.log("change") & e.preventDefault())
+
+  // B. use these event listener to see that neither keydown nor keydown .preventDefault() has any effect on select element default actions
+  window.addEventListener("keydown", e => console.log("keydown") & e.preventDefault(), true)
+  window.addEventListener("keypress", e =>console.log("keypress") &  e.preventDefault(), true)
+
+  // C. neither keydown nor keypress is not given out from the select (unlike mouseup and click).
+  // When selected using the keyboard, then only input and change is fired.
+
+  //X. use these listeners to see that the select element grabs and hides all the mouse events in between mousedown and mouseup/click
+  // window.addEventListener("mousedown", e => console.log("mousedown", e.offsetX, e.clientX, e.pageX))
+  // window.addEventListener("mousemove", e => console.log("mousemove", e.offsetX, e.clientX, e.pageX))
+  // window.addEventListener("mouseup", e => console.log("mouseup", e.offsetX, e.clientX, e.pageX))
+  // window.addEventListener("click", e => console.log("click", e.offsetX, e.clientX, e.pageX))
+  // window.addEventListener("pointermove", e => console.log(e.offsetX, e.clientX, e.pageX))
+  // window.addEventListener("pointerdown", e => console.log(e.offsetX, e.clientX, e.pageX))
+  // window.addEventListener("pointerup", e => console.log(e.offsetX, e.clientX, e.pageX))
 </script>
