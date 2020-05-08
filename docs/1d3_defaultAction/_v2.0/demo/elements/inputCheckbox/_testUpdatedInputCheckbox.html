@@ -1,0 +1,37 @@
+<script type="module" src="UpdatedCheckBox.js"></script>
+
+<h1>This is how checkbox should be.</h1>
+
+<h4>This works as normal. The default-checked attribute is added after 1sec</h4>
+<check-box id="one"></check-box>
+<h4>This calls preventDefault() on click. The default-checked attribute is added after 1sec</h4>
+<check-box id="two" default-checked></check-box>
+<h4>This calls preventDefault() on space keydown</h4>
+<check-box id="three"></check-box>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+
+  one.addEventListener("click", function (e) {
+    console.log(one.checked);
+    setTimeout(() => console.log(one.checked));
+  }, true);
+
+  two.addEventListener("click", function (e) {
+    console.log(two.checked);
+    e.preventDefault();
+    setTimeout(() => console.log(two.checked));
+  });
+
+  three.addEventListener("keydown", function (e) {
+    console.log(three.checked);
+    e.preventDefault();
+    setTimeout(() => console.log(three.checked));
+  }, true);
+
+
+  setTimeout(() => one.setAttribute("default-checked", ""), 1000);
+  setTimeout(() => two.removeAttribute("default-checked"), 1000);
+</script>

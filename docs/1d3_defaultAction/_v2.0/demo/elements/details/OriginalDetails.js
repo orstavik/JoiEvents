@@ -15,7 +15,7 @@ class OriginalDetails extends HTMLElement {
 <slot></slot>`;
     this._summarySlot = this.shadowRoot.children[1].children[0];
     this._contentSlot = this.shadowRoot.children[2];
-    this._summarySlot.addEventListener("click", e => e.setDefault(() => this.open = !this.open));
+    this._summarySlot.addEventListener("click", e => e.setDefault(e => this.requestToggle(e)));
     this.open = false;
   }
 
@@ -35,6 +35,12 @@ class OriginalDetails extends HTMLElement {
 
   get open() {
     return this.hasAttribute("open");
+  }
+
+  requestToggle(e) {
+    if (e.defaultPrevented)
+      return;
+    this.open = !this.open;
   }
 }
 

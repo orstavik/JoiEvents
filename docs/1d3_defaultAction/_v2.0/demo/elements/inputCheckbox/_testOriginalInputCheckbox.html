@@ -1,0 +1,49 @@
+<script type="module" src="OriginalCheckBox.js"></script>
+
+<h1>CtrlZ checkbox.</h1>
+<p>
+  The checkbox alters its state sync at the very beginning of click propagation, and then undo the state change when
+  preventDefault() is called on click().
+</p>
+<h2>attribute is king, property is knave</h2>
+<p>
+  The attribute checked represents the "default-value". When you alter the state of the checked attribute,
+  it will be marshalled to the .checked property, but not vice versa.
+  The .checked property is the state of the checkbox. The `:checked` css pseudo
+  class is the way you read the .checked property from css.
+  The `[checked]` attribute only represent the default value of the checkbox.
+</p>
+
+<h4>This works as normal. The check attribute is added after 1sec</h4>
+<original-input id="one" type="checkbox"></original-input>
+<h4>This calls preventDefault() on click. The check attribute is added after 1sec</h4>
+<original-input id="two" checked type="checkbox"></original-input>
+<h4>This calls preventDefault() on space keydown</h4>
+<original-input id="three" type="checkbox"></original-input>
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+
+  one.addEventListener("click", function (e) {
+    console.log(one.checked);
+    setTimeout(() => console.log(one.checked));
+  }, true);
+
+  two.addEventListener("click", function (e) {
+    console.log(two.checked);
+    e.preventDefault();
+    setTimeout(() => console.log(two.checked));
+  });
+
+  three.addEventListener("keydown", function (e) {
+    console.log(three.checked);
+    e.preventDefault();
+    setTimeout(() => console.log(three.checked));
+  }, true);
+
+
+  setTimeout(() => one.setAttribute("checked", ""), 1000);
+  setTimeout(() => two.removeAttribute("checked"), 1000);
+</script>

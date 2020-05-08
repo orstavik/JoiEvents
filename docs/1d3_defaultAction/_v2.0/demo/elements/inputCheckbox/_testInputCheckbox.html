@@ -1,0 +1,62 @@
+<h2>check! default action</h2>
+<p>
+  The default action of the checkbox is to toggle the value. The default action is triggered by the click event
+  and the keydown event with space when the focus is on the input checkbox.
+</p>
+<h1>CtrlZ checkbox.</h1>
+<p>
+  The checkbox alters its state sync at the very beginning of click propagation, and then undo the state change when
+  preventDefault() is called on click().
+</p>
+<h2>attribute is king, property is knave</h2>
+<p>
+  The attribute checked represents the "default-value". When you alter the state of the checked attribute,
+  it will be marshalled to the .checked property, but not vice versa.
+  The .checked property is the state of the checkbox. The `:checked` css pseudo
+  class is the way you read the .checked property from css.
+  The `[checked]` attribute only represent the default value of the checkbox.
+</p>
+<h5>todo the keydown is highjacked..</h5>
+<p>
+  I need to find out when focus is moved to the element,
+  then it needs to block the keydown event, and instead dispatch a click event on itself.
+  More complexity...
+  The simple way to do this, is to add a listener that blocks the keydown event, and
+  instead convert the event into a click event on the..
+  No wait.. there is a KeydownToClick controller at work here I think.
+</p>
+
+<input id="one" type="checkbox">
+<input id="two" checked type="checkbox">
+<input id="three" type="checkbox">
+
+<script>
+  const one = document.querySelector("#one");
+  const two = document.querySelector("#two");
+  const three = document.querySelector("#three");
+
+  one.addEventListener("click", function (e) {
+    console.log(one.checked);
+    setTimeout(() => console.log(one.checked));
+  }, true);
+
+  two.addEventListener("click", function (e) {
+    console.log(two.checked);
+    e.preventDefault();
+    setTimeout(() => console.log(two.checked));
+  });
+
+  three.addEventListener("keydown", function (e) {
+    console.log(three.checked);
+    e.preventDefault();
+    setTimeout(() => console.log(three.checked));
+  });
+
+  setTimeout(() => one.setAttribute("checked", ""), 1000);
+  setTimeout(() => two.removeAttribute("checked"), 1000);
+
+  window.addEventListener("input", e=> console.log(e.type));
+  window.addEventListener("change", e=> console.log(e.type));
+  window.addEventListener("click", e=> console.log(e.type));
+  window.addEventListener("keydown", e=> console.log(e.type));
+</script>

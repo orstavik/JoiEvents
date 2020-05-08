@@ -10,7 +10,7 @@ Object.defineProperties(HTMLDetailsElement.prototype, {
         return;
       const propPath = e.composedPath();
       const firstSummaryIndex = this.querySelector("summary");
-      if (propPath.indexOf(this)-propPath.indexOf(firstSummaryIndex) === 1)
+      if (propPath.indexOf(this) - propPath.indexOf(firstSummaryIndex) === 1)
         return () => this.requestToggle();
     }
   },
