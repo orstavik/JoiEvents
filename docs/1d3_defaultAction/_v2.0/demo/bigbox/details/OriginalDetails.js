@@ -11,9 +11,9 @@ class OriginalDetails extends HTMLElement {
   ::slotted([slot=summary])::before { content: "▶ "; font-family: monospace; vertical-align: top;}
   :host([open]) ::slotted([slot=summary])::before { content: "▼ "; }
 </style>
-<span tabindex="0"><slot name="summary"></slot></span>
+<slot name="summary"></slot>
 <slot></slot>`;
-    this._summarySlot = this.shadowRoot.children[1].children[0];
+    this._summarySlot = this.shadowRoot.children[1];
     this._contentSlot = this.shadowRoot.children[2];
     this._summarySlot.addEventListener("click", e => e.setDefault(e => this.requestToggle(e)));
     this.open = false;

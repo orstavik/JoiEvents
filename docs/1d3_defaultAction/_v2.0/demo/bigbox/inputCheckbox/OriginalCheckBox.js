@@ -69,5 +69,6 @@ class OriginalInputCheckbox extends HTMLElement {
     this.dispatchEvent(new Event("change", {composed: true, bubbles: true}));
   }
 }
+//todo we need to make the HTMLSummaryElement too, because it has a special .tabIndex property. We cannot override the native .tabIndex I think??
 
 customElements.define("original-input", OriginalInputCheckbox);
