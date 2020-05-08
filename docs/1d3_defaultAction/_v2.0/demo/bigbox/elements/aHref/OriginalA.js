@@ -1,4 +1,4 @@
-import {} from "../../joi2.js";
+import {} from "../../../joi2.js";
 
 class OriginalA extends HTMLElement {
   constructor() {

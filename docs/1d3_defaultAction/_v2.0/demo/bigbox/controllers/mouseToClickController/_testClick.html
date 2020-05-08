@@ -23,16 +23,5 @@
   //can mouseup cancel the usemap
   window.addEventListener("mouseup", e=> e.preventDefault(), true);
 
-  //todo should this be handled by the controller that generates the click event, or should it be put inside another controller ChangeClickTargetController??
-  //todo, it would be most efficient to do it where the click already runs, because that would avoid having the same click function being made twice.
-  //todo, if the target could be changed by a script, then this would not be much of a problem, but changing the target means changing the composedPath, which is not simple. So, maybe it is better to have the click controller also alter this behavior. Yes.
 
-  //todo we have an addAdditionalClick(for some elements)  label for=""
-  //todo we have a shiftClickTarget(for some other elements) usemap=""
-
-  //todo first we listen for the mousedown and mouseup.
-  //todo then we add the switch for auxclick, contextmenu, click
-  //todo then we add the dblclick
-  //todo then we add the for and usemap.
-  //todo how is the touchstart and touchend converted into click? always via mousedown and mouseup?
 </script>
