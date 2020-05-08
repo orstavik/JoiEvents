@@ -1,3 +1,5 @@
+<p>The keydown to click is not a controller, it is a default action. That is unnecessary. And it complicates things. It means that the event will need to be dispersed to many many different elements. Instead of simply being handled in one place.</p>
+
 <a href="#go">link is clicked using Enter</a>
 <hr>
 <input type="checkbox"> checkbox is clicked using Space
@@ -9,6 +11,6 @@
 ....todo make a list of all the elements that you can click with either space or enter
 
 <script>
-  window.addEventListener("keydown", e=> console.log(e.type, e.target, "->"+e.key+"<-"));
+  window.addEventListener("keydown", e=> console.log(e.type, e.target, e.code));
   window.addEventListener("click", e=> console.log(e.type, e.target));
 </script>

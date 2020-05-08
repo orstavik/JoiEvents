@@ -1,0 +1,32 @@
+<script src="KeydownToClickController.js"></script>
+
+<a href="#go">link is clicked using Enter</a>
+<hr>
+<input type="checkbox"> checkbox is clicked using Space
+<hr>
+<input type="submit"> input submit is clicked using Space and Enter
+<hr>
+<input type="reset"> input reset is clicked using Space and Enter
+<hr>
+<button>button is clicked using Space and Enter</button>
+<hr>
+<details><summary>summary click on enter</summary>sunshine</details>
+<hr>
+....todo make a list of all the elements that you can click with either space or enter
+
+<div>
+  <h2>here .preventDefault() is called on the keydown event</h2>
+  <a href="#go">link is clicked using Enter</a>
+  <hr>
+  <input type="checkbox"> checkbox is clicked using Space
+  <hr>
+  <button>button is clicked using Enter</button>
+  <hr>
+  <details><summary>summary click on enter</summary>sunshine</details>
+</div>
+
+<script>
+  window.addEventListener("keydown", e=> console.log(e.type, e.target, e.code));
+  document.querySelector("div").addEventListener("keydown", e => (e.code === "Enter" || e.code === "Space") && e.preventDefault());
+  window.addEventListener("click", e=> console.log(e.type, e.isTrusted, e.target));
+</script>

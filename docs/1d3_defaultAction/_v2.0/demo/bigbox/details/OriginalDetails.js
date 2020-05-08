@@ -15,9 +15,9 @@ class OriginalDetails extends HTMLElement {
 <slot></slot>`;
     this._summarySlot = this.shadowRoot.children[1];
     this._contentSlot = this.shadowRoot.children[2];
-    this._summarySlot.addEventListener("click", e => e.setDefault(e => this.requestToggle(e)));
-    this.open = false;
-  }
+    this._summarySlot.addEventListener("click", e => /*e.isTrusted && */ e.setDefault(e => this.requestToggle(e)));
+    this.open = false;                               //todo 1.  in the updated version, we want the e.isTrusted to be used.
+  }                                                  //todo 2.  in the updated version, we want to remove the slot=name and use slottablesCallback instead and set the slot on the slotted element automatically.
 
   static get observedAttributes() {
     return ["open"];

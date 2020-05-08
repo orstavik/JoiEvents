@@ -6,9 +6,10 @@
 
 <script>
   const one = document.querySelector("#one");
-  const two = document.querySelector("#two");
+  const summary = document.querySelector("summary");
   one.addEventListener("click", function () {
     console.log(one.open, one.hasAttribute("open"), one);
     setTimeout(() => console.log(one.open, one.hasAttribute("open"), one));
   });
+  summary.click();    //this is a bug, it should not allow none isTrusted click events to open it.
 </script>
