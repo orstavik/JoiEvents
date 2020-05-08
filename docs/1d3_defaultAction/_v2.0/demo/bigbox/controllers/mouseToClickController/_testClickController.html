@@ -1,0 +1,35 @@
+<script src="ClickController.js"></script>
+
+<label for="check">hello check</label>  <input id="check" type="checkbox">
+
+<img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MTAiCmhlaWdodD0iODEwIiB2aWV3Qm94PSItLjA1IC0uMDUgOC4xIDguMSI+CjxyZWN0IHg9Ii0uNSIgeT0iLS41IiB3aWR0aD0iOSIgaGVpZ2h0PSI5Ii8+CjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0wLDBIOHYxSDB6bTAsMkg4djFIMHptMAoySDh2MUgwem0wLDJIOHYxSDB6TTEsMFY4aDFWMHptMiwwVjhoMVYwem0yCjBWOGgxVjB6bTIsMFY4aDFWMHoiLz48L3N2Zz4=" width="320" height="320" alt="chessboard" usemap="#chessmap" />
+
+<map name="chessmap">
+  <area shape="rect" coords="0,0,160,160" href="#a1d4" alt="A1D4" title="A1D4">
+  <area shape="rect" coords="0,160,160,320" href="#a5d8" alt="A5D8" title="A5D8">
+  <area shape="rect" coords="160,0,320,160" href="#e1h4" alt="E1H4" title="E1H4">
+  <area shape="rect" coords="160,160,320,320" href="#e5h8" alt="E5H8" title="E5H8">
+</map>
+
+
+<script>
+  //so, the click to click translation for label is also a default action.
+  //should it be??
+  //if it is a click translator, then the behavior could be added to all elements, using a custom href attribute.
+  const label = document.querySelector("label");
+  label.addEventListener("click", e => e.preventDefault(), true);
+
+  //unpreventable, only alters the state of the event itself, by changing the target of the click event.
+  //the click for the usemap is translated as an event controller.
+  //can mouseup cancel the usemap
+  window.addEventListener("mouseup", e=> e.preventDefault(), true);
+
+  window.addEventListener("mouseup", e=> console.log(e.type, e.target));
+  // document.querySelector("div").addEventListener("keydown", e => (e.code === "Enter" || e.code === "Space") && e.preventDefault());
+  window.addEventListener("click", e=> console.log(e.type, e.isTrusted, e.target));
+  window.addEventListener("dblclick", e=> console.log(e.type, e.isTrusted, e.target));
+  window.addEventListener("auxclick", e=> console.log(e.type, e.isTrusted, e.target));
+  window.addEventListener("contextmenu", e=> console.log(e.type, e.isTrusted, e.target));
+
+
+</script>

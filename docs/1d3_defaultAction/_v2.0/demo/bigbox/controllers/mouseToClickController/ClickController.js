@@ -67,31 +67,42 @@
       return;
 
     if (e.button === 2) { //contextmenu
+      //contextmenu runs sync!! it will eat the mouseup if you don't preventDefault on it.
+      //this means that the contextmenu should be set up as a separate event controller that has first position on the mouseup event, and that can!! grab it!!
+
       const cm = new Event("contextmenu", {composed: true, bubbles: true});
       nextTick(() => e.target.dispatchEvent(cm));
       nextTick(() => cm.defaultPrevented || e.target.dispatchEvent(makeEvent("auxclick", e)));
-    } else if (e.button === 0) {
+    } else
+      if (e.button === 0) {
 
       //"img usemap"-swap click
       const target = matchTarget(e.target, switchTargets) || e.target;
 
       //normal click
       const click = makeEvent("click", e);
-      const nowClick = nextTick(() => target.dispatchEvent(click, {composed: true, bubbles: true}));
+      nextTick(() => target.dispatchEvent(click, {composed: true, bubbles: true}));
 
       //"label for"-clone click
-      const cloneClick = makeEvent("click", e);
       //the duplicate target is based on the switch target. This could be used to make something really complex:
       //You click on one element, and then two other elements receive the click.
       const cloneTarget = matchTarget(target, duplicateTargets);
-      cloneTarget && nextTick(() => cloneTarget.dispatchEvent(cloneClick, {composed: true, bubbles: true}));
-
+      if (cloneTarget) {
+        const cloneClick = makeEvent("click", e);
+        nextTick(() => cloneTarget.dispatchEvent(cloneClick, {composed: true, bubbles: true}));
+      }
+      
       //dblclick
-      if (lastClick && (nowClick.timeStamp - lastClick.timeStamp) < 300)
-        nextTick(() => makeEvent("dblclick", e));
+      const now = performance.now();
+      if (lastClick) {
+        if (now - lastClick < 300)
+          nextTick(() => target.dispatchEvent(makeEvent("dblclick", e), {composed: true, bubbles: true}));
+      }
+      lastClick = now;
       //todo the problem of the 300ms delay on touch smartphones because double tap was used to zoom
-    } else {
-      nextTick(() => makeEvent("auxclick", e));
+    } else { //the contextmenu event is allowed to run to fruition without blocking the mouseup event.
+
+      nextTick(() => e.target.dispatchEvent(makeEvent("auxclick", e)));
     }
   }
 
