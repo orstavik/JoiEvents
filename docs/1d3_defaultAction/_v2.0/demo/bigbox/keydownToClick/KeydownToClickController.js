@@ -17,7 +17,7 @@
       const target = e.composedPath()[0];
       if (target instanceof HTMLInputElement && target.type === "checkbox")
         nextTick(() => dispatchClick(target));
-      // if (focusTarget instanceof HTMLInputElement && focusTarget.type === "radio")
+      // todo if (focusTarget instanceof HTMLInputElement && focusTarget.type === "radio")
       //   nextTick(() => dispatchClick(focusTarget));
     }
     if (e.key === "Enter") {
@@ -30,7 +30,7 @@
         nextTick(() => dispatchClick(target));
       if (target.tagName === "SUMMARY" && target.parentNode instanceof HTMLDetailsElement)
         nextTick(() => dispatchClick(target));
-      // if (focusTarget instanceof HTMLInputElement && focusTarget.type === "radio")
+      // todo if (focusTarget instanceof HTMLInputElement && focusTarget.type === "radio")
       //   nextTick(() => dispatchClick(focusTarget));
     }
   }
