@@ -34,7 +34,9 @@ class TextCaret extends HTMLElement {
 
   _onCompositionend(e) {
     this._span.innerText = "";
-    this.dispatchEvent(new InputEvent("beforeinput", e));
+    const beforeinput = new InputEvent("beforeinput", e);
+    Object.defineProperty(beforeinput, "inputType", {value: "insertText"});
+    this.dispatchEvent(beforeinput);
   }
 }
 

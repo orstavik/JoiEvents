@@ -35,7 +35,7 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
     this._editable.addEventListener("beforeinput", e => !e.isComposing && e.setDefault(this._onBeforeinput.bind(this)));
     this.shadowRoot.addEventListener("keydown", this._onKeydown.bind(this));
 
-    // this.addEventListener("slottables-changed", this._slottablesChanged.bind(this));
+    this.addEventListener("slottables-changed", this._slottablesChanged.bind(this));
   }
 
   //set up the textarea in multiple ways. cols, rows, etc.
@@ -49,21 +49,30 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
   //   }
   // }
 
-  // get value() {
-  //   return this._pre.innerText + this._editable.innerText + this._post.innerText;
-  // }
-  //
-  // set value(ignore) {
-  // }
-  //
+  get value() {
+    return this._pre.innerText + this._editable.innerText + this._post.innerText;
+  }
+
+  set value(ignore) {
+  }
+
   //simplified, assumes only a single text childNode
-  // _slottablesChanged() {
-  //   this._pre.innerText = this.childNodes[0].data;
-  //   this._editable.innerText = "";
-  //   this._post.innerText = "";
-  // }
+  _slottablesChanged() {
+    this._pre.innerText = this.childNodes[0].data;
+    this._editable.innerText = "";
+    this._post.innerText = "";
+  }
+
   _onBeforeinput(e) {
-    this._pre.innerText += e.data;
+    if (e.inputType === "insertParagraph")
+      this._pre.innerText += "\n";
+    else if (e.inputType === "deleteContentBackward" && this._editable.innerText !== "")
+      this._editable.innerText = "";
+    else if (e.inputType === "deleteContentBackward" && this._editable.innerText === "" && this._pre.innerText.length > 0)
+      this._pre.innerText = this._pre.innerText.slice(0, -1);
+    else if (e.inputType === "insertText")
+      this._pre.innerText += e.data;
+    console.log(e.inputType)
     const inputEvent = new InputEvent("input", e);       //todo this is composed, but should be non-composed
     this.dispatchEvent(inputEvent);
   }
@@ -73,6 +82,10 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
       return e.setDefault(this._moveRight.bind(this, e.ctrlKey));
     if (e.code === "ArrowLeft" && this._pre.innerText.length > 0)
       return e.setDefault(this._moveLeft.bind(this, e.ctrlKey));
+    if (e.code === "Home")
+      return e.setDefault(this._moveHome.bind(this, e.ctrlKey));
+    if (e.code === "End")
+      return e.setDefault(this._moveEnd.bind(this, e.ctrlKey));
   }
 
   _moveRight(ctrl) {
@@ -87,6 +100,18 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
     const one = this._pre.innerText[this._pre.innerText.length - 1];
     this._pre.innerText = this._pre.innerText.slice(0, this._pre.innerText.length - 1);
     this._post.innerText = one + this._post.innerText;
+  }
+
+  _moveHome(ctrl) {
+    //todo, not implemented home key that goes to next end of line
+    this._post.innerText = this._pre.innerText + this._post.innerText;
+    this._pre.innerText = "";
+  }
+
+  _moveEnd(ctrl) {
+    //todo, not implemented home key that goes to next end of line
+    this._pre.innerText += this._post.innerText;
+    this._post.innerText = "";
   }
 }
 
