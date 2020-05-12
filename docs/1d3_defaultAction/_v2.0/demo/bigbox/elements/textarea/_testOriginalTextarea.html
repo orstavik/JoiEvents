@@ -1,0 +1,16 @@
+<script type="module" src="OriginalTextarea.js"></script>
+
+
+<original-textarea>hello</original-textarea>
+
+<script>
+  // window.addEventListener("my-input", e => console.log(e));
+  window.addEventListener("input", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("beforeinput", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("keydown", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("keypress", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("keyup", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("compositionstart", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("compositionupdate", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+  window.addEventListener("compositionend", e => console.log(e.type, e.isComposing, e.key, e.code, e.data), true);
+</script>
