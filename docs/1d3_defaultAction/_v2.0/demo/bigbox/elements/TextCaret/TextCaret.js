@@ -22,6 +22,7 @@ class TextCaret extends HTMLElement {
   span { line-height: 1em; } /*prevents the line height of the span to alter with the dead key layout*/ 
 </style><span></span><div contenteditable></div>`;
     this._span = this.shadowRoot.children[1];
+    this._div = this.shadowRoot.children[2];
 
     this.shadowRoot.addEventListener("compositionupdate", this._onCompositionupdate.bind(this));
     this.shadowRoot.addEventListener("compositionend", this._onCompositionend.bind(this));
@@ -37,6 +38,10 @@ class TextCaret extends HTMLElement {
     const beforeinput = new InputEvent("beforeinput", e);
     Object.defineProperty(beforeinput, "inputType", {value: "insertText"});
     this.dispatchEvent(beforeinput);
+  }
+
+  focus(){
+    this._div.focus();
   }
 }
 
