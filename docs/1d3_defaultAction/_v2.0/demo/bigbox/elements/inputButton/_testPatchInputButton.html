@@ -1,0 +1,47 @@
+<script src="patchInputButton.js"></script>
+
+<form>
+  <input type="button" value="input type button"/>
+  <input type="submit" value="input type submit">
+  <input type="reset" value="input type reset">
+
+  <h3>remove type attribute during mouseup</h3>
+  <input type="submit" remove-mouseup value="input type submit">
+  <input type="reset" remove-mouseup value="input type reset">
+
+  <h3>remove type attribute during click</h3>
+  <input type="submit" remove-click value="input type submit">
+  <input type="reset" remove-click value="input type reset">
+
+  <h3>set type to submit during click</h3>
+  <input type="reset" to-submit value="input type reset">
+  <input type="button" to-submit value="input type button">
+  <input type="text" to-submit value="input type text">
+
+  <h3>set type to reset during click</h3>
+  <input type="submit" to-reset value="input type submit">
+  <input type="button" to-reset value="input type button">
+  <input type="text" to-reset value="input type text">
+</form>
+
+<script>
+  (function () {
+    const inputs = document.querySelectorAll("input");
+    for (let input of inputs) {
+      input.addEventListener("click", e => {
+        e.preventDefault();
+        const nativeAction = e.target.joiGetNativeAction(e);
+        setTimeout(() => nativeAction());//shortcut to call the native default action after the other event listeners has run.
+      });
+    }
+
+    window.addEventListener("mouseup", e => e.target.hasAttribute("remove-mouseup") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("remove-click") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-submit") && e.target.setAttribute("type", "submit"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-reset") && e.target.setAttribute("type", "reset"));
+
+    window.addEventListener("submit", e => e.preventDefault());
+    window.addEventListener("submit", e => console.log(e.type));
+    window.addEventListener("reset", e => console.log(e.type));
+  })();
+</script>

@@ -1,0 +1,41 @@
+<script type="module" src="OriginalInputButton.js"></script>
+<form>
+  <original-input-button type="button" value="input type button"></original-input-button>
+  <original-input-button type="submit" value="input type submit"></original-input-button>
+  <original-input-button type="reset" value="input type reset"></original-input-button>
+
+  <h3>remove type attribute during mouseup</h3>
+  <original-input-button remove-mouseup type="submit" value="input type submit"></original-input-button>
+  <original-input-button remove-mouseup type="reset" value="input type reset"></original-input-button>
+
+  <h3>remove type attribute during click</h3>
+  <original-input-button remove-click type="submit" value="input type submit"></original-input-button>
+  <original-input-button remove-click type="reset" value="input type reset"></original-input-button>
+
+  <h3>set type to submit during click</h3>
+  <original-input-button to-submit type="reset" value="input type reset"></original-input-button>
+  <original-input-button to-submit type="button" value="input type button"></original-input-button>
+  <original-input-button to-submit type="text" value="input type text"></original-input-button>
+
+  <h3>set type to reset during click</h3>
+  <original-input-button to-reset type="submit" value="input type submit"></original-input-button>
+  <original-input-button to-reset type="button" value="input type button"></original-input-button>
+  <original-input-button to-reset type="text" value="input type text"></original-input-button>
+  <p>
+    This is definitively not the behavior we would like. A text input turning into a button during the propagation of click.
+    A submit or reset event magically appearing or disappearing during click event propagation, because the type attribute of an input element is changed.
+  </p>
+</form>
+
+<script>
+  (function () {
+    window.addEventListener("mouseup", e => e.target.hasAttribute("remove-mouseup") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("remove-click") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-submit") && e.target.setAttribute("type", "submit"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-reset") && e.target.setAttribute("type", "reset"));
+
+    window.addEventListener("submit", e => e.preventDefault());
+    window.addEventListener("submit", e => console.log(e.type));
+    window.addEventListener("reset", e => console.log(e.type));
+  })();
+</script>
