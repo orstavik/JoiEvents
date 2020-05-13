@@ -1,0 +1,41 @@
+<script type="module" src="OriginalButton.js"></script>
+<form>
+  <original-button>button no type</original-button>
+  <original-button type="submit">button type submit</original-button>
+  <original-button type="reset">button type reset</original-button>
+
+  <h3>remove type attribute during mouseup</h3>
+  <original-button remove-mouseup type="submit">button type submit</original-button>
+  <original-button remove-mouseup type="reset">button type reset</original-button>
+
+  <h3>remove type attribute during click</h3>
+  <original-button remove-click type="submit">button type submit</original-button>
+  <original-button remove-click type="reset">button type reset</original-button>
+
+  <h3>set type to submit during click</h3>
+  <original-button to-submit type="reset">button type reset</original-button>
+  <original-button to-submit>button no type</original-button>
+
+  <h3>set type to reset during click</h3>
+  <original-button to-reset type="submit">button type submit</original-button>
+  <original-button to-reset>button no type</original-button>
+  <p>
+    This is not the behavior we would like. The default action is changing in nature based on a attribute/property that can be changed after the default action is added (when the web component whose action it is makes the call), and before it runs. The type of action should be locked in place during the adding of the default action, and then the lightDOM can only change if it runs or not. It is impolite of the lightDOM to change the *type* of default action, the lightDOM should only be able to change if the default action runs or not, and possibly data input to that function, such as the address of a link.
+  </p>
+</form>
+
+<script>
+  (function () {
+    window.addEventListener("mouseup", e => e.target.hasAttribute("remove-mouseup") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("remove-click") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-submit") && e.target.setAttribute("type", "submit"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-reset") && e.target.setAttribute("type", "reset"));
+
+    window.addEventListener("submit", e => e.preventDefault());
+    window.addEventListener("submit", e => console.log(e.type));
+    window.addEventListener("reset", e => console.log(e.type));
+
+    const button = document.querySelector("original-button");//first one
+    console.log("button.type when no type attribute is set: ", button.type);
+  })();
+</script>

@@ -1,0 +1,49 @@
+<script type="module" src="UpdatedButton.js"></script>
+<form>
+  <updated-button>button no type</updated-button>
+  <updated-button type="submit">button type submit</updated-button>
+  <updated-button type="reset">button type reset</updated-button>
+
+  <h3>remove type attribute during mouseup</h3>
+  <updated-button remove-mouseup type="submit">button type submit</updated-button>
+  <updated-button remove-mouseup type="reset">button type reset</updated-button>
+
+  <h3>remove type attribute during click</h3>
+  <updated-button remove-click type="submit">button type submit</updated-button>
+  <updated-button remove-click type="reset">button type reset</updated-button>
+
+  <h3>set type to submit during click</h3>
+  <updated-button to-submit type="reset">button type reset</updated-button>
+  <updated-button to-submit>button no type</updated-button>
+
+  <h3>set type to reset during click</h3>
+  <updated-button to-reset type="submit">button type submit</updated-button>
+  <updated-button to-reset>button no type</updated-button>
+  <p>
+    Here, the type of default action is set before the event bubbles to the lightDOM in which the button is used. The
+    lightDOM can still call preventDefault() on the click event to prevent either submit or reset, but changing the
+    attribute will not change the type of action that the button does.
+    This is more polite from the lightDOM side. The lightDOM can prevent (or alter the data of the reset or submit), but
+    it cannot change a default action from a submit to a reset or vice versa anymore.
+  </p>
+  <p>
+    The best solution here would be to have two buttons, one for submit and one for reset: < button > and < reset-button
+    >.
+  </p>
+</form>
+
+<script>
+  (function () {
+    window.addEventListener("mouseup", e => e.target.hasAttribute("remove-mouseup") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("remove-click") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-submit") && e.target.setAttribute("type", "submit"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-reset") && e.target.setAttribute("type", "reset"));
+
+    window.addEventListener("submit", e => e.preventDefault());
+    window.addEventListener("submit", e => console.log(e.type));
+    window.addEventListener("reset", e => console.log(e.type));
+
+    const button = document.querySelector("updated-button");//first one
+    console.log("button.type when no type attribute is set: ", button.type);
+  })();
+</script>

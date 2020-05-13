@@ -1,0 +1,46 @@
+<script src="patchButton.js"></script>
+
+<form>
+  <button>button no type</button>
+  <button type="submit">button type submit</button>
+  <button type="reset">button type reset</button>
+
+  <h3>remove type attribute during mouseup</h3>
+  <button remove-mouseup type="submit">button type submit</button>
+  <button remove-mouseup type="reset">button type reset</button>
+
+  <h3>remove type attribute during click</h3>
+  <button remove-click type="submit">button type submit</button>
+  <button remove-click type="reset">button type reset</button>
+
+  <h3>set type to submit during click</h3>
+  <button to-submit type="reset">button type reset</button>
+  <button to-submit>button no type</button>
+
+  <h3>set type to reset during click</h3>
+  <button to-reset type="submit">button type submit</button>
+  <button to-reset>button no type</button>
+</form>
+
+<script>
+  (function () {
+    const buttons = document.querySelectorAll("button");
+    for (let button of buttons) {
+      button.addEventListener("click", e => {
+        e.preventDefault();
+        const nativeAction = e.target.joiGetNativeAction(e);
+        setTimeout(() =>nativeAction());//shortcut to call the native default action after the other event listeners has run.
+      });
+    }
+
+    window.addEventListener("mouseup", e => e.target.hasAttribute("remove-mouseup") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("remove-click") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-submit") && e.target.setAttribute("type", "submit"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-reset") && e.target.setAttribute("type", "reset"));
+
+    window.addEventListener("submit", e => e.preventDefault());
+    window.addEventListener("submit", e => console.log(e.type));
+    window.addEventListener("reset", e => console.log(e.type));
+
+  })();
+</script>
