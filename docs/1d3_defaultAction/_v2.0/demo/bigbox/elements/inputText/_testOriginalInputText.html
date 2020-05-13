@@ -1,9 +1,10 @@
-<script type="module" src="OriginalTextarea.js"></script>
+<script type="module" src="OriginalInputText.js"></script>
 
-
-<original-textarea>hello</original-textarea>
-
+<form action="#gogogo">
+  <original-input-text value="hello sunshine"></original-input-text>
+</form>
 <script>
+  // window.addEventListener("my-input", e => console.log(e));
   window.addEventListener("input", e => console.log(e.type, e.isComposing, e.key, e.code, e.data));
   window.addEventListener("beforeinput", e => console.log(e.type, e.isComposing, e.key, e.code, e.data));
   window.addEventListener("keydown", e => console.log(e.type, e.isComposing, e.key, e.code, e.data));

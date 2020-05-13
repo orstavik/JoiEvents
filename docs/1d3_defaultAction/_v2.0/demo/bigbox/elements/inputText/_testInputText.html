@@ -1,0 +1,16 @@
+<form action="#go"></form>
+<input type="text" value="type something here, try both letters, arrow keys, dead keys, multiple spaces and enter.">
+
+<script>
+  window.addEventListener("beforeinput", e => console.log(e.type));
+  window.addEventListener("input", e => console.log(e.type));
+  window.addEventListener("compositionstart", e => console.log(e.type));
+  window.addEventListener("compositionupdate", e => console.log(e.type));
+  window.addEventListener("compositionend", e => console.log(e.type));
+  window.addEventListener("keydown", e => console.log(e.type));
+  window.addEventListener("keypress", e => console.log(e.type));
+  window.addEventListener("keyup", e => console.log(e.type));
+  window.addEventListener("submit", e => console.log(e.type));
+  window.addEventListener("submit", e => e.preventDefault());
+</script>
+
