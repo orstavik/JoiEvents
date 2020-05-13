@@ -15,11 +15,13 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
   span{
     white-space: pre;
   }
-</style><div><span></span><text-caret></text-caret><span></span></div>`;
+</style><div><span> </span><text-caret></text-caret><span> </span></div>`;
     this._container = this.shadowRoot.children[1];
-    this._pre = this._container.children[0];
+    this._pre = this._container.children[0].childNodes[0];
     this._caret = this._container.children[1];
-    this._post = this._container.children[2];
+    this._post = this._container.children[2].childNodes[0];
+    this._pre.data = "";
+    this._post.data = "";
 
     //listen only for the composing-completed beforeinput events.
     this._caret.addEventListener("beforeinput", e => !e.isComposing && e.setDefault(this._onBeforeinput.bind(this)));
@@ -52,7 +54,7 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
   }
 
   get value() {
-    return this._pre.innerText + this._caret.innerText + this._post.innerText;
+    return this._pre.data + this._caret.innerText + this._post.data;
   }
 
   set value(ignore) { //todo do we need this one
@@ -60,21 +62,21 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
 
   //todo check and override the innerText functions
   get innerText() {
-    return this._pre.innerText + this._caret.innerText + this._post.innerText;
+    return this.value;
   }
 
   set innerText(textValue) {
     //todo convert the text to pure text
-    this._pre.innerText = textValue;
+    this._pre.data = textValue;
     this._caret.innerText = "";
-    this._post.innerText = "";
+    this._post.data = "";
   }
 
   //simplified, assumes only a single text childNode
   _slottablesChanged() {
-    this._pre.innerText = this.childNodes[0].data;
+    this._pre.data = this.childNodes[0].data;
     this._caret.innerText = "";
-    this._post.innerText = "";
+    this._post.data = "";
   }
 
   focus() {
@@ -83,22 +85,22 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
 
   _onBeforeinput(e) {
     if (e.inputType === "insertParagraph")
-      this._pre.innerText += "\n";
+      this._pre.data += "\n";
     else if (e.inputType === "deleteContentBackward" && this._caret.innerText !== "")
       this._caret.innerText = "";
-    else if (e.inputType === "deleteContentBackward" && this._caret.innerText === "" && this._pre.innerText.length > 0)
-      this._pre.innerText = this._pre.innerText.slice(0, -1);
+    else if (e.inputType === "deleteContentBackward" && this._caret.innerText === "" && this._pre.data.length > 0)
+      this._pre.data = this._pre.data.slice(0, -1);
     else if (e.inputType === "insertText")
-      this._pre.innerText += e.data;
+      this._pre.data += e.data;
     console.log(e.inputType)
     const inputEvent = new InputEvent("input", e);       //todo this is composed, but should be non-composed
     this.dispatchEvent(inputEvent);
   }
 
   _onKeydown(e) {
-    if (e.code === "ArrowRight" && this._post.innerText.length > 0)
+    if (e.code === "ArrowRight" && this._post.data.length > 0)
       return e.setDefault(this._moveRight.bind(this, e.ctrlKey));
-    if (e.code === "ArrowLeft" && this._pre.innerText.length > 0)
+    if (e.code === "ArrowLeft" && this._pre.data.length > 0)
       return e.setDefault(this._moveLeft.bind(this, e.ctrlKey));
     if (e.code === "Home")
       return e.setDefault(this._moveHome.bind(this, e.ctrlKey));
@@ -115,28 +117,28 @@ class OriginalTextarea extends SlottablesEventMixin(HTMLElement) {
 
   _moveRight(ctrl) {
     //todo implement ctrl
-    const one = this._post.innerText[0];
-    this._post.innerText = this._post.innerText.slice(1);
-    this._pre.innerText += one;
+    const one = this._post.data[0];
+    this._post.data = this._post.data.slice(1);
+    this._pre.data += one;
   }
 
   _moveLeft(ctrl) {
     //todo implement ctrl
-    const one = this._pre.innerText[this._pre.innerText.length - 1];
-    this._pre.innerText = this._pre.innerText.slice(0, this._pre.innerText.length - 1);
-    this._post.innerText = one + this._post.innerText;
+    const one = this._pre.data[this._pre.data.length - 1];
+    this._pre.data = this._pre.data.slice(0, this._pre.data.length - 1);
+    this._post.data = one + this._post.data;
   }
 
   _moveHome(ctrl) {
     //todo, not implemented home key that goes to next end of line
-    this._post.innerText = this._pre.innerText + this._post.innerText;
-    this._pre.innerText = "";
+    this._post.data = this._pre.data + this._post.data;
+    this._pre.data = "";
   }
 
   _moveEnd(ctrl) {
     //todo, not implemented home key that goes to next end of line
-    this._pre.innerText += this._post.innerText;
-    this._post.innerText = "";
+    this._pre.data += this._post.data;
+    this._post.data = "";
   }
 }
 
