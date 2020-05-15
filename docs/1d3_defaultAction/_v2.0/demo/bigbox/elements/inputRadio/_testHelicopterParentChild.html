@@ -1,0 +1,39 @@
+<script type="module">
+
+  import {ObserveHelicopterParent} from "./HelicopterParentMixin.js";
+
+  class HelicopterParent extends HTMLElement {
+
+  }
+
+  customElements.define("helicopter-parent", HelicopterParent);
+
+  class HelicopterChild extends ObserveHelicopterParent(HTMLElement) {
+    static get observedParentType() {
+      return HelicopterParent;
+    }
+
+    parentChangedCallback(oldParent, newParent) {
+      console.log("parentChanged ", oldParent, newParent);
+    }
+  }
+
+  customElements.define("helicopter-child", HelicopterChild);
+</script>
+
+<helicopter-parent id="one">
+  <div>
+    <helicopter-child></helicopter-child>
+  </div>
+</helicopter-parent>
+
+<helicopter-parent id="two">
+</helicopter-parent>
+
+<script>
+  setTimeout(() => {
+    const div = document.querySelector("div");
+    const two = document.querySelector("#two");
+    two.appendChild(div);
+  }, 1000);
+</script>

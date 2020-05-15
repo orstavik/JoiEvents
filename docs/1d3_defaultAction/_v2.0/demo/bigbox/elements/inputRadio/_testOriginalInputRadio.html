@@ -1,0 +1,20 @@
+<script type="module" src="OriginalInputRadio.js"></script>
+
+<form>
+  <original-input-radio checked></original-input-radio>
+  <original-input-radio></original-input-radio>
+  <original-input-radio></original-input-radio>
+</form>
+
+<script>
+  (function () {
+    window.addEventListener("mouseup", e => e.target.hasAttribute("remove-mouseup") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("remove-click") && e.target.removeAttribute("type"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-submit") && e.target.setAttribute("type", "submit"));
+    window.addEventListener("click", e => e.target.hasAttribute("to-reset") && e.target.setAttribute("type", "reset"));
+
+    window.addEventListener("submit", e => e.preventDefault());
+    window.addEventListener("submit", e => console.log(e.type));
+    window.addEventListener("reset", e => console.log(e.type));
+  })();
+</script>
