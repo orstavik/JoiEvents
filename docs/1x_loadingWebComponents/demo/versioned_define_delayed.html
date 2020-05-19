@@ -12,6 +12,32 @@
     return existingVersion.startsWith(semver)
   }
 
+  //super naive algorithm for merging semantic versions for tag names.
+  // this will not safely merge three or more entries for the same tag name.
+  function reduceTasksSemver(tasks){
+    const res = [];
+    for (let task of tasks) {
+      const indexOfConflict = res.findIndex(t=> t.tag === task.tag);
+      if (indexOfConflict === -1){
+        res.push(task);
+        continue;
+      }
+      let a = res[indexOfConflict];
+      let b = task;
+      const bAcceptsA = versionIsAccepted(a.options.version, b.options.acceptVersion);
+      const aAcceptsB = versionIsAccepted(b.options.version, a.options.acceptVersion);
+      if (bAcceptsA && aAcceptsB){
+        if (b.options.version > a.options.version)
+          res.splice(indexOfConflict, 1, b);
+      } else if(!aAcceptsB && !bAcceptsA){
+        throw new Error(`Trying to load two different versions of ${a.tag} that are incompatible.`);
+      } else if(aAcceptsB /*&& !bAcceptsA*/){
+        res.splice(indexOfConflict, 1, b);
+      } /*else if(bAcceptsA && !aAcceptsB) bAcceptsA, but not the other way round, but then we just leave a in the result list*/
+    }
+    return res;
+  }
+
   let listener;
   let delayedTasks = [];
   const nameClass = {};
@@ -20,17 +46,19 @@
   const gangster = {
     define: function (tag, clazz, options) {
       //delay until document has loaded, and then use the version numbering to tackle conflicts.
-      if (document.readyState !== "completed") {
+      if (document.readyState !== "complete") {
         if (!listener) {
           listener = function () {
             //sort the delayedTasks so that the most recent one that all can use, is used.
-            for (let task of delayedTasks)
+            const tasks = reduceTasksSemver(delayedTasks);
+            delayedTasks = undefined;
+            for (let task of tasks)
               window.customElements.define(task.tag, task.clazz, task.options);
           };
           window.addEventListener("load", listener, {once: true});
-          delayedTasks = undefined;
         }
         delayedTasks.push({tag, clazz, options});
+        return;
       }
 
       const existingVersion = nameVersion[tag];
@@ -51,9 +79,24 @@
 
 <soft-drink>is the best!</soft-drink>
 
+<!--from developer two-->
+<script>
+  // setTimeout(function () {
+  class PepsiMax extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "PepsiMax <slot></slot>";
+    }
+  }
+
+  customElements.define("soft-drink", PepsiMax, {version: "1.1.2", acceptVersion: "1.1"});
+  // }, Math.random() * 1000);
+</script>
+
 <!--from developer one-->
 <script>
-  setTimeout(function () {
+  // setTimeout(function () {
     class CocaCola extends HTMLElement {
       constructor() {
         super();
@@ -63,20 +106,5 @@
     }
 
     customElements.define("soft-drink", CocaCola, {version: "1.1.1", acceptVersion: "1.1.1"});
-  }, Math.random() * 1000);
-</script>
-
-<!--from developer two-->
-<script>
-  setTimeout(function () {
-    class PepsiMax extends HTMLElement {
-      constructor() {
-        super();
-        this.attachShadow({mode: "open"});
-        this.shadowRoot.innerHTML = "PepsiMax <slot></slot>";
-      }
-    }
-
-    customElements.define("soft-drink", PepsiMax, {version: "1.1.2", acceptVersion: "1.1"});
-  }, Math.random() * 1000);
+  // }, Math.random() * 1000);
 </script>
