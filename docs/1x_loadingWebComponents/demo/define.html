@@ -1,0 +1,30 @@
+<web-comp id="one"></web-comp>
+<web-comp id="two"></web-comp>
+
+<script>
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      console.log("constructor");
+    }
+    connectedCallback(){
+      console.log("connectedCallback");
+    }
+    disconnectedCallback(){
+      console.log("disconnectedCallback");
+    }
+    static get observedAttributes(){
+      //this is also the point of the old polymer .ready(){} callback..
+      console.log("ready");
+      return ["id"];
+    }
+    attributeChangedCallback(name, oldValue, newValue){
+      if (name === "id"){
+        console.log("attributeChangedCallback", newValue);
+      }
+    }
+  }
+  customElements.define("web-comp", WebComp);
+  // customElements.undefine("web-comp", WebComp); //doesn't exist.. oh so sad and unexpected..
+  // customElements.define("web-comp", WebComp);
+</script>

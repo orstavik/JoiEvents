@@ -1,0 +1,66 @@
+<script>
+  //two options coming in:
+  // 1. version: the number of the version of the class
+  // 2. acceptVersion: the semver query for accepted versions
+
+  function versionIsAccepted(existingVersion, semver) {
+    //big algorithm for checking that the semver matches the existing version
+    //includes:
+    // macroversion accepted query ^1.2.3
+    // microversion accepted query ~1.2.23
+    // https://semver.npmjs.com/
+    return existingVersion.startsWith(semver)
+  }
+
+  const nameClass = {};
+  const nameVersion = {};
+  const original = window.customElements;
+  const gangster = {
+    define: function (tag, clazz, options) {
+      const existingVersion = nameVersion[tag];
+      if (existingVersion === undefined) {
+        original.define(tag, clazz, options);
+        nameVersion[tag] = options.version || 0;
+        nameClass[tag] = clazz;
+      } else {
+        const semver = options.acceptVersion;
+        if (!semver || versionIsAccepted(existingVersion, semver))
+          return;
+        throw new Error(`${tag} has version for ${existingVersion} while requiring ${semver}.`);
+      }
+    }
+  }
+  Object.defineProperty(window, "customElements", {value: gangster});
+</script>
+
+<soft-drink>is the best!</soft-drink>
+
+<!--from developer one-->
+<script>
+  setTimeout(function () {
+    class CocaCola extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = "CocaCola <slot></slot>";
+      }
+    }
+
+    customElements.define("soft-drink", CocaCola, {version: "1.1.1", acceptVersion: "1.1.1"});
+  }, Math.random() * 1000);
+</script>
+
+<!--from developer two-->
+<script>
+  setTimeout(function () {
+    class PepsiMax extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = "PepsiMax <slot></slot>";
+      }
+    }
+
+    customElements.define("soft-drink", PepsiMax, {version: "1.1.2", acceptVersion: "1.1"});
+  }, Math.random() * 1000);
+</script>
