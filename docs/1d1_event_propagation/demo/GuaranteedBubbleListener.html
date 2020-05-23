@@ -1,0 +1,30 @@
+<script>
+  const nonBubblingEvents = ["toggle","load", "unload", "scroll", "blur", "focus", "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument", "loadstart", "loadend", "progress", "abort", "error", "pointerenter", "pointerleave", "pointerleave", "rowexit", "beforeunload", "stop", "start", "finish", "bounce", "Miscellaneous", "afterprint", "propertychange", "filterchange", "readystatechange", "losecapture"];
+
+  //on the propagationRoot
+  function addGuaranteedBubbleListener(propagationRoot, eventname, fun, onTarget) {
+    if (nonBubblingEvents.indexOf(eventname) === -1 && !onTarget)
+      return propagationRoot.addEventListener(eventname, fun);
+    const onTargetWrapper = function (e) {
+      e.target.addEventListener(eventname, fun, {once: true});
+    }
+    return propagationRoot.addEventListener(eventname, onTargetWrapper, {capture: true});
+  }
+</script>
+
+<div>
+  <span>hello sunshine</span>
+  <hr>
+  <h1>hello world</h1>
+  <hr>
+  <details><summary>hello</summary> toggle</details>
+  <hr>
+  <details><summary>hello</summary> toggle 2</details>
+</div>
+
+<script>
+  addGuaranteedBubbleListener(document, "click", e=> console.log("normal", e.type, e.currentTarget, e.eventPhase));
+  addGuaranteedBubbleListener(document, "click", e=> console.log("onTarget", e.type, e.currentTarget, e.eventPhase), true);
+  addGuaranteedBubbleListener(document, "toggle", e=> console.log("normal", e.type, e.currentTarget, e.eventPhase));
+  addGuaranteedBubbleListener(document, "toggle", e=> console.log("onTarget", e.type, e.currentTarget, e.eventPhase), true);
+</script>
