@@ -28,6 +28,7 @@
     const activeEventListeners = this._activeEventListeners || (this._activeEventListeners = new Map());
     if (activeEventListeners.has(name))
       return;
+    //todo if a parent specifies a local eventController, then the parent should also be able to override the childrens controllers.
     const controller = useLocal ? (this._eventControllers && this._eventControllers.get(name)) : getController(this, name);
     if (!controller)
       return;
@@ -84,9 +85,13 @@
   });
 </script>
 
+
+
+
 <script type="module">
 
   class BouncedMousedown {
+
     constructor(root) {
       this.root = root;
       this._onMousedown = this.onMousedown.bind(this);
@@ -101,8 +106,10 @@
     }
 
     onMousedown(e) {
-      const bounceMousedown = new MouseEvent("bounced-mousedown", e);
-      toggleTick(() => e.target.dispatchEvent(bounceMousedown));
+      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      //todo the problem of the mutating event.target property
+      const target = e.target;
+      toggleTick(() => target.dispatchEvent(bounceMousedown));
     }
   }
 
@@ -111,20 +118,13 @@
       super();
       this.attachShadow({mode: "open"});
       this.shadowRoot.innerHTML = "<h1>hello sunshine</h1>";
-      this.addEventListener2("bounced-mousedown", e => console.log("bounced-mousedown"));
+      this.shadowRoot.addEventListener2("bounced-mousedown", e => console.log(e.target));
     }
   }
 
-  window["BouncedMousedown"] = BouncedMousedown;
-  window["WebComp"] = WebComp;
-
+  window.defineEvent("bounced-mousedown", BouncedMousedown);
+  customElements.define("web-comp", WebComp);
+  window.addEventListener2("bounced-mousedown", e => console.log(e.target));
 </script>
 
 <web-comp></web-comp>
-
-<script type="module">
-  window.defineEvent("bounced-mousedown", BouncedMousedown);
-  customElements.define("web-comp", WebComp);
-
-  window.addEventListener("bounced-mousedown", e => console.log("e"));
-</script>
