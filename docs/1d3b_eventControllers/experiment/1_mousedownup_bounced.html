@@ -1,0 +1,130 @@
+<script type="module">
+  import {} from "../../1d3_defaultAction/_v2.0/demo/joi2.js";
+</script>
+
+<script type="module">
+  function defineEvent(name, clazz, options) {
+    const eventControllers = this._eventControllers || (this._eventControllers = new Map());
+    if (eventControllers.has(name))
+      throw new Error("defining the same event twice on the same root, you must make up your mind about one.");
+    eventControllers.set(name, {clazz, options});
+  }
+
+  // function undefineEvent(name, clazz, options){
+  //   this._eventControllers.delete(name);
+  // }
+
+  function getController(root, name) {
+    const parent = root.host ? root.host.getRootNode() : root === document ? window : null;
+    const eventControllers = root._eventControllers || (root._eventControllers = new Map());
+    if (root === window)
+      return eventControllers.get(name);
+    if (parent === null)
+      throw new Error("You are trying to activate a controller on an element that is not connected to the DOM. Not cool.");
+    return getController(parent, name) || eventControllers.get(name);
+  }
+
+  function activateEvent(name, useLocal) {
+    const activeEventListeners = this._activeEventListeners || (this._activeEventListeners = new Map());
+    if (activeEventListeners.has(name))
+      return;
+    const controller = useLocal ? (this._eventControllers && this._eventControllers.get(name)) : getController(this, name);
+    if (!controller)
+      return;
+    const stateMachine = new controller.clazz(this);
+    activeEventListeners.set(name, stateMachine);
+    stateMachine.connect();
+  }
+
+  // function deactivateEvent(name) {
+  //   const controller = this._activeEventListeners.get(name);
+  //   controller.disconnect();
+  //   this._activeEventListeners.delete(name);
+  // }
+
+  Object.defineProperty(ShadowRoot.prototype, "defineEvent", {value: defineEvent});
+  Object.defineProperty(Document.prototype, "defineEvent", {value: defineEvent});
+  Object.defineProperty(Window.prototype, "defineEvent", {value: defineEvent});
+  Object.defineProperty(ShadowRoot.prototype, "activateEvent", {value: activateEvent});
+  Object.defineProperty(Document.prototype, "activateEvent", {value: activateEvent});
+  Object.defineProperty(Window.prototype, "activateEvent", {value: activateEvent});
+</script>
+
+<script>
+  const nonBubblingEvents = ["toggle", "load", "unload", "scroll", "blur", "focus", "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument", "loadstart", "loadend", "progress", "abort", "error", "pointerenter", "pointerleave", "pointerleave", "rowexit", "beforeunload", "stop", "start", "finish", "bounce", "Miscellaneous", "afterprint", "propertychange", "filterchange", "readystatechange", "losecapture"];
+
+  //on the propagationRoot
+  function addGuaranteedBubbleListener(propagationRoot, eventname, fun, onTarget) {
+    if (nonBubblingEvents.indexOf(eventname) === -1 && !onTarget)
+      return propagationRoot.addEventListener(eventname, fun);
+    const onTargetWrapper = function (e) {                             //todo add unstoppable
+      e.target.addEventListener(eventname, fun, {once: true});
+    }
+    return propagationRoot.addEventListener(eventname, onTargetWrapper, {capture: true});
+  }
+
+  Object.defineProperty(EventTarget.prototype, "addEventListener2", {
+    value: function (name, fun, options) {
+      //activate event controller if necessary
+      const root = this instanceof HTMLElement ? this.getRootNode() : this;
+      const useLocalEventController = options && options.useLocalEventController;
+      name.indexOf("-") !== -1 && root.activateEvent(name, useLocalEventController);
+      //add event listener
+      this.addEventListener(name, fun, options);
+    }
+  });
+  Object.defineProperty(EventTarget.prototype, "removeEventListener2", {
+    value: function (name, fun, options) {
+      //we need to update the addEventListener options first to ensure that removeEventListener is added when the
+      //activate event controller if necessary
+      name.indexOf("-") !== -1 && this.getRoot().removeEventController(name, fun, options);
+      //add event listener
+      this.addEventListener(name, fun, options);
+    }
+  });
+</script>
+
+<script type="module">
+
+  class BouncedMousedown {
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+    }
+
+    connect() {
+      addGuaranteedBubbleListener(this.root, "mousedown", this._onMousedown);
+    }
+
+    disconnect() {
+      removeGuaranteedBubbleListener(this.root, "mousedown", this._onMousedown);
+    }
+
+    onMousedown(e) {
+      const bounceMousedown = new MouseEvent("bounced-mousedown", e);
+      toggleTick(() => e.target.dispatchEvent(bounceMousedown));
+    }
+  }
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<h1>hello sunshine</h1>";
+      this.addEventListener2("bounced-mousedown", e => console.log("bounced-mousedown"));
+    }
+  }
+
+  window["BouncedMousedown"] = BouncedMousedown;
+  window["WebComp"] = WebComp;
+
+</script>
+
+<web-comp></web-comp>
+
+<script type="module">
+  window.defineEvent("bounced-mousedown", BouncedMousedown);
+  customElements.define("web-comp", WebComp);
+
+  window.addEventListener("bounced-mousedown", e => console.log("e"));
+</script>
