@@ -1,0 +1,124 @@
+<!--
+what do we need to test:
+1. we need to test adding removing event controller
+3.
+-->
+
+<script type="module">
+
+  import {toggleTick} from "../src/joi2.js";
+
+  class BouncedMousedown1 {
+
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+    }
+
+    connect() {
+      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    disconnect() {
+      this.root.removeGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    onMousedown(e) {
+      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      const target = e.target;
+      bounceMousedown.version = 1;
+      toggleTick(() => target.dispatchEvent(bounceMousedown));
+    }
+  }
+
+  class BouncedMousedown2 {
+
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+    }
+
+    connect() {
+      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    disconnect() {
+      this.root.removeGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    onMousedown(e) {
+      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      const target = e.target;
+      bounceMousedown.version = 2;
+      toggleTick(() => target.dispatchEvent(bounceMousedown));
+    }
+  }
+
+  class BouncedMousedown3 {
+
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+    }
+
+    connect() {
+      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    disconnect() {
+      this.root.removeGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    onMousedown(e) {
+      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      const target = e.target;
+      bounceMousedown.version = 3;
+      toggleTick(() => target.dispatchEvent(bounceMousedown));
+    }
+  }
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<h1>hello sunshine</h1>";
+      this.shadowRoot.defineEvent("bounced-mousedown", BouncedMousedown2);
+      this.shadowRoot.addEventListener("bounced-mousedown", e => console.log(e.target, e.version));
+    }
+  }
+
+  class WebComp3 extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<h1>hello world</h1>";
+      this.shadowRoot.defineEvent("bounced-mousedown", BouncedMousedown3, {useLocal: true});
+      //todo should the shadowRoot
+      // 1. listen for childList subtree: true, to see if there are still elements listening for an event?
+      // 2. check the subtree for events when it is added?
+      // 3. when the event definition is undefined, should the event listeners also be removed? no...
+      // 4. manual methods for adding and removing the event controllers
+      this.shadowRoot.addEventListener("bounced-mousedown", e => console.log(e.target, e.version));
+    }
+  }
+
+  class WrapperComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<web-comp></web-comp>";
+    }
+  }
+
+  //define event controller on the window.
+  window.defineEvent("bounced-mousedown", BouncedMousedown1);
+  //define custom element
+  customElements.define("web-comp", WebComp);
+  customElements.define("web-comp3", WebComp3);
+  customElements.define("wrapper-comp", WrapperComp);
+
+  window.addEventListener("bounced-mousedown", e => console.log(e.target, e.version));
+</script>
+
+<wrapper-comp></wrapper-comp>
+<web-comp3></web-comp3>

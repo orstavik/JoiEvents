@@ -52,6 +52,23 @@
     return path.length && path[0];
   }
 
+  const dispatchEventOriginal = EventTarget.prototype.dispatchEvent;
+  Object.defineProperty(EventTarget.prototype, "dispatchEvent",{
+    value: function(e){
+      e.fromDispatchEvent = true;
+      dispatchEventOriginal.call(this, e);
+    }
+  });
+
+  const addEventListenerOriginal = EventTarget.prototype.addEventListener;
+  Object.defineProperty(EventTarget.prototype, "addEventListener",{
+    value: function(name, cb, options){
+      if (options && options.composed)
+        throw new Error("you should bounce your events, not compose: true them.");
+      addEventListenerOriginal.call(this, name, cb, options);
+    }
+  });
+
   const stopOG = Event.prototype.stopImmediatePropagation;
   const preventDefaultOG = Event.prototype.preventDefault;
   const preventedEvents = new WeakSet();
@@ -60,6 +77,9 @@
       value: function (cb) {
         if (this.eventPhase === Event.CAPTURING_PHASE)
           throw new Error("event.setDefault(cb) must be called during the bubble phase!!! If not the implied logic breaks down. Do not do element.addEventListener(type, function(e){ ...e.setDefault(...)}, TRUE)!!! There is a problem here that host target phase event listeners are marked as AT_TARGET, don't know how to fix that.");
+        //ie. if you do webCompWithShadowDom.addEventListener("click", e=> e.setDefault(...), true),
+        // and the click is triggered on an element inside the shadowRoot of webCompWithShadowDom, you will not get an error msg.
+
         if (!(cb instanceof Function))
           throw new Error("event.setDefault(cb) must be given a function as an argument. If you want to 'null out' a defaultAction, call preventDefault().");
         //already have a custom defaultAction placed from a lower DOM context, this should override the lightDOM default action unless the lightDOM specifically calls preventDefault().
@@ -72,12 +92,12 @@
           return;
         }
         //there is no lower defaultAction set, that has not also been cancelled before. You are free to add your own default action
-        preventDefaultOG.call(this);
+        preventDefaultOG.call(this); //this is done to prevent slotted event listeners such as <a href> to *also* do their default action.
         preventedEvents.delete(this);
         this._defaultAction = cb;
-        if (this._wrapper)
-          return;
-        addPostPropagationCallback(this);
+        if (!this._wrapper && !this.fromDispatchEvent)//todo here I have done some stuff..
+          addPostPropagationCallback(this);//todo this we only do for events we do not dispatch ourselves.
+        //todo all events that are dispatched from a function in the DOM should bounce, no events should be composed: true.
       }
     },
     "preventDefault": {
@@ -189,5 +209,4 @@
 //     return dispatchOg.call(this, event);
 //   }
 // });
-})
-();
+})();

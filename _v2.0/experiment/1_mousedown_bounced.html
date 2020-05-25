@@ -1,0 +1,50 @@
+<script type="module">
+
+  import {toggleTick} from "../src/joi2.js";
+
+  class BouncedMousedown {
+
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+    }
+
+    //todo should this be static?
+    //todo should this be xxxCallback()??
+    connect() {
+      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    //todo should this be static?
+    disconnect() {
+      this.root.removeGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    onMousedown(e) {
+      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      //todo the problem of the mutating event.target property. Remember that the .target is a mutable property.
+      const target = e.target;
+      toggleTick(() => target.dispatchEvent(bounceMousedown));
+      //todo use (nextTick||setTimeout) instead of import?? todo I don't know the pros/cons of this method of import.
+      //todo or window.nextTick = nextTick || setTimeout;??
+    }
+  }
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<h1>hello sunshine</h1>";
+      this.shadowRoot.addEventListener("bounced-mousedown", e => console.log(e.target));
+    }
+  }
+
+  //define event controller
+  window.defineEvent("bounced-mousedown", BouncedMousedown);
+  //define custom element
+  customElements.define("web-comp", WebComp);
+
+  window.addEventListener("bounced-mousedown", e => console.log(e.target));
+</script>
+
+<web-comp></web-comp>

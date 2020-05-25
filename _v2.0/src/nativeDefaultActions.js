@@ -1,3 +1,5 @@
+import {toggleTick} from "./toggleTick.js";
+
 Object.defineProperties(HTMLSelectElement.prototype, {
   requestSelect: function (option) {
     const beforeInput = new InputEvent("beforeinput", {composed: true, bubbles: true});
@@ -103,6 +105,7 @@ Object.defineProperties(HTMLDetailsElement.prototype, {
       this.open = !this.open;
       //set pseudo-class??
       (toggleTick || setTimeout)(() => this.dispatchEvent(new Event("toggle")));
+      //todo here is the use of (tick||setTimeout) import...
     }
   },
   joiGetNativeAction: {
