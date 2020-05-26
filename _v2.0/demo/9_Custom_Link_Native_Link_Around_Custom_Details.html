@@ -1,0 +1,40 @@
+<script type="module" src="../src/joi2.js"></script>
+<script src="ALink.js"></script>
+<script src="DetailsOpen.js"></script>
+<script src="CheckBox.js"></script>
+
+<a-link href="#dumdidum">
+  dumdidum
+  <a href="#trudelidu">trudelidu
+    <details-open>
+      <h4 slot="summary">custom summary</h4>
+      custom details
+    </details-open>
+    <details>
+      <summary>native summary</summary>
+      native details
+    </details>
+  </a>
+</a-link>
+
+<script>
+
+  function log(e, msg) {
+    console.log("-------", e.type, msg);
+    console.log("state of the navigation", location.hash);
+    console.log("state of the details", details1.open);
+    console.log("state of the details", details2.open);
+  }
+
+  const details1 = document.querySelector("details-open");
+  const details2 = document.querySelector("details");
+ 
+  window.addEventListener("click", e => log(e, "window capture"), true);
+  window.addEventListener("click", e => log(e, "window bubble"));
+  window.addEventListener("toggle", e => log(e, "window capture"), true);
+
+  document.addEventListener("click", function (e) {
+    window.addEventListener("click", e => log(e, "dynamic on window bubble"), {once: true});
+  });
+
+</script>

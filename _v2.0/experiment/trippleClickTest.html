@@ -1,0 +1,195 @@
+<script type="module">
+  import {} from "../src/joi2.js";
+
+  function defineEvent(name, clazz, options) {
+    if (this._eventControllers.has(name))
+      throw new Error("defining the same event twice on the same root, you must make up your mind about one.");
+    this._eventControllers.set(name, {clazz, options});
+  }
+
+  // function undefineEvent(name, clazz, options){
+  //   this._eventControllers.delete(name);
+  // }
+
+  function getController(root, name) {
+    const parent = root.host ? root.host.getRootNode() : root === document ? window : null;
+    if (parent === window)
+      return root._eventControllers.get(name);
+    if (parent === null)
+      throw new Error("You are trying to activate a controller on an element that is not connected to the DOM. Not cool.");
+    return getController(parent, name) || root._eventControllers.get(name);
+  }
+
+  function activateEvent(name, useLocal) {
+    if (this._activeEventListeners.has(name))
+      return;
+    const controller = useLocal ? this._eventControllers.get(name) : getController(this, name);
+    if (!controller)
+      return;
+    const stateMachine = new controller(this);
+    this._activeEventListeners.set(name, stateMachine);
+    stateMachine.connect();
+  }
+
+  // function deactivateEvent(name) {
+  //   const controller = this._activeEventListeners.get(name);
+  //   controller.disconnect();
+  //   this._activeEventListeners.delete(name);
+  // }
+
+  Object.defineProperty(ShadowRoot.prototype, "defineEvent", defineEvent);
+  Object.defineProperty(Window.prototype, "defineEvent", defineEvent);
+</script>
+
+<script>
+  const nonBubblingEvents = ["toggle", "load", "unload", "scroll", "blur", "focus", "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument", "loadstart", "loadend", "progress", "abort", "error", "pointerenter", "pointerleave", "pointerleave", "rowexit", "beforeunload", "stop", "start", "finish", "bounce", "Miscellaneous", "afterprint", "propertychange", "filterchange", "readystatechange", "losecapture"];
+
+  //on the propagationRoot
+  function addGuaranteedBubbleListener(propagationRoot, eventname, fun, onTarget) {
+    if (nonBubblingEvents.indexOf(eventname) === -1 && !onTarget)
+      return propagationRoot.addEventListener(eventname, fun);
+    const onTargetWrapper = function (e) {
+      e.target.addEventListener(eventname, fun, {once: true});
+    }
+    return propagationRoot.addEventListener(eventname, onTargetWrapper, {capture: true});
+  }
+
+
+  Object.defineProperty(EventTarget.prototype, "addEventListener2", {
+    value: function (name, fun, options) {
+      //activate event controller if necessary
+      name.indexOf("-") !== -1 && this.getRoot().activateEvent(name, options.useLocalEventController);
+      //add event listener
+      this.addEventListener(name, fun, options);
+    }
+  });
+  Object.defineProperty(EventTarget.prototype, "removeEventListener2", {
+    value: function (name, fun, options) {
+      //we need to update the addEventListener options first to ensure that removeEventListener is added when the
+      //activate event controller if necessary
+      name.indexOf("-") !== -1 && this.getRoot().removeEventController(name, fun, options);
+      //add event listener
+      this.addEventListener(name, fun, options);
+    }
+  });
+</script>
+
+<script>
+
+  class SingleClick {
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+      this._onMouseup = this.onMouseup.bind(this);
+      this._cancel = this.onBlur.bind(this);
+      this.options = {capture: true, unstoppable: true};
+    }
+
+    connect() {
+      addGuaranteedBubbleListener(this.root, "mousedown", this._onMousedown, this.options);
+      addGuaranteedBubbleListener(this.root, "mouseup", this._onMouseup, this.options);
+      addGuaranteedBubbleListener(window, "blur", this._cancel, this.options);
+    }
+
+    disconnect() {
+      removeGuaranteedBubbleListener(this.root, "mousedown", this._onMousedown, this.options);
+      removeGuaranteedBubbleListener(this.root, "mouseup", this._onMouseup, this.options);
+      removeGuaranteedBubbleListener(window, "blur", this._cancel, this.options);
+    }
+
+    onMousedown(e) {
+      e.button === 0 && (this._e = e);
+    }
+
+    onMouseup(e) {
+      if (e.button === 0 || !this._e)
+        return;
+      const singleClick = new MouseEvent("single-click", e);
+      singleClick.composed = false;
+      toggleTick(() => e.target.dispatchEvent(singleClick));
+      this._e = undefined;
+    }
+
+    onBlur(e) {
+      this._e = undefined;
+    }
+  }
+
+  class DoubleClick {
+    constructor(root) {
+      this.root = root;
+      this._onSingleClick = this.onSingleClick.bind(this);
+      this._cancel = this.onBlur.bind(this);
+      this.options = {capture: true, unstoppable: true};
+      this.clicks = [];
+    }
+
+    connect() {
+      this.root.addEventListener("single-click", this._onSingleClick, this.options);
+      window.addEventListener("blur", this._cancel, this.options);
+    }
+
+    disconnect() {
+      this.root.removeEventListener("single-click", this._onSingleClick, this.options);
+      window.removeEventListener("blur", this._cancel, this.options);
+    }
+
+    onSingleClick(e) {
+      e.button === 0 && (this._e = e);
+    }
+
+    onMouseup(e) {
+      if (e.button === 0 || !this._e)
+        return;
+      const singleClick = new MouseEvent("single-click", e);
+      singleClick.composed = false;
+      toggleTick(() => e.target.dispatchEvent(singleClick));
+      this._e = undefined;
+    }
+
+    onBlur(e) {
+      this._e = undefined;
+    }
+  }
+
+  //todo here comes the definition of the single-click, double-click, tripple-click
+</script>
+
+<script>
+  class CompOne extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<div>hello sunshine</div>";
+      this._sunshine = this.shadowRoot.children[0];
+    }
+
+    connectedCallback() {
+      this._sunshine.addEventListener("tripple-click", e => console.log(e.target, e.type));
+    }
+  }
+
+  customElements.define("comp-one", CompOne);
+
+  class CompTwo extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<comp-one></comp-one>";
+      this._sunshine = this.shadowRoot.children[0];
+    }
+
+    connectedCallback() {
+      this._sunshine.addEventListener("double-click", e => console.log(e.target, e.type));
+    }
+  }
+
+  customElements.define("comp-two", CompTwo);
+</script>
+
+<comp-two></comp-two>
+
+<script>
+  const compTwo = document.querySelector("comp-two");
+  compTwo.addEventListener("single-click", e => console.log(e.target, e.type));
+</script>

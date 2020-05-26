@@ -1,0 +1,16 @@
+<div contenteditable="">beforeinput me</div>
+
+<script>
+  const div = document.querySelector("div");
+  div.addEventListener("keydown", log);
+  div.addEventListener("beforeinput", log);
+  div.addEventListener("compositionstart", log);
+  div.addEventListener("compositionupdate", log);
+  div.addEventListener("compositionend", log);
+
+  function log(e) {
+    console.log(e.type, e.isComposing, e.data);
+    Promise.resolve().then(() => console.log("microtask from ", e.type));//the composition and beforeinput events all run as separate macrotasks.
+
+  }
+</script>

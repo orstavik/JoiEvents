@@ -1,0 +1,79 @@
+<script type="module">
+
+  import {toggleTick} from "../src/joi2.js";//todo we need to make sure we have setDefault in this test.
+
+  class BouncedMousedown {
+
+    constructor(root) {
+      this.root = root;
+      this._onMousedown = this.onMousedown.bind(this);
+    }
+
+    connect() {
+      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    disconnect() {
+      this.root.removeGuaranteedBubbleListener("mousedown", this._onMousedown);
+    }
+
+    bounceDefaultAction(mousedown, cb) {
+      this.defaultAction = {mousedown, cb};
+    }
+
+    onMousedown(e) {
+      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      const target = e.target;
+      toggleTick(function () {
+        //this is not necessary here.. how do i control for the order of the mousedowns..
+        //todo i could go via the toggleTick task.. but from the task, i have no way of calling the function on the 
+        if (this.defaultAction?.mousedown === e)  //todo this is a hack which will not work for bounced trigger events
+          bounceMousedown._defaultAction = this.defaultAction?.cb;
+        target.dispatchEvent(bounceMousedown);
+        if (!bounceMousedown._defaultAction)
+          return;
+        const myRoot = target.getRootNode ? target.getRootNode() : target;
+        const parent = myRoot === document ? window : myRoot.host?.getRootNode();
+        const upperController = parent.getActivateEventController("bounced-mousedown");
+        //here we need the event controller to pass the defaultAction.
+        if (upperController)
+          upperController.bounceDefaultAction(e, bounceMousedown._defaultAction);
+        else
+          bounceMousedown._defaultAction(bounceMousedown);
+      }.bind(this));
+    }
+  }
+
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "<h1>hello sunshine</h1><h2>nothing here</h2>";
+      const h1 = this.shadowRoot.children[0];
+      h1.addEventListener("bounced-mousedown", e => e.setDefault(e => console.log("defaultAction from WebComp" + e.type)));
+    }
+  }
+
+  class WrapperComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.defineEvent("bounced-mousedown", BouncedMousedown);
+      this.shadowRoot.innerHTML = "<web-comp></web-comp>";
+      const webComp = this.shadowRoot.querySelector("web-comp");
+      webComp.addEventListener("bounced-mousedown", e => e.setDefault(e => console.log("defaultAction from Wrapper" + e.type)));
+      // webComp.addEventListener("bounced-mousedown", e => e.preventDefault() && e.setDefault(e => console.log("defaultAction from Wrapper" + e.type)));
+    }
+  }
+
+  //define event controller on the window.
+  window.defineEvent("bounced-mousedown", BouncedMousedown);
+  //define custom element
+  customElements.define("web-comp", WebComp);
+  customElements.define("wrapper-comp", WrapperComp);
+
+  window.addEventListener("bounced-mousedown", e => console.log(e.target, e.version));
+</script>
+
+<wrapper-comp></wrapper-comp>
+<web-comp3></web-comp3>

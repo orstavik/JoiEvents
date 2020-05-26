@@ -1,0 +1,34 @@
+<script type="module" src="../src/joi2.js"></script>
+<script src="DetailsOpen.js"></script>
+
+<details-open>
+  <span slot="summary">summary</span>
+  <span>Hello content.</span>
+</details-open>
+
+<script>
+  const details = document.querySelector("details-open");
+
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added before defaultAction ---, and I run before it.");
+    console.log("state of the details", details.open);
+  }, true);
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added after defaultAction ---, still I run before it.");
+    console.log("state of the details", details.open);
+  });
+
+  details.addEventListener("click", function (e) {
+    window.addEventListener("click", e => {
+      console.log("--- dynamically added after defaultAction ---, still I run before it.");
+      console.log("state of the details", details.open);
+      /*debugger;*/
+    }, {once: true});
+  });
+
+  window.addEventListener("toggle", function (e) {
+      console.log("toggle on window capture")//this event listener should run after the default action
+      console.log("state of the details", details.open);
+    }
+    , true);
+</script>

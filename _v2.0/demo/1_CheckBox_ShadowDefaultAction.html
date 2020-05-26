@@ -1,0 +1,30 @@
+<script type="module" src="../src/joi2.js"></script>
+<script src="CheckBox.js"></script>
+
+<check-box id="one"></check-box>
+<check-box id="two"></check-box>
+
+<script>
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added before defaultAction ---, and I run before it.");
+    console.log("state of the checkbox", e.target.checked);
+  }, true);
+  window.addEventListener("click", function (e) {
+    console.log("--- statically added after defaultAction ---, still I run before it.");
+    console.log("state of the checkbox", e.target.checked);
+  });
+
+  const one = document.querySelector("#one");
+  one.addEventListener("click", function (e) {
+    window.addEventListener("click", e => {
+      console.log("--- dynamically added after defaultAction ---, still I run before it.");
+      console.log("state of the checkbox", e.target.checked);
+      /*debugger;*/
+    }, {once: true});
+  });
+
+  const a = document.querySelector("#two");
+  a.addEventListener("click", function (e) {
+    e.preventDefault();
+  });
+</script>
