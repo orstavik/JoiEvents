@@ -47,22 +47,22 @@
 
   function findLowerNativeAction(path, start, end, event) {
     start = /*!start ? 0 : */path.indexOf(start);
-    path = path.slice(start+1, path.indexOf(end));
+    path = path.slice(start + 1, path.indexOf(end));
     path = path.filter(n => n.joiGetNativeAction).map(n => n.joiGetNativeAction(event)).filter(fun => fun);
     return path.length && path[0];
   }
 
   const dispatchEventOriginal = EventTarget.prototype.dispatchEvent;
-  Object.defineProperty(EventTarget.prototype, "dispatchEvent",{
-    value: function(e){
+  Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
+    value: function (e) {
       e.fromDispatchEvent = true;
       dispatchEventOriginal.call(this, e);
     }
   });
 
   const addEventListenerOriginal = EventTarget.prototype.addEventListener;
-  Object.defineProperty(EventTarget.prototype, "addEventListener",{
-    value: function(name, cb, options){
+  Object.defineProperty(EventTarget.prototype, "addEventListener", {
+    value: function (name, cb, options) {
       if (options && options.composed)
         throw new Error("you should bounce your events, not compose: true them.");
       addEventListenerOriginal.call(this, name, cb, options);
@@ -75,13 +75,19 @@
   Object.defineProperties(Event.prototype, {
     "setDefault": {
       value: function (cb) {
+        if (!(cb instanceof Function))
+          throw new Error("event.setDefault(cb) must be given a function as an argument. If you want to 'null out' a defaultAction, call preventDefault().");
+
         if (this.eventPhase === Event.CAPTURING_PHASE)
           throw new Error("event.setDefault(cb) must be called during the bubble phase!!! If not the implied logic breaks down. Do not do element.addEventListener(type, function(e){ ...e.setDefault(...)}, TRUE)!!! There is a problem here that host target phase event listeners are marked as AT_TARGET, don't know how to fix that.");
         //ie. if you do webCompWithShadowDom.addEventListener("click", e=> e.setDefault(...), true),
         // and the click is triggered on an element inside the shadowRoot of webCompWithShadowDom, you will not get an error msg.
 
-        if (!(cb instanceof Function))
-          throw new Error("event.setDefault(cb) must be given a function as an argument. If you want to 'null out' a defaultAction, call preventDefault().");
+        //adding a default action before the event is dispatched.
+        //before the event is dispatched, calling setDefault(cb) will simply overwrite the value of the default action.
+        if (this.eventPhase === 0)
+          return this._defaultAction = cb;
+
         //already have a custom defaultAction placed from a lower DOM context, this should override the lightDOM default action unless the lightDOM specifically calls preventDefault().
         if (this._defaultAction)
           return;
@@ -95,8 +101,12 @@
         preventDefaultOG.call(this); //this is done to prevent slotted event listeners such as <a href> to *also* do their default action.
         preventedEvents.delete(this);
         this._defaultAction = cb;
-        if (!this._wrapper && !this.fromDispatchEvent)//todo here I have done some stuff..
-          addPostPropagationCallback(this);//todo this we only do for events we do not dispatch ourselves.
+        //todo this we only do for events dispatched by the browsers native event controllers
+        if (!this._wrapper && !this.fromDispatchEvent)
+          addPostPropagationCallback(this);
+        //todo here I have done some stuff..
+        // todo can we use .isTrusted as a proxy for not from dispatchEvent??
+
         //todo all events that are dispatched from a function in the DOM should bounce, no events should be composed: true.
       }
     },
@@ -119,11 +129,13 @@
         return preventedEvents.has(this);
       }
     },
+    //todo fix this so that all addEventListeners are wrapped, and that stopPropagation() works within the current DOM context.
     "stopPropagation": {
       value: function () {
         throw new Error("Event.stopPropagation() is disabled. See: CaptureTorpedo, ShadowTorpedo, and SlotTorpedo.");
       }
     },
+    //todo fix this so that all addEventListeners are wrapped, and that stopPropagation() works within the current DOM context.
     "stopImmediatePropagation": {
       value: function () {
         if (this[firstSymbol])
@@ -140,8 +152,9 @@
   const shadowOg = HTMLElement.prototype.attachShadow;
   const alwaysOpen = {mode: "open"};
   Object.defineProperty(HTMLElement.prototype, "attachShadow", {
-    value: function (ignored) {
-      return shadowOg.call(this, alwaysOpen);
+    value: function (options) {
+      options instanceof Object ? options.mode = "open" : options = alwaysOpen;
+      return shadowOg.call(this, options);
     }
   });
 

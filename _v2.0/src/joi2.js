@@ -1,5 +1,6 @@
 export {toggleTick} from "./toggleTick.js";
 export {SlottablesEvent} from "./slottablesEvent.js";
+export {queueEvent} from "./PropagationRootInterface.js";
 
 import {} from "./nativeDefaultActions.js";
 import {} from "./JoiEventPatchNew.js";

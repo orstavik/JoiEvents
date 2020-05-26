@@ -1,6 +1,6 @@
 <script type="module">
 
-  import {toggleTick} from "../src/joi2.js";//todo we need to make sure we have setDefault in this test.
+  import {queueEvent} from "../src/joi2.js";
 
   class BouncedMousedown {
 
@@ -18,28 +18,10 @@
     }
 
     onMousedown(e) {
-      this.defaultAction = undefined;
-      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
-      const target = e.currentTarget === window ? e.currentTarget : e.target;
-      const myRoot = target.getRootNode ? target.getRootNode() : target;//todo this is the origin of the event. So this I should be able to query from the event itself.
-      //const myRoot = e.origin;//todo
-      toggleTick(function () {
-        //this is not necessary here.. how do i control for the order of the mousedowns..
-        //todo how do i make the function ensure that it is the same bounced event sequence. Not some lingering defaultAction
-        if (this.defaultAction)
-          bounceMousedown._defaultAction = this.defaultAction;
-        target.dispatchEvent(bounceMousedown);
-        if (!bounceMousedown._defaultAction)
-          return;
-        //todo here it might be a question if we should do a event.bounceDefaultAction()???
-        //     And then it would be possible to do a bounceOrRunDefaultAction()...
-        if (!myRoot.bounceDefaultAction(bounceMousedown.type, bounceMousedown._defaultAction))
-          bounceMousedown._defaultAction(bounceMousedown);
-        //todo this is a bit fragile. The default action might be passed to an inactive event controller,
-        //     that will implicitly either delay it or loose it. and here there can be version conflicts.
-        //todo we must assume that event controllers with the same handle name will want to pass default
-        //     actions to each other.
-      }.bind(this));
+      const bounceEvent = new MouseEvent("bounced-mousedown", {bubbles: true});
+      bounceEvent.bounce = e;                                            //bounce is not a valid eventDictionary property
+      const target = e.currentTarget === window ? window : e.target;     //converting target from a composed: true event to a bouncing event
+      queueEvent(target, bounceEvent);
     }
   }
 
@@ -58,7 +40,10 @@
   //define custom element
   customElements.define("web-comp", WebComp);
 
-  window.addEventListener("bounced-mousedown", e => console.log(e.target, e.version));
+  document.addEventListener("bounced-mousedown", e => console.log("doc", e.target));
+  window.addEventListener("bounced-mousedown", e => console.log("win", e.target));
+  //todo to split the document and window as propagation roots, we need to disable all bounce event listeners on window were the target is not the window.
+  //todo do we want to do that?
 </script>
 
 <web-comp></web-comp>
