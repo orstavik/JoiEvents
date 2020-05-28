@@ -1,3 +1,5 @@
+import {toggleTick} from "../src/toggleTick.js";
+
 class DetailsOpen extends HTMLElement {
   constructor() {
     super();
@@ -25,7 +27,7 @@ class DetailsOpen extends HTMLElement {
     this.open ?
       this._contentSlot.setAttribute("active", "") :
       this._contentSlot.removeAttribute("active");
-    toggleTick(() => this.dispatchEvent(new Event("toggle")));
+    toggleTick(() => this.dispatchEvent(new Event("toggle")));//todo this should dispatchEvent(toggleEvent, {async: true});
   }
 }
 

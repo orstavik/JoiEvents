@@ -12,6 +12,8 @@ Object.defineProperty(EventTarget.prototype, "addEventListener", {
     addEventListenerOriginal.call(this, name, fun, options);
     // todo if (!this.isConnected)
     // todo   throw new Error("Don't add event listeners on elements not connected to the DOM. Not cool.");
+    //todo maybe the monitoring service for automatic gc of unused event controllers should run as a true event observer on the
+    //todo propagation root instead.. This is not necessary. As long as we have a method deactivate, then it is all good.
   }
 });
 
@@ -73,6 +75,11 @@ export function addPropagationRootInterface(clazz) {
   });
 }
 
+//todo override dispatchEvent instead?
+//todo and add a warning for dispatchEvent composed: true events ? and bubble: false events?
+
+//todo override dispatchEvent, but trigger the behavior as an option dispatchEvent(event, options)??
+
 const eventLoopWannabe = [];
 
 export function queueEvent(target, event) {            //simulates what the event loop does, kinda
@@ -80,12 +87,13 @@ export function queueEvent(target, event) {            //simulates what the even
   toggleTick(runEvent);
 }
 
-function runEvent(){
+function runEvent() {
   const {target, event} = eventLoopWannabe.shift();
   target.dispatchEvent(event);
   const defaultAction = event.preventDefault();
   if (!defaultAction)
     return;
+  // todo queueEvent() should probably simply be converted into a dispatchEvent(event with bounce: true) or composed: bounce.
   if (event.bounce) {                     //try to bounce the default action.
     //bounce logic: assumes that events with the same type name and the same bounce key,
     //              will bounce the default action to each other

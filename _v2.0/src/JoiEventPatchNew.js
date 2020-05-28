@@ -1,48 +1,16 @@
 (function () {
 
-  const lastNodeCache = new WeakMap();
-
-  function getLastPropagationNode(event) {
-    if (lastNodeCache.has(event))
-      return lastNodeCache.get(event);
+  function lastBubblePhaseNode(event) {
     const path = event.composedPath();
-    let last;
-    if (event.bubbles)
-      last = path[path.length - 1];
-    else if (!event.composed)//todo verify focus events.composed === true
-      last = path[0];
-    else {
-      last = event.target;
-      for (let i = 1; i < path.length - 1; i++) {
-        if (path[i] instanceof ShadowRoot)
-          last = path[i + 1];
-      }
+    if (event.bubbles) return path[path.length - 1];
+    if (!event.composed) return path[0];
+    //non-bubbling and composed
+    let last = event.target;
+    for (let i = 1; i < path.length - 2; i++) {
+      if (path[i] instanceof ShadowRoot)
+        last = path[++i];
     }
-    lastNodeCache.set(event, last);
     return last;
-  }
-
-  const firstSymbol = Symbol("firstSymbol");
-
-  function addPostPropagationCallback(event) {
-    event._wrapper = function (e) {
-      event._defaultAction && event._defaultAction.call(this, e);
-      const node = getLastPropagationNode(event);
-      node.removeEventListener(event.type, event._wrapper);
-      delete node.addEventListener;
-    };
-    const lastNode = getLastPropagationNode(event);
-    lastNode.addEventListener(event.type, event._wrapper);
-    const addEventListenerOG = lastNode.addEventListener;
-
-    lastNode.addEventListener = function (type, listener, options) {
-      const res = addEventListenerOG.call(this, type, listener, options);
-      if (event.type === type) {
-        lastNode.removeEventListener(event.type, event._wrapper);
-        addEventListenerOG.call(this, event.type, event._wrapper);
-      }
-      return res;
-    }.bind(lastNode);
   }
 
   function findLowerNativeAction(path, start, end, event) {
@@ -63,13 +31,18 @@
   const addEventListenerOriginal = EventTarget.prototype.addEventListener;
   Object.defineProperty(EventTarget.prototype, "addEventListener", {
     value: function (name, cb, options) {
-      if (options && options.composed)
+      if (options?.composed)
         throw new Error("you should bounce your events, not compose: true them.");
       addEventListenerOriginal.call(this, name, cb, options);
     }
   });
 
-  const stopOG = Event.prototype.stopImmediatePropagation;
+  function doDefaultAction(e) {
+    e._defaultAction && e._defaultAction.call(this, e);//todo what should the this be here?? I think it is correct, but check it out..
+    // e._defaultAction && e._defaultAction(e);//todo this is more correct, I don't want to alter any this binding on the default action??
+  }
+
+  //require unstoppable and last event listener option.
   const preventDefaultOG = Event.prototype.preventDefault;
   const preventedEvents = new WeakSet();
   Object.defineProperties(Event.prototype, {
@@ -100,10 +73,13 @@
         //there is no lower defaultAction set, that has not also been cancelled before. You are free to add your own default action
         preventDefaultOG.call(this); //this is done to prevent slotted event listeners such as <a href> to *also* do their default action.
         preventedEvents.delete(this);
-        this._defaultAction = cb;
         //todo this we only do for events dispatched by the browsers native event controllers
-        if (!this._wrapper && !this.fromDispatchEvent)
-          addPostPropagationCallback(this);
+        if (!this._defaultAction && !this.fromDispatchEvent){
+          const lastBubbleNode = lastBubblePhaseNode(this);
+          lastBubbleNode.addEventListener(this.type, doDefaultAction, {once: true, last: true, unstoppable: true});
+          //if last and unstoppable is not available, it might very well still work fine, if noone calls stopPropagation() and adds other event listeners to the same node dynamically afterwards. It is really not that big of a deal.
+        }//todo change the fromDispatchEvent to be a bounce property??
+        this._defaultAction = cb;
         //todo here I have done some stuff..
         // todo can we use .isTrusted as a proxy for not from dispatchEvent??
 
@@ -129,23 +105,23 @@
         return preventedEvents.has(this);
       }
     },
-    //todo fix this so that all addEventListeners are wrapped, and that stopPropagation() works within the current DOM context.
-    "stopPropagation": {
-      value: function () {
-        throw new Error("Event.stopPropagation() is disabled. See: CaptureTorpedo, ShadowTorpedo, and SlotTorpedo.");
-      }
-    },
-    //todo fix this so that all addEventListeners are wrapped, and that stopPropagation() works within the current DOM context.
-    "stopImmediatePropagation": {
-      value: function () {
-        if (this[firstSymbol])
-          return stopOG.call(this);
-        throw new Error(
-          "Event.stopImmediatePropagation() is disabled. " +
-          "Only allowed for the very first event listener during EventGrabbing. " +
-          "See also: CaptureTorpedo, ShadowTorpedo, and SlotTorpedo.");
-      }
-    }
+    // //todo fix this so that all addEventListeners are wrapped, and that stopPropagation() works within the current DOM context.
+    // "stopPropagation": {
+    //   value: function () {
+    //     throw new Error("Event.stopPropagation() is disabled. See: CaptureTorpedo, ShadowTorpedo, and SlotTorpedo.");
+    //   }
+    // },
+    // //todo fix this so that all addEventListeners are wrapped, and that stopPropagation() works within the current DOM context.
+    // "stopImmediatePropagation": {
+    //   value: function () {
+    //     if (this[firstSymbol])
+    //       return stopOG.call(this);
+    //     throw new Error(
+    //       "Event.stopImmediatePropagation() is disabled. " +
+    //       "Only allowed for the very first event listener during EventGrabbing. " +
+    //       "See also: CaptureTorpedo, ShadowTorpedo, and SlotTorpedo.");
+    //   }
+    // }
   });
 
 //disable closed shadowDOM.
