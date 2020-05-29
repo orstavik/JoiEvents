@@ -1,5 +1,7 @@
 # Pattern: UnstoppableEventListener
 
+//todo this is old. The new ScopedStopPropagation replace this chapter.
+
 The event listener option `{unstoppable: true}` ensures that event listeners added with this option will not be blocked when a previous event listener calls `stopPropagation()` or `stopImmediatePropagation()`.
 
 ## Why? When do we need `unstoppable` event listeners?
