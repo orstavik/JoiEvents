@@ -1,31 +1,29 @@
 //todo use (nextTick||setTimeout) instead of import?? todo I don't know the pros/cons of this method of import.
 //todo or window.nextTick = nextTick || setTimeout;??
 
-export {toggleTick} from "./toggleTick.js";
-export {SlottablesEvent} from "./slottablesEvent.js";
-
 //todo I don't know the sequence of these imports on addEventListener especially.
 //todo I don't know if the sequence here matters.
-import {} from "./dispatchEvent_asyncAndBounce.js"; //todo add this one, replaces the export {queueEvent} from "./PropagationRootInterface.js";
-import {} from "./Event_setDefault.js";
-import {} from "./EventListenerOption_unstoppable.js";
-import {addPropagationRootInterface} from "./PropagationRootInterface.js";
+//Dependencies for EventControllers
+import {addPropagationRootInterface} from "./PropagationRootInterface.js";  //1. PropagationRootInterface with root.defineEvent(eventController);
 addPropagationRootInterface(ShadowRoot.prototype);
 addPropagationRootInterface(Document.prototype);
 addPropagationRootInterface(Window.prototype);
-import {addLastEventListenerOption} from "./EventListenerOption_last.js";
-addLastEventListenerOption(EventTarget.prototype);
 
-//todo make a clearer separation about which are needed for the default action (which is necessary to make the elements
-//which are needed to make the elements?
-//1. the mixins for slottablesCallback and styleCallback
-//2. the setDefault()
-//3. EventListenerOption.last
-//4. EventListenerOption.unstoppable
-
-//which are needed to make the EventControllers?
-//1. PropagationRootInterface
-//2. dispatchAsyncAndBounce
-//3. EventListenerOption.CaptureToBubble
+import {} from "./dispatchEvent_asyncAndBounce.js";                         //2. dispatchAsyncAndBounce
+                                                                            //3. EventListenerOption.CaptureToBubble
+import {addCaptureToBubbleEventListenerOption} from "./EventListenerOption_captureToBubble.js";
+addCaptureToBubbleEventListenerOption(ShadowRoot.prototype);
+addCaptureToBubbleEventListenerOption(Document.prototype);
+addCaptureToBubbleEventListenerOption(Window.prototype);
 //4. EventListenerOption.first for grabbing composed: true events.
-//5. toggleTick
+export {toggleTick} from "./toggleTick.js";                                 //5. toggleTick
+
+
+//Dependencies for web components
+export {SlottablesEvent} from "./slottablesEvent.js";                       //1. the mixins for slottablesCallback and styleCallback
+// export {StyleCallbackMixin} from "./slottablesEvent.js";
+import {} from "./Event_setDefault.js";                                     //2. the setDefault()
+import {addLastEventListenerOption} from "./EventListenerOption_last.js";   //3. EventListenerOption.last
+addLastEventListenerOption(EventTarget.prototype);
+//4. EventListenerOption.unstoppable
+import {} from "./EventListenerOption_unstoppable.js";

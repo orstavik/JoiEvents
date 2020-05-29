@@ -13,6 +13,17 @@ Object.defineProperty(EventTarget.prototype, "addEventListener", {
   }
 });
 
+//here, we will search the registry for the names of the event controllers, and then use the local first if options.useLocal
+// we use the parent root again, we need to make this into a universal method.
+function getEventControllerDefinition(root, name) {
+  const localController = root._eventControllers?.get(name);
+  if (root === window || localController?.options?.useLocal)
+    return localController;
+  const parent = root === document ? window : root.host?.getRootNode();
+  const parentController = getEventControllerDefinition(parent, name);
+  return parentController || localController;
+}
+
 export function addPropagationRootInterface(clazz) {
   Object.defineProperties(clazz, {
     defineEvent: {
@@ -29,18 +40,6 @@ export function addPropagationRootInterface(clazz) {
         //this is the registry of event definitions only. but, we need to pass in names.
       }
     },
-    //here, we will search the registry for the names of the event controllers, and then use the local first if options.useLocal
-    // we use the parent root again, we need to make this into a universal method.
-    getEventControllerDefinition: {
-      value: function (name) {
-        const localController = this._eventControllers?.get(name);
-        if (this === window || localController?.options?.useLocal)
-          return localController;
-        const parent = this === document ? window : this.host?.getRootNode();
-        const parentController = parent.getEventControllerDefinition(name);
-        return parentController || localController;
-      }
-    },
     //here, we need to get the definition, turn it on, and then add it to the registry of active event listeners.
     //these event listeners can have two states. They can be queued, or just active. But, they are queued for different
     //event names. This can be a little complex to manage in the controller.
@@ -52,7 +51,7 @@ export function addPropagationRootInterface(clazz) {
         const activeEventListeners = this._activeEventListeners || (this._activeEventListeners = new Map());
         if (activeEventListeners.has(name))
           return;
-        const controllerClass = this.getEventControllerDefinition(name)?.clazz;
+        const controllerClass = getEventControllerDefinition(this, name)?.clazz;
         const controller = new controllerClass(this);
         controller.connect();
         controller && activeEventListeners.set(name, controller);
