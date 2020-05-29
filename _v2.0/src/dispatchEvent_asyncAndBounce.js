@@ -1,3 +1,4 @@
+
 //target.dispatchEvent(event, {bounce: true, async: true});
 //will replace queueEvent from PropagationRootInterface.js
 
@@ -6,8 +7,6 @@
 //returns undefined when it is async. This is different than true or false,
 //as there is no critical use-case in knowing the state of preventDefault() for async dispatches.
 //that i can think of.
-
-import {toggleTick} from "./toggleTick.js";
 
 const eventLoopWannabe = [];   //simulates what the event loop does, kinda
 
@@ -20,7 +19,7 @@ function dispatchEventAsync(target, event, original) {
   if (!event.async)
     return original(target, event);
   eventLoopWannabe.push({target, event});
-  toggleTick(() => {
+  (nextTick||setTimeout)(() => {
     const {target, event} = eventLoopWannabe.shift();
     original(target, event);
   });
