@@ -1,4 +1,4 @@
-import {toggleTick} from "./toggleTick.js";
+// import {toggleTick} from "./toggleTick.js";
 
 export function findLowerNativeAction(path, start, end, event) {
   start = /*!start ? 0 : */path.indexOf(start);
