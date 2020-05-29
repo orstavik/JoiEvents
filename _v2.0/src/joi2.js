@@ -1,5 +1,5 @@
 //import {} from "./toggleTick.js";
-window["nextTick"] = window["nextTick"] || setTimeout;
+window["toggleTick"] = window["toggleTick"] || setTimeout;
 
 // * nextTick
 //this will ensure that there is a nextTick, but you don't have to load if you don't want to.
@@ -24,7 +24,7 @@ addCaptureToBubbleEventListenerOption(Document.prototype);
 addCaptureToBubbleEventListenerOption(Window.prototype);
 //4. EventListenerOption.first for grabbing composed: true events.
 
-//(nextTick||setTimeout)()    //use this instead of import?? don't know the pros/cons of this method of import.
+//(toggleTick||setTimeout)()    //use this instead of import?? don't know the pros/cons of this method of import.
 
 //Dependencies for web components
 export {SlottablesEvent} from "./slottablesEvent.js";                       //1. the mixins for slottablesCallback and styleCallback
