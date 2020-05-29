@@ -1,4 +1,5 @@
-import {toggleTick} from "../src/toggleTick.js";
+// import {} from "../src/nextTick.js"; //will run both with and without nextTick
+// window["nextTick"] = window["nextTick"] || setTimeout;
 
 class DetailsOpen extends HTMLElement {
   constructor() {
@@ -27,7 +28,8 @@ class DetailsOpen extends HTMLElement {
     this.open ?
       this._contentSlot.setAttribute("active", "") :
       this._contentSlot.removeAttribute("active");
-    toggleTick(() => this.dispatchEvent(new Event("toggle")));//todo this should dispatchEvent(toggleEvent, {async: true});
+    // toggleTick(() => this.dispatchEvent(new Event("toggle")));
+    this.dispatchEvent(new Event("toggle"), {async: true});
   }
 }
 

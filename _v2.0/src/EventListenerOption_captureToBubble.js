@@ -13,7 +13,7 @@ Object.defineProperty(Event, "bubbles", {value: nativeBubbleEvent});
 //but, if the event is not bubbling, then there will be added an event listener
 
 export function addCaptureToBubbleEventListenerOption(proto) {
-  if (!(proto instanceof ShadowRoot || proto instanceof Document || proto instanceof Window))
+  if (!(ShadowRoot.prototype === proto || Document.prototype === proto || Window.prototype === proto))
     throw new Error("the captureToBubble and captureToTarget event listener option is only available for Propagation root elements.");
   const ogAdd = proto.addEventListener;
   const ogRemove = proto.removeEventListener;
@@ -32,7 +32,7 @@ export function addCaptureToBubbleEventListenerOption(proto) {
           };
         }
         return ogAdd.call(this, name, cb, options);
-      }
+      }, writable: true
     },
     removeEventListener: {
       value: function (type, cb, options) {
@@ -45,7 +45,7 @@ export function addCaptureToBubbleEventListenerOption(proto) {
 
 
         return ogRemove.call(this, type, cb, options);
-      }
+      }, writable: true
     }
   });
 }

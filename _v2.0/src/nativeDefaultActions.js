@@ -1,4 +1,4 @@
-import {toggleTick} from "./toggleTick.js";
+nextTick = nextTick || setTimeout;                     //implied import of nextTick
 
 export function findLowerNativeAction(path, start, end, event) {
   start = /*!start ? 0 : */path.indexOf(start);
@@ -105,13 +105,12 @@ Object.defineProperty(HTMLAnchorElement.prototype, "joiGetNativeAction", {
   }
 });
 
-//dependency toggleTick todo rename toggleTick nextTick
 Object.defineProperties(HTMLDetailsElement.prototype, {
   requestToggle: {
     value: function () {
       this.open = !this.open;
       //set pseudo-class??
-      (toggleTick || setTimeout)(() => this.dispatchEvent(new Event("toggle")));
+      nextTick(() => this.dispatchEvent(new Event("toggle")));
       //todo here is the use of (tick||setTimeout) import...
     }
   },

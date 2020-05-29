@@ -1,3 +1,4 @@
+window["nextTick"] = window["nextTick"] || setTimeout;           //implied import of nextTick, is this good or bad??
 
 //target.dispatchEvent(event, {bounce: true, async: true});
 //will replace queueEvent from PropagationRootInterface.js
@@ -19,7 +20,7 @@ function dispatchEventAsync(target, event, original) {
   if (!event.async)
     return original(target, event);
   eventLoopWannabe.push({target, event});
-  (nextTick||setTimeout)(() => {
+  nextTick(() => {
     const {target, event} = eventLoopWannabe.shift();
     original(target, event);
   });

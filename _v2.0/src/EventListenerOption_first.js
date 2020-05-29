@@ -8,7 +8,7 @@ function makeListener(target, type, listener, options) {
     options.capture = !!options.capture;
   else
     options = options ? captureOptions : bubbleOptions;
-  const typePhase = listener.name + options.capture ? " capture" : "";       //Pronounced typeface ;)
+  const typePhase = type + (options.capture ? " capture" : "");               //Pronounced typeface ;)
   let wrapper = listener;
   if (options.once) {                                                         //we need to wrap the once functions
     wrapper = function (e) {
@@ -25,7 +25,7 @@ function makeListener(target, type, listener, options) {
 function setEventListener(target, listener) {
   const targetMap = targetToListeners.get(target);
   if (!targetMap)
-    return targetToListeners.set(target, new Map([[listener.typePhase, listener]])) || true;//todo check the true value here?
+    return targetToListeners.set(target, new Map([[listener.typePhase, [listener]]])) || true;//todo check the true value here?
   const listeners = targetMap.get(listener.typePhase);
   if (!listeners)
     return targetMap.set(listener.typePhase, [listener]) || true;                                  //todo check the true value here?
@@ -43,7 +43,7 @@ function removeEventListener(target, type, capture, cb) {
   const targetMap = targetToListeners.get(target);
   if (!targetMap)
     return false;
-  const typePhase = type + capture ? " capture" : "";       //Pronounced typeface ;)
+  const typePhase = type + (capture ? " capture" : "");       //Pronounced typeface ;)
   const listeners = targetMap.get(typePhase);
   if (!listeners)
     return false;
