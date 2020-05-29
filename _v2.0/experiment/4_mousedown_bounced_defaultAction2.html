@@ -10,7 +10,7 @@
     }
 
     connect() {
-      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.addEventListener("mousedown", this._onMousedown, {captureToBubble: true, unstoppable: true});
     }
 
     disconnect() {
@@ -22,25 +22,8 @@
     }
 
     onMousedown(e) {
-      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
-      const target = e.target;
-      toggleTick(function () {
-        //this is not necessary here.. how do i control for the order of the mousedowns..
-        //todo i could go via the toggleTick task.. but from the task, i have no way of calling the function on the 
-        if (this.defaultAction?.mousedown === e)  //todo this is a hack which will not work for bounced trigger events
-          bounceMousedown._defaultAction = this.defaultAction?.cb;
-        target.dispatchEvent(bounceMousedown);
-        if (!bounceMousedown._defaultAction)
-          return;
-        const myRoot = target.getRootNode ? target.getRootNode() : target;
-        const parent = myRoot === document ? window : myRoot.host?.getRootNode();
-        const upperController = parent.getActivateEventController("bounced-mousedown");
-        //here we need the event controller to pass the defaultAction.
-        if (upperController)
-          upperController.bounceDefaultAction(e, bounceMousedown._defaultAction);
-        else
-          bounceMousedown._defaultAction(bounceMousedown);
-      }.bind(this));
+      const bounced = new MouseEvent("bounced-mousedown", {bubbles: true});
+      (e.currentTarget === window ? window : e.target).dispatchEvent(bounced, {bounce: true, async: true});
     }
   }
 

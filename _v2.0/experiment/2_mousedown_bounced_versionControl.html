@@ -6,7 +6,7 @@ what do we need to test:
 
 <script type="module">
 
-  import {toggleTick} from "../src/joi2.js";
+  import {} from "../src/joi2.js";
 
   class BouncedMousedown1 {
 
@@ -24,10 +24,9 @@ what do we need to test:
     }
 
     onMousedown(e) {
-      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
-      const target = e.target;
-      bounceMousedown.version = 1;
-      toggleTick(() => target.dispatchEvent(bounceMousedown));
+      const bounced = new MouseEvent("bounced-mousedown", {bubbles: true});
+      bounced.version = 1;
+      e.target.dispatchEvent(bounced, {bounce: true, async: true});
     }
   }
 
@@ -47,10 +46,9 @@ what do we need to test:
     }
 
     onMousedown(e) {
-      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
-      const target = e.target;
-      bounceMousedown.version = 2;
-      toggleTick(() => target.dispatchEvent(bounceMousedown));
+      const bounced = new MouseEvent("bounced-mousedown", {bubbles: true});
+      bounced.version = 2;
+      e.target.dispatchEvent(bounced, {bounce: true, async: true});
     }
   }
 
@@ -70,10 +68,9 @@ what do we need to test:
     }
 
     onMousedown(e) {
-      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
-      const target = e.target;
-      bounceMousedown.version = 3;
-      toggleTick(() => target.dispatchEvent(bounceMousedown));
+      const bounced = new MouseEvent("bounced-mousedown", {bubbles: true});
+      bounced.version = 3;
+      e.target.dispatchEvent(bounced, {bounce: true, async: true});
     }
   }
 

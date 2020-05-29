@@ -1,10 +1,12 @@
+//todo use (nextTick||setTimeout) instead of import?? todo I don't know the pros/cons of this method of import.
+//todo or window.nextTick = nextTick || setTimeout;??
+
 export {toggleTick} from "./toggleTick.js";
 export {SlottablesEvent} from "./slottablesEvent.js";
 
 //todo I don't know the sequence of these imports on addEventListener especially.
 //todo I don't know if the sequence here matters.
-export {queueEvent} from "./PropagationRootInterface.js";
-// import {} from "./dispatchEvent_asyncAndBounce.js"; //todo add this one, replaces the export {queueEvent} from "./PropagationRootInterface.js";
+import {} from "./dispatchEvent_asyncAndBounce.js"; //todo add this one, replaces the export {queueEvent} from "./PropagationRootInterface.js";
 import {} from "./Event_setDefault.js";
 import {} from "./EventListenerOption_unstoppable.js";
 import {addPropagationRootInterface} from "./PropagationRootInterface.js";

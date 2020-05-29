@@ -15,22 +15,17 @@ const eventLoopWannabe = [];   //simulates what the event loop does, kinda
 //preventDefault blocks the bounce of default action
 const original2 = EventTarget.prototype.dispatchEvent;
 Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
-  value: function (event, eventPropagationOptions) {
-    if (!eventPropagationOptions?.bounce)
-      return original2.call(this, event, eventPropagationOptions);
+  value: function (event) {
+    if (!event.bounce)
+      return original2.call(this, event);
 
-    Object.defineProperty(event, "bounce", {value: true, writable: false});
-    original2.call(this, event, eventPropagationOptions);
+    original2.call(this, event);
     if (event.defaultPrevented)
       return false;
-    const defaultAction = event.defaultAction;
-    const next = /*todo eventPropagationOptions?.async &&*/ //todo don't know if these two have to be connected??
-      eventLoopWannabe.find(task => task.event.bounce === event.bounce && task.event.type === event.type);
-    if (next) {
-      next.event.setDefault(defaultAction);
-    } else {
-      defaultAction && defaultAction(event);
-    }
+    if(!event.defaultAction)
+      return true;
+    const next = eventLoopWannabe.find(t => t.event.bounce === event.bounce && t.event.type === event.type);
+    next ? next.event.setDefault(event.defaultAction): event.defaultAction(event);
     return true;
   }
 });
@@ -41,10 +36,10 @@ Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
 // It works with fetch, maybe we can do it with toggleTick and setTimeout too?
 const original = EventTarget.prototype.dispatchEvent;
 Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
-  value: function (event, eventPropagationOptions) {
-    if (!eventPropagationOptions?.async)
-      return original.call(this, event, eventPropagationOptions);
-    eventLoopWannabe.push({target: this, event, eventPropagationOptions});//todo I don't think I need target here.. I think I can just use this instead
+  value: function (event) {
+    if (!event.async)
+      return original.call(this, event);
+    eventLoopWannabe.push({target: this, event});//todo I don't think I need target here.. I think I can just use this instead
     toggleTick(() => {
       const {target, event, eventPropagationOptions} = eventLoopWannabe.shift();
       original.call(target, event, eventPropagationOptions);
@@ -52,6 +47,7 @@ Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
   }
 });
 
+//merging the propagationOptions into the event object.
 const original3 = EventTarget.prototype.dispatchEvent;
 Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
   value: function (event, eventPropagationOptions) {
@@ -61,6 +57,8 @@ Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
       console.warn("most events should bubble. Are you sure you don't want your event to bubble? There is rarely anything lost due to bubbling, and if you are concerned with the target of the event, it is better to check this target in the event listener function directly.");
     if (event.composed && eventPropagationOptions.bounce)   //todo should I have this error??
       throw new Error("bounce events cannot also be composed: true.");
-    return original3.call(this, event, eventPropagationOptions);
+    Object.defineProperty(event, "bounce", {value: !!eventPropagationOptions?.bounce, writable: false});
+    Object.defineProperty(event, "async", {value: !!eventPropagationOptions?.async, writable: false});
+    return original3.call(this, event);
   }
 });

@@ -1,8 +1,3 @@
-import {toggleTick} from "./toggleTick.js";
-
-const nonBubblingEvents = ["toggle", "load", "unload", "scroll", "blur", "focus", "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument", "loadstart", "loadend", "progress", "abort", "error", "mouseenter", "mouseleave", "pointerenter", "pointerleave", "pointerleave", "rowexit", "beforeunload", "stop", "start", "finish", "bounce", "Miscellaneous", "afterprint", "propertychange", "filterchange", "readystatechange", "losecapture"];
-
-//I need to here
 const addEventListenerOriginal = EventTarget.prototype.addEventListener;
 Object.defineProperty(EventTarget.prototype, "addEventListener", {
   value: function (name, cb, options) {
@@ -62,49 +57,9 @@ export function addPropagationRootInterface(clazz) {
         controller.connect();
         controller && activeEventListeners.set(name, controller);
       }
-    },
-    addGuaranteedBubbleListener: {
-      value: function (name, cb, onTarget) {
-        // if (nonBubblingEvents.indexOf(name) === -1 && !onTarget)
-          return this.addEventListener(name, cb, {captureToBubble: true, onTarget: !!onTarget});
-        // const onTargetWrapper = function (e) {
-        //   e.target.addEventListener(name, cb, {once: true, unstoppable: true});
-        // }
-        // return this.addEventListener(name, onTargetWrapper, {capture: true});
-      }
-    },
+    }
   });
 }
-
-//todo override dispatchEvent instead?
-//todo and add a warning for dispatchEvent composed: true events ? and bubble: false events?
-
-//todo override dispatchEvent, but trigger the behavior as an option dispatchEvent(event, options)??
-
-const eventLoopWannabe = [];
-
-export function queueEvent(target, event) {            //simulates what the event loop does, kinda
-  eventLoopWannabe.push({target, event});
-  toggleTick(runEvent);
-}
-
-function runEvent() {
-  const {target, event} = eventLoopWannabe.shift();
-  target.dispatchEvent(event);
-  const defaultAction = event.preventDefault();
-  if (!defaultAction)
-    return;
-  // todo queueEvent() should probably simply be converted into a dispatchEvent(event with bounce: true) or composed: bounce.
-  if (event.bounce) {                     //try to bounce the default action.
-    //bounce logic: assumes that events with the same type name and the same bounce key,
-    //              will bounce the default action to each other
-    const next = eventLoopWannabe.find(task => task.event.bounce === event.bounce && task.event.type === event.type);
-    if (next) return next.event.setDefault(defaultAction);
-  }
-  defaultAction(event);
-}
-
-
 // todo
 //  function undefineEvent(name, clazz, options){
 //    this._eventControllers.delete(name);

@@ -1,6 +1,6 @@
 <script type="module">
 
-  import {toggleTick} from "../src/joi2.js";
+  import {} from "../src/joi2.js";
 
   class BouncedMousedown {
 
@@ -21,12 +21,8 @@
     }
 
     onMousedown(e) {
-      const bounceMousedown = new MouseEvent("bounced-mousedown", {bubbles: true});
+      e.target.dispatchEvent(new MouseEvent("bounced-mousedown", {bubbles: true}), {bounce: true, async: true});
       //todo the problem of the mutating event.target property. Remember that the .target is a mutable property.
-      const target = e.target;
-      toggleTick(() => target.dispatchEvent(bounceMousedown));
-      //todo use (nextTick||setTimeout) instead of import?? todo I don't know the pros/cons of this method of import.
-      //todo or window.nextTick = nextTick || setTimeout;??
     }
   }
 

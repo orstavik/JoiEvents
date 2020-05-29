@@ -1,6 +1,6 @@
 <script type="module">
 
-  import {queueEvent} from "../src/joi2.js";
+  import {} from "../src/joi2.js";
 
   class BouncedMousedown {
 
@@ -18,10 +18,10 @@
     }
 
     onMousedown(e) {
-      const bounceEvent = new MouseEvent("bounced-mousedown", {bubbles: true});
-      bounceEvent.bounce = e;                                            //bounce is not a valid eventDictionary property
-      const target = e.currentTarget === window ? window : e.target;     //converting target from a composed: true event to a bouncing event
-      queueEvent(target, bounceEvent);
+      //todo the problem of window/document root for bounced events... How and where should I fix this??
+      //todo i don't think that we should split the window and document. I think i must merge them in the defineEvent..
+      const bounced = new MouseEvent("bounced-mousedown", {bubbles: true});
+      (e.currentTarget === window ? window : e.target).dispatchEvent(bounced, {bounce: true, async: true});
     }
   }
 
@@ -31,7 +31,12 @@
       this.attachShadow({mode: "open"});
       this.shadowRoot.innerHTML = "<h1>hello sunshine</h1><h2>nothing here</h2>";
       const h1 = this.shadowRoot.children[0];
-      h1.addEventListener("bounced-mousedown", e => e.setDefault(e => console.log("defaultAction from WebComp" + e.type)));
+      h1.addEventListener("bounced-mousedown", e => e.setDefault(this.myDefaultAction.bind(this)));
+      this.shadowRoot.addEventListener("bounced-mousedown", e => console.log("shadowRoot", e.target));
+    }
+
+    myDefaultAction(e){
+      console.log("defaultAction from WebComp: " + e.type);
     }
   }
 
