@@ -1,5 +1,12 @@
-//todo use (nextTick||setTimeout) instead of import?? todo I don't know the pros/cons of this method of import.
-//todo or window.nextTick = nextTick || setTimeout;??
+//import {} from "./toggleTick.js";
+window["nextTick"] = window["nextTick"] || setTimeout;
+
+// * nextTick
+//this will ensure that there is a nextTick, but you don't have to load if you don't want to.
+// https://cdn.jsdelivr.net/combine/
+// gh/orstavik@1.2/nextTick/nextTick.min.js
+// ,
+// gh/orstavik/joi@3.3/dist/index.min.js
 
 //todo I don't know the sequence of these imports on addEventListener especially.
 //todo I don't know if the sequence here matters.
@@ -16,8 +23,8 @@ addCaptureToBubbleEventListenerOption(ShadowRoot.prototype);
 addCaptureToBubbleEventListenerOption(Document.prototype);
 addCaptureToBubbleEventListenerOption(Window.prototype);
 //4. EventListenerOption.first for grabbing composed: true events.
-export {toggleTick} from "./toggleTick.js";                                 //5. toggleTick
 
+//(nextTick||setTimeout)()    //use this instead of import?? don't know the pros/cons of this method of import.
 
 //Dependencies for web components
 export {SlottablesEvent} from "./slottablesEvent.js";                       //1. the mixins for slottablesCallback and styleCallback

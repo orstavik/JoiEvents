@@ -21,7 +21,7 @@ function parseRaceEvents(raceEvents) {
     "for the trigger event in the event cascade.");
 }
 
-export function toggleTick(cb, raceEvents) {
+window["nextTick"] = function nextTick(cb, raceEvents) {
   raceEvents = parseRaceEvents(raceEvents);
   const details = document.createElement("details");
   details.style.display = "none";
