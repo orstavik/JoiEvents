@@ -10,7 +10,7 @@
     }
 
     connect() {
-      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.addEventListener("mousedown", this._onMousedown, {captureToBubble: true, unstoppable: true});
     }
 
     disconnect() {

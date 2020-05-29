@@ -1,0 +1,25 @@
+<a href="#bobo">
+  <h1>hello sunshine</h1>
+</a>
+
+<input type="checkbox">
+
+<details>
+  <summary>hello</summary>
+  world
+</details>
+
+<script>
+  const input = document.querySelector("input");
+  const summary = document.querySelector("summary");
+  const h1 = document.querySelector("h1");
+
+  const click1 = new MouseEvent("click");
+  click1.preventDefault();
+  input.dispatchEvent(click1);
+  const click2 = new MouseEvent("click");
+  click2.preventDefault();
+  summary.dispatchEvent(click2);
+  h1.dispatchEvent(new MouseEvent("click"));
+
+</script>

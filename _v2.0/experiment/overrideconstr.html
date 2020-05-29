@@ -1,0 +1,48 @@
+<script type="module">
+
+  import {toggleTick} from "./toggleTick.js";
+
+  const eventLoopWannabe = [];   //simulates what the event loop does, kinda
+
+  const original = EventTarget.prototype.dispatchEvent;
+  Object.defineProperty(EventTarget.prototype, "dispatchEvent", {
+    value: function (event, eventPropagationOptions) {
+      if (event.composed)
+        throw new Error("bounce events instead of making events propagate composed: true");
+      if (event.bubbles === false)
+        console.log("most events should bubble. Are you sure you don't want your event to bubble? There is rarely anything lost due to bubbling, and if you are concerned with the target of the event, it is better to check this target in the event listener function directly.");
+      const bounce = eventPropagationOptions?.bounce;
+      const asyncDispatch = eventPropagationOptions?.async;
+      if (bounce)
+        Object.defineProperty(event, "bounce", {value: true, writable: false});
+      if (!asyncDispatch) {
+        const res = original.call(this, event);
+        if (!bounce)
+          return res;
+        const defaultAction = event.preventDefault();
+        defaultAction && defaultAction(event);
+        return res;
+      }
+      eventLoopWannabe.push({target, event});
+      toggleTick(function runEvent() {
+        const {target, event} = eventLoopWannabe.shift();
+        target.dispatchEvent(event);
+        const defaultAction = event.preventDefault();
+        if (!defaultAction)
+          return;
+        // todo queueEvent() should probably simply be converted into a dispatchEvent(event with bounce: true) or composed: bounce.
+        if (event.bounce) {                     //try to bounce the default action.
+          //bounce logic: assumes that events with the same type name and the same bounce key,
+          //              will bounce the default action to each other
+          const next = eventLoopWannabe.find(task => task.event.bounce === event.bounce && task.event.type === event.type);
+          if (next) return next.event.setDefault(defaultAction);
+        }
+        defaultAction(event);
+      });
+    }
+  });
+  window.addEventListener("boob", e => console.log(e));
+  document.dispatchEvent(new Event("boob", {composed: true, bubbles: false, cancelable: false}));
+
+</script>
+

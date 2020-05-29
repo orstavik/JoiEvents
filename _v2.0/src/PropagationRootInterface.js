@@ -5,13 +5,14 @@ const nonBubblingEvents = ["toggle", "load", "unload", "scroll", "blur", "focus"
 //I need to here
 const addEventListenerOriginal = EventTarget.prototype.addEventListener;
 Object.defineProperty(EventTarget.prototype, "addEventListener", {
-  value: function (name, fun, options) {
+  value: function (name, cb, options) {
     //activate event controller if necessary
-    if (name.indexOf("-") >= 0)   //todo remove this - eventually.
+    if (name.indexOf("-") >= 0)   //todo remove this - eventually...
       (this.activateEvent ? this : this.getRootNode()).activateEvent(name);
-    addEventListenerOriginal.call(this, name, fun, options);
+    addEventListenerOriginal.call(this, name, cb, options);
     // todo if (!this.isConnected)
     // todo   throw new Error("Don't add event listeners on elements not connected to the DOM. Not cool.");
+    // todo.. no i don't know how to do this now..
     //todo maybe the monitoring service for automatic gc of unused event controllers should run as a true event observer on the
     //todo propagation root instead.. This is not necessary. As long as we have a method deactivate, then it is all good.
   }
@@ -64,12 +65,12 @@ export function addPropagationRootInterface(clazz) {
     },
     addGuaranteedBubbleListener: {
       value: function (name, cb, onTarget) {
-        if (nonBubblingEvents.indexOf(name) === -1 && !onTarget)
-          return this.addEventListener(name, cb);
-        const onTargetWrapper = function (e) {
-          e.target.addEventListener(name, cb, {once: true, unstoppable: true});
-        }
-        return this.addEventListener(name, onTargetWrapper, {capture: true});
+        // if (nonBubblingEvents.indexOf(name) === -1 && !onTarget)
+          return this.addEventListener(name, cb, {captureToBubble: true, onTarget: !!onTarget});
+        // const onTargetWrapper = function (e) {
+        //   e.target.addEventListener(name, cb, {once: true, unstoppable: true});
+        // }
+        // return this.addEventListener(name, onTargetWrapper, {capture: true});
       }
     },
   });

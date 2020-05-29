@@ -1,5 +1,12 @@
 import {toggleTick} from "./toggleTick.js";
 
+export function findLowerNativeAction(path, start, end, event) {
+  start = /*!start ? 0 : */path.indexOf(start);
+  path = path.slice(start + 1, path.indexOf(end));
+  path = path.filter(n => n.joiGetNativeAction).map(n => n.joiGetNativeAction(event)).filter(fun => fun);
+  return path.length && path[0];
+}
+
 Object.defineProperties(HTMLSelectElement.prototype, {
   requestSelect: function (option) {
     const beforeInput = new InputEvent("beforeinput", {composed: true, bubbles: true});

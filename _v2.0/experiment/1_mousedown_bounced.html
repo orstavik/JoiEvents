@@ -12,12 +12,12 @@
     //todo should this be static?
     //todo should this be xxxCallback()??
     connect() {
-      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.addEventListener("mousedown", this._onMousedown, {captureToBubble: true, unstoppable: true});
     }
 
     //todo should this be static?
     disconnect() {
-      this.root.removeGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.removeEventListener("mousedown", this._onMousedown); //todo this is not implemented in the captureToBubble options
     }
 
     onMousedown(e) {

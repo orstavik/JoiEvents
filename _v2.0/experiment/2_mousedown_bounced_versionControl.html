@@ -16,7 +16,7 @@ what do we need to test:
     }
 
     connect() {
-      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.addEventListener("mousedown", this._onMousedown, {captureToBubble: true, unstoppable: true});
     }
 
     disconnect() {
@@ -39,7 +39,7 @@ what do we need to test:
     }
 
     connect() {
-      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.addEventListener("mousedown", this._onMousedown, {captureToBubble: true, unstoppable: true});
     }
 
     disconnect() {
@@ -62,7 +62,7 @@ what do we need to test:
     }
 
     connect() {
-      this.root.addGuaranteedBubbleListener("mousedown", this._onMousedown);
+      this.root.addEventListener("mousedown", this._onMousedown, {captureToBubble: true, unstoppable: true});
     }
 
     disconnect() {

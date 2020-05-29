@@ -22,10 +22,10 @@ export function addCaptureToBubbleEventListenerOption(proto) {
       value: function (name, cb, options) {
         if (options?.captureToBubble && Event.bubbles(name)) {
           options.capture = false;
-          options.unstoppable = true;
+          options.unstoppable = true;//todo this shouldn't be added here??
         } else if (options?.captureToTarget || options?.captureToBubble) {
           options.capture = true;
-          options.unstoppable = true;
+          options.unstoppable = true;//todo this shouldn't be added here?? let that be up to the outside to decide?
           const og = cb;
           cb = function (e) {
             ogAdd.call(e.target, name, og, {once: true, unstoppable: true});
@@ -44,7 +44,7 @@ export function addCaptureToBubbleEventListenerOption(proto) {
         }
 
 
-          return ogRemove.call(this, type, cb, options);
+        return ogRemove.call(this, type, cb, options);
       }
     }
   });
