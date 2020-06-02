@@ -1,0 +1,59 @@
+<h1>hello sunshine</h1>
+
+<script>
+
+  (async function () {
+
+    class FlushPromise extends Promise {
+      constructor(promiseFunction, details) {
+        super(promiseFunction);
+        this.details = details;
+      }
+
+      flush() {
+        if (!this.details.promiseResult)
+          this.details.ontoggle();
+        return this.details.promiseResult;
+      }
+
+      resolved() {
+        return !!this.details.promiseResult;
+      }
+    }
+
+    function nextTick(fun) {
+      const details = document.createElement("details");
+      document.body.appendChild(details);
+      details.style.display = "none";
+      details.open = true;
+      //Promise.resolve().then(audio.remove.bind(audio));
+
+      return new FlushPromise(function (resolve, reject) {
+        details.ontoggle = function () {
+          details.ontoggle = undefined;
+          details.remove();
+          resolve(details.promiseResult = fun());
+        };
+      }, details);
+    }
+
+    const testPromise = nextTick(() => 42);
+    console.log(testPromise, performance.now());
+    console.log(testPromise.flush(), performance.now());
+    console.log(testPromise, performance.now());
+    console.log("meaning of life:", await testPromise, performance.now());
+    console.log(testPromise.flush(), performance.now());
+    console.log("i forget the meaning of life:", await testPromise, performance.now());
+
+    async function testFunction(testPromise2){
+      console.log("what was the meaning of life?", await testPromise2, performance.now());//this should have a longer wait
+      console.log("resolved yet?", testPromise2.resolved(), performance.now())
+    }
+
+    const testPromise2 = nextTick(() => 21);
+    console.log("resolved yet?", testPromise2.resolved(), performance.now())
+    console.log("passing out the promise to another async function", testFunction(testPromise2), performance.now());//this should have a longer wait
+    console.log("when is this printed?", performance.now())
+  })();
+
+</script>

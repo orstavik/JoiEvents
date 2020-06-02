@@ -72,12 +72,12 @@ export function addFirstEventListenerOption(proto) {
     },
     removeEventListener: {
       value: function (type, cb, options) {
-        const listener = removeEventListener(this, type, options?.capture || !!options, cb);
-        if (listener)
-          return ogRemove.call(this, type, listener.wrapper, options);
+        const listener = removeEventListener(this, type, !!(options instanceof Object? options.capture : options), cb);
+        // if (listener)
+          return ogRemove.call(this, type, listener?.wrapper || cb, options);
       }
     }
   });
 }
 
-addFirstEventListenerOption(EventTarget.prototype);
+// addFirstEventListenerOption(EventTarget.prototype);

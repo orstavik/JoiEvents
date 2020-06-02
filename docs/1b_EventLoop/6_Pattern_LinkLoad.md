@@ -16,7 +16,7 @@ function loadOnImg(cb) {
     cb();
   };
   img.style.display = "none";
-  document.body.appendChild(img);
+  document.body.appendChild(img);//todo this is not necessary i think. check safari and ie.
   img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 }
 ```

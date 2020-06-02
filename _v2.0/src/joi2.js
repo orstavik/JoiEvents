@@ -18,8 +18,8 @@ import {addCaptureToBubbleEventListenerOption} from "./EventListenerOption_captu
 addCaptureToBubbleEventListenerOption(ShadowRoot.prototype);                //3. EventListenerOption.CaptureToBubble
 addCaptureToBubbleEventListenerOption(Document.prototype);
 addCaptureToBubbleEventListenerOption(Window.prototype);
-//todo import {addFirstEventListenerOption} from "./EventListenerOption_first.js"; //4. EventListenerOption.first for grabbing composed: true events.
-//todo addFirstEventListenerOption(Window.prototype);//we only need the event listener registry to stop composed: true events.
+import {addFirstEventListenerOption} from "./EventListenerOption_first.js"; //4. EventListenerOption.first for grabbing composed: true events.
+addFirstEventListenerOption(Window.prototype);//we only need the event listener registry to stop composed: true events.
 
 //todo if we don't have Event.setDefault(), we can fallback to do Event.setDefault() to be setTimeout. And there we also have the event.
 //todo but, this will of course have the wrong timing and preventDefault() will not control it. Or, we could make preventDefault() control it slightly, but not completely.

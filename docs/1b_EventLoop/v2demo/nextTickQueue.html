@@ -1,0 +1,69 @@
+<!--
+2. ratechange demo, in itself.
+3. comparison ratechange vs toggleTick vs loadOnImg
+ * ie9/edge support ratechange, but not toggleTick.
+ * ff has a bug with ratechange, but it still works with it
+ * chrome works equally well with both, but should use ratechange because it is in the head and even rarer than toggle
+ * safari should use loadOnImg..
+4. Promise architecture. Is it really better? or is it not? It is better? yes..
+-->
+
+<h1>hello sunshine</h1>
+two problems:
+1. inefficient to createElements again and again, reuse would be more efficient
+2. you are not 100% sure that the callbacks are done in the correct order, see the onLoad callbacks in Safari for example.
+<script>
+
+  (async function () {
+
+    class FlushablePromise extends Promise {
+      constructor(promiseFunction, audio) {
+        super(promiseFunction);
+        this.audio = audio;
+      }
+
+      flush() {
+        if (!this.audio.promiseResult)
+          this.audio.onratechange();
+        return this.audio.promiseResult;
+      }
+
+      resolved() {
+        return !!this.audio.promiseResult;
+      }
+    }
+
+    function nextTick(fun) {
+      const audio = document.createElement("audio"); //new Audio() is supported in ie10, not ie9
+      document.head.appendChild(audio);
+      audio.playbackRate = 2;
+      //Promise.resolve().then(audio.remove.bind(audio));
+
+      return new FlushablePromise(function (resolve, reject) {
+        audio.onratechange = function () {
+          audio.onratechange = undefined;
+          audio.remove();
+          resolve(audio.promiseResult = fun());
+        };
+      }, audio);
+    }
+
+    const testPromise = nextTick(() => 42);
+    console.log(testPromise, performance.now());
+    console.log(testPromise.flush(), performance.now());
+    console.log(testPromise, performance.now());
+    console.log("meaning of life:", await testPromise, performance.now());
+    console.log(testPromise.flush(), performance.now());
+    console.log("i forget the meaning of life:", await testPromise, performance.now());
+
+    async function testFunction(testPromise2) {
+      console.log("what was the meaning of life?", await testPromise2, performance.now());//this should have a longer wait
+      console.log("resolved yet?", testPromise2.resolved(), performance.now())
+    }
+
+    const testPromise2 = nextTick(() => 21);
+    console.log("resolved yet?", testPromise2.resolved(), performance.now())
+    console.log("passing out the promise to another async function", testFunction(testPromise2), performance.now());//this should have a longer wait
+    console.log("when is this printed?", performance.now())
+  })();
+</script>

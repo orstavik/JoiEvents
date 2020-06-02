@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<pre>
+  toggleTick    ratechangeTick     loadTick
+
+</pre>
+reusing either link or img seems difficult in chrome. It will not dispatch a second load event on the same object.
+This means that reusing an element to minimize the effort of making it, doesn't work.
+
+audio element and thus ratechangeTick is extremely expensive. approx 20 times more so than toggleTick
+
+loadTick on img is cheaper than toggleTick, as it doesn't need to be added to the DOM to be triggered.
+It would be beneficial if toggle would be dispatched if details wasn't connected, but that is not so.
+
+in firefox, toggleTick comes before imgLoadTick. in safari imgLoadTick comes first. in Chrome, imgLoadTick and toggleTick come at the same time.
+
+In ie9 and above, I would imagine that imgLoadTick would be the safest choice.
+
+Simple.
+We use toggleTick if it exists and if it is in both first places, else imgLoadTick?
+
+Choice.
+1. we check if details exists, if not, then imgLoadTick.
+2. we make the competition between 2 imgLoadTick and 2 toggleTick, and then see if the imgLoadTick or toggleTick is in places 1 and 2.
+3. we use imgLoadTick or toggleTick if toggleTick is set as default.
+
+conclusion: in chrome and firefox, toggleTick is approx 20 times cheaper than ratechangeTick.
+<script>
+
+  const array = new Array(1000);
+
+  //audio
+  // console.time("audio");
+  // console.time("audio construction");
+  // for (let i = 0; i < array.length; i++)
+  //   array[i] = document.createElement("audio");
+  // console.timeEnd("audio construction");
+  //
+  // console.time("audio append");
+  // for (let i = 0; i < array.length; i++)
+  //   document.body.appendChild(array[i]);
+  // console.timeEnd("audio append"); //connectedCallback on audio element is really expensive
+  //
+  // console.time("audio listener");
+  // for (let i = 0; i < array.length; i++)
+  //   array[i].onratechange = e => console.log(e.type, e.target.tagName);
+  // console.timeEnd("audio listener");
+  //
+  // console.time("audio trigger");
+  // for (let i = 0; i < array.length; i++)
+  //   array[i].playbackRate = 2;
+  // console.timeEnd("audio trigger");
+  //
+  // console.time("audio remove");
+  // for (let i = 0; i < array.length; i++)
+  //   array[i].remove();
+  // console.timeEnd("audio remove");
+  // console.timeEnd("audio");
+
+  //details
+  console.time("details");
+  console.time("details construction");
+  for (let i = 0; i < array.length; i++)
+    array[i] = document.createElement("details");
+  console.timeEnd("details construction");
+
+  console.time("details append");
+  for (let i = 0; i < array.length; i++)
+    document.body.appendChild(array[i]);
+  console.timeEnd("details append"); //connectedCallback on details element is not expensive.
+
+  console.time("details no style");
+  for (let i = 0; i < array.length; i++)
+    array[i].style.display = "none";
+  console.timeEnd("details no style");
+
+  console.time("details listener");
+  for (let i = 0; i < array.length; i++)
+    array[i].ontoggle = e => console.log(e.type, e.target.tagName);
+  console.timeEnd("details listener");
+
+  console.time("details trigger");
+  for (let i = 0; i < array.length; i++)
+    array[i].open = 1;
+  console.timeEnd("details trigger");
+
+  console.time("details remove");
+  for (let i = 0; i < array.length; i++)
+    array[i].remove();
+  console.timeEnd("details remove");
+  console.timeEnd("details");
+
+  //img
+  console.time("img");
+  console.time("img construction");
+  for (let i = 0; i < array.length; i++)
+    array[i] = document.createElement("img");
+  console.timeEnd("img construction");
+
+  // console.time("img append");
+  // for (let i = 0; i < array.length; i++)
+  //   document.body.appendChild(array[i]);
+  // console.timeEnd("img append"); //connectedCallback on img element is not expensive.
+
+  console.time("img no style");
+  for (let i = 0; i < array.length; i++)
+    array[i].style.display = "none";
+  console.timeEnd("img no style");
+
+  console.time("img listener");
+  for (let i = 0; i < array.length; i++)
+    array[i].onload = e => console.log(e.type, e.target.tagName);
+  console.timeEnd("img listener");
+
+  console.time("img trigger");
+  for (let i = 0; i < array.length; i++)
+    array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  console.timeEnd("img trigger");
+  console.timeEnd("img");
+
+// setTimeout(function(){
+//   console.time("img reuse");
+//   for (let i = 0; i < array.length; i++)
+//     array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+//   console.timeEnd("img reuse");
+// }, 5000);
+
+  //link
+  console.time("link");
+  console.time("link construction");
+  for (let i = 0; i < array.length; i++)
+    array[i] = document.createElement("link");
+  console.timeEnd("link construction");
+
+  console.time("link rel stylesheet");
+  for (let i = 0; i < array.length; i++)
+    array[i].rel = "stylesheet";
+  console.timeEnd("link rel stylesheet");
+
+  console.time("link listener");
+  for (let i = 0; i < array.length; i++)
+    array[i].onload = e => console.log(e.type, e.target.tagName);
+  console.timeEnd("link listener");
+
+  console.time("link append");
+  for (let i = 0; i < array.length; i++)
+    document.head.appendChild(array[i]);
+  console.timeEnd("link append"); //connectedCallback on link element is not expensive.
+
+  console.time("link trigger");
+  for (let i = 0; i < array.length; i++)
+    array[i].href = "data:text/css;base64,YXt9";
+  console.timeEnd("link trigger");
+
+  // console.time("link remove");
+  // for (let i = 0; i < array.length; i++)
+  //   array[i].remove();
+  // console.timeEnd("link remove");
+  console.timeEnd("link");
+
+  setTimeout(function() {
+    console.time("link reuse");
+    for (let i = 0; i < array.length; i++)
+      array[i].href = "data:text/css;base64,Ynt9";
+    console.timeEnd("link reuse");
+  }, 5000);
+  //todo how to trigger an image rerun?
+  // for (let i = 0; i < array.length; i++)
+  //   array[i].setAttribute("src", "");
+  //
+  // setTimeout(function () {
+  //   console.time("img trigger rerun");
+  //   for (let i = 0; i < array.length; i++){
+  //
+  //     array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  //   }
+  //   console.timeEnd("img trigger rerun");
+  // }, 10000);
+
+
+  // console.time("img remove");
+  // for (let i = 0; i < array.length; i++)
+  //   array[i].remove();
+  // console.timeEnd("img remove");
+</script>
+</body>
+</html>

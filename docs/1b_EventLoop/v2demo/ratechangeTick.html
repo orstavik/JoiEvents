@@ -1,0 +1,13 @@
+<h1>hello sunshine</h1>
+<script>
+  const audio = document.createElement("audio");
+  audio.onratechange = function () {
+    this.remove ? this.remove() :
+    console.log("ratechange");
+  };
+  document.head.appendChild(audio);
+  audio.playbackRate = 0.1;
+  Promise.resolve().then(audio.remove.bind(audio));
+
+  console.log("bruce wayne");
+</script>

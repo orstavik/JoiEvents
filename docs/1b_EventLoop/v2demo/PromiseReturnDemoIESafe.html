@@ -1,0 +1,85 @@
+<!--
+1. ff bug, simple. i should just post it.
+2. ratechange demo, in itself.
+3. comparison ratechange vs toggleTick vs loadOnImg
+ * ie9/edge support ratechange, but not toggleTick.
+ * ff has a bug with ratechange, but it still works with it
+ * chrome works equally well with both, but should use ratechange because it is in the head and even rarer than toggle
+ * safari should use loadOnImg..
+4. Promise architecture. Is it really better? or is it not? It is better? yes..
+-->
+
+<h1>hello sunshine</h1>
+
+<script>
+
+  (function () {
+
+    function nextTick(fun) {
+      const audio = document.createElement("audio");
+      document.head.appendChild(audio);
+      audio.playbackRate = 2;
+      //Promise.resolve().then(audio.remove.bind(audio));
+      var flushablePromise;
+      if (false && window["Promise"]) {
+        flushablePromise = new Promise(function (resolve, reject) {
+          audio.onratechange = function () {
+            audio.onratechange = undefined;
+            audio.remove ? audio.remove() : document.head.removeChild(audio);
+            resolve(audio.promiseResult = fun());
+          };
+        });
+      } else {
+        var callbacks = [];
+        audio.onratechange = function () {
+          audio.onratechange = undefined;
+          document.head.removeChild(audio);
+          audio.promiseResult = fun();
+          for (let i = 0; i < callbacks.length; i++)
+            callbacks[i](audio.promiseResult);
+        };
+        flushablePromise = {
+          onResolved: function(cb){
+            if(audio.promiseResult)
+              cb(audio.promiseResult);
+            callbacks.push(cb);
+          }
+        };
+      }
+      flushablePromise.flush = function () {
+        if (!audio.promiseResult)
+          audio.onratechange();
+        return audio.promiseResult;
+      }
+      flushablePromise.resolved = function () {
+        return !!audio.promiseResult;
+      }
+      return flushablePromise;
+    }
+
+    //in the context of use, we need to handle the async and await with care.
+    const testPromise = nextTick(() => 42);
+    console.log(testPromise, new Date().getTime());
+    testPromise.onResolved(function(result){
+      console.log("meaning of life:", result, new Date().getTime());
+    })
+    console.log(testPromise.flush(), new Date().getTime());
+    console.log(testPromise, new Date().getTime());
+    // console.log("meaning of life:", await testPromise, new Date().getTime());
+    console.log(testPromise.flush(), new Date().getTime());
+    testPromise.onResolved(function(result){
+      console.log("i forget the meaning of life:", result, new Date().getTime());
+    })
+    // console.log("i forget the meaning of life:", await testPromise, new Date().getTime());
+
+    // async function testFunction(testPromise2) {
+    //   console.log("what was the meaning of life?", await testPromise2, new Date().getTime());//this should have a longer wait
+    //   console.log("resolved yet?", testPromise2.resolved(), new Date().getTime())
+    // }
+
+    // const testPromise2 = nextTick(() => 21);
+    // console.log("resolved yet?", testPromise2.resolved(), new Date().getTime())
+    // console.log("passing out the promise to another async function", testFunction(testPromise2), new Date().getTime());//this should have a longer wait
+    // console.log("when is this printed?", new Date().getTime())
+  })();
+</script>

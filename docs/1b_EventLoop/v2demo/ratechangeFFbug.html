@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<h1>hello world</h1>
+<script>
+  let one;
+  //bug nr 1  (important error!!)
+  const audio = document.createElement("audio");
+  audio.addEventListener("ratechange", e => console.log("ratechange bug1b", e.timeStamp));
+  audio.onratechange = function (e) {
+    this.remove();                              //bug, somehow, this.remove triggers the onratechange callback a second time.
+    console.log("ratechange bug1", e.timeStamp);
+    if (!one)
+      one = e;
+    else if (one !== e)
+      console.log("the extra event is not the same event as the first event");
+  };
+  document.head.appendChild(audio);
+  audio.playbackRate = 0.1;
+
+  //bug nr 2  (just produce an error message that is not an Error, it seems like)
+  const audio2 = document.createElement("audio");
+  audio2.onratechange = function (e) {
+    document.head.removeChild(this);        //throws NotFoundError: Node.removeChild: The node to be removed is not a child of this node
+    console.log("ratechange bug2", e.timeStamp);
+  };
+  document.head.appendChild(audio2);
+  audio2.playbackRate = 0.1;
+
+  //needed to run correctly in FF
+  const audio3 = document.createElement("audio");
+  audio3.onratechange = function (e) {
+    this.onratechange = undefined;    //patch bug 1: by removing the onratechange listener, it doesn't trigger a second time
+    this.remove();                    //patch bug 2: this.remove() doesn't throw an NotFoundError
+    console.log("ratechange no bug", e.timeStamp);
+  };
+  document.head.appendChild(audio3);
+  audio3.playbackRate = 0.1;
+
+  //illustrate the correct behavior of a similar event toggle in FF
+  const details = document.createElement("details");
+  details.ontoggle = function () {
+    document.body.removeChild(this);    //doesn't throw a NotFoundError: Node.removeChild: The node to be removed is not a child of this node
+                                        //this.remove();
+    console.log("toggle");
+  };
+  document.body.appendChild(details);
+  details.open = true;
+</script>
+
+</body>
+</html>
