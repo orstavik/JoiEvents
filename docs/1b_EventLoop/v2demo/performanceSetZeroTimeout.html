@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+  (function(){
+    var idCb = {};
+
+    window.setZeroTimeout = function(task) {
+      const mid = "pm." + Math.random();
+      idCb[mid] = task;
+      window.postMessage(mid, "*");
+      return mid;
+    }
+    window.clearZeroTimeout = function (mid){
+      delete idCb[mid];
+    }
+
+    function onMessage(evt) {
+      if (evt.source !== window)
+        return;
+      const mid = evt.data;
+      if (!idCb[mid])
+        return;
+      evt.stopImmediatePropagation();
+      const cb = idCb[mid];
+      delete idCb[mid];
+      cb();
+    }
+
+    window.addEventListener("message", onMessage);
+  })();
+</script>
+<script>
+  var time1, triggerTime1, callbackTime1, time2, triggerTime2, callbackTime2;
+  //test setTimeout
+  setTimeout(function () {
+    const array = new Array(1000);
+    let i = 0;
+    const cb = function () {
+      array[i++] = performance.now();
+    }
+    const start = performance.now();
+    for (let i = 0; i < array.length; i++)
+      setTimeout(cb);
+    console.log("1000x setTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
+    setTimeout(function () {
+      console.log("1000x setTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
+      console.log("1x setTimeout costs on this computer+browser in the current state (ms): ", (time1 = triggerTime1 + callbackTime1) / 1000);
+    });
+  }, 1000);
+
+  //test setZeroTimeout
+  setTimeout(function () {
+    const array = new Array(1000);
+    let i = 0;
+    const cb = function () {
+      array[i++] = performance.now();
+    }
+
+    const start = performance.now();
+    for (let i = 0; i < array.length; i++)
+      setZeroTimeout(cb);
+    console.log("setZeroTimeout trigger vs setTimeout trigger: ", (triggerTime2 = performance.now() - start)/triggerTime1);
+    setTimeout(function () {
+      console.log("setZeroTimeout callback vs setTimeout callback: ", (callbackTime2 = array[array.length - 1] - array[0])/callbackTime1);
+
+      console.log("setZeroTimeout vs setTimeout totaltime: " + (time2 = triggerTime2 + callbackTime2) / time1);
+      console.log("1x setZeroTimeout costs on this computer+browser in the current state (ms): ", time2 / 1000);
+    });
+  }, 3000);
+
+</script>
+</body>
+</html>

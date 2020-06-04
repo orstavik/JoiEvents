@@ -1,10 +1,10 @@
-# Pattern: LoadInQue
+# Pattern: ImgLoad
 
 We will here look at another technique to put a task in a different position in the event loop: the `load` event.
 
 The `load` event is similar to the `error` event in the UglyDuckling pattern. Both `load` and `error` are element lifecycle events. But, as opposed to the `error` in UglyDuckling, the `load` event does not represent something bad/unexpected.
 
-But. There are different elements we can add the `load` event too, and there are different means to trigger them. Good candidates are `<img>`, `<script>`, `<style>`,  and `<link>`. We will only focus on two candidates here: `<img>` and `<link>`.
+But. There are different elements we can add the `load` event too, and there are different means to trigger them. Good candidates are `<img>`, `<script>`, `<style>`, `<svg>`, and `<link>`. We will only focus on two candidates here: `<img>` and `<link>`.
 
 ## `load` on `<img>` 
  
@@ -16,7 +16,7 @@ function loadOnImg(cb) {
     cb();
   };
   img.style.display = "none";
-  document.body.appendChild(img);//todo this is not necessary i think. check safari and ie.
+  // document.body.appendChild(img);//todo this is not necessary i think. check safari and ie.
   img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 }
 ```
@@ -77,10 +77,10 @@ loadOnImg 1           loadOnImg 1          toggleTickTrick 1
 loadOnImg 2           loadOnImg 2          toggleTickTrick 2
 loadOnImg 1           loadOnImg 1          toggleTickTrick 1
 loadOnImg 2           loadOnImg 2          toggleTickTrick 2
-loadOnImg 1           loadOnImg 1          toggleTickTrick 1
+loadOnImg 1  !!       loadOnImg 1          toggleTickTrick 1
 loadOnImg 1  !!       loadOnImg 2          toggleTickTrick 2
 loadOnImg 2  !!       loadOnImg 1          toggleTickTrick 1
-loadOnImg 2           loadOnImg 2          toggleTickTrick 2
+loadOnImg 2  !!       loadOnImg 2          toggleTickTrick 2
 loadOnImg 1           loadOnImg 1          toggleTickTrick 1
 loadOnImg 2           loadOnImg 2          toggleTickTrick 2
 setTimeout 1          setTimeout 1         setTimeout 1
@@ -95,7 +95,7 @@ setTimeout 1          setTimeout 1         setTimeout 1
 setTimeout 2          setTimeout 2         setTimeout 2
 ``` 
 
-The order in Firefox of the `load` events might be scrambled like they were for the `error` event. Thus, you need to implement your own efficient queue and loop for tasks if you need a safer version of this pattern. In our tests, Chrome 79 didn't mess up the sequence of `loadOnImg` as Firefox did, but that may be just a coincidence, and in any case not relevant as will be shown later.  
+The order Firefox (and the other browsers in other tests) call the `load` events might be scrambled like they were for the `error` event. Thus, you need to implement your own efficient queue and loop for tasks if you need a safer version of this pattern. In our tests, Chrome 79 didn't mess up the sequence of `loadOnImg` as Firefox did, but that may be just a coincidence, and in any case not relevant as will be shown later.  
 
 Safari gives higher and different priority to loadOnImg tasks than it gives to ToggleTickTrick tasks.
 
@@ -330,4 +330,4 @@ The `load` on `<script>` is queued very erratic, both across browsers, and withi
 
 ## References
 
-  * dunno
+ * [smallest base64 image](http://proger.i-forge.net/%D0%9A%D0%BE%D0%BC%D0%BF%D1%8C%D1%8E%D1%82%D0%B5%D1%80/[20121112]%20The%20smallest%20transparent%20pixel.html)

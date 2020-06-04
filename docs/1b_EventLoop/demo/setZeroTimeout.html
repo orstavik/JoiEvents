@@ -1,0 +1,43 @@
+<script>
+  (function(){
+    var idCb = {};
+
+    window.setZeroTimeout = function(task) {
+      const mid = "pm." + Math.random();
+      idCb[mid] = task;
+      window.postMessage(mid, "*");
+      return mid;
+    }
+    window.clearZeroTimeout = function (mid){
+      delete idCb[mid];
+    }
+
+    function onMessage(evt) {
+      if (evt.source !== window)
+        return;
+      const mid = evt.data;
+      if (!idCb[mid])
+        return;
+      evt.stopImmediatePropagation();
+      const cb = idCb[mid];
+      delete idCb[mid];
+      cb();
+    }
+
+    window.addEventListener("message", onMessage);
+  })();
+</script>
+
+<script>
+  setTimeout(function () {
+    console.log(document.readyState);
+    setTimeout(function(){console.log("setTimeout 1")});
+    setZeroTimeout(function(){console.log("setZeroTimeout 1")});
+    var mid1 = setTimeout(function(){console.log("setTimeout x")});
+    var mid2 = setZeroTimeout(function(){console.log("setTimeout x")});
+    clearTimeout(mid1);
+    clearZeroTimeout(mid2);
+    setTimeout(function(){console.log("setTimeout 2")});
+    setZeroTimeout(function(){console.log("setZeroTimeout 2")});
+  }, 0);
+</script>

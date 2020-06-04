@@ -10,7 +10,10 @@ To get a single task to run first in one of two places, we:
 
 In the case of `toggleTick` racing a different event, we add *both* a `toggleTick` callback *and* an `addEventListener` for the racing event, and we have them both cancel the other function, whichever runs first. To achieve this effect, we must wrap the callback task in a wrapper function that will cancel both the `toggleTask` and `removeEventListener` first, and then call the callback function. 
 
+## Implementation: `toggleTickRace1.js`
+
 ```javascript
+//nextTick/toggleTickRace1.js
 function toggleTick(cb, raceEvent) {
   const details = document.createElement("details");
   details.style.display = "none";
@@ -37,31 +40,8 @@ function toggleTick(cb, raceEvent) {
 
 ```html
 <h1>double click on me</h1>
+<script src="toggleTickRace1.js"></script>
 <script>
-  function toggleTick(cb, raceEvent) {
-    const details = document.createElement("details");
-    details.style.display = "none";
-
-    const wrapper = function(){
-      task.cancel();
-      cb();
-    };
-    const task = {
-      cancel: function () {
-        raceEvent && window.removeEventListener(raceEvent, wrapper, true);
-        details.ontoggle = undefined;
-      }
-    };
-
-    details.ontoggle = wrapper;
-    document.body.appendChild(details);
-    details.open = true;
-    Promise.resolve().then(details.remove.bind(details));
-    raceEvent && window.addEventListener(raceEvent, wrapper, {capture: true});
-
-    return task;
-  }
-
   window.addEventListener("mouseup", e=> console.log(e.type));
   window.addEventListener("click", e=> console.log(e.type));
   window.addEventListener("dblclick", e=> console.log(e.type));

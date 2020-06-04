@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+toggleTick ratechangeTick loadTick
+
+<pre>
+`setTimeout` is the simplest and most efficient way to queue a macrotask in the event loop.
+The cost of running setTimeout gives us a benchmark value (1).
+The problem with `setTimeout` is that it doesn't run the macrotask immediately, it will delay the queued macrotask
+after other tasks.
+This is not good, it can cause serious confusion and disruptions as the queued macrotask is called too late/other tasks
+are called too soon.
+
+To call setTimeout is not super expensive.
+  In a best case scenario (ie. fast browser+computer) it costs maybe 0,01ms.
+  In a bad case scenario (ie. old browser+slow computer) it costs maybe 0,1ms.
+
+This cost is not insignificant, but it is not terribly expensive neither.
+</pre>
+
+<script defer>
+
+  let syncTime;
+  //test sync
+  setTimeout(function () {
+    const array = new Array(1000);
+    let i = 0;
+    const cb = function () {
+      array[i++] = performance.now();
+    }
+    const start = performance.now();
+    for (let i = 0; i < array.length; i++)
+      cb();
+    console.log("Sync time: ", syncTime = performance.now() - start);
+  }, 1000);
+
+  //test setTimeout
+  setTimeout(function () {
+    const array = new Array(1000);
+    let i = 0;
+    const cb = function () {
+      array[i++] = performance.now();
+    }
+
+    const start = performance.now();
+    for (let i = 0; i < array.length; i++)
+      setTimeout(cb);
+    console.log("setTimeout trigger time costs (ms): ", triggerTime = performance.now() - start);
+    setTimeout(function () {
+      console.log("setTimeout callback time: ", callbackTime = array[array.length - 1] - array[0]);
+
+      console.log("setTimeout is x" + (triggerTime + callbackTime) / syncTime + " slower than simple calling the same functions sync.");
+      console.log("The average time for a setTimeout callback is (ms): ", (triggerTime + callbackTime) / 1000);
+    });
+  }, 2000);
+
+</script>
+</body>
+</html>
+//We try to run this when the browser has no other tasks.
+//When the page has finished loading, then the speed of setTimeout increases.
+//To approx x25 relative sync calls and normative 0.025ms.

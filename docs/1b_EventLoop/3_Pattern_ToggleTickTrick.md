@@ -143,12 +143,12 @@ console.log("one");
 
 Why use the `<details>` element and `toggle` event for this purpose?
 
-1. The `<details>` element and `toggle` event is well and consistently supported in the main browsers: Chrome, Firefox, Safari, and Edge (todo from what version?).
-2. The ToggleTickTrick has a minimal footprint. Little JS code is needed to load, import and/or cut'n'paste.
-3. The ToggleTickTrick is efficient. The browser needs only to natively create a `<details>` element, populate it with some properties, and run a MutationObserver to get to the core task of queuing the callback in the event loop.
+1. The `<details>` element and `toggle` event is well and consistently supported in the main browsers: Chrome, Firefox, Safari, and Edge. However, it is not supported in IE.
+2. The ToggleTickTrick has a small footprint. Little JS code is needed to load, import and/or cut'n'paste. The drawback of toggelTick is that the details elements needs to be added to the `document.body`, even though it can often be taken out of the DOM almost immediately (the next microtask). 
+3. The ToggleTickTrick is quite efficient. The browser needs only to natively create a `<details>` element, add it to the DOM, populate it with some properties, run a MutationObserver to get to the core task of queuing the callback in the event loop, and then remove it again. However, as we will see later, there are more efficient means to add a macrotask to the event loop.
 4. The ToggleTickTrick is simple. It is an unobtrusive, single function! Once you understand how and when the `toggle` event is triggered, there is really not much to it.
-5. The `<details>` element and `toggle` event is not much used. It will less likely cause confusion with other code in the app.
+5. The `<details>` element and `toggle` event is not much used. This makes it less likely to cause confusion and conflict with other code in the app.
 
 ## References
 
-  * dunno
+ * dunno

@@ -44,7 +44,7 @@ Here we use the `EventRoadMap.UNPREVENTABLES` map to enable developers to automa
 
 In addition, we would like to reuse the `toggleTick` task to be more efficient. We therefore add a `reuse(newCb, raceEvents)` to our `toggleTick` task object. Although as efficient as it can be, to make and discard multiple `toggleTick` tasks would be inefficient. Thus, we need to make a mechanism to reuse a `toggleTick` task when necessary.
 
-### `toggleTick.js`
+### `nextTick.js`
 
 ```javascript
 const EventRoadMap = {
@@ -116,7 +116,7 @@ function toggleTick(cb, raceEvents) {
 ### Demo: `toggleTick` race with multiple events and RoadMaps  
 
 ```html
-<script src="toggleTick.js"></script>
+<script src="nextTick.js"></script>
 
 <h1 tabindex="1">Hello sunshine!</h1>
 <p tabindex="2">

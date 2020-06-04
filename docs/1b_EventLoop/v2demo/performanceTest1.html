@@ -1,69 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
 <body>
+toggleTick ratechangeTick loadTick
+
 <pre>
-  toggleTick    ratechangeTick     loadTick
+`setTimeout` is the simplest and most efficient way to queue a macrotask in the event loop.
+The cost of running setTimeout gives us a benchmark value (1).
+The problem with `setTimeout` is that it doesn't run the macrotask immediately, it will delay the queued macrotask
+after other tasks.
+This is not good, it can cause serious confusion and disruptions as the queued macrotask is called too late/other tasks
+are called too soon.
 
+To call setTimeout is not super expensive.
+  In a best case scenario (ie. fast browser+computer) it costs maybe 0,01ms.
+  In a bad case scenario (ie. old browser+slow computer) it costs maybe 0,1ms.
+
+This cost is not insignificant, but it is not terribly expensive neither.
 </pre>
-reusing either link or img seems difficult in chrome. It will not dispatch a second load event on the same object.
-This means that reusing an element to minimize the effort of making it, doesn't work.
 
-audio element and thus ratechangeTick is extremely expensive. approx 20 times more so than toggleTick
-
-loadTick on img is cheaper than toggleTick, as it doesn't need to be added to the DOM to be triggered.
-It would be beneficial if toggle would be dispatched if details wasn't connected, but that is not so.
-
-in firefox, toggleTick comes before imgLoadTick. in safari imgLoadTick comes first. in Chrome, imgLoadTick and toggleTick come at the same time.
-
-In ie9 and above, I would imagine that imgLoadTick would be the safest choice.
-
-Simple.
-We use toggleTick if it exists and if it is in both first places, else imgLoadTick?
-
-Choice.
-1. we check if details exists, if not, then imgLoadTick.
-2. we make the competition between 2 imgLoadTick and 2 toggleTick, and then see if the imgLoadTick or toggleTick is in places 1 and 2.
-3. we use imgLoadTick or toggleTick if toggleTick is set as default.
-
-conclusion: in chrome and firefox, toggleTick is approx 20 times cheaper than ratechangeTick.
-<script>
-
+<script type="module">
   const array = new Array(1000);
+  const start = performance.now();
+  for (let i = 0; i < array.length; i++)
+    setTimeout(function () {
+      console.log("setTimeout")
+    });
+  window.setTimeoutTime = performance.now() - start;
+  console.log("triggering setTimeout costs (ms): ", setTimeoutTime/1000);
+</script>
 
-  //audio
-  // console.time("audio");
-  // console.time("audio construction");
-  // for (let i = 0; i < array.length; i++)
-  //   array[i] = document.createElement("audio");
-  // console.timeEnd("audio construction");
-  //
-  // console.time("audio append");
-  // for (let i = 0; i < array.length; i++)
-  //   document.body.appendChild(array[i]);
-  // console.timeEnd("audio append"); //connectedCallback on audio element is really expensive
-  //
-  // console.time("audio listener");
-  // for (let i = 0; i < array.length; i++)
-  //   array[i].onratechange = e => console.log(e.type, e.target.tagName);
-  // console.timeEnd("audio listener");
-  //
-  // console.time("audio trigger");
-  // for (let i = 0; i < array.length; i++)
-  //   array[i].playbackRate = 2;
-  // console.timeEnd("audio trigger");
-  //
-  // console.time("audio remove");
-  // for (let i = 0; i < array.length; i++)
-  //   array[i].remove();
-  // console.timeEnd("audio remove");
-  // console.timeEnd("audio");
+<pre>
+The second next fastest method to queue a macrotask in the event loop is actually to load an img(!!). Yes, you heard right!
+The trick is as follows:
+  1. The load event is called whenever an `<img>` element loads its source.
+  2. This load event is dispatched even when the `<img>` element is not connected to the DOM.
+  This is important, as the native elements can trigger lots of functionality when their connectedCallback() equivalent is triggered.
+  3. The `<img>` can load the same a minimal gif, 1x1 image as base64, which most browser cache quite simply, and
+  which is quite efficient.
 
-  //details
-  console.time("details");
+  In a good browser, using this trick has the performance of 2xsetTimeout. That is cheap enough!
+</pre>
+
+<script type="module">
+  const startImg = performance.now();
+  console.time("img construction");
+  for (let i = 0; i < array.length; i++)
+    array[i] = document.createElement("img");
+  console.timeEnd("img construction");
+
+  console.time("img no style");
+  for (let i = 0; i < array.length; i++)
+    array[i].style.display = "none";
+  console.timeEnd("img no style");
+
+  console.time("img listener");
+  for (let i = 0; i < array.length; i++)
+    array[i].onload = e => console.log(e.type, e.target.tagName);
+  console.timeEnd("img listener");
+
+  console.time("img trigger");
+  for (let i = 0; i < array.length; i++)
+    array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  console.timeEnd("img trigger");
+
+  var imgTime = performance.now() - startImg;
+  console.log("triggering img.onload costs (compared to setTimeout): ", imgTime/setTimeoutTime);
+</script>
+
+<pre>
+  The third most efficient method to queue a macrotask in the event loop is the toggleTick.
+  The toggleTick is relevant because Firefox gives toggle events a higher priority than img load events.
+  So, if you need queue precision in Firefox, you would likely want to use toggleTick.
+</pre>
+
+<script type="module">
+  const startToggle = performance.now();
+
   console.time("details construction");
   for (let i = 0; i < array.length; i++)
     array[i] = document.createElement("details");
@@ -93,45 +105,100 @@ conclusion: in chrome and firefox, toggleTick is approx 20 times cheaper than ra
   for (let i = 0; i < array.length; i++)
     array[i].remove();
   console.timeEnd("details remove");
-  console.timeEnd("details");
 
-  //img
-  console.time("img");
-  console.time("img construction");
+  var toggleTime = performance.now() - startToggle;
+  console.log("triggering details.ontoggle costs (compared to setTimeout): ", toggleTime/setTimeoutTime);
+</script>
+
+<pre>
+  One might expect that setZeroTimeout would be efficient. And it is!
+  To call setZeroTimeout takes about as much time as calling the regular setTimeout().
+</pre>
+
+<script type="module">
+  var idOrigin = {};
+  var idCb = {};
+
+  function zetZeroTimeout(task) {
+    const mid = "pm." + Math.random();    // IE 10 does not support location.origin
+    const origin = window.location.origin || window.location.protocol + '//' + window.location.hostname + (window.location.port ? (':' + window.location.port) : '');
+    idOrigin[mid] = origin;       //todo do I need origin??
+    idCb[mid] = task;
+    window.postMessage(mid, origin);
+    return mid;
+  }
+
+  function onMessage(evt) {
+    if (evt.source !== window)
+      return;
+    const mid = evt.data;
+    if (!idOrigin[mid])
+      return;
+    evt.stopImmediatePropagation();
+    const cb = idCb[mid];
+    delete idOrigin[mid];
+    delete idCb[mid];
+    cb();
+  }
+
+  window.addEventListener("message", onMessage);
+
+  function clearZeroTimeout(mid) {
+    delete idOrigin[mid];
+    delete idCb[mid];
+  }
+
+  const startZero = performance.now();
   for (let i = 0; i < array.length; i++)
-    array[i] = document.createElement("img");
-  console.timeEnd("img construction");
+    setTimeout(function () {
+      console.log("setZeroTimeout")
+    });
+  var setZeroTimeoutTime = performance.now() - startZero;
+  console.log("triggering setZeroTimeout costs (compared to setTimeout): ", setZeroTimeoutTime/setTimeoutTime);
+</script>
 
-  // console.time("img append");
-  // for (let i = 0; i < array.length; i++)
-  //   document.body.appendChild(array[i]);
-  // console.timeEnd("img append"); //connectedCallback on img element is not expensive.
-
-  console.time("img no style");
+<pre>
+  Another, slower methods of adding a macrotask to the event queue is:
+  ratechangeTick is extremely expensive. approx 40 times slower than setTimeout
+</pre>
+<script type="module">
+  //audio
+  const startAudio = performance.now();
+  console.time("audio construction");
   for (let i = 0; i < array.length; i++)
-    array[i].style.display = "none";
-  console.timeEnd("img no style");
+    array[i] = document.createElement("audio");
+  console.timeEnd("audio construction");
 
-  console.time("img listener");
+  console.time("audio append");
   for (let i = 0; i < array.length; i++)
-    array[i].onload = e => console.log(e.type, e.target.tagName);
-  console.timeEnd("img listener");
+    document.body.appendChild(array[i]);
+  console.timeEnd("audio append"); //connectedCallback on audio element is really expensive
 
-  console.time("img trigger");
+  console.time("audio listener");
   for (let i = 0; i < array.length; i++)
-    array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-  console.timeEnd("img trigger");
-  console.timeEnd("img");
+    array[i].onratechange = e => console.log(e.type, e.target.tagName);
+  console.timeEnd("audio listener");
 
-// setTimeout(function(){
-//   console.time("img reuse");
-//   for (let i = 0; i < array.length; i++)
-//     array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
-//   console.timeEnd("img reuse");
-// }, 5000);
+  console.time("audio trigger");
+  for (let i = 0; i < array.length; i++)
+    array[i].playbackRate = 2;
+  console.timeEnd("audio trigger");
 
+  console.time("audio remove");
+  for (let i = 0; i < array.length; i++)
+    array[i].remove();
+  console.timeEnd("audio remove");
+  var audioTime = performance.now() - startAudio;
+  console.log("triggering audio.onratechange costs (compared to setTimeout): ", audioTime/setTimeoutTime);
+</script>
+
+<pre>
+  Another, slower methods of adding a macrotask to the event queue is:
+  linkLoad is expensive. approx 40 times slower than setTimeout
+</pre>
+<script type="module">
   //link
-  console.time("link");
+  var startLink = performance.now();
   console.time("link construction");
   for (let i = 0; i < array.length; i++)
     array[i] = document.createElement("link");
@@ -161,32 +228,36 @@ conclusion: in chrome and firefox, toggleTick is approx 20 times cheaper than ra
   // for (let i = 0; i < array.length; i++)
   //   array[i].remove();
   // console.timeEnd("link remove");
-  console.timeEnd("link");
+  var linkTime = performance.now() - startLink;
+  console.log("triggering link.onload costs (compared to setTimeout): ", linkTime/setTimeoutTime);
 
-  setTimeout(function() {
-    console.time("link reuse");
-    for (let i = 0; i < array.length; i++)
-      array[i].href = "data:text/css;base64,Ynt9";
-    console.timeEnd("link reuse");
-  }, 5000);
-  //todo how to trigger an image rerun?
-  // for (let i = 0; i < array.length; i++)
-  //   array[i].setAttribute("src", "");
-  //
-  // setTimeout(function () {
-  //   console.time("img trigger rerun");
-  //   for (let i = 0; i < array.length; i++){
-  //
-  //     array[i].src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-  //   }
-  //   console.timeEnd("img trigger rerun");
-  // }, 10000);
-
-
-  // console.time("img remove");
-  // for (let i = 0; i < array.length; i++)
-  //   array[i].remove();
-  // console.timeEnd("img remove");
 </script>
+<pre>
+reusing either link or img seems difficult in chrome. It will not dispatch a second load event on the same object.
+This means that reusing an element to minimize the effort of making it, doesn't work.
+
+audio element and thus
+
+loadTick on img is cheaper than toggleTick, as it doesn't need to be added to the DOM to be triggered.
+It would be beneficial if toggle would be dispatched if details wasn't connected, but that is not so.
+
+in firefox, toggleTick comes before imgLoadTick. in safari imgLoadTick comes first. in Chrome, imgLoadTick and
+toggleTick come at the same time.
+
+In ie9 and above, I would imagine that imgLoadTick would be the safest choice.
+
+Simple.
+We use toggleTick if it exists and if it is in both first places, else imgLoadTick?
+
+Choice.
+1. we check if details exists, if not, then imgLoadTick.
+2. we make the competition between 2 imgLoadTick and 2 toggleTick, and then see if the imgLoadTick or toggleTick is in
+places 1 and 2.
+3. we use imgLoadTick or toggleTick if toggleTick is set as default.
+</pre>
 </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
 </html>
