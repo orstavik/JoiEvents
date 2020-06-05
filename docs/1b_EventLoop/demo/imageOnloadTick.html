@@ -1,0 +1,67 @@
+<script>
+  function imageOnloadTick(cb) {
+    const img = document.createElement("img");
+    img.onload = cb
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  }
+</script>
+
+<script>
+  (function () {
+    var idCb = {};
+
+    window.setZeroTimeout = function (task) {
+      const mid = "pm." + Math.random();
+      idCb[mid] = task;
+      window.postMessage(mid, "*");
+      return mid;
+    }
+    window.clearZeroTimeout = function (mid) {
+      delete idCb[mid];
+    }
+
+    function onMessage(evt) {
+      if (evt.source !== window)
+        return;
+      const mid = evt.data;
+      if (!idCb[mid])
+        return;
+      evt.stopImmediatePropagation();
+      const cb = idCb[mid];
+      delete idCb[mid];
+      cb();
+    }
+
+    window.addEventListener("message", onMessage);
+  })();
+</script>
+
+<script>
+  console.log(document.readyState);//loading
+  setTimeout(function () { console.log("setTimeout 1") });
+  setZeroTimeout(function () { console.log("setZeroTimeout 1") });
+  imageOnloadTick(function () { console.log("imageOnloadTick 1") });
+  setTimeout(function () { console.log("setTimeout 2") });
+  setZeroTimeout(function () { console.log("setZeroTimeout 2") });
+  imageOnloadTick(function () { console.log("imageOnloadTick 2") });
+
+  setTimeout(function () {
+    console.log(document.readyState);//sometimes interactive
+    setTimeout(function () { console.log("setTimeout 1") });
+    setZeroTimeout(function () { console.log("setZeroTimeout 1") });
+    imageOnloadTick(function () { console.log("imageOnloadTick 1") });
+    setTimeout(function () { console.log("setTimeout 2") });
+    setZeroTimeout(function () { console.log("setZeroTimeout 2") });
+    imageOnloadTick(function () { console.log("imageOnloadTick 2") });
+  }, 0);
+
+  setTimeout(function () {
+    console.log(document.readyState);//complete
+    setTimeout(function () { console.log("setTimeout 1") });
+    setZeroTimeout(function () { console.log("setZeroTimeout 1") });
+    imageOnloadTick(function () { console.log("imageOnloadTick 1") });
+    setTimeout(function () { console.log("setTimeout 2") });
+    setZeroTimeout(function () { console.log("setZeroTimeout 2") });
+    imageOnloadTick(function () { console.log("imageOnloadTick 2") });
+  }, 1000);
+</script>
