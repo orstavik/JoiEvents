@@ -1,0 +1,32 @@
+<form action="#go">
+  <input type="text">
+  <input type="date">
+</form>
+<script>
+  const form = document.querySelector("form");
+  const text = document.querySelector("input[type='text']");
+  const date = document.querySelector("input[type='date']");
+
+  setTimeout( e=>{
+    text.addEventListener("blur", e => {
+      Promise.resolve().then(() => console.log("blur prt"));
+      console.log("blur");
+    });
+    text.addEventListener("focus", e => {
+      Promise.resolve().then(() => console.log("focus prt"));
+      console.log("focus");
+    });
+    text.addEventListener("focusin", e => {
+      Promise.resolve().then(() => console.log("focusin prt"));
+      console.log("focusin");
+    });
+    text.addEventListener("focusout", e => {
+      Promise.resolve().then(() => console.log("focusout prt"));
+      console.log("focusout");
+    });
+    text.focus();
+    date.focus();
+    console.log("main")
+    Promise.resolve().then(() => console.log("main prt"));
+  }, 0);
+</script>

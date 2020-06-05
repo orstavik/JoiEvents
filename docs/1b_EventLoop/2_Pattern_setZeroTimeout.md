@@ -42,7 +42,7 @@ To implement the "setZeroTimeout" pattern, we create an interface with two metho
 })();
 ```
 
-## Test: `setZeroTimeout` vs. `setTimeout`
+## Test event loop sequence: `setZeroTimeout` vs. `setTimeout`
 
 ```html
 <script>
@@ -95,20 +95,20 @@ When running this test, the queues can be tested in both the loading, interactiv
  * `setTimeout(.., 0)` => sometimes `document.readyState == "interactive"`
  * `setTimeout(.., 1000)` => `document.readyState == "complete"`
 
-## Test results
+## Event loop sequence: `setTimeout` vs. `setZeroTimeout`
 
 ```
 Chrome 81         Firefox 76          Safari IOs13      IE11  
                                     
 //loading         //loading           //loading         //loading         
-setZeroTimeout 1  setZeroTimeout 1    setZeroTimeout 1  ((setZeroTimeout 1)) **
-setZeroTimeout 2  setZeroTimeout 2    setZeroTimeout 2  ((setZeroTimeout 2)) **  
+setZeroTimeout 1  setZeroTimeout 1    setZeroTimeout 1  ** setZeroTimeout 1 
+setZeroTimeout 2  setZeroTimeout 2    setZeroTimeout 2  ** setZeroTimeout 2   
 setTimeout 1      setTimeout 1        setTimeout 1      setTimeout 1      
 setTimeout 2      setTimeout 2        setTimeout 2      setTimeout 2      
                                     
 //complete        //complete          //complete        //complete        
-setZeroTimeout 1  setTimeout 1    *   setZeroTimeout 1  setZeroTimeout 1  
-setZeroTimeout 2  setTimeout 2    *   setZeroTimeout 2  setZeroTimeout 2  
+setZeroTimeout 1  * setTimeout 1      setZeroTimeout 1  setZeroTimeout 1  
+setZeroTimeout 2  * setTimeout 2      setZeroTimeout 2  setZeroTimeout 2  
 setTimeout 1      setZeroTimeout 1    setTimeout 1      setTimeout 1      
 setTimeout 2      setZeroTimeout 2    setTimeout 2      setTimeout 2      
 
@@ -121,14 +121,13 @@ setTimeout 2
 
 The results above illustrate how `setTimeout` and `message` events are placed in two different macrotask queues. All four tasks are added from the same sync script, the same macrotask. When the browser finishes adding the four tasks to the event loop, it then gets to run them. It then runs either both the `setZeroTimeout` tasks first before it runs both the `setTimeout` tasks. This illustrates how the browsers places the tasks in different macrotask queues, and then prioritize tasks in some macrotask queues over others.
 
-However, there are two exceptions in this small test set of four browsers. The first is that Firefox 76 (on Ubuntu) runs both the `setTimeout` tasks *before* the `setZeroTimeout` tasks *after* it has finished loading the main document, while it runs the `setZeroTimeout` tasks *before* the  `setTimeout` *while* it is loading the main document. This makes explicit two things:
+*) However, there are two exceptions in this small test set of four browsers. The first is that Firefox 76 (on Ubuntu) runs both the `setTimeout` tasks *before* the `setZeroTimeout` tasks *after* it has finished loading the main document, while it runs the `setZeroTimeout` tasks *before* the  `setTimeout` *while* it is loading the main document. This makes explicit two things:
  * Firefox prioritize its `message` event macrotask queue and its `setTimeout` macrotask queue differently during different states of the DOM.
- * Firefox and the other browsers run their macrotasks in different order from each other. 
- from the  and so queued one after the other  
+ * Firefox and the other browsers run their macrotasks in different order from each other.  
 
-The second exception is the `setZeroTimeout` calls in IE11. While IE11 is loading the page either the second or both `message` events sometimes go missing. This is a clear bug, simply alerting developers that `setZeroTimeout` is unsafe in IE11 while the page is loading (and possibly at other times too).
+**) The second exception is the `setZeroTimeout` calls in IE11. While IE11 is loading the page either the second or both `message` events sometimes go missing. This is a clear bug, simply alerting developers that `setZeroTimeout` is unsafe in IE11 while the page is loading (and possibly at other times too).
 
-## Performance: `setZeroTimeout` vs. `setTimeout`
+## Test performance: `setZeroTimeout` vs. `setTimeout`
 
 Another aspect of using `setZeroTimeout` is its performance. We have seen how `setTimeout` performs against sync running of the same function (x25 slower), but how much slower/faster is calling `setZeroTimeout` compared to `setTimeout`?
 
@@ -149,12 +148,38 @@ Another aspect of using `setZeroTimeout` is its performance. We have seen how `s
     setTimeout(function () {
       console.log("setTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
       console.log("setTimeout time " + (time1 = triggerTime1 + callbackTime1));
-      console.log("The average time for a setTimeout callback is (ms): ", (triggerTime + callbackTime) / 1000);
+      console.log("The average time for a setTimeout callback is (ms): ", time1 / 1000);
     });
   }, 2000);
-  
 </script>
 ```   
+
+We need an endpoint that we can pass a link to a web site and get the sum total log from 4-5-7 tests. We could maybe do this via endtest.. here we get the log. but this is f..ing building an application, and i don't want that. Id rather do it manually than manage an application for testing.
+
+We could set up a clientside testing service. Ie a web component that runs a test and then report back to a server about the result. This is a better approach. But, would we be able to see which browsers we have?? don't think so. This is a very bad way.
+
+## `setZeroTimeout` result
+
+https://the.world.is/beauti.ful?https://orstavik.github.io/JoiEvents/docs/1_Intro/demo/ValidateInvalid.html
+=> {chrome: ..., firefox: ..., 
+
+```
+Chrome 81              Firefox 76          Safari IOs13      IE11  
+                                         
+//loading              //loading           //loading         //loading         
+setTimeout 0.01ms      setTimeout 1        setTimeout 1      setTimeout 1      
+setZeroTimeout 0.025ms setZeroTimeout 1    setZeroTimeout 1  ** setZeroTimeout 1 
+                                      
+//complete             //complete          //complete        //complete        
+setZeroTimeout 1       * setTimeout 1      setZeroTimeout 1  setZeroTimeout 1  
+setTimeout 1           setZeroTimeout 1    setTimeout 1      setTimeout 1      
+
+//interactive
+setZeroTimeout 1
+setZeroTimeout 2
+setTimeout 1
+setTimeout 2
+```
 
 ## Discussion: `setZeroTimeout` vs. `setTimeout`
 

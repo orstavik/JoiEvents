@@ -7,7 +7,7 @@ When choosing a default action, the browser selects the default action associate
 ## Demo: 
 
 ```html
-<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script src="../../1b_EventLoop/demo/nextTick.js"></script>
 <script>
   (function () {
     //return true if b is the same as a, a doesn`t exists, or b is inside a.

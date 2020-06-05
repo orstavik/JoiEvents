@@ -1,0 +1,93 @@
+<script>
+  //two options coming in:
+  // 1. version: the number of the version of the class
+  // 2. acceptVersion: the semver query for accepted versions
+
+  function versionIsAccepted(existingVersion, semver) {
+    //big algorithm for checking that the semver matches the existing version
+    //includes:
+    // macroversion accepted query ^1.2.3
+    // microversion accepted query ~1.2.23
+    // https://semver.npmjs.com/
+    return existingVersion.startsWith(semver)
+  }
+
+  //super naive algorithm for merging semantic versions for tag names.
+  // this will not safely merge three or more entries for the same tag name.
+  function reduceTasksSemver(tasks){
+    const res = [];
+    for (let task of tasks) {
+      const indexOfConflict = res.findIndex(t=> t.tag === task.tag);
+      if (indexOfConflict === -1){
+        res.push(task);
+        continue;
+      }
+      let a = res[indexOfConflict];
+      let b = task;
+      const bAcceptsA = versionIsAccepted(a.options.version, b.options.acceptVersion);
+      const aAcceptsB = versionIsAccepted(b.options.version, a.options.acceptVersion);
+      if (bAcceptsA && aAcceptsB){
+        if (b.options.version > a.options.version)
+          res.splice(indexOfConflict, 1, b);
+      } else if(!aAcceptsB && !bAcceptsA){
+        throw new Error(`Trying to load two different versions of ${a.tag} that are incompatible.`);
+      } else if(aAcceptsB /*&& !bAcceptsA*/){
+        res.splice(indexOfConflict, 1, b);
+      } /*else if(bAcceptsA && !aAcceptsB) bAcceptsA, but not the other way round, but then we just leave a in the result list*/
+    }
+    return res;
+  }
+
+  let listener;
+  let delayedTasks = [];
+  const nameClass = {};
+  const nameVersion = {};
+  const original = window.customElements;
+  const gangster = {
+    define: async function (tag, clazz, options) {
+      //delay until document has loaded, and then use the version numbering to tackle conflicts.
+      if (document.readyState !== "complete") {
+        if (!listener) {
+          listener = function () {
+            //sort the delayedTasks so that the most recent one that all can use, is used.
+            const tasks = reduceTasksSemver(delayedTasks);
+            delayedTasks = undefined;
+            for (let task of tasks)
+              window.customElements.define(task.tag, task.clazz, task.options);
+          };
+          window.addEventListener("load", listener, {once: true});
+        }
+        delayedTasks.push({tag, clazz, options});
+        return;
+      }
+
+      if (clazz.name && clazz.url){
+        const module = await import(clazz.url);
+        clazz = module[clazz.name];
+      }
+
+      const existingVersion = nameVersion[tag];
+      if (existingVersion === undefined) {
+        original.define(tag, clazz, options);
+        nameVersion[tag] = clazz.version || options.version || 0;
+        nameClass[tag] = clazz;
+      } else {
+        const semver = options.acceptVersion;
+        if (!semver || versionIsAccepted(existingVersion, semver))
+          return;
+        throw new Error(`${tag} has version for ${existingVersion} while requiring ${semver}.`);
+      }
+    }
+  }
+  Object.defineProperty(window, "customElements", {value: gangster});
+</script>
+
+<the-lunch></the-lunch>
+<br>
+<the-dinner></the-dinner>
+
+<script>
+  customElements.define("the-dinner", {name: "TheDinner", url: "./src/TheDinner.js"}, {acceptVersion: "3"});
+  customElements.define("the-lunch", {name: "TheLunch", url: "./src/TheLunch.js"}, {acceptVersion: "3"});
+  customElements.define("soft-drink", {name: "SoftDrink", url: "./src/SoftDrink_1_2_5.js"}, {acceptVersion: "1"});
+</script>

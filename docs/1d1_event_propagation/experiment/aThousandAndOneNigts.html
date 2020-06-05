@@ -1,0 +1,113 @@
+<h3>What is the cost of wrapping all event listener functions?</h3>
+
+<h3>What is the cost of running 1000 event listeners through a small set of functions in advance?</h3>
+
+<a href="https://blog.codinghorror.com/the-sad-tragedy-of-micro-optimization-theater/">codinghorror</a>
+<a href="https://www.codereadability.com/performance-cost-javascript-function-call-and-foreach/">a reminder about
+  TCO.</a>
+<p>
+  I forget my basic training. The browser of course does TCO, tail call optimization, so wrapping all event listeners
+  will only cost a little when they are added, not when they run. When they run, it is just a couple of lookups, when
+  they are created, its just making a closure object. It has close to zero cost.
+</p>
+
+<script>
+  const funToWrapper = new WeakMap();
+
+  Object.defineProperty(EventTarget.prototype, "addEventListenerWrapped", {
+    value: function (name, fun, options) {
+      const cache = funToWrapper.get(fun);
+      if (cache)
+        return this.addEventListener(name, fun, options);
+
+      function newFun(e) {
+        if (performance.now() > 0)
+          fun(e);
+      }
+
+      funToWrapper.set(fun, newFun);
+      return this.addEventListener(name, newFun, options);
+    }
+  });
+</script>
+
+<a1>
+  <a2>
+    <a3>
+      <a4>
+        <a5>
+          <a6>
+            Hello sunshine
+          </a6>
+        </a5>
+      </a4>
+    </a3>
+  </a2>
+</a1>
+
+<b1>
+  <b2>
+    <b3>
+      <b4>
+        <b5>
+          <b6>
+            Hello sunshine behind clouds
+          </b6>
+        </b5>
+      </b4>
+    </b3>
+  </b2>
+</b1>
+
+<script>
+  function one(e) {
+    return console.log("one", e.timeStamp + 1);
+  }
+
+  function two(e) {
+    return console.log("two", e.timeStamp + 1);
+  }
+
+  function three(e) {
+    return console.log("three", e.timeStamp + 1);
+  }
+
+  function four(e) {
+    return console.log("four", e.timeStamp + 1);
+  }
+
+  function five(e) {
+    return console.log("five", e.timeStamp + 1);
+  }
+
+  function six(e) {
+    return console.log("six", e.timeStamp + 1);
+  }
+
+  const a1 = document.querySelector("a1");
+  const a2 = document.querySelector("a2");
+  const a3 = document.querySelector("a3");
+  const a4 = document.querySelector("a4");
+  const a5 = document.querySelector("a5");
+  const a6 = document.querySelector("a6");
+  a1.addEventListener("mousemove", one, true);
+  a2.addEventListener("mousemove", two, true);
+  a3.addEventListener("mousemove", three, true);
+  a4.addEventListener("mousemove", four, true);
+  a5.addEventListener("mousemove", five, true);
+  a6.addEventListener("mousemove", six, true);
+
+  const b1 = document.querySelector("b1");
+  const b2 = document.querySelector("b2");
+  const b3 = document.querySelector("b3");
+  const b4 = document.querySelector("b4");
+  const b5 = document.querySelector("b5");
+  const b6 = document.querySelector("b6");
+
+  b1.addEventListenerWrapped("mousemove", one, true);
+  b2.addEventListenerWrapped("mousemove", two, true);
+  b3.addEventListenerWrapped("mousemove", three, true);
+  b4.addEventListenerWrapped("mousemove", four, true);
+  b5.addEventListenerWrapped("mousemove", five, true);
+  b6.addEventListenerWrapped("mousemove", six, true);
+</script>

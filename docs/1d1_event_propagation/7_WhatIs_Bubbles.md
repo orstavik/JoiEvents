@@ -161,6 +161,57 @@ In my opinion, there rarely would be any benefit of using `bubble: false` in a c
 
 <code-demo src="demo/NonBubblingEventsDoStillCapture.html"></code-demo>
 
+## List of all non-bubbling events
+
+//todo make a manual check of this list.
+against 
+https://developer.mozilla.org/en-US/docs/Web/Events
+
+```javascript
+const nonBubblingEvents = [
+  "toggle",
+
+  "load",
+  "unload",
+
+
+  "scroll",
+
+  "blur",
+  "focus",
+
+  "DOMNodeRemovedFromDocument",
+  "DOMNodeInsertedIntoDocument",
+
+  "loadstart",
+  // "load",
+  "loadend",
+  "progress",
+  "abort",
+  "error",
+
+  "mouseenter",
+  "mouseleave",
+  "pointerenter",
+  "pointerleave",
+
+  "rowexit",
+
+  "beforeunload",
+  "stop",
+
+  "start",
+  "finish",
+  "bounce",
+ 
+  "afterprint",
+  "propertychange",
+  "filterchange",
+  "readystatechange",
+  "losecapture",
+];
+``` 
+
 ## References
 
   * [MDN: Event.bubbles](https://developer.mozilla.org/en-US/docs/Web/API/Event/bubbles)

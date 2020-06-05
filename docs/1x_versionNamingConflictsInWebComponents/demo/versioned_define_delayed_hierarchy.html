@@ -1,0 +1,159 @@
+<script>
+  //two options coming in:
+  // 1. version: the number of the version of the class
+  // 2. acceptVersion: the semver query for accepted versions
+
+  function versionIsAccepted(existingVersion, semver) {
+    //big algorithm for checking that the semver matches the existing version
+    //includes:
+    // macroversion accepted query ^1.2.3
+    // microversion accepted query ~1.2.23
+    // https://semver.npmjs.com/
+    return existingVersion.startsWith(semver)
+  }
+
+  //super naive algorithm for merging semantic versions for tag names.
+  // this will not safely merge three or more entries for the same tag name.
+  function reduceTasksSemver(tasks){
+    const res = [];
+    for (let task of tasks) {
+      const indexOfConflict = res.findIndex(t=> t.tag === task.tag);
+      if (indexOfConflict === -1){
+        res.push(task);
+        continue;
+      }
+      let a = res[indexOfConflict];
+      let b = task;
+      const bAcceptsA = versionIsAccepted(a.options.version, b.options.acceptVersion);
+      const aAcceptsB = versionIsAccepted(b.options.version, a.options.acceptVersion);
+      if (bAcceptsA && aAcceptsB){
+        if (b.options.version > a.options.version)
+          res.splice(indexOfConflict, 1, b);
+      } else if(!aAcceptsB && !bAcceptsA){
+        throw new Error(`Trying to load two different versions of ${a.tag} that are incompatible.`);
+      } else if(aAcceptsB /*&& !bAcceptsA*/){
+        res.splice(indexOfConflict, 1, b);
+      } /*else if(bAcceptsA && !aAcceptsB) bAcceptsA, but not the other way round, but then we just leave a in the result list*/
+    }
+    return res;
+  }
+
+  let listener;
+  let delayedTasks = [];
+  const nameClass = {};
+  const nameVersion = {};
+  const original = window.customElements;
+  const gangster = {
+    define: function (tag, clazz, options) {
+      //delay until document has loaded, and then use the version numbering to tackle conflicts.
+      if (document.readyState !== "complete") {
+        if (!listener) {
+          listener = function () {
+            //sort the delayedTasks so that the most recent one that all can use, is used.
+            const tasks = reduceTasksSemver(delayedTasks);
+            delayedTasks = undefined;
+            for (let task of tasks)
+              window.customElements.define(task.tag, task.clazz, task.options);
+          };
+          window.addEventListener("load", listener, {once: true});
+        }
+        delayedTasks.push({tag, clazz, options});
+        return;
+      }
+
+      const existingVersion = nameVersion[tag];
+      if (existingVersion === undefined) {
+        original.define(tag, clazz, options);
+        nameVersion[tag] = options.version || 0;
+        nameClass[tag] = clazz;
+      } else {
+        const semver = options.acceptVersion;
+        if (!semver || versionIsAccepted(existingVersion, semver))
+          return;
+        throw new Error(`${tag} has version for ${existingVersion} while requiring ${semver}.`);
+      }
+    }
+  }
+  Object.defineProperty(window, "customElements", {value: gangster});
+</script>
+
+<the-lunch></the-lunch>
+<br>
+<the-dinner></the-dinner>
+
+<!--developer one, making lunch in June 2020-->
+<script type="module">
+  // from developer three in Mai 2020, looking forward to swimsuit season
+  //import {SoftDrink} from "jsdelivr.com/npm/developer3/soft-drink.js";
+  class SoftDrink extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "PepsiMax";
+    }
+
+    one(){
+      return "one";
+    }
+    two(){
+      return "two";
+    }
+  }
+
+  class TheLunch extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "Eat bread with <soft-drink></soft-drink>";
+      const softDrink = this.shadowRoot.children[0];
+      console.log("one", softDrink.one());
+    }
+  }
+
+  try {
+    customElements.define("soft-drink", SoftDrink, {version: "1.1.5", acceptVersion: "1"});
+  }catch(err){
+    console.warn(err);
+  }
+  //can i just say ^1.1.5, to join the version and the number? I think so.
+  //can i just say ~1.1.5, to join the version and the number? I think so.
+  customElements.define("the-lunch", TheLunch, {version: "3.4.5", acceptVersion: "3"});
+</script>
+
+<!--developer two, making dinner in November 2020-->
+<script type="module">
+  //from developer three in October 2020, having just visited the dentist and been given too much praise.
+  //ps. relax, the sinister dentist knows exactly what he is doing;)
+  //import {SoftDrink} from "jsdelivr.com/npm/developer3/soft-drink.js";
+  class SoftDrink extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "CocaCola";
+    }
+    one(){
+      return "one";
+    }
+    three(){
+      return "three";
+    }
+  }
+
+  class TheDinner extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = "Eat pizza with <soft-drink></soft-drink>";
+      const softDrink = this.shadowRoot.children[0];
+      console.log("one", softDrink.one());
+      console.log("three", softDrink.three());
+    }
+  }
+
+  try {
+    customElements.define("soft-drink", SoftDrink, {version: "1.2.5", acceptVersion: "1.2"});
+  }catch(err){
+    console.warn(err);
+  }
+  customElements.define("the-dinner", TheDinner, {version: "3.4.5", acceptVersion: "3"});
+</script>

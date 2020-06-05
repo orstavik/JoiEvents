@@ -114,7 +114,7 @@ To capture the change events for non-text input elements, we simply listen for `
 To capture the change events for text input elements, we must listen for `focusin`, events and then `input`, `blur`, and indirectly generated `click` events. The `blur` event is used instead of `focusout` as it will run *before* the `focusout` event. The `click` event is generated when the user submits a form by pressing "enter" while an `<input type="text">` element has focus. The `input` event is necessary to verify that at least one part of the change of the text input element state was user-driven. The `my-change` event is dispatched synchronously at during the EarlyBird event listener to simulate it being dispatched immediately before the end of the focus session.
 
 ```html
-<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script src="../../1b_EventLoop/demo/nextTick.js"></script>
 <script>
   (function () {
 

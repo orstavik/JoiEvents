@@ -103,12 +103,12 @@ const composedEvents =[
   "pointerover", "pointerenter", "pointerdown", "pointermove", "pointerup", "pointercancel", "pointerout", "pointerleave",
   "gotpointercapture", "lostpointercapture",
   "dragstart", "dragend", "dragenter", "dragexit", "dragleave", "drag", "dragover", "drop",
-  "compositionstart", "compositionupdate", "compositionend",
   "cut", "copy", "paste",
-  //focus events are composed, but often behave as non-composed
+  //focus events are partially composed, they cross shadowDOM borders, but not necessarily to the top DOM context
   "blur", "focus", "focusin", "focusout",
-  //these two events should not be composed, in my opinion
+  //these five text input events should be composed: false, in my strong opinion
   "beforeinput", "input",
+  "compositionstart", "compositionupdate", "compositionend",
   //this is a global event that alert about a coming change of the browser state that should be composed. It doesn't matter where the submit occurs, you want the DOM above to be able to intercept it.
   //"submit"
 ];

@@ -56,7 +56,7 @@ To run a default action task a) immediately after the currently processing event
 ## Demo: 
 
 ```html
-<script src="../../1b_EventLoop/demo/toggleTick.js"></script>
+<script src="../../1b_EventLoop/demo/nextTick.js"></script>
 
 <div singleclick-action dblclick-action>
   default action added to both single click and dblclick event for this particular element
