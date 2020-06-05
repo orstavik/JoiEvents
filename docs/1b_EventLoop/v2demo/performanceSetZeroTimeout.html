@@ -30,11 +30,14 @@
     window.addEventListener("message", onMessage);
   })();
 </script>
+
 <script>
-  var time1, triggerTime1, callbackTime1, time2, triggerTime2, callbackTime2;
+  var time1;
+  var count = 10000;
   //test setTimeout
   setTimeout(function () {
-    const array = new Array(1000);
+    var triggerTime1, callbackTime1;
+    const array = new Array(count);
     let i = 0;
     const cb = function () {
       array[i++] = performance.now();
@@ -42,33 +45,31 @@
     const start = performance.now();
     for (let i = 0; i < array.length; i++)
       setTimeout(cb);
-    console.log("1000x setTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
+    console.log("10000x setTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
     setTimeout(function () {
-      console.log("1000x setTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
-      console.log("1x setTimeout costs on this computer+browser in the current state (ms): ", (time1 = triggerTime1 + callbackTime1) / 1000);
+      console.log("10000x setTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
+      console.log("1x setTimeout costs on this computer+browser in the current state (ms): ", (triggerTime1 + callbackTime1) / count);
+      time1 = triggerTime1 + callbackTime1;
     });
-  }, 1000);
-
-  //test setZeroTimeout
-  setTimeout(function () {
-    const array = new Array(1000);
-    let i = 0;
-    const cb = function () {
-      array[i++] = performance.now();
-    }
-
-    const start = performance.now();
-    for (let i = 0; i < array.length; i++)
-      setZeroTimeout(cb);
-    console.log("setZeroTimeout trigger vs setTimeout trigger: ", (triggerTime2 = performance.now() - start)/triggerTime1);
+    //test setZeroTimeout
     setTimeout(function () {
-      console.log("setZeroTimeout callback vs setTimeout callback: ", (callbackTime2 = array[array.length - 1] - array[0])/callbackTime1);
-
-      console.log("setZeroTimeout vs setTimeout totaltime: " + (time2 = triggerTime2 + callbackTime2) / time1);
-      console.log("1x setZeroTimeout costs on this computer+browser in the current state (ms): ", time2 / 1000);
-    });
-  }, 3000);
-
+      var triggerTime1, callbackTime1;
+      const array = new Array(count);
+      let i = 0;
+      const cb = function () {
+        array[i++] = performance.now();
+      }
+      const start = performance.now();
+      for (let i = 0; i < array.length; i++)
+        setTimeout(cb);
+      console.log("10000x setZeroTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
+      setTimeout(function () {
+        console.log("10000x setZeroTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
+        console.log("1x setZeroTimeout costs on this computer+browser in the current state (ms): ", (triggerTime1 + callbackTime1) / count);
+        console.log("setZeroTimeout takes x times that of setTimeout: ", (triggerTime1 + callbackTime1) / time1);
+      });
+    }, 500);
+  }, 500); //give the browser a little time to stabilize after loading the document
 </script>
 </body>
 </html>
