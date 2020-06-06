@@ -11,15 +11,20 @@ This means that an `error` event might be delayed for longer
 ## Implementation: `errorTick`  
 
 We implement the `errorTick` on three different elements, mirroring the implementation of `loadTick`:
- * `<img src="data:ivar/rules;">`
- * `<link rel="stylesheet" href="data:ivar/rules;">`
- * `<script src="data:ivar/rules;">`
+ * `<img src="img://">`
+ * `<link rel="stylesheet" href="link://">`
+ * `<script src="script://">`
+
+write about needing queue here
 
 ```javascript
+//todo add the queue for error
+//
+
 function imgOnerrorTick(cb){
   var img = document.createElement("img");
   img.onerror = cb;
-  img.src = "data:ivar/rules;";
+  img.src = "img://";
 }
 
 function linkOnerrorTick(cb){
@@ -28,7 +33,7 @@ function linkOnerrorTick(cb){
     document.head.removeChild(link);
     cb();
   }
-  link.href = "data:ivar/rules;";
+  link.href = "link://";
   link.rel = "stylesheet";
   document.head.appendChild(link);
 }
@@ -39,7 +44,7 @@ function scriptOnerrorTick(cb){
     document.head.removeChild(script);
     cb();
   }
-  script.src = "data:ivar/rules;";
+  script.src = "script://";
   document.head.appendChild(script);
 }
 ```

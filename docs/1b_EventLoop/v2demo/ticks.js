@@ -97,8 +97,7 @@
   window.imgOnerrorTick = function imgOnerrorTick(cb) {
     var img = document.createElement("img");
     img.onerror = cb;
-    img.src = ":";
-    // img.src = "data:image/gif;base64,?";
+    img.src = "img://";
   }
 
   window.linkOnerrorTick = function linkOnerrorTick(cb) {
@@ -107,8 +106,7 @@
       document.head.removeChild(link);
       cb();
     }
-    link.href = ":";
-    // link.href = "data:text/css;base64,?";
+    link.href = "link://";
     link.rel = "stylesheet";
     document.head.appendChild(link);
   }
@@ -119,8 +117,7 @@
       document.head.removeChild(script);
       cb();
     }
-    script.src = ":";
-    // script.src = "data:text/javascript;base64,?";
+    script.src = "script://";
     document.head.appendChild(script);
   }
 })();
