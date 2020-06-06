@@ -42,7 +42,7 @@ To implement the "setZeroTimeout" pattern, we create an interface with two metho
 })();
 ```
 
-## Test event loop sequence: `setZeroTimeout` vs. `setTimeout`
+## Event loop priority: `setZeroTimeout` vs. `setTimeout`
 
 ```html
 <script>
@@ -127,16 +127,48 @@ The results above illustrate how `setTimeout` and `message` events are placed in
 
 **) The second exception is the `setZeroTimeout` calls in IE11. While IE11 is loading the page either the second or both `message` events sometimes go missing. This is a clear bug, simply alerting developers that `setZeroTimeout` is unsafe in IE11 while the page is loading (and possibly at other times too).
 
-## Test performance: `setZeroTimeout` vs. `setTimeout`
+## Performance: `setZeroTimeout` vs. `setTimeout`
 
-Another aspect of using `setZeroTimeout` is its performance. We have seen how `setTimeout` performs against sync running of the same function (x25 slower), but how much slower/faster is calling `setZeroTimeout` compared to `setTimeout`?
+Is `setTimeout` faster than `setZeroTimeout`? And how much does it cost to handle the `message` event? To test this, we run 1000 calls to `setTimeout` and compare that with 1000 calls to `setZeroTimeout`. 
 
 ```html
 <script>
-  var time1, triggerTime1, callbackTime1, time2, triggerTime2, callbackTime2;
+  (function(){
+    var idCb = {};
+
+    window.setZeroTimeout = function(task) {
+      const mid = "pm." + Math.random();
+      idCb[mid] = task;
+      window.postMessage(mid, "*");
+      return mid;
+    }
+    window.clearZeroTimeout = function (mid){
+      delete idCb[mid];
+    }
+
+    function onMessage(evt) {
+      if (evt.source !== window)
+        return;
+      const mid = evt.data;
+      if (!idCb[mid])
+        return;
+      evt.stopImmediatePropagation();
+      const cb = idCb[mid];
+      delete idCb[mid];
+      cb();
+    }
+
+    window.addEventListener("message", onMessage);
+  })();
+</script>
+
+<script>
+  var time1;
+  var count = 10000;
   //test setTimeout
   setTimeout(function () {
-    const array = new Array(1000);
+    var triggerTime1, callbackTime1;
+    const array = new Array(count);
     let i = 0;
     const cb = function () {
       array[i++] = performance.now();
@@ -144,55 +176,61 @@ Another aspect of using `setZeroTimeout` is its performance. We have seen how `s
     const start = performance.now();
     for (let i = 0; i < array.length; i++)
       setTimeout(cb);
-    console.log("setTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
+    console.log("1000x setTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
     setTimeout(function () {
-      console.log("setTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
-      console.log("setTimeout time " + (time1 = triggerTime1 + callbackTime1));
-      console.log("The average time for a setTimeout callback is (ms): ", time1 / 1000);
+      console.log("1000x setTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
+      console.log("1x setTimeout costs on this computer+browser in the current state (ms): ", (triggerTime1 + callbackTime1) / count);
+      time1 = triggerTime1 + callbackTime1;
     });
-  }, 2000);
+    //test setZeroTimeout
+    setTimeout(function () {
+      var triggerTime1, callbackTime1;
+      const array = new Array(count);
+      let i = 0;
+      const cb = function () {
+        array[i++] = performance.now();
+      }
+      const start = performance.now();
+      for (let i = 0; i < array.length; i++)
+        setZeroTimeout(cb);
+      console.log("1000x setZeroTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
+      setTimeout(function () {
+        console.log("1000x setZeroTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
+        console.log("1x setZeroTimeout costs on this computer+browser in the current state (ms): ", (triggerTime1 + callbackTime1) / count);
+        console.log("setZeroTimeout takes x times that of setTimeout: ", (triggerTime1 + callbackTime1) / time1);
+      });
+    }, 500);
+  }, 500); //give the browser a little time to stabilize after loading the document
 </script>
-```   
-
-We need an endpoint that we can pass a link to a web site and get the sum total log from 4-5-7 tests. We could maybe do this via endtest.. here we get the log. but this is f..ing building an application, and i don't want that. Id rather do it manually than manage an application for testing.
-
-We could set up a clientside testing service. Ie a web component that runs a test and then report back to a server about the result. This is a better approach. But, would we be able to see which browsers we have?? don't think so. This is a very bad way.
-
-## `setZeroTimeout` result
-
-https://the.world.is/beauti.ful?https://orstavik.github.io/JoiEvents/docs/1_Intro/demo/ValidateInvalid.html
-=> {chrome: ..., firefox: ..., 
-
-```
-Chrome 81              Firefox 76          Safari IOs13      IE11  
-                                         
-//loading              //loading           //loading         //loading         
-setTimeout 0.01ms      setTimeout 1        setTimeout 1      setTimeout 1      
-setZeroTimeout 0.025ms setZeroTimeout 1    setZeroTimeout 1  ** setZeroTimeout 1 
-                                      
-//complete             //complete          //complete        //complete        
-setZeroTimeout 1       * setTimeout 1      setZeroTimeout 1  setZeroTimeout 1  
-setTimeout 1           setZeroTimeout 1    setTimeout 1      setTimeout 1      
-
-//interactive
-setZeroTimeout 1
-setZeroTimeout 2
-setTimeout 1
-setTimeout 2
 ```
 
-## Discussion: `setZeroTimeout` vs. `setTimeout`
+Results:
 
-`setZeroTimeout` adds a `message` event to the event loop, that should be processed without delay. But, so do `setTimeout(.., 0)`. The difference  Thus, while the `setTimeout(task, 0)` is hampered by both a) the browser being able to delay the countdown function underlying `setTimeout` at will and b) "clamp" down and delay recursive `setTimeout` tasks, the `setZeroTimeout` is *guaranteed* to be *added* to the event loop asap.
+```
+                           Ubuntu            (GTK2.26.4)|    Windows 10
+                             Chrome81    FF76   WebKit  |Edge18    IE11
+10000x setTimeout trigger:        146      33       31  |   294     502
+10000x setTimeout callback:       180      17       41  |   428    1706
+1x setTimeout (ms):             0.033   0.005    0.007  | 0.072    0.22
+10000x setZeroTimeout trigger:    123      21       24  |   353     526
+10000x setZeroTimeout callback:   128      23       28  |   606    1811
+1x setZeroTimeout (ms):         0.025   0.004    0.005  | 0.096    0.23
+setZeroTimeout vs setTimeout:   0.77x   0.88x    0.72x  | 1.32x   1.05x
+```
 
-Furthermore, the `message` event is not added to the "setTimeout macrotask queue" in the event loop, but rather the "Normal DOM macrotask queue" (Chrome) or a "PostMessage macrotask queue" (Firefox). This means that the browsers will prioritize the `setZeroTimeout` tasks over the `setTimeout` tasks in most cases where the browsers can choose. Unfortunately, this can vary, depending on the browser and the state of the event loop. But, for simplicity purpuses, you might think that the browser will run `setZeroTimeout` before `setTimeout` 9 out of 10 times when both tasks are added to the event loop from the same tick of the event loop.    
-   
-The main drawback of `setZeroTimeout` is complexity. Calling `setTimeout` is utterly simple. A decent implementation of `setZeroTimeout` adds two methods and a flow of `message` events to the DOM that might interfere with a) the developer's understanding of his app and b) other event listeners reacting to `message` events. However, the performance cost of going via event messages instead of only calling `setTimeout` is insignificant in most use cases (todo do I need to verify this opinion on performance). 
+All browsers handle `setZeroTimeout` roughly as fast or slightly faster than `setTimeout`. This finding is important, as it shows that the system of dispatching and executing an event based is as fast as the system for counting down and executing a `setTimeout` call. And that the performance of the two methods are roughly irrelevant.
 
+Another relevant finding is that Chrome, known to be the fastest, is roughly 5x slower than Firefox and WebKitGTK. But, this finding might be due to other factors related to the OS, and so should be checked further.
+ 
+## Conclusion: `setZeroTimeout` vs. `setTimeout`
 
-//todo test the queueing, using 2+2 invocations.
-//todo speed test the fucker!
+1. Looking at the performance of these two options, both `setTimeout` and `setZeroTimeout` are equally good options for queuing a task in the event loop.
 
+2. Because the browsers "clamp down" on recursive `setTimeout` calls, `setZeroTimeout` is a better alternative. 
+
+3. The `message`-event macrotask queue are consistently prioritized *before* the `setTimeout` macrotask queue, with the notable exception of Firefox which seems to consistently prioritize `setTimeout` *before* `setZeroTimeout` after the `document` has completed loading.
+
+4. The `postMessage()` method in IE11 is unreliable while the `document` is loading. 
 
 ## References
 

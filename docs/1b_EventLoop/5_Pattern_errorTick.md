@@ -1,5 +1,56 @@
-# Pattern: UglyDuckling
+# Pattern: `errorTick`
 
+When a resource, such as an `<img>`, `<link>`, or `<script>`, fails to `load` its `src`, it will dispatch an `error` event. 
+
+The use-case of `error` and `load` events differ, even when they target the same element. For example:
+ * A `load` event on an `<img>` element signals the `<img>` is ready to be shown on screen. This likely would be used to add the element dynamically in the DOM when ready, to replace a placeholder element. And such a task should be given high priority.
+ * However, an `error` event would likely *not* cause any changes to the DOM, as the fallback, placeholder element is likely shown on screen already. An `error` event would much more likely be used for debugging purposes, logging a message to the `console` or a server. Such a task can be given low priority.
+
+This means that an `error` event might be delayed for longer
+
+## Implementation: `errorTick`  
+
+We implement the `errorTick` on three different elements, mirroring the implementation of `loadTick`:
+ * `<img src="data:ivar/rules;">`
+ * `<link rel="stylesheet" href="data:ivar/rules;">`
+ * `<script src="data:ivar/rules;">`
+
+```javascript
+function imgOnerrorTick(cb){
+  var img = document.createElement("img");
+  img.onerror = cb;
+  img.src = "data:ivar/rules;";
+}
+
+function linkOnerrorTick(cb){
+  var link = document.createElement("link");
+  link.onerror = function(){
+    document.head.removeChild(link);
+    cb();
+  }
+  link.href = "data:ivar/rules;";
+  link.rel = "stylesheet";
+  document.head.appendChild(link);
+}
+
+function scriptOnerrorTick(cb){
+  var script = document.createElement("script");
+  script.onerror = function(){
+    document.head.removeChild(script);
+    cb();
+  }
+  script.src = "data:ivar/rules;";
+  document.head.appendChild(script);
+}
+```
+
+## References
+
+  * dunno
+  
+
+## old drafts
+  
 Ok. So far we have seen that we can access the following queues in the event loop:
 1. setTimeout macrotasks: `setTimeout()`
 2. Normal DOM event macrotasks: 
@@ -136,6 +187,3 @@ setTimeout(function(){
 
 If what you need is to add a task in the event loop with the *lowest* priority, then look no further, the UglyDuckling is your Swan! 
 
-## References
-
-  * dunno

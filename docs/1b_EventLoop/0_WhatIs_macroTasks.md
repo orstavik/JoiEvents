@@ -23,9 +23,15 @@ The browser gives different priority to different macrotask queues. For example:
 
 This means that **the event loop as a whole is *not* FIFO!** Wow.. Let me say that again: **the event loop as a whole is *not* FIFO!** The browser juggles between different macrotask queues in this highly elaborate way in order to provide a better user experience (giving UI events high priority and error events low priority).
 
-## Todo, can i find out if the event order changes in a browser during load vs completed?
+## Different DOM state = different macrotask priorities
 
-I think that Safari handles maybe the first setTimeout and load differently during the main document load. document.readyState === loading vs. document.readyState === completed.   
+The browser also changes the priorities of different macrotask queues depending on the state of the DOM. For example:
+
+1. Chrome81 prioritize `message` events before image `load` events while `document.readyState === "loading"`, but once the document has completed loading, Chrome81 give `message` and image `load` events equal priority.
+
+2. Firefox76 prioritize `message` events before `setTimeout(.., 0)` callbacks while `document.readyState === "loading"`,  but after the document has completed loading, Firefox76 prioritize `setTimeout(.., 0)` callbacks before `message` events.
+
+3. Safari handles maybe the first setTimeout and load differently during the main document load. document.readyState === loading vs. document.readyState === completed.   
 
 ## Problem: browser variations
  

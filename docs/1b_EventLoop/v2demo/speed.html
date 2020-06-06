@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="./ticks.js"></script>
+</head>
+<body>
+<script>
+  window.syncCallback = function syncCallback(cb) {
+    cb();
+  };
+
+  window.microtaskCallback = function microtaskCallback(cb) {
+    Promise.resolve().then(cb);
+  };
+
+  window.setTimeoutCallback = function setTimeoutCallback(cb) {
+    setTimeout(cb);
+  };
+
+  var array = new Array(100000);
+  var i = 0;
+
+  function test() {
+    array[i] = i++;
+  }
+
+  window.onload = function () {
+    var count = 50;
+    var tasks = [
+      {cb: syncCallback, count: count},
+      {cb: microtaskCallback, count: count},
+      {cb: setTimeoutCallback, count: count},
+      {cb: setZeroTimeout, count: count},
+      {cb: imageOnloadTick, count: count},
+      {cb: linkOnloadTick, count: count},
+      {cb: scriptOnloadTick, count: count},
+      {cb: toggleTickOne, count: count},
+      {cb: toggleTickTwo, count: count},
+      {cb: ratechangeTick, count: count},
+    ];
+
+    function performanceTest(task) {
+      console.log("testing ", task.cb.name);
+      var x = i;
+      task.start = performance.now();
+      for (var l = 0; l < task.count; l++) {
+        task.cb(test);
+      }
+      task.triggerTime = performance.now() - task.start;
+      task.cb(function () {
+        task.time = performance.now() - task.start;
+      });
+      console.log("async?", i === x);
+    }
+
+    for (let k = 0; k < tasks.length; k++) {
+      setTimeout(function () {
+        performanceTest(tasks[k]);
+      }, 100 * k);
+    }
+    setTimeout(function () {
+      var setTimeoutTime = tasks[2].time;
+      console.log("1x setTimeout uses (ms): ", setTimeoutTime / tasks[2].count);
+      for (var j = 0; j < tasks.length; j++) {
+        var task = tasks[j];
+        console.log(task.cb.name, (task.time / setTimeoutTime).toFixed(2));
+      }
+    }, 100 * tasks.length)
+  };
+</script>
+</body>
+</html>

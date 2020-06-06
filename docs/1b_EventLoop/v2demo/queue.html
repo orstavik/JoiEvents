@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="./ticks.js"></script>
+</head>
+<body>
+<script>
+  var tasks = ['setTimeout', 'setZeroTimeout', 'imageOnloadTick', 'linkOnloadTick', 'scriptOnloadTick', 'toggleTickOne', 'toggleTickTwo', 'ratechangeTick', 'imgOnerrorTick', 'linkOnerrorTick', 'scriptOnerrorTick' ];
+
+  console.log("  // ", document.readyState);
+  for (let j = 0; j < 3; j++) {
+    for (let i = 0; i < tasks.length; i++) {
+      let task = tasks[i];
+      window[task](function () {
+        console.log(task, j);
+      });
+    }
+  }
+
+  window.onload = function () {
+    console.log("---- onload ----");
+  };
+
+  setTimeout(function(){
+    console.log("  // ", document.readyState);
+    for (let j = 0; j < 3; j++) {
+      for (let i = 0; i < tasks.length; i++) {
+        let task = tasks[i];
+        window[task](function () {
+          console.log(task, j);
+        });
+      }
+    }
+  }, 2000);
+</script>
+</body>
+</html>

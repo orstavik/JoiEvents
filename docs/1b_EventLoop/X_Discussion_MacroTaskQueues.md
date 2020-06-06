@@ -1,3 +1,51 @@
+
+Result:
+
+```
+Ubuntu                                                     |Windows 10
+Chrome81            FF76                WebKit GTK2.26.4   |Edge18             IE11
+                                                           |
+loading             loading             loading            |loading             loading            
+setZeroTimeout 1    imageOnloadTick 2   setZeroTimeout 1   |imageOnloadTick 1   imageOnloadTick 1    
+setZeroTimeout 2    imageOnloadTick 1   setTimeout 1       |imageOnloadTick 2   imageOnloadTick 2           
+imageOnloadTick 1   setZeroTimeout 1    setZeroTimeout 2   |setZeroTimeout 1    setZeroTimeout 1   
+imageOnloadTick 2   setZeroTimeout 2    setTimeout 2       |setZeroTimeout 2    setTimeout 1       
+setTimeout 1        setTimeout 1        interactive        |setTimeout 1        setTimeout 2        
+setTimeout 2        setTimeout 2        imageOnloadTick 1  |setTimeout 2        complete
+interactive         complete            imageOnloadTick 2  |complete            imageOnloadTick 1  
+setZeroTimeout 1    setTimeout 1        imageOnloadTick 1  |setTimeout 1        imageOnloadTick 2  
+imageOnloadTick 1   setTimeout 2        imageOnloadTick 2  |setTimeout 2        setZeroTimeout 2  
+setZeroTimeout 2    setZeroTimeout 1    setZeroTimeout 1   |imageOnloadTick 1   setTimeout 1    
+imageOnloadTick 2   setZeroTimeout 2    setZeroTimeout 2   |imageOnloadTick 2   setTimeout 2   
+setTimeout 1        imageOnloadTick 1   setTimeout 1       |setZeroTimeout 1    setZeroTimeout 1           
+setTimeout 2        imageOnloadTick 2   setTimeout 2       |setZeroTimeout 2    setZeroTimeout 2           
+complete            complete            complete           |complete            complete           
+setZeroTimeout 1    setTimeout 1        setZeroTimeout 1   |imageOnloadTick 1   imageOnloadTick 1    
+imageOnloadTick 1   setTimeout 2        setTimeout 1       |imageOnloadTick 2   imageOnloadTick 2       
+setZeroTimeout 2    setZeroTimeout 1    imageOnloadTick 1  |setZeroTimeout 1    setZeroTimeout 1  
+imageOnloadTick 2   setZeroTimeout 2    imageOnloadTick 2  |setZeroTimeout 2    setZeroTimeout 2  
+setTimeout 1        imageOnloadTick 1   setZeroTimeout 2   |setTimeout 1        setTimeout 1   
+setTimeout 2        imageOnloadTick 2   setTimeout 2       |setTimeout 2        setTimeout 2       
+```                 
+
+These are messy results.
+1. Firefox76 is consistent: results do not change when you reload the test document, and the priority order of these three macrotasks is reversed when the `document.readyState` switches from `loading` to `complete`:
+ * After loading: 1. `setTimeout`, 2. `message`, 3. `load`.
+ * During loading: 1. `load`, 2. `message`, 3. `setTimeout`.
+
+2. Chrome81 is also consistent: results do not change when you reload the test document, and the priority order of the macrotasks is to always prioritize `setTimeout(..,0)` last, and then have an equal priority between `message` and image `load` events, except when the `document.readyState` is loading, when Chrome81 prioritize `message` events.    
+
+3. WebKit is very inconsistent. It seems to have no altered priorities between neither of these three events/macrotasks, and so simply run the first it encounters. Furthermore, loading the base64 gif seems slower in Safari (or Safari is faster processing its `setTimeout` and `message` events, enabling it to jump to the second stage sooner.
+
+4. Edge18 seems to be able to consistently trigger the different events in pairs. However, which pair is triggered can change completely every time the document is reloaded.
+
+5. IE11 seems to consistently prioritize image `load` events, and consistently struggle with `message` events. The clear result being that `load` runs first, and `setTimeout` last.
+
+The `load` event is similar to the `error` event in the UglyDuckling pattern. Both `load` and `error` are element lifecycle events. But, as opposed to the `error` in UglyDuckling, the `load` event does not represent something bad/unexpected.
+
+
+
+
 # Discussion: Different MacroTaskQueues
 
 How many MacroTaskQueues are there? And how does the browser prioritize them? Simple questions that doesn't have a simple answer.

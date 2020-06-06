@@ -1,35 +1,68 @@
 # Pattern: ToggleTickTrick
 
-The first pattern we will look at is a method for adding task/callback in the event loop's "normal DOM Event macrotask queue". Ie. a method for adding a task with the same priority as a normal DOM Event. We call this method the ToggleTickTrick.
+Most native elements that dispatch events do so *synchronously*. For example, when an `<input type="text">` element dispatches an `invalid` event, it does so immediately. Similarly, `<form>` elements dispatch synchronous `reset` events when you call `.reset()` on them. However, one element behaves differently: **the `<details>` element dispatches its `toggle` event *asynchronously***.
+
+This means that we can use the `<details>` element and its `toggle` event to queue tasks in the event loop. And we call this method `toggleTick`.
 
 ## Implementation: `toggle` from `<details>`
 
-### Step 1: the naive basics
+`toggleTick`:
+1. creates a `<details>` element and 
+2. appends it to the DOM,
+3. then changes the `.open` property on the `<details>` element.
+4. This causes a `toggle` event to be queued in the event loop
+5. which trigger a callback.
 
-The ToggleTickTrick:
-1. uses the `<details>` element 
-2. and change the `.open` property on this element that in turn will
-3. queue a `toggle` event in the event loop's "normal DOM Event macrotask queue" that
-4. we can add an event listener for that in turn will
-5. trigger the callback.
-
-* But, for step 2 (changing the `.open` property on the `<details>` element) to trigger step 3 (queue a `toggle` event), the `<details>` the need to be connected to the DOM. We end up with this first draft. 
+Based on our previous `loadTick` methods, this would produce the following method:
 
 ```javascript
-function toggleTick(cb) {
-  const details = document.createElement("details");
-  details.ontoggle = cb;
+function toggleTickOne(cb) {
+  var details = document.createElement("details");
+  details.ontoggle = function(){
+    details.remove();
+    cb();
+  }
+  details.style.display = "none";
   document.body.appendChild(details);
   details.open = true;
 }
+```
 
-toggleTick(function(){
-  console.log("two");
-});
-console.log("one");
-//one
-//two
-``` 
+However. `<details>` and `toggle` holds an additional secret: the `<details>` element does not have to be connected to the DOM when the event is dispatched, *only* through the microtask in which the `open` attribute is set. This means that we can use a microtask to *disconnect* the `<details>` element, we do not have to wait until the `ontoggle` event listener is dispatched. The benefit of this alternative approach is that the `<details>` element will not be added to the DOM for long. However, it will (likely) still trigger `MutationObserver` with `childlist: true` on the `<body>` element.
+ 
+This gives us the following alternative: 
+
+```javascript
+function toggleTickTwo(cb) {
+  var details = document.createElement("details");
+  details.ontoggle = cb;
+  details.style.display = "none";
+  document.body.appendChild(details);
+  details.open = true;
+  Promise.resolve().then(details.remove.bind(details));
+}
+```
+
+But. `Promise.resolve().then(..)` can be expensive: in some browsers adding a microtask is as expensive as calling `setTimeout`. `toggleTickOne` wraps the method in a way that enable tail-call optimization, and so from the perspective of performance, the more primitive `toggleTickOne` might be preferable.
+
+Finally. IE11 does not support the native `<details>` element. This means that any importable script intended to be safe in IE11 needs a fallback to `setTimeout`.   
+
+```javascript
+var toggleTick = HTMLDetailsElement  && Promise ? toggleTickImpl : setTimeout;
+```
+
+## References
+
+ * dunno
+ 
+ 
+## old draft
+ 
+### Step 1: the naive basics
+
+
+* But, for step 2 (changing the `.open` property on the `<details>` element) to trigger step 3 (queue a `toggle` event), the `<details>` the need to be connected to the DOM. We end up with this first draft. 
+
 
 The first big problem here is that the `<details>` element we added to the DOM will remain in the DOM indefinitely. We need to cleanup, remove the `<details>` element from the DOM when we have triggered the callback.
 
@@ -149,6 +182,3 @@ Why use the `<details>` element and `toggle` event for this purpose?
 4. The ToggleTickTrick is simple. It is an unobtrusive, single function! Once you understand how and when the `toggle` event is triggered, there is really not much to it.
 5. The `<details>` element and `toggle` event is not much used. This makes it less likely to cause confusion and conflict with other code in the app.
 
-## References
-
- * dunno

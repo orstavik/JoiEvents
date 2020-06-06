@@ -61,12 +61,12 @@
       }
       const start = performance.now();
       for (let i = 0; i < array.length; i++)
-        setZeroTimeout(cb);
-      console.log("10000x setZeroTimeout trigger time costs (ms): ", triggerTime1 = performance.now() - start);
+        imageOnloadTick(cb);
+      console.log("10000x imageOnloadTick trigger time costs (ms): ", triggerTime1 = performance.now() - start);
       setTimeout(function () {
-        console.log("10000x setZeroTimeout callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
-        console.log("1x setZeroTimeout costs on this computer+browser in the current state (ms): ", (triggerTime1 + callbackTime1) / count);
-        console.log("setZeroTimeout takes x times that of setTimeout: ", (triggerTime1 + callbackTime1) / time1);
+        console.log("10000x imageOnloadTick callback time: ", callbackTime1 = array[array.length - 1] - array[0]);
+        console.log("1x imageOnloadTick costs on this computer+browser in the current state (ms): ", (triggerTime1 + callbackTime1) / count);
+        console.log("imageOnloadTick takes x times that of setTimeout: ", (triggerTime1 + callbackTime1) / time1);
       });
     }, 500);
   }, 500); //give the browser a little time to stabilize after loading the document
