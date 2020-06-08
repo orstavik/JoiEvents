@@ -48,9 +48,12 @@ Yes. This means that for example Safari 13.3 might queue `load` events in a sepa
 
  * https://qdivision.io/javascript/blog/
  * https://qdivision.io/javascript-settimeout-an-in-depth-look-part-2/blog/
- * jake archibalds blog post (old)
- * the Phillips youtube and jake archibalds youtube 
- * discussions about the nextTick in node and the setImmediate in node
- * discussion about the setImmediate in IE and why the browsers didn't implement it. 
+ * [Jake Archibald: Tasks, microtasks, queues and schedules](https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/)
+ * [Youtube: Jake Archibald: In The Loop - JSConf.Asia](https://www.youtube.com/watch?v=cCOL7MC4Pl0)
+ * [Youtube: Javascript: Macro vs Micro Tasks](https://www.youtube.com/watch?v=Rpb-hZjw--w&t=205s)
+ * [Medium: How process.nextTick() works in Node.js?](https://medium.com/@amanhimself/how-process-nexttick-works-in-node-js-cb327812e083)
+ * [The Node.js Event Loop, Timers, and process.nextTick()] (https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+ * [StackOverflow](https://stackoverflow.com/questions/25090606/using-setimmediate-over-settimeoutfunc-0-in-ie)
+
  
       
