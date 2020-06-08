@@ -131,6 +131,7 @@
 })();
 
 (function () {
+  //todo #1 here is considerate of other macrotasks.
   window.ratechangeTick = function ratechangeTick(cb) {
     var audio = document.createElement("audio");
     audio.onratechange = cb;
@@ -138,16 +139,30 @@
   };
 
   var audio = document.createElement("audio");
-  var listenCount = 0;
+  var cbs = [];
+  var eventLoopDiLoop = function () {
+    var cb = cbs.shift();
+    if (!cbs.length) {
+      audio = document.createElement("audio");
+      cbs = [];
+    }
+    cb();
+  };
 
+  //#2 here is remaing focused on its own tasks. It gives priority to the main tasks as its own task queue.
+  //todo you have a queue 1 task. the task you have, first opens a details and triggers a toggle. second, it calls nextTick.
+  //todo now #1 will add the toggle to the queue first, and then the nextTick.
+  //todo now #2 will add the toggle to the main event loop, but then the nextTick to the same queue position in the main event loop, thus
+  //todo making the nextTick run before the queued toggle. These are two different queue positions.
+  //todo the #1 is the queue position of the ratechange/toggle, which in Chrome would run in the time they are added.
+  //todo the #2 is the queue position of immediate, except for the first nextTick, which will be delayed until needed.
   window.reuseRatechangeTick2 = function reuseRatechangeTick2(cb) {
-    var funky = function (e) {
-      audio.removeEventListener("ratechange", funky);
-      listenCount--;
-      cb(e);
-    };
-    audio.addEventListener("ratechange", funky);
-    listenCount++ === 0 && (audio.playbackRate = Math.random() + 1);
+    cbs.push(cb);
+    //todo if we want, we can add priority as a second argument option here..
+    //todo then, when we push to the loop, the loop array could be sorted in terms of priority.
+    audio.addEventListener("ratechange", eventLoopDiLoop.bind({}));
+    if (cbs.length === 1)
+      audio.playbackRate = 2;
   }
 
   var audios = [];

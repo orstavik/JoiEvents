@@ -27,7 +27,7 @@
   }
 
   window.onload = function () {
-   var count = 30;
+   var count = 300;
     var tasks = [
       {cb: syncCallback, count: count},
       {cb: microtaskCallback, count: count},
@@ -39,18 +39,20 @@
       // {cb: toggleTickOne, count: count},
       // {cb: toggleTickTwo, count: count},
       //
-      // {cb: reuseRatechangeTick, count: count},
-      // {cb: reuseRatechangeTick, count: count},
+      {cb: reuseRatechangeTick, count: count},
+      {cb: reuseRatechangeTick, count: count},
       {cb: reuseRatechangeTick, count: count},
       {cb: reuseRatechangeTick, count: count},
 
       {cb: reuseRatechangeTick2, count: count},
       {cb: reuseRatechangeTick2, count: count},
-      // {cb: reuseRatechangeTick2, count: count},
-      // {cb: reuseRatechangeTick2, count: count},
+      {cb: reuseRatechangeTick2, count: count},
+      {cb: reuseRatechangeTick2, count: count},
+      {cb: reuseRatechangeTick2, count: count},
+      {cb: reuseRatechangeTick2, count: count},
       //
-      // {cb: ratechangeTick, count: count},
-      // {cb: ratechangeTick, count: count},
+      {cb: ratechangeTick, count: count},
+      {cb: ratechangeTick, count: count},
       {cb: ratechangeTick, count: count},
       {cb: ratechangeTick, count: count},
     ];
