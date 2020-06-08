@@ -1,0 +1,136 @@
+<!--
+1. ff bug, simple. i should just post it.
+2. ratechange demo, in itself.
+3. comparison ratechange vs toggleTick vs loadOnImg
+ * ie9/edge support ratechange, but not toggleTick.
+ * ff has a bug with ratechange, but it still works with it
+ * chrome works equally well with both, but should use ratechange because it is in the head and even rarer than toggle
+ * safari should use loadOnImg..
+4. Promise architecture. Is it really better? or is it not? It is better? yes..
+-->
+
+<h1>hello sunshine</h1>
+
+<script>
+
+  (async function () {
+
+    var promise = Promise || function(resolveReject){
+      
+    };
+
+    //returns {
+    // state: -1 aborted, 0 pending, 1 completed; 
+    // flush(): function that runs the macrotask ahead of time/sync instead;
+    // abort(): function that cancels the macrotask
+    //}
+    function nextTick(fun) {
+      var resolveCb, rejectCb;
+
+      const promise = Promise ? new Promise(function (resolve, reject) {
+        resolveCb = resolve;
+        rejectCb = reject;
+      }) : {
+        //todo _this_ wont work
+        thenables: [],
+        catchers: [],
+        then: function(cb){
+          this.callbacks.push(cb)
+        },
+        catch: function(cb){
+          this.catchers.push(cb)
+        },
+        resolve: function(result){
+          for (let i = 0; i < this.thenables.length; i++) {
+            let cb = this.thenables[i];
+            cb(result);
+          }
+        },
+        reject: function(msg){
+          for (let i = 0; i < catchers.length; i++) {
+            let catcher = catchers[i];
+            catcher(msg);
+          }
+        }
+      };
+      const audio = document.createElement("audio");
+      audio.playbackRate = 2;
+      audio.onratechange = function () {
+        audio.onratechange = undefined;  //only call this method once
+        promise.result = fun();
+        promise.state = 1;
+        resolveCb(promise.result);
+        return promise.result;
+      };
+      promise.state = 0;
+      promise.flush = function () {
+        if (promise.state === 1)
+          return promise.result;
+        if (promise.state === -1)
+          throw new Error("You cannot flush an aborted macrotask.");
+        promise.state = 1;
+        return promise.result = audio.onratechange();
+      }
+      promise.abort = function () {
+        if (promise.state === -1)
+          return;
+        if (promise.state === 1)
+          throw new Error("You cannot abort an already completed macrotask.");
+        audio.onratechange = undefined;
+        promise.state = -1;
+        promise.catch(function(){});
+        rejectCb(".abort() is called on the macrotask callback.");
+      }
+      return promise;
+    }
+
+    const testPromise = nextTick(() => 42);
+    console.log(testPromise.state === 0);
+    console.log(42, testPromise.flush());
+    console.log(testPromise.state === 1);
+
+    const testPromise3 = nextTick(() => 84);
+    testPromise3.catch(function (err) {
+      console.log(err);
+    });
+    console.log(testPromise3.state === 0);
+    console.log("abort", testPromise3.abort());
+    console.log(testPromise3.state === -1);
+
+    (async function () {
+      try{
+        var testPromise3 = nextTick(() => 84);
+        console.log(testPromise3.state === 0);
+        console.log("abort", testPromise3.abort());
+        console.log(84, await testPromise3);
+      } catch(err){
+        console.log(err);
+      } finally{
+        console.log(testPromise3.state === -1);
+      }
+    })();
+
+    (async function () {
+      const testPromise = nextTick(() => 42);
+      console.log(testPromise.state === 0);
+      console.log(42, await testPromise);
+      console.log(testPromise.state === 1);
+    })();
+    
+    // console.log("meaning of life:", await testPromise);
+    // console.log(testPromise.flush());
+    // console.log("i forget the meaning of life:", await testPromise);
+    //
+    // async function testFunction(testPromise2) {
+    //   console.log("what was the meaning of life?", await testPromise2);//this should have a longer wait
+    //   console.log("resolved yet?", testPromise2.isResolved())
+    // }
+    //
+    // const testPromise2 = nextTick(() => 21);
+    // console.log("resolved yet?", testPromise2.state)
+    // console.log("passing out the promise to another async function", testFunction(testPromise2));//this should have a longer wait
+    // console.log("when is this printed?")
+
+
+  })();
+</script>

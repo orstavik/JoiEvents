@@ -7,17 +7,26 @@
 <body>
 <h1>hello-</h1>
 <script>
-  (function () {
 
+  (function () {
+    const audio = document.createElement("audio");
+    audio.addEventListener("ratechange", function () {
+      console.log("a")
+      Promise.resolve().then(()=>{
+        console.log("a prt")})
+    })
+    audio.addEventListener("ratechange", function () {
+      console.log("b")
+      Promise.resolve().then(()=>{
+        console.log("b prt")})
+    })
+    audio.playbackRate = 2;
+  })();
+  (function () {
+    //this regex is safe for polyfill definitions, as no js code can contain [native code] outside of comments.
+    var nate = /^\s*function\s+\w*\s*\([^\)]*\)\s*{\s*\[native code\]/;
     function isNative(funkyBoy) {
-      //todo to make this completely safe, we might need to have the regex start at the beginning
-      //todo its slow to test for the real name, we can test for a name or nothing.
-      //todo make the regex a standalone entity.. maybe
-      //if (!funkyBoy)
-      //  return false;
-      //var name = funkyBoy.name;
-      // return /\$\s*function\s*\w*\s*\([^)]*\)\s*{\s+\[native code\]/.test(Function.prototype.toString.call(funkyBoy));
-      return funkyBoy && /\{\s+\[native code\]/.test(Function.prototype.toString.call(funkyBoy));
+      return funkyBoy && nate.test(Function.prototype.toString.call(funkyBoy));
     }
 
     //we do not test for versions here..

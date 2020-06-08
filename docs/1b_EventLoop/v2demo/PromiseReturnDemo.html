@@ -15,37 +15,54 @@
 
   (async function () {
 
-    class FlushablePromise extends Promise {
-      constructor(promiseFunction, audio) {
-        super(promiseFunction);
-        this.audio = audio;
-      }
-
-      flush() {
-        if (!this.audio.promiseResult)
-          this.audio.onratechange();
-        return this.audio.promiseResult;
-      }
-
-      resolved() {
-        return !!this.audio.promiseResult;
-      }
-    }
-
     function nextTick(fun) {
-      const audio = document.createElement("audio");
-      document.head.appendChild(audio);
-      audio.playbackRate = 2;
-      //Promise.resolve().then(audio.remove.bind(audio));
+      let resolveCb;
 
-      return new FlushablePromise(function (resolve, reject) {
-        audio.onratechange = function () {
-          audio.onratechange = undefined;
-          audio.remove();
-          resolve(audio.promiseResult = fun());
-        };
-      }, audio);
+      const promise = new Promise(function (resolve, reject) {
+        resolveCb = resolve;
+        //use reject to call onratechange??
+        //or, wrap abort on promise??
+      });
+      const audio = document.createElement("audio");
+      audio.playbackRate = 2;
+      audio.onratechange = function () {
+        audio.onratechange = undefined;  //only call this method once
+        promise.result = fun();
+        resolveCb(promise.result);
+        return promise.result;
+      };
+      promise.flush = function(){
+        return promise.result || (promise.result = audio.onratechange());
+      }
+      promise.isResolved = function(){
+        return !!promise.result;
+      }
+      return promise;
     }
+
+    // class FlushablePromise extends Promise {
+    // flush() {
+    //   return this.result || this.onratechange();
+    // }
+    //
+    // isResolved() {
+    //   return !!this.result;
+    // }
+    // }
+
+    // function nextTick(fun) {
+    //   const audio = document.createElement("audio");
+    //   audio.playbackRate = 2;
+    //   const promise = new FlushablePromise(function (resolve, reject) {
+    //     audio.onratechange = function () {
+    //       console.log(promise);
+    //       promise.result = fun();
+    //       resolve(promise.result);
+    //       return promise.result;
+    //     };
+    //   }, audio);
+    //   return promise;
+    // }
 
     const testPromise = nextTick(() => 42);
     console.log(testPromise, performance.now());
@@ -57,11 +74,11 @@
 
     async function testFunction(testPromise2) {
       console.log("what was the meaning of life?", await testPromise2, performance.now());//this should have a longer wait
-      console.log("resolved yet?", testPromise2.resolved(), performance.now())
+      console.log("resolved yet?", testPromise2.isResolved(), performance.now())
     }
 
     const testPromise2 = nextTick(() => 21);
-    console.log("resolved yet?", testPromise2.resolved(), performance.now())
+    console.log("resolved yet?", testPromise2.isResolved(), performance.now())
     console.log("passing out the promise to another async function", testFunction(testPromise2), performance.now());//this should have a longer wait
     console.log("when is this printed?", performance.now())
   })();

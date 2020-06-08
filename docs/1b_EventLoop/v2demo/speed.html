@@ -23,20 +23,35 @@
 
   function test() {
     array[i] = i++;
+    console.log("sanatize santa")
   }
 
   window.onload = function () {
-    var count = 50;
+   var count = 30;
     var tasks = [
       {cb: syncCallback, count: count},
       {cb: microtaskCallback, count: count},
       {cb: setTimeoutCallback, count: count},
-      {cb: setZeroTimeout, count: count},
-      {cb: imageOnloadTick, count: count},
-      {cb: linkOnloadTick, count: count},
-      {cb: scriptOnloadTick, count: count},
-      {cb: toggleTickOne, count: count},
-      {cb: toggleTickTwo, count: count},
+      // {cb: setZeroTimeout, count: count},
+      // {cb: imageOnloadTick, count: count},
+      // {cb: linkOnloadTick, count: count},
+      // {cb: scriptOnloadTick, count: count},
+      // {cb: toggleTickOne, count: count},
+      // {cb: toggleTickTwo, count: count},
+      //
+      // {cb: reuseRatechangeTick, count: count},
+      // {cb: reuseRatechangeTick, count: count},
+      {cb: reuseRatechangeTick, count: count},
+      {cb: reuseRatechangeTick, count: count},
+
+      {cb: reuseRatechangeTick2, count: count},
+      {cb: reuseRatechangeTick2, count: count},
+      // {cb: reuseRatechangeTick2, count: count},
+      // {cb: reuseRatechangeTick2, count: count},
+      //
+      // {cb: ratechangeTick, count: count},
+      // {cb: ratechangeTick, count: count},
+      {cb: ratechangeTick, count: count},
       {cb: ratechangeTick, count: count},
     ];
 
@@ -57,7 +72,7 @@
     for (let k = 0; k < tasks.length; k++) {
       setTimeout(function () {
         performanceTest(tasks[k]);
-      }, 100 * k);
+      }, 300 * k);
     }
     setTimeout(function () {
       var setTimeoutTime = tasks[2].time;
@@ -66,7 +81,7 @@
         var task = tasks[j];
         console.log(task.cb.name, (task.time / setTimeoutTime).toFixed(2));
       }
-    }, 100 * tasks.length)
+    }, 300 * tasks.length)
   };
 </script>
 </body>

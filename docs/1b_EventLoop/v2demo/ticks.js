@@ -94,28 +94,36 @@
 })();
 
 (function () {
+  var _imageOnerrorTick_queue = [];
   window.imgOnerrorTick = function imgOnerrorTick(cb) {
+    _imageOnerrorTick_queue.push(cb);
     var img = document.createElement("img");
-    img.onerror = cb;
+    img.onerror = function () {
+      _imageOnerrorTick_queue.shift()();
+    };
     img.src = "img://";
   }
 
+  var _linkOnerrorTick_queue = [];
   window.linkOnerrorTick = function linkOnerrorTick(cb) {
+    _linkOnerrorTick_queue.push(cb);
     var link = document.createElement("link");
     link.onerror = function () {
       document.head.removeChild(link);
-      cb();
+      _linkOnerrorTick_queue.shift()();
     }
     link.href = "link://";
     link.rel = "stylesheet";
     document.head.appendChild(link);
   }
 
+  var _scriptOnerrorTick_queue = [];
   window.scriptOnerrorTick = function scriptOnerrorTick(cb) {
+    _scriptOnerrorTick_queue.push(cb);
     var script = document.createElement("script");
     script.onerror = function () {
       document.head.removeChild(script);
-      cb();
+      _scriptOnerrorTick_queue.shift()();
     }
     script.src = "script://";
     document.head.appendChild(script);
@@ -123,9 +131,40 @@
 })();
 
 (function () {
-  window.ratechangeTick = function ratechangeTick(cb){
+  window.ratechangeTick = function ratechangeTick(cb) {
     var audio = document.createElement("audio");
     audio.onratechange = cb;
     audio.playbackRate = 2;
   };
+
+  var audio = document.createElement("audio");
+  var listenCount = 0;
+
+  window.reuseRatechangeTick2 = function reuseRatechangeTick2(cb) {
+    var funky = function (e) {
+      audio.removeEventListener("ratechange", funky);
+      listenCount--;
+      cb(e);
+    };
+    audio.addEventListener("ratechange", funky);
+    listenCount++ === 0 && (audio.playbackRate = Math.random() + 1);
+  }
+
+  var audios = [];
+  window.reuseRatechangeTick = function reuseRatechangeTick(cb) {
+    var audio;
+    if (audios.length) {
+      audio = audios.shift();
+      audio.cb = cb;
+      audio.playbackRate = !audio.playbackRate;
+    } else {
+      audio = document.createElement("audio");
+      audio.cb = cb;
+      audio.onratechange = function () {
+        audios.push(audio);
+        audio.cb();
+      }
+      audio.playbackRate = 2;
+    }
+  }
 })();
