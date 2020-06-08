@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<h1>hello-</h1>
+<script>
+  (function () {
+
+    function isNative(funkyBoy) {
+      //todo to make this completely safe, we might need to have the regex start at the beginning
+      //todo its slow to test for the real name, we can test for a name or nothing.
+      //todo make the regex a standalone entity.. maybe
+      //if (!funkyBoy)
+      //  return false;
+      //var name = funkyBoy.name;
+      // return /\$\s*function\s*\w*\s*\([^)]*\)\s*{\s+\[native code\]/.test(Function.prototype.toString.call(funkyBoy));
+      return funkyBoy && /\{\s+\[native code\]/.test(Function.prototype.toString.call(funkyBoy));
+    }
+
+    //we do not test for versions here..
+    //especially firefox has updated its core, and i assume there might be some differences in
+    //perforamance and queue priority
+    function browserEngine() {
+      if (!isNative(document.evaluate))
+        return "ie";                          //trident
+      if (!isNative(TextEncoder))       //(this test also includes safari <= 10.0)
+        return "edge";                        //EdgeHTML
+      var auxclick = Object.getOwnPropertyDescriptor(window, "onauxclick");
+      if (!isNative(auxclick && auxclick.set))
+        return "safari";                      //webkit
+      if (isNative(window["MIDIAccess"]))
+        return "chrome";                      //blink
+      return "firefox";                       //gecko
+    }
+
+    document.body.children[0].innerText += browserEngine();
+  })();
+  //https://en.wikipedia.org/wiki/Comparison_of_browser_engines
+  //https://stackoverflow.com/questions/6598945/detect-if-function-is-native-to-browser
+  //https://caniuse.com/#compare=ie+11,edge+12,edge+18&compare_cats=JS%20API
+</script>
+</body>
+</html>
