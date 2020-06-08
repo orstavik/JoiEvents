@@ -40,7 +40,7 @@ Different browsers might:
 2. **prioritize their differing macrotask queues differently**, and even
 3. **change the priorities between macrotask queues depending on the DOM state, differently**. 
 
-Yes. This means that for example Safari 13.3 might queue `load` events in a separate macrotask queue while the main document is loading, while Chrome and Firefox might queue `load` events together with other DOM events such as `toggle`. While when the document has finished loading, Safari alters its behavior and queues the `load` along side `toggle` events too. Ahhh.. The sweet, sweet smell of variety and uncertainty in web development.
+Yes. This means that for example Safari 13.3 might queue `load` events in a separate macrotask queue while the main document is loading, while Chrome and Firefox might queue `load` events together with other DOM events such as `toggle`. And then, when the document has finished loading, Safari alters its behavior and queues the `load` along side `toggle` events too. Ahhh.. The sweet, sweet smell of variety and uncertainty in web development.
   
 > The *single event loop* is a highly misleading concept. What developers *should* envisage is a *set of macrotask queues* that individually runs FIFO, but that prioritize tasks in some queues over tasks in other. Depending on the state of the DOM and the version of the browser.
   

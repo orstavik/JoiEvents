@@ -1,13 +1,30 @@
 # Pattern: `errorTick`
 
-When a resource, such as an `<img>`, `<link>`, or `<script>`, fails to `load` its `src`, it will dispatch an `error` event. 
+When a resource, such as an `<img>`, `<link>`, or `<script>`, fails to `load` its `src`, it will dispatch an `error` event.
 
-The use-case of `error` and `load` events differ, even when they target the same element. For example:
- * A `load` event on an `<img>` element signals the `<img>` is ready to be shown on screen. This likely would be used to add the element dynamically in the DOM when ready, to replace a placeholder element. And such a task should be given high priority.
- * However, an `error` event would likely *not* cause any changes to the DOM, as the fallback, placeholder element is likely shown on screen already. An `error` event would much more likely be used for debugging purposes, logging a message to the `console` or a server. Such a task can be given low priority.
+## Why: `load` events?
 
-This means that an `error` event might be delayed for longer
+The use-case of `error` and `load` events differ, even when they target the same element.
 
+A `load` event on an `<img>` element signals the `<img>` is ready to be shown on screen. A prime use case for listening for such an event would be to create and load an `<img>` off screen, and then only add the `<img>` and replace its placeholder if and when it has loaded completely.
+
+There are good reasons why such an event would likely be given high priority. The function that reacts to it, is likely:
+1. quite independent of other events and other state changes,
+2. unlikely to do much other than append the `<img>` to the DOM, and
+3. the user experience is likely to benefit greatly from receiving the `<img>` element.
+
+Sure, `UIEvent`s such as `click` and `keydown` is likely to be given higher priority, but other than that the *show the ready `<img>`* use case is likely a task the browser should prioritize.
+
+## Why: `error` events?
+
+An `error` event would likely *not* cause any direct changes to the DOM because good practice would dictate that the developer should either put nothing or a simpler fallback placeholder in the `<img>` elements place *before* the browser starts to load it, not after it fails.
+ 
+One use-case for the `error` event is quality control and logging. This use-case is not time sensitive, neither for the developer nor the user.
+ 
+Another use-case for the `error` event is to fallback to an alternative image source. To initiate this alternative, fallback src would both be a) very cheap (it doesn't take long to queue a network request from within the browser) and b) time sensitive (the `<img>` is already delayed once, we do not want to dilly dally before asking for the backup source).
+
+So, the `error` event can be used for both high and low priority tasks. We will look more at this in the later chapter on "WhatIs: macrotask priorities?" in different browsers.
+ 
 ## Implementation: `errorTick`  
 
 We implement the `errorTick` on three different elements, mirroring the implementation of `loadTick`:
@@ -15,34 +32,39 @@ We implement the `errorTick` on three different elements, mirroring the implemen
  * `<link rel="stylesheet" href="link://">`
  * `<script src="script://">`
 
-write about needing queue here
+As with the `load` event, the `error` events are dispatched in the order the processing of the `src` resource fails in the browser, not the order in which the `src` properties are added to the `<img>` elements. This means that the `errorTick` methods needs an internal queue too. 
 
 ```javascript
-//todo add the queue for error
-//
-
+var _imageOnerrorTick_queue = [];
 function imgOnerrorTick(cb){
+  _imageOnerrorTick_queue.push(cb);
   var img = document.createElement("img");
-  img.onerror = cb;
+  img.onerror = function () {
+    _imageOnerrorTick_queue.shift()();
+  };
   img.src = "img://";
 }
 
+var _linkOnerrorTick_queue = [];
 function linkOnerrorTick(cb){
+  _linkOnerrorTick_queue.push(cb);
   var link = document.createElement("link");
   link.onerror = function(){
     document.head.removeChild(link);
-    cb();
+    _linkOnerrorTick_queue.shift()();
   }
   link.href = "link://";
   link.rel = "stylesheet";
   document.head.appendChild(link);
 }
 
+var _scriptOnerrorTick_queue = [];
 function scriptOnerrorTick(cb){
+  _scriptOnerrorTick_queue.push(cb);
   var script = document.createElement("script");
   script.onerror = function(){
     document.head.removeChild(script);
-    cb();
+    _scriptOnerrorTick_queue.shift()();
   }
   script.src = "script://";
   document.head.appendChild(script);

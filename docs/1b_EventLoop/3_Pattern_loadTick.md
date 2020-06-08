@@ -23,7 +23,7 @@ Behind this implementation lies three secrets:
 
 ## `load` on `<link>` and `<script>`
 
-Several other elements in the DOM will also dispatch a `load` event: `<img>`, `<script>`, `<style>`, `<svg>`, `<link>`, `<object>`, `<embed>`, `<iframe>`, etc. Here, we will look at two other such method: `load` on `<link>` and `load` on `<script>` using an empty base64 source (`btoa("") === ""`). 
+Several other elements in the DOM will also dispatch a `load` event: `<img>`, `<script>`, `<style>`, `<svg>`, `<link>`, `<object>`, `<embed>`, `<iframe>`, etc. Here, we will look at two other such method: `load` on `<link>` and `<script>` using an empty base64 source (`btoa("") === ""`). 
 
 Trigger `load` via a new `<link rel="stylesheet" href="data:text/css;base64,">`: 
 
