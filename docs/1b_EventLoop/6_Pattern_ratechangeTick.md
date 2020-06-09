@@ -20,7 +20,91 @@ function ratechangeTick(cb){
   audio.onratechange = cb;
   audio.playbackRate = 2;
 } 
+```          
+
+## Demo: async `ratechange` 
+
+But, funniest of all is the fact that `ratechange` events triggered by script induced changes of the `playbackRate` property on script created `<audio>` elements are dispatched *async* in the browser. 
+
+```html
+<script>
+  const audio = document.createElement("audio");
+  audio.addEventListener("ratechange", function () {
+    console.log("a")
+    Promise.resolve().then(function(){
+      console.log("a prt")});
+  });
+  audio.addEventListener("ratechange", function () {
+    console.log("b")
+    Promise.resolve().then(function(){
+      console.log("b prt")});
+  });
+  audio.playbackRate = 2;
+</script>
 ```
+
+Results in:
+
+```
+a
+a prt
+b
+b prt
+```
+
+This little demo above opens the door for a huuuge op opportunity to not only create a macrotask, but also a macrotask with a partially fixed set of mesotasks.
+
+
+## Demo: Dynamic, async `ratechange` 
+```html
+<script>
+  var span = document.createElement("span");
+  var audio = document.createElement("audio");
+  span.appendChild(audio);
+  
+  span.addEventListener("ratechange", function () {
+    console.log("a")
+    Promise.resolve().then(function (){
+      console.log("a microtask");
+    });
+  }, true);     //!! note, capture: true, as ratechange is non-bubbling
+
+  span.addEventListener("ratechange", function(){
+    audio.addEventListener("ratechange", function () {
+      console.log("c")
+      Promise.resolve().then(function(){
+        console.log("c microtask");
+      });
+    });
+  }, true);   //!! note, capture: true, as ratechange is non-bubbling
+  audio.addEventListener("ratechange", function () {
+    console.log("b")
+    Promise.resolve().then(function (){
+      console.log("b microtask");
+    });
+  });         //!! note, the audio element is the target, so capture: true is irrelevant.
+  audio.playbackRate = 2;
+  console.log("one");
+</script>
+```
+
+Results in:
+
+```
+one
+a
+a microtask
+b
+b microtask
+c
+c microtask
+```
+
+## References
+
+  * dunno
+  
+### old draft
 
 ## Reuse of `<audio>` elements?
 
@@ -51,7 +135,3 @@ function reuseRatechangeTick(cb) {
 The performance of `ratechangeTick` depends on the browser:
 1. In WebKitGTK 2.26.4 (Linux WebKit June2020) `reuseRatechangeTick(cb)` is twice as fast.
 2. In Firefox 76 and Chrome 81 the reusable `reuseRatechangeTick(cb)` is just as faste as the simpler `ratechangeTick(cb)`, or slightly slower.
-
-## References
-
-  * dunno

@@ -1,13 +1,43 @@
 <h1>hello sunshine</h1>
 <script>
-  const audio = document.createElement("audio");
-  audio.onratechange = function () {
-    this.remove ? this.remove() :
-    console.log("ratechange");
-  };
-  document.head.appendChild(audio);
-  audio.playbackRate = 0.1;
-  Promise.resolve().then(audio.remove.bind(audio));
+  // const audio = document.createElement("audio");
+  // audio.onratechange = function () {
+  //   this.remove ? this.remove() :
+  //   console.log("ratechange");
+  // };
+  // document.head.appendChild(audio);
+  // audio.playbackRate = 0.1;
+  // Promise.resolve().then(audio.remove.bind(audio));
+  //
+  // console.log("bruce wayne");
+</script>
 
-  console.log("bruce wayne");
+<script>
+  var span = document.createElement("span");
+  var audio = document.createElement("audio");
+  span.appendChild(audio);
+
+  span.addEventListener("ratechange", function () {
+    console.log("a")
+    Promise.resolve().then(function (){
+      console.log("a microtask");
+    });
+  }, true);     //!! note, capture: true, as ratechange is non-bubbling
+
+  span.addEventListener("ratechange", function(){
+    audio.addEventListener("ratechange", function () {
+      console.log("c")
+      Promise.resolve().then(function(){
+        console.log("c microtask");
+      });
+    });
+  }, true);   //!! note, capture: true, as ratechange is non-bubbling
+  audio.addEventListener("ratechange", function () {
+    console.log("b")
+    Promise.resolve().then(function (){
+      console.log("b microtask");
+    });
+  });         //!! note, the audio element is the target, so capture: true is irrelevant.
+  audio.playbackRate = 2;
+  console.log("one");
 </script>

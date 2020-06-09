@@ -9,20 +9,6 @@
 <script>
 
   (function () {
-    const audio = document.createElement("audio");
-    audio.addEventListener("ratechange", function () {
-      console.log("a")
-      Promise.resolve().then(()=>{
-        console.log("a prt")})
-    })
-    audio.addEventListener("ratechange", function () {
-      console.log("b")
-      Promise.resolve().then(()=>{
-        console.log("b prt")})
-    })
-    audio.playbackRate = 2;
-  })();
-  (function () {
     //this regex is safe for polyfill definitions, as no js code can contain [native code] outside of comments.
     var nate = /^\s*function\s+\w*\s*\([^\)]*\)\s*{\s*\[native code\]/;
     function isNative(funkyBoy) {
