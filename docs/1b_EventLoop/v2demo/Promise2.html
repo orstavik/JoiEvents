@@ -1,0 +1,106 @@
+<h1>hello sunshine</h1>
+
+<script>
+
+  (async function () {
+
+    function addMesoLevelTasks(el, cbs) {
+      if (!cbs)
+        return;
+      if (cbs instanceof Function) {
+        el.addEventListener("ratechange", cbs, true);
+      } else if (cbs instanceof Array) {
+        for (var i = 0; i < cbs.length; i++) {
+          el.addEventListener("ratechange", cbs[i], true);
+        }
+      }
+    }
+
+    function ratechangeTickStart(cbs, mesoLevels) {
+      var audio = document.createElement("audio");
+      var top = audio;
+      if (mesoLevels) {
+        top = document.createElement("span");
+        var bottomSpan = top;
+        for (var j = 0; j < mesoLevels; j++) { //two too many.. or one, does meso indicate extra levels? hmm..
+          bottomSpan.appendChild(bottomSpan = document.createElement("span"));
+        }
+        bottomSpan.appendChild(audio);
+      }
+      audio.playbackRate = 2;
+      return {top: top, audio: audio};
+    }
+
+    function makePromise(macroTask) {
+
+
+      macroTask.top.addEventListener("ratechange", finish);
+
+      //will drop a level every time
+      promise.nextMesoTick = function (cbs) {
+        macroTask.top.addEventListener("ratechange", function () {
+          macroTask.top = macroTask.top.children[0];             //shifting the top one down at the beginning
+        });
+        addMesoLevelTasks(macroTask.top.children[0], cbs);
+        macroTask.top.removeEventListener("ratechange", finish);
+        macroTask.top.children[0].addEventListener("ratechange", finish);
+      };
+      return promise;
+
+    }
+
+     function special(macroTask, cbs) {
+      macroTask.top.addEventListener("ratechange", function () {
+        macroTask.top = macroTask.top.children[0];             //shifting the top one down at the beginning
+      }, true);
+      addMesoLevelTasks(macroTask.top, cbs);
+      var resolveCb;
+      var promise = new Promise(function (resolve, reject) {
+        resolveCb = resolve;
+      });
+      macroTask.finish = function () {
+        resolveCb(true);
+      }
+      macroTask.top.addEventListener("ratechange", macroTask.finish, true);
+
+      promise.nextMesoTick= function(cbs2){
+        if(macroTask.top === macroTask.audio)
+          return false;
+        macroTask.top.removeEventListener("ratechange", macroTask.finish, true);
+        var nestedPromise = special(macroTask, cbs2);
+        macroTask.top.removeEventListener("ratechange", macroTask.finish, true);
+      }
+      return promise;
+    }
+
+    window.nextTick = function (cbs, mesoLevels) {
+      mesoLevels = Math.max(parseInt(mesoLevels), 0);
+      var macroTask = ratechangeTickStart(cbs, mesoLevels);
+      var promise = special(macroTask, cbs);
+      return promise;
+
+      //todo when nextMesoTick is called, the finish should be replace with a new function that replaces the true with a promise.
+    }
+
+  })();
+</script>
+
+<script>
+  (async function () {
+    function one() {
+      console.log("one");
+    }
+
+    function two() {
+      console.log("two");
+    }
+
+    const task = nextTick([one, two], 1);
+    debugger;
+    const res = await task;
+    const task2 = await task.nextMesoTick(two);
+    let task3 = await task2.nextMesoTick(two);
+    task3.complete();
+  })();
+
+</script>

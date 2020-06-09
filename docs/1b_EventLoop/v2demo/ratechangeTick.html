@@ -13,31 +13,62 @@
 </script>
 
 <script>
-  var span = document.createElement("span");
-  var audio = document.createElement("audio");
-  span.appendChild(audio);
+  (function () {
+    var span = document.createElement("span");
+    var audio = document.createElement("audio");
+    span.appendChild(audio);
 
-  span.addEventListener("ratechange", function () {
-    console.log("a")
-    Promise.resolve().then(function (){
-      console.log("a microtask");
-    });
-  }, true);     //!! note, capture: true, as ratechange is non-bubbling
-
-  span.addEventListener("ratechange", function(){
-    audio.addEventListener("ratechange", function () {
-      console.log("c")
-      Promise.resolve().then(function(){
-        console.log("c microtask");
+    span.addEventListener("ratechange", function () {
+      console.log("a")
+      Promise.resolve().then(function () {
+        console.log("a microtask");
       });
+    }, true);     //!! note, capture: true, as ratechange is non-bubbling
+
+    span.addEventListener("ratechange", function () {
+      audio.addEventListener("ratechange", function () {
+        console.log("c")
+        Promise.resolve().then(function () {
+          console.log("c microtask");
+        });
+      });
+    }, true);   //!! note, capture: true, as ratechange is non-bubbling
+    audio.addEventListener("ratechange", function () {
+      console.log("b")
+      Promise.resolve().then(function () {
+        console.log("b microtask");
+      });
+    });         //!! note, the audio element is the target, so capture: true is irrelevant.
+    audio.playbackRate = 2;
+    console.log("one");
+  })();
+</script>
+
+<script>
+  (async function () {
+    var span = document.createElement("span");
+    var audio = document.createElement("audio");
+    span.appendChild(audio);
+
+    var resolveCb;
+    const promise = new Promise(function (resolve, reject) {
+      resolveCb = resolve;
     });
-  }, true);   //!! note, capture: true, as ratechange is non-bubbling
-  audio.addEventListener("ratechange", function () {
-    console.log("b")
-    Promise.resolve().then(function (){
-      console.log("b microtask");
-    });
-  });         //!! note, the audio element is the target, so capture: true is irrelevant.
-  audio.playbackRate = 2;
-  console.log("one");
+
+    span.addEventListener("ratechange", function () {
+      console.log("span")
+    }, true);     //!! note, capture: true, as ratechange is non-bubbling
+
+    span.addEventListener("ratechange", function () {
+      resolveCb("boo");
+    }, true);     //!! note, capture: true, as ratechange is non-bubbling
+
+    audio.addEventListener("ratechange", function () {
+      console.log("audio")
+    });         //!! note, the audio element is the target, so capture: true is irrelevant.
+    audio.playbackRate = 2;
+    console.log("one");
+
+    console.log(await promise);
+  })();
 </script>
