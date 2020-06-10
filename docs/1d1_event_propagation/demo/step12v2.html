@@ -21,38 +21,42 @@
     return path;
   }
 
-  function callListenersOnElement(currentTarget, event, phase) {
+  async function callListenersOnElement(currentTarget, event, phase, macrotask) {
     if (event.cancelBubble || event._propagationStoppedImmediately || (phase === Event.BUBBLING_PHASE && !event.bubbles))
       return;
     const listeners = currentTarget.getEventListeners(event.type, phase);
     if (!listeners)
       return;
     Object.defineProperty(event, "currentTarget", {value: currentTarget, writable: true});
-    for (let listener of listeners) {
-      if (event._propagationStoppedImmediately)
-        return;
-      if (!currentTarget.hasEventListener(event.type, listener.listener, listener.capture))
-        continue;
-      try {
-        listener.listener(event);
-      } catch (err) {
-        const error = new ErrorEvent(
-          'error',
-          {error: err, message: 'Uncaught Error: event listener break down'}
-        );
-        dispatchEvent(window, error);
-        if (!error.defaultPrevented)
-          console.error(error);
-      }
-    }
+    const wrappedListeners = listeners.map(listener => {
+      const og = listener.listener;
+      return function () {
+        if (event._propagationStoppedImmediately)
+          return;
+        if (!currentTarget.hasEventListener(event.type, og, listener.capture))
+          return;
+        try {
+          og(event);
+        } catch (err) {
+          const error = new ErrorEvent(
+            'error',
+            {error: err, message: 'Uncaught Error: event listener break down'}
+          );
+          dispatchEvent(window, error);
+          if (!error.defaultPrevented)
+            console.error(error);
+        }
+      };
+    });
+    return macrotask.nextMesoTick(wrappedListeners);
   }
 
-  function dispatchEvent(target, event) {
+  async function dispatchEvent(target, event) {
     // if (!target.isConnected)
     //   return;
     const propagationPath = getComposedPath(target, event.composed).slice(1);
     Object.defineProperties(event, {
-      "target" : {
+      "target": {
         get: function () {
           let lowest = target;
           for (let t of propagationPath) {
@@ -73,20 +77,25 @@
         writable: true
       }
     });
-
-    for (let currentTarget of propagationPath.slice().reverse())
-      callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE);
+    const reverse = propagationPath.slice().reverse();
+    let mesotaskDepth = event.bubbles ? (propagationPath.length * 2) + 1 : propagationPath.length + 1;
+    let macrotask = nextMesoTicks([function(){}], mesotaskDepth + 1);//todo hack.. problem initiating without knowing the tasks
+    for (let currentTarget of reverse) {
+      await callListenersOnElement(currentTarget, event, Event.CAPTURING_PHASE, macrotask);
+    }
     Object.defineProperty(event, "eventPhase", {
       value: Event.AT_TARGET,
       writable: true
     });
-    callListenersOnElement(target, event, Event.AT_TARGET);
+    await callListenersOnElement(target, event, Event.AT_TARGET, macrotask);
+    if (!event.bubbles)
+      return;
     Object.defineProperty(event, "eventPhase", {
       value: Event.BUBBLING_PHASE,
       writable: true
     });
     for (let currentTarget of propagationPath)
-      callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE);
+      await callListenersOnElement(currentTarget, event, Event.BUBBLING_PHASE, macrotask);
   }
 </script>
 
@@ -108,5 +117,5 @@
   inner.addEventListener("click", log);
   outer.addEventListener("click", log);
 
-  inner.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+  dispatchEvent(inner, new MouseEvent("click", {bubbles: true}));
 </script>
