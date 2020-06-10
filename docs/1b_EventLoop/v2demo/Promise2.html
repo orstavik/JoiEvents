@@ -25,11 +25,6 @@
       var level = levels.shift();
       for (let i = 0; i < cbs.length; i++)
         level.addEventListener("ratechange", cbs[i], true);
-      promise.nextMesoTick = function (cbs2) {
-        if (levels.length === 0)
-          throw new Error("cannot add any more mesotasks to this macrotask");
-        return addMesoLevelTasks(cbs2, levels);
-      };
       return promise;
     }
 
@@ -50,7 +45,13 @@
       mesoLevels = Math.max(parseInt(mesoLevels), 0);
       cbs = parseNextTickArg(cbs);
       var levels = ratechangeTickStart(cbs, mesoLevels);
-      return addMesoLevelTasks(cbs, levels);
+      const firstPromise = addMesoLevelTasks(cbs, levels);
+      firstPromise.nextMesoTick = function (cbs2) {
+        if (levels.length === 0)
+          throw new Error("cannot add any more mesotasks to this macrotask");
+        return addMesoLevelTasks(cbs2, levels);   //todo add the nested task here)
+      };
+      return firstPromise;
       //todo when nextMesoTick is called, the finish should be replace with a new function that replaces the true with a promise.
     }
   })();
