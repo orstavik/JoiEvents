@@ -1,106 +1,89 @@
-<h1>hello sunshine</h1>
+<script src="./nextTick.js"></script>
 
 <script>
 
   (async function () {
+    //test reusability
+    //queue audio
+    //queue toggle
+    //cancel audio1
+    //queue audio2
+    //   audio2, toggle = wrong
+    //   toggle, audio2 = right
 
-    function parseNextTickArg(cbs) {
-      // if (cbs instanceof Function)
-      //   return [cbs];
-      if (cbs instanceof Array && cbs.length && cbs.every(fun => fun instanceof Function))
-        return cbs;    //avoids external mutations
-      throw new Error("only a Function, an array of functions can be passed to nextTick");
-    }
-
-    function runMesoLevelTask(e) {
-      this._mesoLevelTasks ? this._mesoLevelTasks.shift()() : e.stopImmediatePropagation();
-    }
-
-    function addMesoLevelTasks(tasks, level) {
-      var resolve;
-      var promise = new Promise(function (resolveImpl) {//no mesotask error causes the rest of the mesotasks to falter, thus no reject should be possible.
-        resolve = resolveImpl;
-      });
-      tasks = parseNextTickArg(tasks);
-      level._mesoLevelTasks = tasks.concat(resolve.bind(null, true));
-      for (let i = 0; i < level._mesoLevelTasks.length; i++)
-        level.addEventListener("ratechange", runMesoLevelTask.bind(level), true);
-      return promise;
-    }
-
-    //levels: starts as [ audio, span ]
-    //        grows when needed into [ audio, span , span , ... , span ]
-    var levels = [document.createElement("audio"), document.createElement("span")];
-    levels[1].appendChild(levels[0]);
-
-    function getClone(depth) {
-      if (depth < levels.length)
-        return levels[depth].cloneNode(true);
-      var span;
-      for (let i = 0; i < (depth - levels.length + 1); i++) {
-        span = document.createElement("span");
-        span.appendChild(levels[levels.length - 1]);
-        levels.push(span);
-      }
-      return span.cloneNode(true);
-    }
-
-    function getTopAudio(depth) {
-      var top = getClone(depth);
-      var el = top;
-      while (el.children.length)
-        el = el.children[0];
-      return [top, el];
-    }
-
-    function ratechangeTickStart(mesoLevels) {
-      var topAudio = getTopAudio(mesoLevels);
-      topAudio[1].playbackRate = 2;
-      return topAudio[0];
-    }
-
-    //todo nextTick(cb)
-    //todo asyncListenerTasks([cbs], levels)
-    //todo nextMesoTicks([cbs], levels)
-
-    //mesotask promises return true when completed, and false when cancelled.
-    //mesotask promises never fail.
-    window.nextTick = function (tasks, mesoLevels) {
-      mesoLevels = Math.max(parseInt(mesoLevels), 0);
-      var level = ratechangeTickStart(mesoLevels);
-      var macrotaskPromise = addMesoLevelTasks(tasks, level);
-
-      macrotaskPromise.nextMesoTick = function (extraTasks) {
-        level = level.children[0];   //todo "level" is a closure variable.. its techincally safe, but likely can cause dev errors.
-        if (level)                   //todo should i add "levels" to the macrotaskPromise instead??
-          return addMesoLevelTasks(extraTasks, level);
-        throw new Error("cannot add any more mesotasks to this macrotask");
-      };
-
-      // to flush a macroTask, you call cancel() which returns an array of not yet done methods,
-      //                       and then you call these returned functions.
-      //returns an array with the functions that were cancelled
-      macrotaskPromise.cancel = function () {
-        var undone = [];
-        var resolves = [];
-        //start with level, it is the deepest one that has added mesotasks
-        while (level && level._mesoLevelTasks && level._mesoLevelTasks.length) {
-          resolves.push(level._mesoLevelTasks.pop());//take out the listener that will call the resolve on the element.
-          undone = level._mesoLevelTasks.concat(undone);      //take the rest of the listeners out into undone
-          level._mesoLevelTasks = undefined;                  //set to undefined to communicate the method being removed.
-          level = level.parentNode;
-        }
-        for (let i = 0; i < resolves.length; i++)
-          resolves[i]("cancelled");//todo should the resolve return false when cancelled??
-        return undone;
-      };
-      return macrotaskPromise;
-    }
+    // let res = "";
+    // var audio1 = nextTickAudio(function () {
+    //   res += "audio1";
+    // });
+    // var toggle1 = nextTickToggle(function () {
+    //   res += "toggle1-";
+    // });
+    // audio1.cancel();
+    // var audio2 = nextTickAudio(function () {
+    //   res += "audio2";
+    // });
+    // await audio2;
+    // await toggle1;
+    // assert("toggle1 audio2" === res);
   })();
-</script>
 
-<script>
   (async function () {
+    const res = await nextTick(function(){
+      console.log("alpha");
+      return 42;
+    });
+    console.log(res);
+  })();
+
+  async function bobob(res){
+    const bo = await res;
+    console.log("true", bo === nextTick.cancelledTask);
+  }
+
+  (async function () {
+    const res = nextTick(function(){
+      console.log("errorororor");
+    });
+    bobob(res);
+    res.cancel();
+  })();
+
+  (async function () {
+    const res = nextTick(function(){
+      console.log("horrorerror");
+    });
+    res.cancel();
+
+    const res2 = nextTick(function(){
+      console.log("eleven");
+      return 11;
+    });
+    const resx = await res2;
+    console.log(resx);
+    // res2.cancel();
+    //
+    // const res3 = nextTick(function(){
+    //   console.log("three");
+    // });
+    // res3.cancel();
+    //
+    // const res4 = nextTick(function(){
+    //   console.log("four");
+    // });
+    // // res4.cancel();
+    //
+    // console.log(await res4);
+  })();
+
+  (async function () {
+    const res = await nextTick(function(){
+      console.log("beta");
+      return 43;
+    });
+    console.log(res);
+  })();
+  
+  setTimeout(async function () {
     function one() {
       console.log("one");
     }
@@ -109,7 +92,7 @@
       console.log("two");
     }
 
-    const task = nextTick([one, two], 2);
+    const task = nextMesoTicks([one, two], 2);
     console.log("a")
     const res1 = await task;                        //the result here is just true, it would be better to have the result from the methods.
     console.log("a")
@@ -117,7 +100,7 @@
     console.log("a")
     const res3 = await task.nextMesoTick([two]);    //the result here is just true, it would be better to have the result from the methods.
     console.log("a")
-  })();
+  }, 50);
 
   setTimeout(async function () {
     function three() {
@@ -128,7 +111,7 @@
       console.log("four");
     }
 
-    const task = nextTick([three, four], 1);
+    const task = nextMesoTicks([three, four], 1);
     console.log("b")
     const res1 = await task;                        //the result here is just true, it would be better to have the result from the methods.
     console.log("b")
@@ -147,7 +130,7 @@
       console.log("six");
     }
 
-    const task = nextTick([five, six], 1);
+    const task = nextMesoTicks([five, six], 1);
     await task;
     const task2 = task.nextMesoTick([five]);
     const cancelled = task.cancel();
@@ -156,5 +139,4 @@
     }
 
   }, 200);
-
 </script>
