@@ -1,0 +1,284 @@
+<!--<h1>-->
+<!--  <summary>-->
+<!--    <a href="boo">-->
+<!--      hello-->
+<!--      <input type="checkbox">-->
+<!--    </a>-->
+<!--    sunshine-->
+<!--  </summary>-->
+<!--</h1>-->
+<!--input, slot, document-fragment, a, slot, document-fragment, summary, h1-->
+<!--"hello", slot, document-fragment, a, slot, document-fragment, summary, h1-->
+<!--"sunshine", slot, document-fragment, summary, h1-->
+
+
+<!--window-->
+<!--document-->
+<html>
+<body>
+<h1>
+  <matroschka-comp>
+    <!-- slotted event propagation -->
+    <h2>
+      <span>hello sunshine</span>
+    </h2>
+  </matroschka-comp>
+</h1>
+
+<web-comp2>
+  <h4>hello light</h4>
+</web-comp2>
+
+<matroschka-comp>
+  <!-- slotted event propagation -->
+  <h2>
+    <span>
+      <web-comp3 id="bigboy">hello sunshine</web-comp3>
+    </span>
+  </h2>
+</matroschka-comp>
+
+<!--templates-->
+<template id="webcomp">
+  <!-- document-fragment -->
+  <div>
+    <slot></slot>
+  </div>
+  <h6>your shadow is your only true companion</h6>
+</template>
+
+<template id="webcomp2">
+  <!-- document-fragment -->
+  <i>
+    <h5>hello shadow companion</h5>
+  </i>
+</template>
+
+<template id="webcomp3">
+  <!-- document-fragment -->
+  <i>
+    <web-comp2></web-comp2>
+  </i>
+</template>
+
+<template id="matroschkacomp">
+  <!-- document-fragment -->
+  <b>
+    <web-comp>
+      <!-- slotted event propagation -->
+      <slot></slot>
+    </web-comp>
+  </b>
+</template>
+
+<script>
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.appendChild(document.querySelector("#webcomp").content.cloneNode(true));
+    }
+  }
+
+  customElements.define("web-comp", WebComp);
+
+  class WebComp2 extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.appendChild(document.querySelector("#webcomp2").content.cloneNode(true));
+    }
+  }
+
+  customElements.define("web-comp2", WebComp2);
+
+  class WebComp3 extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.appendChild(document.querySelector("#webcomp3").content.cloneNode(true));
+    }
+  }
+
+  customElements.define("web-comp3", WebComp3);
+
+  class MatroschkaComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.appendChild(document.querySelector("#matroschkacomp").content.cloneNode(true));
+    }
+  }
+
+  customElements.define("matroschka-comp", MatroschkaComp);
+</script>
+
+<script>
+  function getScopedPathsComposedTrue(target) {
+    let innerRes = getScopedPathsComposedFalse(target);
+    const res = [innerRes];
+    while (target = innerRes[innerRes.length - 1]?.host)
+      res.push(innerRes = getScopedPathsComposedFalse(target));
+    //todo should we return the upper bounced path as a flat array? or not? This will yield a different graph structure in different settings?
+    return res;
+  }
+
+  function getScopedPathsComposedFalse(target) {
+    const path = [];
+    const firstTarget = target;
+    while (target) {
+      if (target.shadowRoot && firstTarget !== target) {  //we don't check on the first run
+        const slotName = target.getAttribute("slot") || "";
+        const slot = target.shadowRoot.querySelector(!slotName ? "slot:not([name]), slot[name='']" : "slot[name=" + slotName + "]");
+        slot && path.push(getScopedPathsComposedFalse(slot));
+        //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
+      }
+      path.push(target);
+      if (target instanceof ShadowRoot)
+        return path;
+      if (target === document) {
+        path.push(window);
+        return path;
+      }
+      target = target.parentNode;
+    }
+    return path;
+  }
+
+  function toScope(path) {
+    if(!(path instanceof Array))
+      throw new Error("toBounce argument must be an array.");
+    const res = [];
+    for (let i = 0; i < path.length;) {
+      [i, innerRes] = toScopeImpl(i, path);
+      res.push(innerRes);
+    }
+    return res;
+  }
+
+  function toScopeImpl(i, path) {
+    const res = [path[i++]];
+    for (; i < path.length; i++) {
+      const target = path[i];
+      if (target instanceof HTMLSlotElement) {
+        [i, innerRes] = toScopeImpl(i, path);
+        res.push(innerRes);
+      } else if (target instanceof ShadowRoot) {
+        return [i, path];
+      } else
+        res.push(target);
+    }
+    return [i, res];
+  }
+
+</script>
+
+
+<script>
+  //test helper functions
+  function arrayEquals(one, two) {
+    if (!two)
+      return false;
+    if (one.length != two.length)
+      return false;
+    for (var i = 0, l = one.length; i < l; i++) {
+      if (one[i] instanceof Array && two[i] instanceof Array) {
+        if (!arrayEquals(one[i], two[i]))
+          return false;
+      } else if (one[i] != two[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function sameDOMScope(bouncedPath) {
+    for (let i = 0; i < bouncedPath.length; i++)
+      sameDOMScopeImpl(bouncedPath[i]);
+    return true;
+  }
+
+  function sameDOMScopeImpl(path) {
+    if (path.length === 1) {
+      if (path[0] === document)
+        throw new Error("document must always be added to the window, no?");
+      if (path[0] instanceof EventTarget)
+        return;
+      throw new Error("omg, what kind of path is this? single path that is not window, shadowRoot, or element?")
+    }
+    let root = path[path.length - 1];
+    if (root === window) {
+      if (path[path.length - 2] !== document)
+        throw new Error("document is always the child of the window event target, no??");
+      for (let i = 0; i < path.length - 2; i++) {
+        if (path[i] instanceof Array)
+          sameDOMScopeImpl(path[i]);
+        else if (!(path[i] instanceof HTMLElement))
+          throw new Error(path[i], " is not an HTMLElement..");
+        else if (!(path[i].getRootNode() === document))
+          throw new Error(path[i], " an HTMLElement with a different root..");
+      }
+    } else if (root instanceof DocumentFragment) {
+      for (let i = 0; i < path.length - 1; i++) {
+        if (path[i] instanceof Array)
+          sameDOMScopeImpl(path[i]);
+        else if (!(path[i] instanceof HTMLElement))
+          throw new Error(path[i], " is not an HTMLElement..");
+        else if (root !== path[i].getRootNode())
+          throw new Error(path[i], " an HTMLElement with a different root..");
+      }
+    } else if (root instanceof HTMLElement) {
+      for (let i = 0; i < path.length - 1; i++) {
+        if (path[i] instanceof Array)
+          sameDOMScopeImpl(path[i]);
+        else if (!(path[i] instanceof HTMLElement))
+          throw new Error(path[i], " is not an HTMLElement..");
+        else if (undefined !== path[i].getRootNode())
+          throw new Error(path[i], " an HTMLElement with a different root..");
+      }
+    } else
+      throw new Error(root, "unknown type of root for propagation path");
+  }
+
+  function unitTest(target) {
+    const bouncePath = getScopedPathsComposedTrue(target);
+    const testOnClick = function (e) {
+      const composedPath = e.composedPath();
+      const toScoped = toScope(composedPath);
+      const testEqualScoped = arrayEquals(toScoped, bouncePath);
+      const testEqualPath = arrayEquals(bouncePath.flat(100), composedPath);
+      const testCorrectDOMBoundaries = sameDOMScope(bouncePath);
+      if (!testEqualPath || !testCorrectDOMBoundaries)
+        throw new Error("omg, test failed..");
+      console.log("test ok", bouncePath, composedPath);
+    };
+    target.addEventListener("click", testOnClick);
+    target.click();
+    target.removeEventListener("click", testOnClick);
+  }
+</script>
+
+<script>
+  (function () {
+    unitTest(document.querySelector("span"));
+    unitTest(document.createElement("span"));
+    const webcomp2 = document.querySelector("web-comp2");
+    const h5 = webcomp2.shadowRoot.children[0].children[0];
+    unitTest(webcomp2);
+    unitTest(h5);
+    const h4 = document.querySelector("h4");
+    unitTest(h4);
+    const matroschkaComp = document.querySelector("matroschka-comp");
+    const webcomp = matroschkaComp.shadowRoot.querySelector("web-comp");
+    const h6 = webcomp.shadowRoot.querySelector("h6");
+    unitTest(matroschkaComp);
+    unitTest(webcomp);
+    unitTest(h6);
+    const bigboy = document.querySelector("#bigboy");
+    const bigboy_innerchild = bigboy.shadowRoot.children[0].children[0].shadowRoot.children[0].children[0];
+    unitTest(bigboy);
+    unitTest(bigboy_innerchild);
+  })();
+</script>
+</body>
+</html>
