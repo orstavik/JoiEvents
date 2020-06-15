@@ -1,38 +1,11 @@
-# Pattern: ExtendEventListenerOptions
+# Pattern: ImmediateOnly event listener option
 
 In this chapter we implement two event listener options:
- 1. `once` (polyfill)
  2. `immediateOnly` (custom option)
+
+todo implement this as a wrapper method for addEventListener option, so that it doesn't have to have the event listener registry added to it.
  
 todo should i add a special check for `window.addEventListener("mouseenter",...` so that it will add an empty event listener for mouseenter on the document too, so that the window event listener for mouseenter is run?
-
-## polyfilled EventListenerOption: `once`
-
-When we make a JS mirror of the EventTargetRegistry, we also need to polyfill the `once` event listener option. The reason for this is that the native implementation of the `once` option do not remove the event listener using the js `removeEventListener(..)` method, and therefore `once` event listeners will be removed from the underlying `EventTarget` nodes without being removed from the EventTargetRegistry.
-
-Fortunately, `once` is a simple option to implement. We need only wrap the callback in an anonymous function that in addition to calling the `once` event listener, also calls the `removeEventListener(...)` to remove it. 
-
-```javascript
-EventTarget.prototype.addEventListener = function (name, listener, options) {
-  this._eventTargetRegistry || (this._eventTargetRegistry = {});
-  this._eventTargetRegistry[name] || (this._eventTargetRegistry[name] = []);
-  const entry = options instanceof Object ? Object.assign({listener}, options) : {listener, capture: options};
-  entry.capture = !!entry.capture;
-  const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
-  if (index >= 0)
-    return;
-    if (entry.once) {
-      const onceSelf = this;
-      const onceCapture = entry.capture;
-      entry.listener = function (e) {
-        onceSelf.removeEventListener(name, entry.listener, onceCapture);
-        listener(e);
-      }
-    }
-    this._eventTargetRegistry[name].push(entry);
-    ogAdd.call(this, name, entry.listener, entry);
-};
-``` 
 
 ## new EventListenerOption: `immediateOnly`
 
