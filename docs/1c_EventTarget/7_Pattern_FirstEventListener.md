@@ -1,8 +1,7 @@
 # Pattern: FirstEventListener
 
-In this chapter we implement two additional event listener options:
+In this chapter we implement an additional event listener options:
  1. `first` (custom option) 
- 2. `grab` (custom option) 
 
 ## new EventListenerOption: `first`
 
@@ -45,60 +44,6 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
       ogRemove.call(this, name, listener.listener, listener);
     this._eventTargetRegistry[name].unshift(entry);
     for (let listener of this._eventTargetRegistry[name]) 
-      ogAdd.call(this, name, listener.listener, listener);
-  } else {
-    this._eventTargetRegistry[name].push(entry);
-    ogAdd.call(this, name, entry.listener, entry);
-  }
-};
-``` 
-
-## new EventListenerOption: `grab`
-
-`grab` tells the `EventTarget` to put the event listener 1) first in the EventTargetRegistry FIFO queue and 2) disallow other event listeners to be put before it.
- 
-```javascript
-EventTarget.prototype.addEventListener = function (name, listener, options) {
-  this._eventTargetRegistry || (this._eventTargetRegistry = {});
-  this._eventTargetRegistry[name] || (this._eventTargetRegistry[name] = []);
-  const entry = options instanceof Object ? Object.assign({listener}, options) : {listener, capture: options};
-  entry.capture = !!entry.capture;
-  const index = findEquivalentListener(this._eventTargetRegistry[name], listener, entry.capture);
-  if (index >= 0)
-    return;
-  if (entry.immediateOnly) {
-    entry.once = false;
-    const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
-    const macroTask = toggleTick(function () {
-      immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
-    });
-    entry.listener = function (e) {
-      macroTask.cancel();
-      immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
-      immediateCb(e);
-    }
-  }
-  if (entry.once) {
-    const onceSelf = this;
-    const onceCapture = entry.capture;
-    entry.listener = function (e) {
-      onceSelf.removeEventListener(name, entry.listener, onceCapture);
-      listener(e);
-    }
-  }
-  if (entry.grab) {
-    if (this._eventTargetRegistry[name][0].grab)
-      throw new Error("The event " + name + " has already been grabbed.");
-    entry.first = true;
-  }
-  if (entry.first) {
-    for (let listener of this._eventTargetRegistry[name])
-      ogRemove.call(this, name, listener.listener, listener);
-    if (!this._eventTargetRegistry[name][0].grab)
-      this._eventTargetRegistry[name].unshift(entry);
-    else
-      this._eventTargetRegistry[name].splice(1, 0, entry);
-    for (let listener of this._eventTargetRegistry[name])
       ogAdd.call(this, name, listener.listener, listener);
   } else {
     this._eventTargetRegistry[name].push(entry);
@@ -186,10 +131,10 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
     if (entry.immediateOnly) {
       entry.once = false;
       const immediateSelf = this, immediateCb = entry.listener, immediateCapture = entry.capture;
-      const macroTask = toggleTick(function () {
+      const macroTask = toggleTick(function() {
         immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
       });
-      entry.listener = function (e) {
+      entry.listener = function(e){
         macroTask.cancel();
         immediateSelf.removeEventListener(name, entry.listener, immediateCapture);
         immediateCb(e);
@@ -203,19 +148,11 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
         listener(e);
       }
     }
-    if (entry.grab) {
-      if (this._eventTargetRegistry[name][0].grab)
-        throw new Error("The event " + name + " has already been grabbed.");
-      entry.first = true;
-    }
     if (entry.first) {
-      for (let listener of this._eventTargetRegistry[name])
+      for (let listener of this._eventTargetRegistry[name]) 
         ogRemove.call(this, name, listener.listener, listener);
-      if (!this._eventTargetRegistry[name][0].grab)
-        this._eventTargetRegistry[name].unshift(entry);
-      else
-        this._eventTargetRegistry[name].splice(1, 0, entry);
-      for (let listener of this._eventTargetRegistry[name])
+      this._eventTargetRegistry[name].unshift(entry);
+      for (let listener of this._eventTargetRegistry[name]) 
         ogAdd.call(this, name, listener.listener, listener);
     } else {
       this._eventTargetRegistry[name].push(entry);
@@ -243,13 +180,8 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
   h1.addEventListener("click", () => console.log(5), {});
   h1.addEventListener("click", () => console.log(6), {});
   h1.addEventListener("click", () => console.log(4), {first: true});
-  h1.addEventListener("click", () => console.log(2), {grab: true, first: true});
+  h1.addEventListener("click", () => console.log(2), {first: true});
   h1.addEventListener("click", () => console.log(3), {first: true, once: true});
-  try {
-    h1.addEventListener("click", () => console.log("wtf"), {grab: true, first: true});
-  } catch (err) {
-    console.log(1);
-  }
   h1.dispatchEvent(new MouseEvent("click"));
   h1.dispatchEvent(new MouseEvent("click"));
 </script>
@@ -258,9 +190,8 @@ EventTarget.prototype.addEventListener = function (name, listener, options) {
 Result:
 
 ```
-1
-2
 3
+2
 4
 5
 6
