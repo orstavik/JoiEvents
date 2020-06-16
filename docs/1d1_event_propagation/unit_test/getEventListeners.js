@@ -15,6 +15,11 @@ export function getEventListeners(target, type, phase) {
     return allListeners[type].filter(listener => !listener.capture);
   throw new Error("Illegal event phase for getEventListeners: phase can only be Event.BUBBLING_PHASE, Event.CAPTURING_PHASE, or Event.AT_TARGET.");
 }
+//todo do we need this??
+// export function hasEventListener(target, type, phase, cb){
+//   const listeners = getEventListeners(target, type, phase);
+//   return listeners.indexOf(cb) !== -1;
+// }
 
 function findEquivalentListener(registryList, listener, useCapture) {
   return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);

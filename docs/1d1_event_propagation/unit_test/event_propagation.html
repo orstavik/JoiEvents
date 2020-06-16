@@ -1,13 +1,14 @@
 <script>
   function runTests(tests, eventSystems) {
     const results = {};
+    for (let test of tests)
+      results[test.name] = {};
     for (let {sysname, upgrade, downgrade} of eventSystems) {
-      results[sysname] = {};
       setTimeout(upgrade);
       for (let {name, fun, expect} of tests) {
         setTimeout(fun);
         setTimeout(function () {
-          results[sysname][name] = expect();
+          results[name][sysname] = expect();
         });
       }
       setTimeout(downgrade);
@@ -21,9 +22,11 @@
 <script type="module">
   import {testBasic} from "./testBasic.js";
   import {testRegistry} from "./testRegistry.js";
+  import {testOnce} from "./testOnce.js";
   import {tests} from "./test1.js";//todo this is a test for now
 
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
+  import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
@@ -52,8 +55,14 @@
       window.getEventListeners = getEventListeners;
     },
     downgrade: downgrade,
-  }]
+  }, {
+    sysname: "ONCE patch",
+    upgrade: function () {
+      patchEventListenerOptionOnce(EventTarget.prototype);
+    },
+    downgrade: downgrade,
+  }];
 
-  const alltests = testBasic.concat(testRegistry)//.concat(tests);
+  const alltests = testBasic.concat(testRegistry).concat(testOnce)//.concat(tests);
   runTests(alltests, eventSystems);
 </script>
