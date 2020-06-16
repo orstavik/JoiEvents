@@ -4,9 +4,9 @@ const targetToListeners = new WeakMap();
 export function getEventListeners(target, type, phase) {
   const allListeners = targetToListeners.get(target);
   if (!allListeners || (!type && !phase))
-    return allListeners;
+    return allListeners || [];
   if (!allListeners[type])
-    return null;
+    return [];
   if (!phase || phase === Event.AT_TARGET)
     return allListeners[type].slice();
   if (phase === Event.CAPTURING_PHASE)
@@ -26,7 +26,7 @@ function addListener(target, type, listenerObj) {
     targetToListeners.set(target, allListeners = {});
   let typeListeners = allListeners[type] || (allListeners[type] = []);
   const index = findEquivalentListener(typeListeners, listenerObj.listener, listenerObj.capture);
-  if (index === -1)
+  if (index !== -1)
     return false;
   typeListeners.push(listenerObj);
   return true;

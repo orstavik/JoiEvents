@@ -1,267 +1,59 @@
 <script>
   function runTests(tests, eventSystems) {
     const results = {};
-    const addEventListenerOG = EventTarget.prototype.addEventListener;
-    const removeEventListenerOG = EventTarget.prototype.removeEventListener;
-    const dispatchEventOG = EventTarget.prototype.dispatchEvent;
-
-    for (let {sysname, upgrade} of eventSystems) {
-
+    for (let {sysname, upgrade, downgrade} of eventSystems) {
       results[sysname] = {};
-      setTimeout(function () {
-        EventTarget.prototype.addEventListener = addEventListenerOG;
-        EventTarget.prototype.removeEventListener = removeEventListenerOG;
-        EventTarget.prototype.dispatchEvent = dispatchEventOG;
-        upgrade();
-      });
+      setTimeout(upgrade);
       for (let {name, fun, expect} of tests) {
         setTimeout(fun);
         setTimeout(function () {
           results[sysname][name] = expect();
         });
       }
+      setTimeout(downgrade);
     }
     setTimeout(function () {
-      for (let sysname in results) {
-        console.log("----test results for", sysname);
-        for (let name in results[sysname]) {
-          console.log(name, results[sysname][name]);
-        }
-      }
+      console.table(results);
     });
   }
 </script>
 
-<div id="root">
-  <slot-comp>
-    <shadow-comp></shadow-comp>
-  </slot-comp>
-</div>
-
-<script>
-  class SlotComp extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = "<span><slot></slot></span>";
-    }
-  }
-
-  customElements.define("slot-comp", SlotComp);
-
-  class ShadowComp extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = "<h1>hello sunshine</h1>";
-    }
-  }
-
-  customElements.define("shadow-comp", ShadowComp);
-
-  function cleanDom() {
-    const root = document.querySelector("#root");
-    const clone = root.cloneNode(true);
-    root.remove();
-    document.body.appendChild(clone);
-    return {
-      div: document.querySelector("div"),
-      slot: document.querySelector("slot-comp"),
-      slotRoot: document.querySelector("slot-comp").shadowRoot,
-      slotSpan: document.querySelector("slot-comp").shadowRoot.children[0],
-      slotSlot: document.querySelector("slot-comp").shadowRoot.children[0].children[0],
-      shadow: document.querySelector("shadow-comp"),
-      shadowRoot: document.querySelector("shadow-comp").shadowRoot,
-      shadowH1: document.querySelector("shadow-comp").shadowRoot.children[0]
-    }
-  }
-</script>
-
 <script type="module">
+  import {testBasic} from "./testBasic.js";
+  import {testRegistry} from "./testRegistry.js";
+  import {tests} from "./test1.js";//todo this is a test for now
+
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
 
-  (function () {
+  const addEventListenerOG = EventTarget.prototype.addEventListener;
+  const removeEventListenerOG = EventTarget.prototype.removeEventListener;
+  const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+  window.getEventListeners = function () {
+  };
 
-    let data1, result1;
-    let data2, result2;
-    let data3, result3;
-    const tests = [{
-      name: "currentTarget during all bubble event listeners, called twice",
-      fun: function () {
-        result1 = [];
-        data1 = cleanDom();
-        for (let elName in data1) {
-          data1[elName].addEventListener("click", function (e) {
-            result1.push(e.currentTarget);
-          }, {});
-        }
-        data1.shadowH1.click();
-        data1.shadowH1.click();
-      },
-      expect: function () {
-        const names = Object.getOwnPropertyNames(data1);
-
-        [data1.div, data1.slot, data1.slotRoot, data1.slotSpan, data1.slotSlot, data1.shadow, data1.shadowRoot, data1.shadowH1, data1.div, data1.slot, data1.slotRoot, data1.slotSpan, data1.slotSlot, data1.shadow, data1.shadowRoot, data1.shadowH1].reverse()
-
-      }
-    }, {
-      name: "simple event listener 2",
-      fun: function () {
-        data2 = cleanDom();
-        data2.shadowH1.addEventListener("click", function (e) {
-          result2 = 2;
-        }, {});
-        data2.shadowH1.click();
-      },
-      expect: function () {
-        return result2 === 2;
-      }
-    }, {
-      name: "event listener registry",
-      fun: function () {
-        data3 = cleanDom();
-        data3.shadowH1.addEventListener("click", function (e) {
-          result3 = 3;
-        }, {});
-        data3.shadowH1.click();
-      },
-      expect: function () {
-        return getEventListeners && getEventListeners(data3.shadowH1, "click") && getEventListeners(data3.shadowH1, "click").length === 1;
-      }
-    }];
-
-    const eventSystems = [{
-      sysname: "NATIVE event system",
-      upgrade: function () {
-      },
-    }, {
-      sysname: "REGISTER system",
-      upgrade: function () {
-        addEventTargetRegistry(EventTarget.prototype);
-      },
-    }]
-
-    runTests(tests, eventSystems);
-  })();
-
-
-</script>
-
-<scripts>
-
-  const funkyBoy = (msg) => console.log(msg);
-
-  function playBoy(msg) {
-  console.log(msg);
+  function downgrade() {
+    EventTarget.prototype.addEventListener = addEventListenerOG;
+    EventTarget.prototype.removeEventListener = removeEventListenerOG;
+    EventTarget.prototype.dispatchEvent = dispatchEventOG;
+    window.getEventListeners = function () {
+    };
   }
 
-  const h1 = document.querySelector("h1");
+  const eventSystems = [{
+    sysname: "NATIVE event system",
+    upgrade: function () {
+    },
+    downgrade: function () {
+    },
+  }, {
+    sysname: "REGISTER system",
+    upgrade: function () {
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
+    },
+    downgrade: downgrade,
+  }]
 
-
-  // test 1: empty object option
-  h1.addEventListener("click", function (e) {
-  console.log("Test 1 : empty object options, expect twice")
-  }, {});
-
-
-  // test 2: normal capture: true
-  h1.addEventListener("click", function (e) {
-  console.log("Test 2 : normal capture: true, expect twice")
-  }, false);
-
-
-  h1.addEventListener("click", function (e) {
-  console.log("Test 3: {once: true}, expect once")
-  }, {once: true});
-
-  h1.addEventListener("click", function (e) {
-  console.log("Test 3a: {once: undefined}, expect twice")
-  }, {once: undefined});
-
-
-  h1.addEventListener("click", function (e) {
-  console.log("Test 4: {once: 1}, expect once")
-  }, {once: 1});
-
-
-  // Test 5, {capture: true, once: true}
-  h1.addEventListener("click", function (e) {
-  console.log("Test 5: {capture: true, once: true}, expect once")
-  }, {capture: true, once: true});
-
-
-  //test 6: {once: false}, normal capture: false
-
-  h1.addEventListener("click", function (e) {
-  console.log("Test 6: {once: true}, normal capture: false, expect once")
-  }, {once: true}, false);
-
-  // test 7: nested eventListeners 1
-  h1.addEventListener("click", function () {
-  h1.addEventListener("keypress", function (e) {
-  console.log("Test 7 : nested eventListener: outer listener {once: true}, inner listener {once: true}, expect once")
-  }, {once: true});
-  h1.dispatchEvent(new KeyboardEvent("keypress"));
-  h1.dispatchEvent(new KeyboardEvent("keypress"));
-  }, {once: true});
-
-  // test 8: nested eventListeners 2
-  h1.addEventListener("click", function () {
-  h1.addEventListener("keypress", function (e) {
-  console.log("Test 8 : nested eventListener: outer listener {once: true}, inner listener {once: false}, expect twice")
-  }, {once: false});
-  h1.dispatchEvent(new KeyboardEvent("keypress"));
-  h1.dispatchEvent(new KeyboardEvent("keypress"));
-  }, {once: true});
-
-
-  // test 9: nested eventListeners 3
-  h1.addEventListener("click", function () {
-  h1.addEventListener("keydown", function (e) {
-  console.log("Test 9 : nested eventListener: outer listener {once: true}, inner listener {once: false}, expect twice")
-  }, {once: true});
-  h1.dispatchEvent(new KeyboardEvent("keydown"));
-  h1.dispatchEvent(new KeyboardEvent("keydown"));
-  }, {once: false});
-
-  // test 10: outer callback function
-  h1.addEventListener("click", () => {
-  funkyBoy("Test 10: outer function, expected once")
-  }, {once: true});
-
-  // test 11:
-  let opts = {once: false};
-
-  h1.addEventListener("click", () => {
-  funkyBoy("Test 11: removeEventListener() {once: false}, expect twice");
-  }, opts)
-
-  opts = {once: true}
-
-  h1.addEventListener("click", () => {
-  funkyBoy("Test 11: removeEventListener() {once: true}, expect once");
-  }, opts)
-
-  // test 12:
-  const listener = function (e) {
-  console.log("Test 12: redefine {once}, expected once")
-  };
-  h1.addEventListener("click", listener, {once: false});
-  h1.removeEventListener("click", listener, {once: false});
-  h1.addEventListener("click", listener, {once: true});
-
-
-  // debugger
-
-  h1.addEventListener("click", () => playBoy("Test 14: add the same event listener twice, expected once"), {once:
-  true});
-  h1.addEventListener("click", () => playBoy("Test 14: add the same event listener twice, expected once"), {once:
-  true});
-
-
-  h1.dispatchEvent(new MouseEvent("click"));
-  h1.dispatchEvent(new MouseEvent("click"));
-
-
-  //todo tests here
-</scripts>
+  const alltests = testBasic.concat(testRegistry)//.concat(tests);
+  runTests(alltests, eventSystems);
+</script>
