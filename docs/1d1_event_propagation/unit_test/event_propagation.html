@@ -1,11 +1,34 @@
 <script>
-  function runTests(tests) {
-    for (let test of tests) {
-      setTimeout(test.fun);
+  function runTests(tests, eventSystems) {
+    const results = {};
+    const addEventListenerOG = EventTarget.prototype.addEventListener;
+    const removeEventListenerOG = EventTarget.prototype.removeEventListener;
+    const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+
+    for (let {sysname, upgrade} of eventSystems) {
+
+      results[sysname] = {};
       setTimeout(function () {
-        console.log(test.name, test.expect());
+        EventTarget.prototype.addEventListener = addEventListenerOG;
+        EventTarget.prototype.removeEventListener = removeEventListenerOG;
+        EventTarget.prototype.dispatchEvent = dispatchEventOG;
+        upgrade();
       });
+      for (let {name, fun, expect} of tests) {
+        setTimeout(fun);
+        setTimeout(function () {
+          results[sysname][name] = expect();
+        });
+      }
     }
+    setTimeout(function () {
+      for (let sysname in results) {
+        console.log("----test results for", sysname);
+        for (let name in results[sysname]) {
+          console.log(name, results[sysname][name]);
+        }
+      }
+    });
   }
 </script>
 
@@ -54,10 +77,14 @@
   }
 </script>
 
-<script>
+<script type="module">
+  import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
+
   (function () {
 
     let data1, result1;
+    let data2, result2;
+    let data3, result3;
     const tests = [{
       name: "currentTarget during all bubble event listeners, called twice",
       fun: function () {
@@ -65,7 +92,7 @@
         data1 = cleanDom();
         for (let elName in data1) {
           data1[elName].addEventListener("click", function (e) {
-            result1["currentTarget during all bubble event listeners, called twice"].push(e.currentTarget);
+            result1.push(e.currentTarget);
           }, {});
         }
         data1.shadowH1.click();
@@ -75,24 +102,46 @@
         const names = Object.getOwnPropertyNames(data1);
 
         [data1.div, data1.slot, data1.slotRoot, data1.slotSpan, data1.slotSlot, data1.shadow, data1.shadowRoot, data1.shadowH1, data1.div, data1.slot, data1.slotRoot, data1.slotSpan, data1.slotSlot, data1.shadow, data1.shadowRoot, data1.shadowH1].reverse()
-      },
-      data: cleanDom,
-      res: {}
+
+      }
     }, {
       name: "simple event listener 2",
-      fun: function (data, name, results) {
-        data.shadowH1.addEventListener("click", function (e) {
-          results[name] = 2;
+      fun: function () {
+        data2 = cleanDom();
+        data2.shadowH1.addEventListener("click", function (e) {
+          result2 = 2;
         }, {});
-        data.shadowH1.click();
+        data2.shadowH1.click();
       },
-      expect: function (data, res) {
-        return res === 2;
+      expect: function () {
+        return result2 === 2;
+      }
+    }, {
+      name: "event listener registry",
+      fun: function () {
+        data3 = cleanDom();
+        data3.shadowH1.addEventListener("click", function (e) {
+          result3 = 3;
+        }, {});
+        data3.shadowH1.click();
       },
-      data: cleanDom,
-      res: {}
+      expect: function () {
+        return getEventListeners && getEventListeners(data3.shadowH1, "click") && getEventListeners(data3.shadowH1, "click").length === 1;
+      }
     }];
-    runTests(tests);
+
+    const eventSystems = [{
+      sysname: "NATIVE event system",
+      upgrade: function () {
+      },
+    }, {
+      sysname: "REGISTER system",
+      upgrade: function () {
+        addEventTargetRegistry(EventTarget.prototype);
+      },
+    }]
+
+    runTests(tests, eventSystems);
   })();
 
 
