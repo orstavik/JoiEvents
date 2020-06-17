@@ -59,6 +59,6 @@ export function addEventListenerOptionLast(EventTargetPrototype) {
     removeEventListenerOG.call(this, type, cb, options);
   }
 
-  EventTargetPrototype.addEventListener = addEventListenerLast;//todo Object.defineProperty
-  EventTargetPrototype.removeEventListener = removeEventListenerLast;
+  Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerLast});
+  Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerLast});
 }

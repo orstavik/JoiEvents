@@ -6,7 +6,7 @@ export function getEventListeners(target, type, phase) {
   if (!allListeners)
     return [];
   if (!type && !phase)
-    return allListeners;
+    return allListeners.slice();
   if (!allListeners[type])
     return [];
   if (!phase || phase === Event.AT_TARGET)
@@ -65,9 +65,9 @@ function makeListenerObject(type, listener, options) {
   return listenerObject;
 }
 
-export function addEventTargetRegistry(eventTargetPrototype) {
-  const ogAdd = eventTargetPrototype.addEventListener;
-  const ogRemove = eventTargetPrototype.removeEventListener;
+export function addEventTargetRegistry(EventTargetPrototype) {
+  const ogAdd = EventTargetPrototype.addEventListener;
+  const ogRemove = EventTargetPrototype.removeEventListener;
 
   function addEventListenerRegistry(type, listener, options) {
     const entry = makeListenerObject(type, listener, options);
@@ -83,7 +83,7 @@ export function addEventTargetRegistry(eventTargetPrototype) {
       ogRemove.call(this, type, listener, entry);
   }
 
-  eventTargetPrototype.addEventListener = addEventListenerRegistry;
-  eventTargetPrototype.removeEventListener = removeEventListenerRegistry;
+  Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerRegistry});
+  Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerRegistry});
 }
 

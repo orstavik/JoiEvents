@@ -30,26 +30,30 @@
   import {lastTest, lastErrorsTest} from "./testLast.js";
   allTests = allTests.concat(lastTest);
   allTests = allTests.concat(lastErrorsTest);
+  import {firstTest, firstErrorsTest} from "./testFirst.js";
+  allTests = allTests.concat(firstTest);
+  allTests = allTests.concat(firstErrorsTest);
   import {tests} from "./test1.js";//todo this is a test for now
   // allTests = allTests.concat(tests);
 
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
   import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
   import {addEventListenerOptionLast} from "./EventListenerOptionLast.js";
+  import {addEventListenerOptionFirst} from "./EventListenerOptionFirst.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
   const dispatchEventOG = EventTarget.prototype.dispatchEvent;
-  window.getEventListeners = function () {
-  };
 
   function downgrade() {
     EventTarget.prototype.addEventListener = addEventListenerOG;
     EventTarget.prototype.removeEventListener = removeEventListenerOG;
     EventTarget.prototype.dispatchEvent = dispatchEventOG;
     window.getEventListeners = function () {
+      return [];
     };
   }
+  downgrade();
 
   const eventSystems = [{
     sysname: "NATIVE",
@@ -77,6 +81,14 @@
     },
     downgrade: downgrade,
   }, {
+    sysname: "FIRST+REGISTER",
+    upgrade: function () {
+      addEventListenerOptionFirst(EventTarget.prototype);
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
+    },
+    downgrade: downgrade,
+  }, {
     sysname: "LAST+ONCE",
     upgrade: function () {
       patchEventListenerOptionOnce(EventTarget.prototype);
@@ -88,6 +100,16 @@
     upgrade: function () {
       patchEventListenerOptionOnce(EventTarget.prototype);
       addEventListenerOptionLast(EventTarget.prototype);
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "ONCE+LAST+FIRST+REGISTER",
+    upgrade: function () {
+      patchEventListenerOptionOnce(EventTarget.prototype);
+      addEventListenerOptionLast(EventTarget.prototype);
+      addEventListenerOptionFirst(EventTarget.prototype);
       addEventTargetRegistry(EventTarget.prototype);
       window.getEventListeners = getEventListeners;
     },

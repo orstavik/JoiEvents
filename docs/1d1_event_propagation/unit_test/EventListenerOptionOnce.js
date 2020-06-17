@@ -58,6 +58,6 @@ export function patchEventListenerOptionOnce(EventTargetPrototype) {
     actualCb && removeEventListenerOG.call(this, type, actualCb, options);
   }
 
-  EventTargetPrototype.addEventListener = addEventListenerOnce;//todo Object.defineProperty
-  EventTargetPrototype.removeEventListener = removeEventListenerOnce;
+  Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerOnce});
+  Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerOnce});
 }

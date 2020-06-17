@@ -1,103 +1,103 @@
 let res;
 
-export const lastTest = [{
-  name: "last is true: {last: true}",
+export const firstTest = [{
+  name: "first is true: {first: true}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {last: true});
+    });
     h1.addEventListener("click", function (e) {
       res += "b";
-    });
-    h1.dispatchEvent(new MouseEvent("click"))
-  },
-  expect: function () {
-    return res === "ba"
-  }
-}, {
-  name: "last is true: {last: 1}",
-  fun: function () {
-    res = "";
-    const h1 = document.createElement("h1");
-    h1.addEventListener("click", function (e) {
-      res += "a";
-    }, {last: 1});
-    h1.addEventListener("click", function (e) {
-      res += "b";
-    });
+    }, {first: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
     return res === "ba";
   }
 }, {
-  name: "last is true: {last: []}",
+  name: "first is true: {first: 1}",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+    h1.addEventListener("click", function (e) {
+      res += "b";
+    });
+    h1.addEventListener("click", function (e) {
+      res += "a";
+    }, {first: 1});
+    h1.dispatchEvent(new MouseEvent("click"))
+  },
+  expect: function () {
+    return res === "ab";
+  }
+}, {
+  name: "first is true: {first: []}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {last: []});
+    });
     h1.addEventListener("click", function (e) {
       res += "b";
-    });
+    }, {first: []});
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
     return res === "ba";
   }
 }, {
-  name: "last is false: {last: false}",
+  name: "first is false: {first: false}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {last: false});
+    });
     h1.addEventListener("click", function (e) {
       res += "b";
-    });
+    }, {first: false});
     h1.dispatchEvent(new MouseEvent("click"));
   },
   expect: function () {
     return res === "ab";
   }
 }, {
-  name: "last is false: {last: 0}",
+  name: "first is false: {first: 0}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {last: 0});
+    });
     h1.addEventListener("click", function (e) {
       res += "b";
-    });
+    }, {first: 0});
     h1.dispatchEvent(new MouseEvent("click"));
   },
   expect: function () {
     return res === "ab";
   }
 }, {
-  name: "last is false: {last: ''}",
+  name: "first is false: {first: ''}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {last: ''});
+    });
     h1.addEventListener("click", function (e) {
       res += "b";
-    });
+    }, {first: ''});
     h1.dispatchEvent(new MouseEvent("click"));
   },
   expect: function () {
     return res === "ab";
   }
 }, {
-  name: "last on bubble and capture side {capture: true, last: true}",
+  name: "first on bubble and capture side {capture: true, first: true}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
@@ -106,36 +106,36 @@ export const lastTest = [{
 
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {capture: true, last: true});
-    h1.addEventListener("click", function (e) {
-      res += "b";
     }, {capture: true});
     h1.addEventListener("click", function (e) {
+      res += "b";
+    }, {capture: true, first: true});
+    h1.addEventListener("click", function (e) {
       res += "c";
-    }, {last: true});
+    });
     h1.addEventListener("click", function (e) {
       res += "d";
-    });
+    }, {first: true});
     span.dispatchEvent(new MouseEvent("click", {bubbles: true}));
   },
   expect: function () {
     return res === "badc";
   }
 }, {
-  name: "Last: removeEventListener() {last: true} and then define new last event listener",
+  name: "First: removeEventListener() {first: true} and then define new first event listener",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
 
-    function a(e) {
+    function a() {
       res += "a";
     }
 
-    h1.addEventListener("click", a, {last: true});
+    h1.addEventListener("click", a, {first: true});
     h1.removeEventListener("click", a);
     h1.addEventListener("click", function (e) {
       res += "b";
-    }, {last: true});
+    }, {first: true});
     h1.dispatchEvent(new MouseEvent("click"))
 
   },
@@ -143,7 +143,7 @@ export const lastTest = [{
     return res === "b";
   }
 }, {
-  name: "Last: removeEventListener() {last: true} when there is no event listener to remove",
+  name: "First: removeEventListener() {first: true} when there is no event listener to remove",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
@@ -152,29 +152,29 @@ export const lastTest = [{
     });
   },
   expect: function () {
-    return res === "";//todo we should somehow here check the last register.
+    return res === "";//todo we should somehow here check the first register.
   }
 }];
 
-export const lastErrorsTest = [{
-  name: "Last error: adding two last listeners",
+export const firstErrorsTest = [{
+  name: "First error: adding two first listeners",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
 
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {last: true});
+    }, {first: true});
     try {
       h1.addEventListener("click", function (e) {
         res += "b";
-      }, {last: true});
+      }, {first: true});
     } catch (e) {
       res = e;
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
-    return res === "Error: only one event listener {last: true} can be added to a target for the same event type and capture/bubble event phase.a";  // a at the end
+    return res === "Error: only one event listener {first: true} can be added to a target for the same event type and capture/bubble event phase.a";  // a at the end
   }
 }];
