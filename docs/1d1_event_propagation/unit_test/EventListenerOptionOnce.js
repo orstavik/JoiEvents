@@ -16,6 +16,18 @@ function setOnceFromTargetCbTypeCapture(target, cb, type, capture, realCb) {
   dictToRealCb[type + " " + capture] = realCb;
 }
 
+function removeOnceFromTargetCbTypeCapture(target, cb, type, capture) {
+  let cbToDict = targetToCb.get(target);
+  cbToDict || targetToCb.set(target, cbToDict = new WeakMap());
+
+  let dictToRealCb = cbToDict.get(cb);
+  dictToRealCb || cbToDict.set(cb, dictToRealCb = {});
+  if (!dictToRealCb[type + " " + capture])
+    return false;
+  delete dictToRealCb[type + " " + capture];
+  return true;
+}
+
 export function patchEventListenerOptionOnce(EventTargetPrototype) {
   const addEventListenerOG = EventTargetPrototype.addEventListener;
   const removeEventListenerOG = EventTargetPrototype.removeEventListener;
@@ -42,7 +54,10 @@ export function patchEventListenerOptionOnce(EventTargetPrototype) {
     const realCb = getOnceFromTargetCbTypeCapture(this, cb, type, capture);
     //todo this is not necessary if the method addEventListener has already been checked
     // (ie. something runs on the outside doing the same check, such as event listener registry
-    realCb && removeEventListenerOG.call(this, type, realCb, options);
+    if (!realCb)
+      return;
+    removeOnceFromTargetCbTypeCapture(this, cb, type, capture);
+    removeEventListenerOG.call(this, type, realCb, options);
   }
 
 

@@ -8,7 +8,7 @@
       for (let {name, fun, expect} of tests) {
         setTimeout(fun);
         setTimeout(function () {
-          results[name][sysname] = expect();
+          results[name][sysname] = expect()+0;
         });
       }
       setTimeout(downgrade);
@@ -21,9 +21,17 @@
 
 <script type="module">
   import {testBasic} from "./testBasic.js";
+  import {dynamicTest} from "./testDynamic.js";
+  let allTests = testBasic.concat(dynamicTest);
   import {testRegistry} from "./testRegistry.js";
+  allTests = allTests.concat(testRegistry);
   import {testOnce} from "./testOnce.js";
+  allTests = allTests.concat(testOnce);
+  import {lastTest, lastErrorsTest} from "./testLast.js";
+  allTests = allTests.concat(lastTest);
+  allTests = allTests.concat(lastErrorsTest);
   import {tests} from "./test1.js";//todo this is a test for now
+  // allTests = allTests.concat(tests);
 
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
   import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
@@ -63,6 +71,5 @@
     downgrade: downgrade,
   }];
 
-  const alltests = testBasic.concat(testRegistry).concat(testOnce)//.concat(tests);
-  runTests(alltests, eventSystems);
+  runTests(allTests, eventSystems);
 </script>
