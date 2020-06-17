@@ -35,6 +35,7 @@
 
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
   import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
+  import {addEventListenerOptionLast} from "./EventListenerOptionLast.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
@@ -51,22 +52,44 @@
   }
 
   const eventSystems = [{
-    sysname: "NATIVE event system",
+    sysname: "NATIVE",
     upgrade: function () {
     },
     downgrade: function () {
     },
   }, {
-    sysname: "REGISTER system",
+    sysname: "REGISTER",
     upgrade: function () {
       addEventTargetRegistry(EventTarget.prototype);
       window.getEventListeners = getEventListeners;
     },
     downgrade: downgrade,
   }, {
-    sysname: "ONCE patch",
+    sysname: "ONCE",
     upgrade: function () {
       patchEventListenerOptionOnce(EventTarget.prototype);
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "LAST",
+    upgrade: function () {
+      addEventListenerOptionLast(EventTarget.prototype);
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "LAST+ONCE",
+    upgrade: function () {
+      patchEventListenerOptionOnce(EventTarget.prototype);
+      addEventListenerOptionLast(EventTarget.prototype);
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "ONCE+LAST+REGISTER",
+    upgrade: function () {
+      patchEventListenerOptionOnce(EventTarget.prototype);
+      addEventListenerOptionLast(EventTarget.prototype);
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
     },
     downgrade: downgrade,
   }];

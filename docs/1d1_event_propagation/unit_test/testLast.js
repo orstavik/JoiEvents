@@ -175,6 +175,6 @@ export const lastErrorsTest = [{
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
-    return res === "Error: only one last event listener can be added to a target for an event type at a time.a";  // a at the end
+    return res === "Error: only one event listener {last: true} can be added to a target for the same event type and capture/bubble event phase.a";  // a at the end
   }
 }];

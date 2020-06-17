@@ -3,8 +3,10 @@ const targetToListeners = new WeakMap();
 //this thing returns immutable listeners
 export function getEventListeners(target, type, phase) {
   const allListeners = targetToListeners.get(target);
-  if (!allListeners || (!type && !phase))
-    return allListeners || [];
+  if (!allListeners)
+    return [];
+  if (!type && !phase)
+    return allListeners;
   if (!allListeners[type])
     return [];
   if (!phase || phase === Event.AT_TARGET)
@@ -15,6 +17,7 @@ export function getEventListeners(target, type, phase) {
     return allListeners[type].filter(listener => !listener.capture);
   throw new Error("Illegal event phase for getEventListeners: phase can only be Event.BUBBLING_PHASE, Event.CAPTURING_PHASE, or Event.AT_TARGET.");
 }
+
 //todo do we need this??
 // export function hasEventListener(target, type, phase, cb){
 //   const listeners = getEventListeners(target, type, phase);
@@ -25,26 +28,26 @@ function findEquivalentListener(registryList, listener, useCapture) {
   return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);
 }
 
-function addListener(target, type, listenerObj) {
+function addListener(target, entry) {
   let allListeners = targetToListeners.get(target);
   if (!allListeners)
     targetToListeners.set(target, allListeners = {});
-  let typeListeners = allListeners[type] || (allListeners[type] = []);
-  const index = findEquivalentListener(typeListeners, listenerObj.listener, listenerObj.capture);
+  let typeListeners = allListeners[entry.type] || (allListeners[entry.type] = []);
+  const index = findEquivalentListener(typeListeners, entry.listener, entry.capture);
   if (index !== -1)
     return false;
-  typeListeners.push(listenerObj);
+  typeListeners.push(entry);
   return true;
 }
 
-function removeListener(target, type, listener, capture) {
+function removeListener(target, entry) {
   let allListeners = targetToListeners.get(target);
   if (!allListeners)
     return false;
-  let typeListeners = allListeners[type];
+  let typeListeners = allListeners[entry.type];
   if (!typeListeners)
     return false;
-  const index = findEquivalentListener(typeListeners, listener, capture);
+  const index = findEquivalentListener(typeListeners, entry.listener, entry.capture);
   if (index === -1)
     return false;
   typeListeners.splice(index, 1);//mutates
@@ -52,25 +55,35 @@ function removeListener(target, type, listener, capture) {
 }
 
 function makeListenerObject(type, listener, options) {
-  return options instanceof Object ?
-    Object.assign({}, options, {listener, type, capture: !!options.capture}) :
+  const listenerObject = options instanceof Object ?
+    Object.assign({}, options, {listener, type}) :
     {listener, type, capture: !!options};
+  listenerObject.capture = !!listenerObject.capture;
+  listenerObject.bubbles = !!listenerObject.bubbles;
+  listenerObject.once = !!listenerObject.once;
+  listenerObject.passive = !!listenerObject.passive;
+  return listenerObject;
 }
 
-export function addEventTargetRegistry(eventTargetPrototype){
+export function addEventTargetRegistry(eventTargetPrototype) {
   const ogAdd = eventTargetPrototype.addEventListener;
   const ogRemove = eventTargetPrototype.removeEventListener;
 
-  eventTargetPrototype.addEventListener = function (type, listener, options) {
+  function addEventListenerRegistry(type, listener, options) {
     const entry = makeListenerObject(type, listener, options);
-    addListener(this, type, entry); //if this returns false, then we should be able to skip the below step
-    ogAdd.call(this, type, listener, options);
-  };
+    if(addListener(this, entry))             //addListener returns false when equivalent listener is already added.
+      ogAdd.call(this, type, listener, entry);
+    //the inside of the system sees the more elaborate options object.
+    //this will break the native getListeners in dev tools, but do nothing else.
+  }
 
-  eventTargetPrototype.removeEventListener = function (type, listener, options) {
-    const capture = !!(options instanceof Object ? options.capture : options);
-    removeListener(this, type, listener, capture);
-    ogRemove.call(this, type, listener, options);
-  };  
+  function removeEventListenerRegistry(type, listener, options) {
+    const entry = makeListenerObject(type, listener, options);
+    if(removeListener(this, entry))  //removeListener returns false when there is no listener to be removed.
+      ogRemove.call(this, type, listener, entry);
+  }
+
+  eventTargetPrototype.addEventListener = addEventListenerRegistry;
+  eventTargetPrototype.removeEventListener = removeEventListenerRegistry;
 }
 

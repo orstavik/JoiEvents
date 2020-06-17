@@ -1,31 +1,35 @@
-//target* => cb* => type+" "+capture => cbOnce/cb
+//target* => cb* => type+" "+capture => cbOnce
 const targetToCb = new WeakMap();
 
-function getOnceFromTargetCbTypeCapture(target, cb, type, capture) {
-  const dictToRealCb = targetToCb.get(target)?.get(cb);
-  return dictToRealCb && dictToRealCb[type + " " + capture];
+function makeKey(type, options) {
+  return type + " " + !!(options instanceof Object ? options.capture : options);
 }
 
-function setOnceFromTargetCbTypeCapture(target, cb, type, capture, realCb) {
+function addOnceWrapper(target, type, cb, options, realCb) {
   let cbToDict = targetToCb.get(target);
   cbToDict || targetToCb.set(target, cbToDict = new WeakMap());
-
   let dictToRealCb = cbToDict.get(cb);
   dictToRealCb || cbToDict.set(cb, dictToRealCb = {});
-
-  dictToRealCb[type + " " + capture] = realCb;
-}
-
-function removeOnceFromTargetCbTypeCapture(target, cb, type, capture) {
-  let cbToDict = targetToCb.get(target);
-  cbToDict || targetToCb.set(target, cbToDict = new WeakMap());
-
-  let dictToRealCb = cbToDict.get(cb);
-  dictToRealCb || cbToDict.set(cb, dictToRealCb = {});
-  if (!dictToRealCb[type + " " + capture])
-    return false;
-  delete dictToRealCb[type + " " + capture];
+  const typeCapture = makeKey(type, options);
+  if (dictToRealCb[typeCapture])   //todo this is dev time checking, i think this should be removed during production
+    return false;                  // throw new Error("once event listener option patch not working as it should!!");
+  dictToRealCb[typeCapture] = realCb;
   return true;
+}
+
+function removeOnceWrapper(target, type, cb, options) {
+  const cbToDict = targetToCb.get(target);
+  if (!cbToDict)
+    return false;
+  const dictToRealCb = cbToDict.get(cb);
+  if (!dictToRealCb)
+    return false;
+  const typeCapture = makeKey(type, options);
+  const actual = dictToRealCb[typeCapture];
+  if (!actual)   //todo this is dev time checking, i think this should be removed during production
+    return false;//  throw new Error("once event listener option patch not working as it should!!");
+  delete dictToRealCb[typeCapture];
+  return actual;
 }
 
 export function patchEventListenerOptionOnce(EventTargetPrototype) {
@@ -34,32 +38,25 @@ export function patchEventListenerOptionOnce(EventTargetPrototype) {
 
   function addEventListenerOnce(type, cb, options) {
     //the cb is already added, either once or not
-    const capture = !!(options instanceof Object ? options.capture : options);
-    if (getOnceFromTargetCbTypeCapture(this, cb, type, capture))
-      return;//todo this is not necessary if the method addEventListener has already been checked (ie. something runs on the outside doing the same check, such as the registry).
-    let realCb = cb;
-    if (options?.once) {
-      realCb = function (e) {
-        this.removeEventListener(type, cb, options);//this is the patch.. that the removeEventListener goes via the JS method, not happens in the background..
+    let actualCb = cb;
+    if (options instanceof Object && options.once) {
+      options = Object.assign({}, options);
+      options.once = false;
+      actualCb = function onceWrapped(e) {
+        //this is the patch.. that the removeEventListener goes via the JS method, not happens in the background..
+        //this means that other patches such as updating the event listener registry works.
+        this.removeEventListener(type, cb, options);
         cb(e);
       }
-      options = Object.assign({}, options, {once: false});//todo this assumes the once patch runs on a lower level than the registry.
     }
-    setOnceFromTargetCbTypeCapture(this, cb, type, capture, realCb);
-    addEventListenerOG.call(this, type, realCb, options);
+    if (addOnceWrapper(this, type, cb, options, actualCb))
+      addEventListenerOG.call(this, type, actualCb, options);
   }
 
   function removeEventListenerOnce(type, cb, options) {
-    const capture = !!(options instanceof Object ? options.capture : options);
-    const realCb = getOnceFromTargetCbTypeCapture(this, cb, type, capture);
-    //todo this is not necessary if the method addEventListener has already been checked
-    // (ie. something runs on the outside doing the same check, such as event listener registry
-    if (!realCb)
-      return;
-    removeOnceFromTargetCbTypeCapture(this, cb, type, capture);
-    removeEventListenerOG.call(this, type, realCb, options);
+    const actualCb = removeOnceWrapper(this, type, cb, options);
+    actualCb && removeEventListenerOG.call(this, type, actualCb, options);
   }
-
 
   EventTargetPrototype.addEventListener = addEventListenerOnce;//todo Object.defineProperty
   EventTargetPrototype.removeEventListener = removeEventListenerOnce;
