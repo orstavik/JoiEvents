@@ -27,6 +27,8 @@
   allTests = allTests.concat(testRegistry);
   import {testOnce} from "./testOnce.js";
   allTests = allTests.concat(testOnce);
+  import {testUnstoppable} from "./testUnstoppable.js";
+  allTests = allTests.concat(testUnstoppable);
   import {lastTest, lastErrorsTest} from "./testLast.js";
   allTests = allTests.concat(lastTest);
   allTests = allTests.concat(lastErrorsTest);
@@ -40,15 +42,20 @@
   import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
   import {addEventListenerOptionLast} from "./EventListenerOptionLast.js";
   import {addEventListenerOptionFirst} from "./EventListenerOptionFirst.js";
+  import {addEventListenerOptionUnstoppable} from "./EventListenerOptionUnstoppable.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
   const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+  const stopPropOG = Event.prototype.stopPropagation;
+  const stopImmediateOG = Event.prototype.stopImmediatePropagation;
 
   function downgrade() {
     EventTarget.prototype.addEventListener = addEventListenerOG;
     EventTarget.prototype.removeEventListener = removeEventListenerOG;
     EventTarget.prototype.dispatchEvent = dispatchEventOG;
+    Event.prototype.stopPropagation = stopPropOG;
+    Event.prototype.stopImmediatePropagation = stopImmediateOG;
     window.getEventListeners = function () {
       return [];
     };
@@ -81,6 +88,12 @@
     },
     downgrade: downgrade,
   }, {
+    sysname: "UNSTOPPABLE",
+    upgrade: function () {
+      addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
+    },
+    downgrade: downgrade,
+  }, {
     sysname: "FIRST+REGISTER",
     upgrade: function () {
       addEventListenerOptionFirst(EventTarget.prototype);
@@ -108,6 +121,17 @@
     sysname: "ONCE+LAST+FIRST+REGISTER",
     upgrade: function () {
       patchEventListenerOptionOnce(EventTarget.prototype);
+      addEventListenerOptionLast(EventTarget.prototype);
+      addEventListenerOptionFirst(EventTarget.prototype);
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "ONCE+UNSTOPPABLE+LAST+FIRST+REGISTER",
+    upgrade: function () {
+      patchEventListenerOptionOnce(EventTarget.prototype);
+      addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
       addEventListenerOptionLast(EventTarget.prototype);
       addEventListenerOptionFirst(EventTarget.prototype);
       addEventTargetRegistry(EventTarget.prototype);
