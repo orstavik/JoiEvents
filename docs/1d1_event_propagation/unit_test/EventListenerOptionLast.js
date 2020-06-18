@@ -1,32 +1,26 @@
 //target* => type+" "+capture => [lastCb, lastCbOptions]
 const targetToTypeCapture = new WeakMap();
 
-function makeKey(type, options) {
-  return type + " " + !!(options instanceof Object ? options.capture : options);
-}
-
-function getLast(target, type, options) {
+function getLast(target, type) {
   const dictToLastCb = targetToTypeCapture.get(target);
-  return dictToLastCb && dictToLastCb[makeKey(type, options)];
+  return dictToLastCb && dictToLastCb[type];
 }
 
 function setLast(target, type, lastCb, options) {
   let dictToLastCb = targetToTypeCapture.get(target);
   dictToLastCb || targetToTypeCapture.set(target, dictToLastCb = {});
-  const key = makeKey(type, options);
-  if(dictToLastCb[key])
+  if(dictToLastCb[type])
     return false;//we don't need to throw here..
-  return dictToLastCb[key] = [lastCb, options];
+  return dictToLastCb[type] = [lastCb, options];
 }
 
-function removePreviousLastIfItIsTheCb(target, type, cb, options) {
+function removePreviousLastIfItIsTheCb(target, type, cb) {
   let dictToLastCb = targetToTypeCapture.get(target);
   if(!dictToLastCb)
     return false;
-  const key = makeKey(type, options);
-  if(!dictToLastCb[key] || dictToLastCb[key][0] !== cb)
+  if(!dictToLastCb[type] || dictToLastCb[type][0] !== cb)
     return false;
-  delete dictToLastCb[key];
+  delete dictToLastCb[type];
   return true;
 }
 
@@ -36,7 +30,7 @@ export function addEventListenerOptionLast(EventTargetPrototype) {
 
   function addEventListenerLast(type, cb, options) {
     const last = options instanceof Object && !!options.last;
-    const lastEntry = getLast(this, type, options);
+    const lastEntry = getLast(this, type);
     let previousLast, previousLastOptions;
     if(lastEntry)
       [previousLast, previousLastOptions] = lastEntry;
@@ -57,7 +51,7 @@ export function addEventListenerOptionLast(EventTargetPrototype) {
   }
 
   function removeEventListenerLast(type, cb, options) {
-    removePreviousLastIfItIsTheCb(this, type, cb, options);//todo this will return true if the removed listener also was "last".
+    removePreviousLastIfItIsTheCb(this, type, cb);//todo this will return true if the removed listener also was "last".
     removeEventListenerOG.call(this, type, cb, options);
   }
 

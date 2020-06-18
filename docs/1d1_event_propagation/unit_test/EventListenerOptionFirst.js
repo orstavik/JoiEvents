@@ -3,32 +3,26 @@
 //target* => type+" "+capture => [ cb, options ]
 const targetToTypeCapture = new WeakMap();
 
-function makeKey(type, options) {
-  return type + " " + !!(options instanceof Object ? options.capture : options);
-}
-
-function getFirst(target, type, options) {
+function getFirst(target, type) {
   const dictToFirstCb = targetToTypeCapture.get(target);
-  return dictToFirstCb && dictToFirstCb[makeKey(type, options)];
+  return dictToFirstCb && dictToFirstCb[type];
 }
 
-function setFirst(target, type, firstCb, options) {
+function setFirst(target, type, firstCb) {
   let dictToFirstCb = targetToTypeCapture.get(target);
   dictToFirstCb || targetToTypeCapture.set(target, dictToFirstCb = {});
-  const key = makeKey(type, options);
-  if (dictToFirstCb[key])
+  if (dictToFirstCb[type])
     return false;//we don't need to throw here..
-  return dictToFirstCb[key] = firstCb;
+  return dictToFirstCb[type] = firstCb;
 }
 
-function removePreviousFirstIfItIsTheCb(target, type, cb, options) {
+function removePreviousFirstIfItIsTheCb(target, type, cb) {
   let dictToFirstCb = targetToTypeCapture.get(target);
   if (!dictToFirstCb)
     return false;
-  const key = makeKey(type, options);
-  if (!dictToFirstCb[key] || dictToFirstCb[key] !== cb)
+  if (!dictToFirstCb[type] || dictToFirstCb[type] !== cb)
     return false;
-  delete dictToFirstCb[key];
+  delete dictToFirstCb[type];
   return true;
 }
 
@@ -38,7 +32,7 @@ export function addEventListenerOptionFirst(EventTargetPrototype) {
 
   function addEventListenerFirst(type, cb, options) {
     const first = options instanceof Object && !!options.first;
-    const previousFirstCallback = getFirst(this, type, options);
+    const previousFirstCallback = getFirst(this, type);
     if (first && previousFirstCallback) {
       throw new Error("only one event listener {first: true} can be added to a target for the same event type and capture/bubble event phase.");
     }
@@ -54,7 +48,7 @@ export function addEventListenerOptionFirst(EventTargetPrototype) {
     //first
     for (let listener of allListeners)
       this.removeEventListener(listener.type, listener.listener, listener);
-    setFirst(this, type, cb, options);
+    setFirst(this, type, cb);
     const res = addEventListenerOG.call(this, type, cb, options);
     for (let listener of allListeners)
       this.addEventListener(listener.type, listener.listener, listener);
@@ -62,7 +56,7 @@ export function addEventListenerOptionFirst(EventTargetPrototype) {
   }
 
   function removeEventListenerFirst(type, cb, options) {
-    removePreviousFirstIfItIsTheCb(this, type, cb, options);//todo this will return true if the removed listener also was "first".
+    removePreviousFirstIfItIsTheCb(this, type, cb);//todo this will return true if the removed listener also was "first".
     removeEventListenerOG.call(this, type, cb, options);
   }
 
