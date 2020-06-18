@@ -128,10 +128,10 @@
     },
     downgrade: downgrade,
   }, {
-    sysname: "ONCE+UNSTOPPABLE+LAST+FIRST+REGISTER",
+    sysname: "UNSTOPPABLE+ONCE+LAST+FIRST+REGISTER",
     upgrade: function () {
-      patchEventListenerOptionOnce(EventTarget.prototype);
       addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
+      patchEventListenerOptionOnce(EventTarget.prototype);
       addEventListenerOptionLast(EventTarget.prototype);
       addEventListenerOptionFirst(EventTarget.prototype);
       addEventTargetRegistry(EventTarget.prototype);
