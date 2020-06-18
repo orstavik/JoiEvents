@@ -1,26 +1,29 @@
 <script>
   function runTests(tests, eventSystems) {
     const results = {};
+    let nativeSysName = eventSystems[0].sysname;
     for (let test of tests)
       results[test.name] = {};
     for (let {sysname, upgrade, downgrade} of eventSystems) {
       setTimeout(upgrade);
-      for (let {name, fun, expect} of tests) {
+      for (let {name, fun, expect, result} of tests) {
         setTimeout(fun);
         setTimeout(function () {
-          results[name][sysname] = expect()+0;
+          let res = result();
+          if (expect instanceof Function)
+            expect = expect();
+          if (expect === res)
+            res = 1;
+          else
+            res += " != " + expect;
+          const nativeRes = results[name][nativeSysName];
+          if (res === nativeRes && sysname !== nativeSysName)
+            res = res === 1 ? null : undefined;
+          results[name][sysname] = res;
         });
       }
       setTimeout(downgrade);
     }
-    //todo 1, fix unstoppable
-    //todo 2, move the old stuff into an old folder
-    //todo 3, write test results:
-    // 1. same as native and as expected,  lightgreen   ""
-    // 2. same as native, unexpected,      yellow       "---"
-    // 3. expected, unlike native,         darkgreen    1
-    // 4. unexpected and unlike native     red          false
-    
     //compare the result with native behavior.
     //or, run only some tests against some systems.
     setTimeout(function () {
@@ -32,30 +35,33 @@
 <script type="module">
   import {testBasic} from "./testBasic.js";
   import {dynamicTest} from "./testDynamic.js";
-  let allTests = testBasic.concat(dynamicTest);
   import {testRegistry} from "./testRegistry.js";
-  allTests = allTests.concat(testRegistry);
   import {testOnce} from "./testOnce.js";
-  allTests = allTests.concat(testOnce);
   import {testUnstoppable} from "./testUnstoppable.js";
-  allTests = allTests.concat(testUnstoppable);
   import {lastTest, lastErrorsTest} from "./testLast.js";
+  import {firstTest, firstErrorsTest} from "./testFirst.js";
+
+  let allTests = testBasic.concat(dynamicTest);
+  allTests = allTests.concat(testRegistry);
+  allTests = allTests.concat(testOnce);
+  allTests = allTests.concat(testUnstoppable);
   allTests = allTests.concat(lastTest);
   allTests = allTests.concat(lastErrorsTest);
-  import {firstTest, firstErrorsTest} from "./testFirst.js";
   allTests = allTests.concat(firstTest);
   allTests = allTests.concat(firstErrorsTest);
   import {tests} from "./testShadow.js";//todo this is a test for now
   // allTests = allTests.concat(tests);
 
-  import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
-  import {addEventTargetRegistry as addEventTargetRegistry2, getEventListeners as getEventListeners2} from "./getEventListeners_once.js";
-  import {addEventTargetRegistry as addEventTargetRegistry3, getEventListeners as getEventListeners3} from "./getEventListeners_once_last.js";
-  import {addEventTargetRegistry as addEventTargetRegistry4, getEventListeners as getEventListeners4} from "./getEventListeners_once_last_first.js";
-  import {addEventTargetRegistry as addEventTargetRegistry5, getEventListeners as getEventListeners5} from "./getEventListeners_once_last_first_unstoppable.js";
-  import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
-  import {addEventListenerOptionLast} from "./EventListenerOptionLast.js";
-  import {addEventListenerOptionFirst} from "./EventListenerOptionFirst.js";
+  // import {addEventTargetRegistry as addEventTargetRegistry1, getEventListeners as getEventListeners1} from "./getEventListeners.js";
+  // import {
+  //   addEventTargetRegistry as addEventTargetRegistry2,
+  //   getEventListeners as getEventListeners2
+  // } from "./getEventListeners_once.js";
+  // import {
+  //   addEventTargetRegistry as addEventTargetRegistry3,
+  //   getEventListeners as getEventListeners3
+  // } from "./getEventListeners_once_last.js";
+  import {addEventTargetRegistry, getEventListeners} from "./getEventListeners_once_last_first.js";
   import {addEventListenerOptionUnstoppable} from "./EventListenerOptionUnstoppable.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
@@ -74,6 +80,7 @@
       return [];
     };
   }
+
   downgrade();
 
   const eventSystems = [{
@@ -82,135 +89,51 @@
     },
     downgrade: function () {
     },
-    units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
   }, {
-  //   sysname: "REGISTER",
-  //   upgrade: function () {
-  //     addEventTargetRegistry(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "ONCE",
-  //   upgrade: function () {
-  //     patchEventListenerOptionOnce(EventTarget.prototype);
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "LAST",
-  //   upgrade: function () {
-  //     addEventListenerOptionLast(EventTarget.prototype);
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
     sysname: "UNSTOPPABLE",
     upgrade: function () {
       addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
     },
     downgrade: downgrade,
-    units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "FIRST+REGISTER",
-  //   upgrade: function () {
-  //     addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "LAST+ONCE",
-  //   upgrade: function () {
-  //     patchEventListenerOptionOnce(EventTarget.prototype);
-  //     addEventListenerOptionLast(EventTarget.prototype);
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "ONCE+LAST+REGISTER",
-  //   upgrade: function () {
-  //     patchEventListenerOptionOnce(EventTarget.prototype);
-  //     addEventListenerOptionLast(EventTarget.prototype);
-  //     addEventTargetRegistry(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "ONCE+LAST+FIRST+REGISTER",
-  //   upgrade: function () {
-  //     patchEventListenerOptionOnce(EventTarget.prototype);
-  //     addEventListenerOptionLast(EventTarget.prototype);
-  //     addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "1 UNSTOPPABLE+ONCE+LAST+FIRST+REGISTER",
-  //   upgrade: function () {
-  //     addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
-  //     patchEventListenerOptionOnce(EventTarget.prototype);
-  //     addEventListenerOptionLast(EventTarget.prototype);
-  //     addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "2 UNSTOPPABLE+LAST+FIRST+REGISTER_once",
-  //   upgrade: function () {
-  //     addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
-  //     // patchEventListenerOptionOnce(EventTarget.prototype);
-  //     addEventListenerOptionLast(EventTarget.prototype);
-  //     addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry2(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners2;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "3 UNSTOPPABLE+FIRST+REGISTER_once_last",
-  //   upgrade: function () {
-  //     addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
-  //     // patchEventListenerOptionOnce(EventTarget.prototype);
-  //     // addEventListenerOptionLast(EventTarget.prototype);
-  //     addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry3(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners3;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "4 UNSTOPPABLE+REGISTER_once_last_first",
-  //   upgrade: function () {
-  //     addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
-  //     // patchEventListenerOptionOnce(EventTarget.prototype);
-  //     // addEventListenerOptionLast(EventTarget.prototype);
-  //     //addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry4(EventTarget.prototype);
-  //     window.getEventListeners = getEventListeners4;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
-  // }, {
-  //   sysname: "5 REGISTER_once_last_first_unstoppable",
-  //   upgrade: function () {
-  //     // addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
-  //     // patchEventListenerOptionOnce(EventTarget.prototype);
-  //     // addEventListenerOptionLast(EventTarget.prototype);
-  //     //addEventListenerOptionFirst(EventTarget.prototype);
-  //     addEventTargetRegistry5(EventTarget.prototype, Event.prototype);
-  //     window.getEventListeners = getEventListeners5;
-  //   },
-  //   downgrade: downgrade,
-  //   units: [testBasic, dynamicTest, testRegistry, testOnce, testUnstoppable, lastTest, lastErrorsTest, firstTest, firstErrorsTest]
+    // }, {
+    //   sysname: "REGISTER",
+    //   upgrade: function () {
+    //     addEventTargetRegistry1(EventTarget.prototype);
+    //     window.getEventListeners = getEventListeners1;
+    //   },
+    //   downgrade: downgrade,
+    // }, {
+    //   sysname: "REGISTER_once",
+    //   upgrade: function () {
+    //     addEventTargetRegistry2(EventTarget.prototype);
+    //     window.getEventListeners = getEventListeners2;
+    //   },
+    //   downgrade: downgrade,
+    // }, {
+    //   sysname: "REGISTER_once_last",
+    //   upgrade: function () {
+    //     addEventTargetRegistry3(EventTarget.prototype);
+    //     window.getEventListeners = getEventListeners3;
+    //   },
+    //   downgrade: downgrade,
+  }, {
+    sysname: "REGISTER_once_last_first",
+    upgrade: function () {
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "UNSTOPPABLE+REGISTER_once_last_first",
+    upgrade: function () {
+      addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
+      addEventTargetRegistry(EventTarget.prototype);
+      window.getEventListeners = getEventListeners;
+    },
+    downgrade: downgrade,
   }];
 
-  runTests(allTests, eventSystems.reverse());
+  runTests(testBasic, eventSystems);
+  runTests(testBasic, eventSystems.slice(0, 1));
+  runTests(allTests, eventSystems);
 </script>

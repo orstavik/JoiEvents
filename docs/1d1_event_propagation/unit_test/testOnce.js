@@ -15,8 +15,7 @@ export const testOnce = [{
     h1.removeEventListener("click", cb, {once: true});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "";
+  expect: "",result: function(){return res;
   }
 }, {
   name: "once: add two event listeners, one with once and one without",
@@ -41,7 +40,6 @@ export const testOnce = [{
     h1.dispatchEvent(new Event("click", {bubbles: true}));
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "cdcc";
+  expect: "cdcc",result: function(){return res;
   }
 }];

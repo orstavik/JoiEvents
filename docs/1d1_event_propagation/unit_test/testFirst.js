@@ -13,8 +13,7 @@ export const firstTest = [{
     }, {first: true, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ba";
+  expect: "ba",result: function(){return res;
   }
 }, {
   name: "first is true: {first: 1}",
@@ -29,8 +28,7 @@ export const firstTest = [{
     }, {first: 1, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "first is true: {first: []}",
@@ -45,8 +43,7 @@ export const firstTest = [{
     }, {first: [], capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ba";
+  expect: "ba",result: function(){return res;
   }
 }, {
   name: "first is false: {first: false}",
@@ -61,8 +58,7 @@ export const firstTest = [{
     }, {first: false});
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "first is false: {first: 0}",
@@ -77,8 +73,7 @@ export const firstTest = [{
     }, {first: 0});
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "first is false: {first: ''}",
@@ -93,8 +88,7 @@ export const firstTest = [{
     }, {first: ''});
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
   //todo move this into a test of both last_first
 // }, {
@@ -140,8 +134,7 @@ export const firstTest = [{
     h1.dispatchEvent(new MouseEvent("click"))
 
   },
-  expect: function () {
-    return res === "b";
+  expect: "b",result: function(){return res;
   }
 }, {
   name: "First: removeEventListener() {first: true, capture: true} when there is no event listener to remove",
@@ -152,8 +145,7 @@ export const firstTest = [{
       res += "a";
     }, {first: true, capture: true});
   },
-  expect: function () {
-    return res === "";//todo we should somehow here check the first register.
+  expect: "",result: function(){return res;//todo we should somehow here check the first register.
   }
 }];
 
@@ -175,8 +167,7 @@ export const firstErrorsTest = [{
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "1a";  // a at the end
+  expect: "1a",result: function(){return res;  // a at the end
   }
 }, {
   name: "First error: first on bubble phase",
@@ -200,7 +191,6 @@ export const firstErrorsTest = [{
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "12";
+  expect: "12",result: function(){return res;
   }
 }];

@@ -8,6 +8,7 @@ export const testUnstoppable = [{
     function a(e) {
       e.stopPropagation();
     }
+
     function b(e) {
       res += "b";
     }
@@ -16,8 +17,9 @@ export const testUnstoppable = [{
     h1.addEventListener("click", b, {unstoppable: true});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "b";
+  expect: "b",
+  result: function () {
+    return res;
   }
 }, {
   name: "unstoppable: different type",
@@ -30,6 +32,7 @@ export const testUnstoppable = [{
     function a(e) {
       e.stopImmediatePropagation();
     }
+
     function b(e) {
       res += "b";
     }
@@ -41,8 +44,9 @@ export const testUnstoppable = [{
     h1.dispatchEvent(new Event("click", {bubbles: true}));
     h1.dispatchEvent(new Event("dblclick", {bubbles: true}));
   },
-  expect: function () {
-    return res === "b";
+  expect: "b",
+  result: function () {
+    return res;
   }
 }, {
   name: "unstoppable: different phase",
@@ -55,9 +59,11 @@ export const testUnstoppable = [{
     function a(e) {
       e.stopPropagation();
     }
+
     function b(e) {
       res += "b";
     }
+
     function c(e) {
       res += "c";
     }
@@ -69,8 +75,9 @@ export const testUnstoppable = [{
     h1.addEventListener("click", c);                            //stoppable and on a different node than stopPropagation()
     span.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "bcb";
+  expect: "bcb",
+  result: function () {
+    return res;
   }
 }, {
   name: "unstoppable: stopPropagation",
@@ -81,6 +88,7 @@ export const testUnstoppable = [{
     function a(e) {
       e.stopPropagation();
     }
+
     function b(e) {
       res += "b";
     }
@@ -89,8 +97,9 @@ export const testUnstoppable = [{
     h1.addEventListener("click", b, {unstoppable: true});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "b";
+  expect: "b",
+  result: function () {
+    return res;
   }
 }, {
   name: "unstoppable: stopImmediatePropagation",
@@ -101,9 +110,11 @@ export const testUnstoppable = [{
     function a(e) {
       e.stopImmediatePropagation();
     }
+
     function b(e) {
       res += "b";
     }
+
     function c(e) {
       res += "c";
     }
@@ -113,7 +124,8 @@ export const testUnstoppable = [{
     h1.addEventListener("click", c, {unstoppable: true});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "c";
+  expect: "c",
+  result: function () {
+    return res;
   }
 }];

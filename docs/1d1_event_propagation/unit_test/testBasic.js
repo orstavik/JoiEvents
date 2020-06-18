@@ -147,8 +147,9 @@ export const testBasic = [{
     h1.dispatchEvent(new Event("click", {bubbles: true}));
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "abcdefgabcdefg";
+  expect: "abcdefgabcdefg",
+  result: function () {
+    return res;
   }
 }, {
   name: "removeEventListener",
@@ -164,8 +165,9 @@ export const testBasic = [{
     h1.removeEventListener("click", cb, {});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "";
+  expect: "",
+  result: function () {
+    return res;
   }
 }, {
   name: "removeEventListener and add it again",
@@ -182,8 +184,8 @@ export const testBasic = [{
     h1.addEventListener("click", cb);
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "c";
+  expect: "c", result: function () {
+    return res;
   }
 }, {
   name: "simple capture, at_target, bubble",
@@ -203,7 +205,7 @@ export const testBasic = [{
     h2.addEventListener("click", cb, true);
     h2.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: function () {
-    return res === "1223";
+  expect: "1223", result: function () {
+    return res;
   }
 }];

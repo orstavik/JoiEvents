@@ -13,8 +13,7 @@ export const lastTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ba"
+  expect: "ba",result: function(){return res;
   }
 }, {
   name: "last is true: {last: 1}",
@@ -29,8 +28,7 @@ export const lastTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ba";
+  expect: "ba",result: function(){return res;
   }
 }, {
   name: "last is true: {last: []}",
@@ -45,8 +43,7 @@ export const lastTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ba";
+  expect: "ba",result: function(){return res;
   }
 }, {
   name: "last is false: {last: false}",
@@ -61,8 +58,7 @@ export const lastTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "last is false: {last: 0}",
@@ -77,8 +73,7 @@ export const lastTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "last is false: {last: ''}",
@@ -93,8 +88,7 @@ export const lastTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "ab";
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "Last: removeEventListener() {last: true} and then define new last event listener",
@@ -114,8 +108,7 @@ export const lastTest = [{
     h1.dispatchEvent(new MouseEvent("click"))
 
   },
-  expect: function () {
-    return res === "b";
+  expect: "b",result: function(){return res;
   }
 }, {
   name: "Last: removeEventListener() {last: true} when there is no event listener to remove",
@@ -126,8 +119,7 @@ export const lastTest = [{
       res += "a";
     });
   },
-  expect: function () {
-    return res === "";//todo we should somehow here check the last register.
+  expect: "",result: function(){return res;//todo we should somehow here check the last register.
   }
 }];
 
@@ -149,8 +141,7 @@ export const lastErrorsTest = [{
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "1a";  // a at the end
+  expect: "1a",result: function(){return res;  // a at the end
   }
 }, {
   name: "Last error: capture phase listener ",
@@ -167,7 +158,6 @@ export const lastErrorsTest = [{
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "1";
+  expect: "1",result: function(){return res;
   }
 }];

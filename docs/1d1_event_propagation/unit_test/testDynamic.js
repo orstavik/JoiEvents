@@ -17,8 +17,7 @@ export const dynamicTest = [{
 
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "ab"
+  expect: "ab",result: function(){return res;
   }
 }, {
   name: "dynamic 2: add listener from listener from listener",
@@ -40,8 +39,7 @@ export const dynamicTest = [{
     });
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "abc";
+  expect: "abc",result: function(){return res;
   }
 }, {
   name: "dynamic 3: Remove listener from listener",
@@ -64,8 +62,7 @@ export const dynamicTest = [{
     h1.addEventListener("click", b);
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: function () {
-    return res === "a";
+  expect: "a",result: function(){return res;
   }
 }, {
   name: "dynamic 4: add event listeners",
@@ -85,8 +82,7 @@ export const dynamicTest = [{
     h1.dispatchEvent(new MouseEvent("click"));
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "xxa";
+  expect: "xxa",result: function(){return res;
   }
 }, {
   name: "dynamic 5: add and remove event listeners",
@@ -108,7 +104,6 @@ export const dynamicTest = [{
     h1.dispatchEvent(new MouseEvent("click"));
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: function () {
-    return res === "xa";
+  expect: "xa",result: function(){return res;
   }
 }];
