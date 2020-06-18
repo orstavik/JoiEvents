@@ -37,6 +37,7 @@ function makeEntry(target,type, listener, options) {
   entry.once = !!entry.once;
   entry.passive = !!entry.passive;
   entry.target = target;
+  Object.freeze(entry);
   return entry;
 }
 
@@ -72,11 +73,19 @@ export function addEventTargetRegistry(EventTargetPrototype) {
   const ogAdd = EventTargetPrototype.addEventListener;
   const ogRemove = EventTargetPrototype.removeEventListener;
 
+  function addEntry(entry){
+    ogAdd.call(entry.target, entry.type, entry.listener, entry);
+  }
+
+  function removeEntry(entry){
+    ogRemove.call(entry.target, entry.type, entry.listener, entry);
+  }
+
   function addEventListenerRegistry(type, listener, options) {
     const entry = addListener(this, type, listener, options);
     if (!entry)             //addListener returns false when equivalent listener is already added.
       return;
-    ogAdd.call(this, type, listener, entry);
+    addEntry(entry);
     //the inside of the system sees the more elaborate options object.
     //this will break the native getListeners in dev tools, but do nothing else.
   }
@@ -85,7 +94,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
     const entry = removeListener(this, type, listener, options);
     if (!entry)  //removeListener returns false when there is no listener to be removed.
       return;
-    ogRemove.call(this, type, listener, entry);
+    removeEntry(entry);
   }
 
   Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerRegistry});
