@@ -40,6 +40,8 @@ export function addEventListenerOptionLast(EventTargetPrototype) {
     let previousLast, previousLastOptions;
     if(lastEntry)
       [previousLast, previousLastOptions] = lastEntry;
+    if (last && options.capture)
+      throw new Error("last option can only be used with bubble phase (at_target bubble phase) event listeners");
     if (last && previousLast) {
       throw new Error("only one event listener {last: true} can be added to a target for the same event type and capture/bubble event phase.");
     } else if (last) {

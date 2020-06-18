@@ -97,31 +97,6 @@ export const lastTest = [{
     return res === "ab";
   }
 }, {
-  name: "last on bubble and capture side {capture: true, last: true}",
-  fun: function () {
-    res = "";
-    const h1 = document.createElement("h1");
-    const span = document.createElement("span");
-    h1.appendChild(span);
-
-    h1.addEventListener("click", function (e) {
-      res += "a";
-    }, {capture: true, last: true});
-    h1.addEventListener("click", function (e) {
-      res += "b";
-    }, {capture: true});
-    h1.addEventListener("click", function (e) {
-      res += "c";
-    }, {last: true});
-    h1.addEventListener("click", function (e) {
-      res += "d";
-    });
-    span.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  },
-  expect: function () {
-    return res === "badc";
-  }
-}, {
   name: "Last: removeEventListener() {last: true} and then define new last event listener",
   fun: function () {
     res = "";
@@ -170,11 +145,29 @@ export const lastErrorsTest = [{
         res += "b";
       }, {last: true});
     } catch (e) {
-      res = e;
+      res += "1";
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
-    return res === "Error: only one event listener {last: true} can be added to a target for the same event type and capture/bubble event phase.a";  // a at the end
+    return res === "1a";  // a at the end
+  }
+}, {
+  name: "Last error: capture phase listener ",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+
+    try {
+      h1.addEventListener("click", function (e) {
+        res += "a";
+      }, {last: true, capture: true});
+    } catch (e) {
+      res += "1";
+    }
+    h1.dispatchEvent(new MouseEvent("click"))
+  },
+  expect: function () {
+    return res === "1";
   }
 }];

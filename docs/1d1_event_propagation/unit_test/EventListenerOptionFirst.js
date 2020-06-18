@@ -44,6 +44,8 @@ export function addEventListenerOptionFirst(EventTargetPrototype) {
     }
     if (!first)
       return addEventListenerOG.call(this, type, cb, options);
+    if (options instanceof Object && options.first && !options.capture)
+      throw new Error("first option can only be used with capture phase (at_target capture phase) event listeners");
     const allListeners = getEventListeners(this, type);
     allListeners.pop();
     const index = allListeners.findIndex(listener => listener.first);

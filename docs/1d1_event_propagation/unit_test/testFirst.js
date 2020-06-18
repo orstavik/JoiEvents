@@ -1,7 +1,7 @@
 let res;
 
 export const firstTest = [{
-  name: "first is true: {first: true}",
+  name: "first is true: {first: true, capture: true}",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
@@ -10,7 +10,7 @@ export const firstTest = [{
     });
     h1.addEventListener("click", function (e) {
       res += "b";
-    }, {first: true});
+    }, {first: true, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
@@ -23,10 +23,10 @@ export const firstTest = [{
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "b";
-    });
+    }, {capture: true});
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {first: 1});
+    }, {first: 1, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
@@ -39,10 +39,10 @@ export const firstTest = [{
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
       res += "a";
-    });
+    }, {capture: true});
     h1.addEventListener("click", function (e) {
       res += "b";
-    }, {first: []});
+    }, {first: [], capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
@@ -96,33 +96,34 @@ export const firstTest = [{
   expect: function () {
     return res === "ab";
   }
+  //todo move this into a test of both last_first
+// }, {
+//   name: "first on bubble and capture side {capture: true, first: true}",
+//   fun: function () {
+//     res = "";
+//     const h1 = document.createElement("h1");
+//     const span = document.createElement("span");
+//     h1.appendChild(span);
+//
+//     h1.addEventListener("click", function (e) {
+//       res += "a";
+//     }, {capture: true});
+//     h1.addEventListener("click", function (e) {
+//       res += "b";
+//     }, {capture: true, first: true});
+//     h1.addEventListener("click", function (e) {
+//       res += "c";
+//     });
+//     h1.addEventListener("click", function (e) {
+//       res += "d";
+//     }, {last: true});
+//     span.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+//   },
+//   expect: function () {
+//     return res === "badc";
+//   }
 }, {
-  name: "first on bubble and capture side {capture: true, first: true}",
-  fun: function () {
-    res = "";
-    const h1 = document.createElement("h1");
-    const span = document.createElement("span");
-    h1.appendChild(span);
-
-    h1.addEventListener("click", function (e) {
-      res += "a";
-    }, {capture: true});
-    h1.addEventListener("click", function (e) {
-      res += "b";
-    }, {capture: true, first: true});
-    h1.addEventListener("click", function (e) {
-      res += "c";
-    });
-    h1.addEventListener("click", function (e) {
-      res += "d";
-    }, {first: true});
-    span.dispatchEvent(new MouseEvent("click", {bubbles: true}));
-  },
-  expect: function () {
-    return res === "badc";
-  }
-}, {
-  name: "First: removeEventListener() {first: true} and then define new first event listener",
+  name: "First: removeEventListener() {first: true, capture: true} and then define new first event listener",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
@@ -131,11 +132,11 @@ export const firstTest = [{
       res += "a";
     }
 
-    h1.addEventListener("click", a, {first: true});
-    h1.removeEventListener("click", a);
+    h1.addEventListener("click", a, {first: true, capture: true});
+    h1.removeEventListener("click", a, {capture: true});
     h1.addEventListener("click", function (e) {
       res += "b";
-    }, {first: true});
+    }, {first: true, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
 
   },
@@ -143,13 +144,13 @@ export const firstTest = [{
     return res === "b";
   }
 }, {
-  name: "First: removeEventListener() {first: true} when there is no event listener to remove",
+  name: "First: removeEventListener() {first: true, capture: true} when there is no event listener to remove",
   fun: function () {
     res = "";
     const h1 = document.createElement("h1");
     h1.removeEventListener("click", function (e) {
       res += "a";
-    });
+    }, {first: true, capture: true});
   },
   expect: function () {
     return res === "";//todo we should somehow here check the first register.
@@ -164,17 +165,42 @@ export const firstErrorsTest = [{
 
     h1.addEventListener("click", function (e) {
       res += "a";
-    }, {first: true});
+    }, {first: true, capture: true});
     try {
       h1.addEventListener("click", function (e) {
         res += "b";
-      }, {first: true});
+      }, {first: true, capture: true});
     } catch (e) {
-      res = e;
+      res += "1";
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
   expect: function () {
-    return res === "Error: only one event listener {first: true} can be added to a target for the same event type and capture/bubble event phase.a";  // a at the end
+    return res === "1a";  // a at the end
+  }
+}, {
+  name: "First error: first on bubble phase",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+
+    try {
+      h1.addEventListener("click", function (e) {
+        res += "a";
+      }, {first: true});
+    } catch (e) {
+      res += "1";
+    }
+    try {
+      h1.addEventListener("click", function (e) {
+        res += "b";
+      }, {first: true, capture: false});
+    } catch (e) {
+      res += "2";
+    }
+    h1.dispatchEvent(new MouseEvent("click"))
+  },
+  expect: function () {
+    return res === "12";
   }
 }];
