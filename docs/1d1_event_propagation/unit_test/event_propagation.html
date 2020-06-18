@@ -40,6 +40,7 @@
 
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners.js";
   import {addEventTargetRegistry as addEventTargetRegistry2, getEventListeners as getEventListeners2} from "./getEventListeners_once.js";
+  import {addEventTargetRegistry as addEventTargetRegistry3, getEventListeners as getEventListeners3} from "./getEventListeners_once_last.js";
   import {patchEventListenerOptionOnce} from "./EventListenerOptionOnce.js";
   import {addEventListenerOptionLast} from "./EventListenerOptionLast.js";
   import {addEventListenerOptionFirst} from "./EventListenerOptionFirst.js";
@@ -150,7 +151,18 @@
       window.getEventListeners = getEventListeners2;
     },
     downgrade: downgrade,
+  }, {
+    sysname: "UNSTOPPABLE+FIRST+REGISTER_once_last",
+    upgrade: function () {
+      addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
+      // patchEventListenerOptionOnce(EventTarget.prototype);
+      // addEventListenerOptionLast(EventTarget.prototype);
+      addEventListenerOptionFirst(EventTarget.prototype);
+      addEventTargetRegistry3(EventTarget.prototype);
+      window.getEventListeners = getEventListeners3;
+    },
+    downgrade: downgrade,
   }];
 
-  runTests(allTests, eventSystems);
+  runTests(allTests, eventSystems.reverse());
 </script>
