@@ -28,7 +28,7 @@ function findEquivalentListener(registryList, listener, useCapture) {
   return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);
 }
 
-function makeEntry(type, listener, options) {
+function makeEntry(target,type, listener, options) {
   const entry = options instanceof Object ?
     Object.assign({}, options, {listener, type}) :
     {listener, type, capture: !!options};
@@ -36,6 +36,7 @@ function makeEntry(type, listener, options) {
   entry.bubbles = !!entry.bubbles;
   entry.once = !!entry.once;
   entry.passive = !!entry.passive;
+  entry.target = target;
   return entry;
 }
 
@@ -48,7 +49,7 @@ function addListener(target, type, listener, options) {
   const index = findEquivalentListener(typeListeners, listener, capture);
   if (index !== -1)
     return null;
-  const entry = makeEntry(type, listener, options);
+  const entry = makeEntry(target,type, listener, options);
   typeListeners.push(entry);
   return entry;
 }
