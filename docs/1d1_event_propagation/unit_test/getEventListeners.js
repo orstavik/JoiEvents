@@ -29,31 +29,31 @@ function findEquivalentListener(registryList, listener, useCapture) {
 }
 
 function addListener(target, type, listener, options) {
-  const entry = makeListenerObject(type, listener, options);
   let allListeners = targetToListeners.get(target);
   if (!allListeners)
     targetToListeners.set(target, allListeners = {});
-  let typeListeners = allListeners[entry.type] || (allListeners[entry.type] = []);
-  const index = findEquivalentListener(typeListeners, entry.listener, entry.capture);
+  let typeListeners = allListeners[type] || (allListeners[type] = []);
+  const capture = !!(options instanceof Object ? options.capture : options);
+  const index = findEquivalentListener(typeListeners, listener, capture);
   if (index !== -1)
     return null;
+  const entry = makeListenerObject(type, listener, options);
   typeListeners.push(entry);
   return entry;
 }
 
 function removeListener(target, type, listener, options) {
-  const entry = makeListenerObject(type, listener, options);
   let allListeners = targetToListeners.get(target);
   if (!allListeners)
     return null;
-  let typeListeners = allListeners[entry.type];
+  let typeListeners = allListeners[type];
   if (!typeListeners)
     return null;
-  const index = findEquivalentListener(typeListeners, entry.listener, entry.capture);
+  const capture = !!(options instanceof Object ? options.capture : options);
+  const index = findEquivalentListener(typeListeners, listener, capture);
   if (index === -1)
     return null;
-  typeListeners.splice(index, 1);//mutates
-  return entry;
+  return typeListeners.splice(index, 1)[0];  //mutates
 }
 
 function makeListenerObject(type, listener, options) {
@@ -73,7 +73,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
 
   function addEventListenerRegistry(type, listener, options) {
     const entry = addListener(this, type, listener, options);
-    if(entry)             //addListener returns false when equivalent listener is already added.
+    if (entry)             //addListener returns false when equivalent listener is already added.
       ogAdd.call(this, type, listener, entry);
     //the inside of the system sees the more elaborate options object.
     //this will break the native getListeners in dev tools, but do nothing else.
@@ -81,7 +81,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
 
   function removeEventListenerRegistry(type, listener, options) {
     const entry = removeListener(this, type, listener, options);
-    if(entry)  //removeListener returns false when there is no listener to be removed.
+    if (entry)  //removeListener returns false when there is no listener to be removed.
       ogRemove.call(this, type, listener, entry);
   }
 
