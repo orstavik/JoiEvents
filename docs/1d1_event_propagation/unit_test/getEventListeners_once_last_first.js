@@ -18,12 +18,6 @@ export function getEventListeners(target, type, phase) {
   throw new Error("Illegal event phase for getEventListeners: phase can only be Event.BUBBLING_PHASE, Event.CAPTURING_PHASE, or Event.AT_TARGET.");
 }
 
-//todo do we need this??
-// export function hasEventListener(target, type, phase, cb){
-//   const listeners = getEventListeners(target, type, phase);
-//   return listeners.indexOf(cb) !== -1;
-// }
-
 function findEquivalentListener(registryList, listener, useCapture) {
   return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);
 }
@@ -78,6 +72,18 @@ export function addEventTargetRegistry(EventTargetPrototype) {
   const ogRemove = EventTargetPrototype.removeEventListener;
 
   function addEntry(entry) {
+    //check first and last options for illegal combinations
+    if (entry.last && entry.capture)
+      throw new Error("last option can only be used with bubble phase (at_target bubble phase) event listeners");
+    if (entry.first && !entry.capture)
+      throw new Error("first option can only be used with capture phase (at_target capture phase) event listeners");
+    const previousLastEntry = targetToLastEntry.get(entry.target);
+    if (entry.last && previousLastEntry)
+      throw new Error("only one event listener {last: true} can be added to the same target and event type.");
+    const previousFirstEntry = targetToFirstEntry.get(entry.target);
+    if (entry.first && previousFirstEntry)
+      throw new Error("only one event listener {first: true} can be added to the same target and event type.");
+
     let target = entry.target;
     let type = entry.type;
     let cb = entry.listener;
@@ -95,18 +101,12 @@ export function addEventTargetRegistry(EventTargetPrototype) {
       entryToOnceCb.set(entry, cb);
     }
     //last
-    const previousLastEntry = targetToLastEntry.get(entry.target);
-    if (entry.last && previousLastEntry)
-      throw new Error("only one event listener {last: true} can be added to the same target and event type.");
     if (entry.last)
       targetToLastEntry.set(entry.target, entry);
     if (previousLastEntry)
       removeEntry(previousLastEntry);
 
     //first
-    const previousFirstEntry = targetToFirstEntry.get(entry.target);
-    if (entry.first && previousFirstEntry)
-      throw new Error("only one event listener {first: true} can be added to the same target and event type.");
     let removedFirsts;
     if (entry.first) {
       targetToFirstEntry.set(entry.target, entry);
@@ -145,12 +145,6 @@ export function addEventTargetRegistry(EventTargetPrototype) {
   }
 
   function addEventListenerRegistry(type, listener, options) {
-    //check options first for illegal combinations
-    if (options instanceof Object && options.last && options.capture)
-      throw new Error("last option can only be used with bubble phase (at_target bubble phase) event listeners");
-    if (options instanceof Object && options.first && !options.capture)
-      throw new Error("first option can only be used with capture phase (at_target capture phase) event listeners");
-
     //register/make the entry, will return null if equivalent listener is already added.
     const entry = addListener(this, type, listener, options);
     entry && addEntry(entry);

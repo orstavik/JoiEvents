@@ -1,4 +1,3 @@
-//target* => cb* => type+" "+capture => cbOnce
 function getCurrentRoot(event) {
   const root = event.currentTarget.getRootNode ? event.currentTarget.getRootNode() : event.currentTarget;
   return root === document ? window : root;
@@ -29,7 +28,37 @@ function isCurrentlyStopped(event) {
   return true;
 }
 
+//target* => cb* => type+" "+capture => cbOnce
 const stoppableWrappers = new WeakMap();
+
+function makeKey(type, options) {
+  return type + " " + !!(options instanceof Object ? options.capture : options);
+}
+
+function setWrapper(target, type, cb, options, wrapped) {
+  let cbMap = stoppableWrappers.get(target);
+  if (!cbMap)
+    stoppableWrappers.set(target, cbMap = new WeakMap());
+  let typeDict = cbMap.get(cb);
+  if (!typeDict)
+    cbMap.set(cb, typeDict = {});
+  const key = makeKey(type, options);
+  if (typeDict[key])
+    return null;
+  return typeDict[key] = wrapped;
+}
+
+function removeWrapper(target, type, options, cb) {
+  let cbMap = stoppableWrappers.get(target);
+  if (!cbMap)
+    return null;
+  let typeDict = cbMap.get(cb);
+  if (!typeDict)
+    return null;
+  const result = typeDict[makeKey(type, options)];
+  delete typeDict[makeKey(type, options)];
+  return result;
+}
 
 export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPrototype) {
   const addEventListenerOG = EventTargetPrototype.addEventListener;
@@ -37,24 +66,23 @@ export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPro
 
   //todo test:  add the same function to different targets, different event types, different phases
 
-  function addEventListenerOnce(type, cb, options) {
+  function addEventListenerUnstoppable(type, cb, options) {
     let wrapped = cb;
-    if (!(options instanceof Object) || !options.unstoppable) {
+    if (!(options instanceof Object && options.unstoppable)) {
       wrapped = function (e) {
         if (!isCurrentlyStopped(e))
           cb.call(this, e);
       };
-      stoppableWrappers.set(cb, wrapped);
+      if(!setWrapper(this, type, cb, options, wrapped))
+        return;
     }
     addEventListenerOG.call(this, type, wrapped, options);
   }
 
-  function removeEventListenerOnce(type, cb, options) {
+  function removeEventListenerUnstoppable(type, cb, options) {
     //tries to remove both the stoppable and the unstoppable wrapper. Don't know which one was added here.
-    const stoppableCb = stoppableWrappers.get(cb);
-    if (stoppableCb)
-      removeEventListenerOG.call(this, type, stoppableCb, options);
-    removeEventListenerOG.call(this, type, cb, options);
+    const args = removeWrapper(this, type, options, cb) || cb;
+    removeEventListenerOG.call(this, type, args, options);
   }
 
   function stopPropagation() {
@@ -67,6 +95,6 @@ export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPro
 
   Object.defineProperty(EventPrototype, "stopPropagation", {value: stopPropagation});
   Object.defineProperty(EventPrototype, "stopImmediatePropagation", {value: stopImmediatePropagation});
-  Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerOnce});
-  Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerOnce});
+  Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerUnstoppable});
+  Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerUnstoppable});
 }
