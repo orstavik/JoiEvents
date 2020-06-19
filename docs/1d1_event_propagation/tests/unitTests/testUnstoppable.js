@@ -128,4 +128,73 @@ export const testUnstoppable = [{
   result: function () {
     return res;
   }
+}, {
+  name: "cancelBubble",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+
+    function a(e) {
+      res += " a " + e.cancelBubble;
+      e.stopPropagation();
+    }
+
+    function b(e) {
+      res += " b " + e.cancelBubble;
+    }
+
+    h1.addEventListener("click", a);
+    h1.addEventListener("click", b);
+    h1.dispatchEvent(new Event("click"));
+  },
+  expect: " a false b true",
+  result: function () {
+    return res;
+  }
+}, {
+  name: "cancelBubble 2",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+
+    function a(e) {
+      res += " a " + e.cancelBubble;
+      e.cancelBubble = "yes, do it!!";
+    }
+
+    function b(e) {
+      res += " b " + e.cancelBubble;
+    }
+
+    h1.addEventListener("click", a);
+    h1.addEventListener("click", b);
+    h1.dispatchEvent(new Event("click"));
+  },
+  expect: " a false b true",
+  result: function () {
+    return res;
+  }
+}, {
+  name: "cancelBubble 3",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+
+    function a(e) {
+      res += " a " + e.cancelBubble;
+      e.cancelBubble = 0;
+    }
+
+    function b(e) {
+      res += " b " + e.cancelBubble;
+    }
+
+    h1.addEventListener("click", a);
+    h1.addEventListener("click", b);
+    h1.dispatchEvent(new Event("click"));
+  },
+  expect: " a false b false",
+  result: function () {
+    return res;
+  }
 }];

@@ -93,6 +93,15 @@ export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPro
     stopProp(this, true);
   }
 
+  function getCancelBubble() {
+    return stopPropagations.has(this);
+  }
+
+  function setCancelBubble(value) {
+    return value && this.stopPropagation();
+  }
+
+  Object.defineProperty(EventPrototype, "cancelBubble", {get: getCancelBubble, set: setCancelBubble});
   Object.defineProperty(EventPrototype, "stopPropagation", {value: stopPropagation});
   Object.defineProperty(EventPrototype, "stopImmediatePropagation", {value: stopImmediatePropagation});
   Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerUnstoppable});

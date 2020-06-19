@@ -31,7 +31,10 @@
 </script>
 
 <script type="module">
-  import {addEventTargetRegistry as addEventTargetRegistry1, getEventListeners as getEventListeners1} from "./getEventListeners.js";
+  import {
+    addEventTargetRegistry as addEventTargetRegistry1,
+    getEventListeners as getEventListeners1
+  } from "./getEventListeners.js";
   import {
     addEventTargetRegistry as addEventTargetRegistry2,
     getEventListeners as getEventListeners2
@@ -48,6 +51,7 @@
   const dispatchEventOG = EventTarget.prototype.dispatchEvent;
   const stopPropOG = Event.prototype.stopPropagation;
   const stopImmediateOG = Event.prototype.stopImmediatePropagation;
+  const cancelBubbleOG = Object.getOwnPropertyDescriptor(Event.prototype, "cancelBubble");
 
   function downgrade() {
     EventTarget.prototype.addEventListener = addEventListenerOG;
@@ -55,6 +59,7 @@
     EventTarget.prototype.dispatchEvent = dispatchEventOG;
     Event.prototype.stopPropagation = stopPropOG;
     Event.prototype.stopImmediatePropagation = stopImmediateOG;
+    Object.defineProperty(Event.prototype, "cancelBubble", cancelBubbleOG);
     window.getEventListeners = function () {
       return [];
     };
@@ -74,27 +79,27 @@
       addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
     },
     downgrade: downgrade,
-    }, {
-      sysname: "REGISTER",
-      upgrade: function () {
-        addEventTargetRegistry1(EventTarget.prototype);
-        window.getEventListeners = getEventListeners1;
-      },
-      downgrade: downgrade,
-    }, {
-      sysname: "REGISTER_once",
-      upgrade: function () {
-        addEventTargetRegistry2(EventTarget.prototype);
-        window.getEventListeners = getEventListeners2;
-      },
-      downgrade: downgrade,
-    }, {
-      sysname: "REGISTER_once_last",
-      upgrade: function () {
-        addEventTargetRegistry3(EventTarget.prototype);
-        window.getEventListeners = getEventListeners3;
-      },
-      downgrade: downgrade,
+  }, {
+    sysname: "REGISTER",
+    upgrade: function () {
+      addEventTargetRegistry1(EventTarget.prototype);
+      window.getEventListeners = getEventListeners1;
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "REGISTER_once",
+    upgrade: function () {
+      addEventTargetRegistry2(EventTarget.prototype);
+      window.getEventListeners = getEventListeners2;
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "REGISTER_once_last",
+    upgrade: function () {
+      addEventTargetRegistry3(EventTarget.prototype);
+      window.getEventListeners = getEventListeners3;
+    },
+    downgrade: downgrade,
   }, {
     sysname: "REGISTER_once_last_first",
     upgrade: function () {
@@ -136,5 +141,4 @@
   // 1. cancelBubble
   // 2. cancelBubbleImmediately
   // 3. test these
-  // 4. test .removed from the listeners object
 </script>
