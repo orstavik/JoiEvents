@@ -112,14 +112,14 @@
     downgrade: downgrade,
   }];
 
-  import {testBasic} from "./testBasic.js";
-  import {dynamicTest} from "./testDynamic.js";
-  import {testRegistry} from "./testRegistry.js";
-  import {testOnce} from "./testOnce.js";
-  import {testUnstoppable} from "./testUnstoppable.js";
-  import {lastTest, lastErrorsTest} from "./testLast.js";
-  import {firstTest, firstErrorsTest} from "./testFirst.js";
-  import {testProp} from "./testPropagation.js";//todo this is a test for now
+  import {testBasic} from "./unitTests/testBasic.js";
+  import {dynamicTest} from "./unitTests/testDynamic.js";
+  import {testRegistry} from "./unitTests/testRegistry.js";
+  import {testOnce} from "./unitTests/testOnce.js";
+  import {testUnstoppable} from "./unitTests/testUnstoppable.js";
+  import {lastTest, lastErrorsTest} from "./unitTests/testLast.js";
+  import {firstTest, firstErrorsTest} from "./unitTests/testFirst.js";
+  import {testProp} from "./unitTests/testPropagation.js";//todo this is a test for now
 
   runTests(eventSystems, testBasic);
   // runTests(testBasic, eventSystems.slice(0, 1));
