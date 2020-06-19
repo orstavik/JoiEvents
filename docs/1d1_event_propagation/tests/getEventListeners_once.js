@@ -30,9 +30,14 @@ function makeEntry(target,type, listener, options) {
   entry.bubbles = !!entry.bubbles;
   entry.once = !!entry.once;
   entry.passive = !!entry.passive;
-  entry.removed = false;
   entry.target = target;
-  // Object.freeze(entry);
+  //see line 96-97 in https://github.com/WebReflection/dom4/blob/master/src/event-target.js
+  Object.defineProperty(entry, "removed", {
+    get: function () {
+      return dynamicallyRemovedEntries.has(this);
+    }
+  });
+  Object.freeze(entry);
   return entry;
 }
 
@@ -61,12 +66,11 @@ function removeListener(target, type, listener, options) {
   const index = findEquivalentListener(typeListeners, listener, capture);
   if (index === -1)
     return null;
-  const removed = typeListeners.splice(index, 1)[0];  //mutates the list in the targetToListeners
-  removed.removed = true;//see line 96-97 in https://github.com/WebReflection/dom4/blob/master/src/event-target.js
-  return removed;
+  return typeListeners.splice(index, 1)[0];  //mutates the list in the targetToListeners
 }
 
 const entryToOnceCb = new WeakMap();
+const dynamicallyRemovedEntries = new WeakSet();
 
 export function addEventTargetRegistry(EventTargetPrototype) {
   const ogAdd = EventTargetPrototype.addEventListener;
@@ -108,6 +112,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
     const entry = removeListener(this, type, listener, options);
     if (!entry)  //removeListener returns false when there is no listener to be removed.
       return;
+    dynamicallyRemovedEntries.add(entry);
     removeEntry(entry);
   }
 

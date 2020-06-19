@@ -24,12 +24,15 @@ export const testRegistry = [{
       res += "!";
     };
     dom.addEventListener("click", cb);
-    res = "" + getEventListeners(dom, "click").length;
+    const eventListeners = getEventListeners(dom, "click");
+    const listenerObject = eventListeners[0];
+    res = "" + eventListeners.length + listenerObject?.removed;
     dom.removeEventListener("click", cb);
     res += getEventListeners(dom, "click").length;
+    res += listenerObject?.removed;
     dom.dispatchEvent(new Event("click"));
   },
-  expect: "10",
+  expect: "1false0true",
   result: function () {
     return res;
   }
