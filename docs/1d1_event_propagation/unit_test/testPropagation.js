@@ -32,7 +32,7 @@ function cleanDom() {
   const root = document.querySelector("#root");
   root && root.remove();
   document.body.appendChild(template.content.cloneNode(true));
-  return {
+  const dom = {
     div: document.querySelector("div"),
     slot: document.querySelector("slot-comp"),
     slotRoot: document.querySelector("slot-comp").shadowRoot,
@@ -41,7 +41,9 @@ function cleanDom() {
     shadowComp: document.querySelector("shadow-comp"),
     shadowRoot: document.querySelector("shadow-comp").shadowRoot,
     shadowH1: document.querySelector("shadow-comp").shadowRoot.children[0]
-  }
+  };
+  addListenersToDOM(dom);
+  return dom;
 }
 
 function addListenersToDOM(dom) {
@@ -59,18 +61,14 @@ function addListenersToDOM(dom) {
   }
 }
 
-let res = "";
 let res1 = "";
 let res2 = "";
 let res3 = "";
-
-
 export const testProp = [{
   name: "propagation: composed: NO bubbles: NO",
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowH1.dispatchEvent(new Event("click"));
   },
   expect: "shadowRoot shadowH1 shadowH1 +-+:122",
@@ -82,7 +80,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowH1.dispatchEvent(new Event("click", {bubbles: true}));
   },
   expect: "shadowRoot shadowH1 shadowH1 shadowRoot +-+-:1223",
@@ -94,7 +91,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true}));
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowComp +++++++-+-:1111121222",
@@ -106,7 +102,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowRoot shadowComp slotSlot slotSpan slotRoot slot div +++++++-+-------:1111121223233333",
@@ -118,7 +113,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowComp.dispatchEvent(new Event("click"));
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp +++++-+:1111122",
@@ -130,7 +124,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowComp.dispatchEvent(new Event("click", {bubbles: true}));
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div +++++-+-----:111112233333",
@@ -142,7 +135,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowComp.dispatchEvent(new Event("click", {composed: true}));
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp +++++-+:1111122",
@@ -154,7 +146,6 @@ export const testProp = [{
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom();
-    addListenersToDOM(dom);
     dom.shadowComp.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div +++++-+-----:111112233333",
