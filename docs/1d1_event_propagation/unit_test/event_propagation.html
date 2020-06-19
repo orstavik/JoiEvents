@@ -1,31 +1,29 @@
 <script>
-  function runTests(tests, eventSystems) {
+  function compareResults(expect, res, nativeRes, notFirst) {
+    res = (res === expect ? 1 : res + " != " + expect);
+    if (notFirst && res === nativeRes)
+      res = res === 1 ? null : undefined;
+    return res;
+  }
+
+  function runTests(eventSystems, tests) {
     const results = {};
     let nativeSysName = eventSystems[0].sysname;
     for (let test of tests)
       results[test.name] = {};
     for (let {sysname, upgrade, downgrade} of eventSystems) {
       setTimeout(upgrade);
-      for (let {name, fun, expect, result} of tests) {
+      for (const {name, fun, expect, result} of tests) {
         setTimeout(fun);
         setTimeout(function () {
-          let res = result();
-          if (expect instanceof Function)
-            expect = expect();
-          if (expect === res)
-            res = 1;
-          else
-            res += " != " + expect;
+          const res = result();
+          const expected = expect instanceof Function ? expect() : expect;
           const nativeRes = results[name][nativeSysName];
-          if (res === nativeRes && sysname !== nativeSysName)
-            res = res === 1 ? null : undefined;
-          results[name][sysname] = res;
+          results[name][sysname] = compareResults(expected, res, nativeRes, sysname !== nativeSysName);
         });
       }
       setTimeout(downgrade);
     }
-    //compare the result with native behavior.
-    //or, run only some tests against some systems.
     setTimeout(function () {
       console.table(results);
     });
@@ -33,25 +31,6 @@
 </script>
 
 <script type="module">
-  import {testBasic} from "./testBasic.js";
-  import {dynamicTest} from "./testDynamic.js";
-  import {testRegistry} from "./testRegistry.js";
-  import {testOnce} from "./testOnce.js";
-  import {testUnstoppable} from "./testUnstoppable.js";
-  import {lastTest, lastErrorsTest} from "./testLast.js";
-  import {firstTest, firstErrorsTest} from "./testFirst.js";
-
-  let allTests = testBasic.concat(dynamicTest);
-  allTests = allTests.concat(testRegistry);
-  allTests = allTests.concat(testOnce);
-  allTests = allTests.concat(testUnstoppable);
-  allTests = allTests.concat(lastTest);
-  allTests = allTests.concat(lastErrorsTest);
-  allTests = allTests.concat(firstTest);
-  allTests = allTests.concat(firstErrorsTest);
-  import {tests} from "./testShadow.js";//todo this is a test for now
-  // allTests = allTests.concat(tests);
-
   // import {addEventTargetRegistry as addEventTargetRegistry1, getEventListeners as getEventListeners1} from "./getEventListeners.js";
   // import {
   //   addEventTargetRegistry as addEventTargetRegistry2,
@@ -133,7 +112,24 @@
     downgrade: downgrade,
   }];
 
-  runTests(testBasic, eventSystems);
-  runTests(testBasic, eventSystems.slice(0, 1));
-  runTests(allTests, eventSystems);
+  import {testBasic} from "./testBasic.js";
+  import {dynamicTest} from "./testDynamic.js";
+  import {testRegistry} from "./testRegistry.js";
+  import {testOnce} from "./testOnce.js";
+  import {testUnstoppable} from "./testUnstoppable.js";
+  import {lastTest, lastErrorsTest} from "./testLast.js";
+  import {firstTest, firstErrorsTest} from "./testFirst.js";
+  import {testProp} from "./testPropagation.js";//todo this is a test for now
+
+  runTests(eventSystems, testBasic);
+  // runTests(testBasic, eventSystems.slice(0, 1));
+  runTests(eventSystems, dynamicTest);
+  // runTests(testRegistry, eventSystems);
+  runTests(eventSystems, testOnce);
+  runTests(eventSystems, testUnstoppable);
+  runTests(eventSystems, lastTest);
+  runTests(eventSystems, lastErrorsTest);
+  runTests(eventSystems, firstTest);
+  runTests(eventSystems, firstErrorsTest);
+  runTests(eventSystems, testProp);
 </script>
