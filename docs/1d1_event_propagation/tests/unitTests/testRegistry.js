@@ -5,21 +5,15 @@ export const testRegistry = [{
   fun: function () {
     dom = document.createElement("h1");
     cb = function (e) {
-      res = 3;
+      res += "!";
     };
     dom.addEventListener("click", cb);
+    res = getEventListeners(dom, "click").length;
     dom.dispatchEvent(new Event("click"));
   },
-  expect: function () {
-    return res === 3 &&
-      getEventListeners(dom, "click") &&
-      getEventListeners(dom, "click").length === 1 &&
-      getEventListeners(dom, "click")[0].listener === cb &&
-      getEventListeners(dom, "click")[0].capture === false &&
-      getEventListeners(dom, "click")[0].type === "click" &&
-      getEventListeners(dom, "click", Event.CAPTURING_PHASE).length === 0 &&
-      getEventListeners(dom, "click", Event.BUBBLING_PHASE).length === 1 &&
-      getEventListeners(dom, "click", Event.AT_TARGET).length === 1;
+  expect: "1!",
+  result: function () {
+    return res;
   }
 }, {
   name: "registry 2: removeEventListener",
@@ -27,13 +21,16 @@ export const testRegistry = [{
     res = "nothing";
     dom = document.createElement("h1");
     cb = function (e) {
-      res = 3;
+      res += "!";
     };
     dom.addEventListener("click", cb);
+    res = "" + getEventListeners(dom, "click").length;
     dom.removeEventListener("click", cb);
+    res += getEventListeners(dom, "click").length;
     dom.dispatchEvent(new Event("click"));
   },
-  expect: function () {
-    return res === "nothing" && !getEventListeners(dom, "click")?.length;
+  expect: "10",
+  result: function () {
+    return res;
   }
 }];

@@ -31,15 +31,15 @@
 </script>
 
 <script type="module">
-  // import {addEventTargetRegistry as addEventTargetRegistry1, getEventListeners as getEventListeners1} from "./getEventListeners.js";
-  // import {
-  //   addEventTargetRegistry as addEventTargetRegistry2,
-  //   getEventListeners as getEventListeners2
-  // } from "./getEventListeners_once.js";
-  // import {
-  //   addEventTargetRegistry as addEventTargetRegistry3,
-  //   getEventListeners as getEventListeners3
-  // } from "./getEventListeners_once_last.js";
+  import {addEventTargetRegistry as addEventTargetRegistry1, getEventListeners as getEventListeners1} from "./getEventListeners.js";
+  import {
+    addEventTargetRegistry as addEventTargetRegistry2,
+    getEventListeners as getEventListeners2
+  } from "./getEventListeners_once.js";
+  import {
+    addEventTargetRegistry as addEventTargetRegistry3,
+    getEventListeners as getEventListeners3
+  } from "./getEventListeners_once_last.js";
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners_once_last_first.js";
   import {addEventListenerOptionUnstoppable} from "./EventListenerOptionUnstoppable.js";
 
@@ -74,27 +74,27 @@
       addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
     },
     downgrade: downgrade,
-    // }, {
-    //   sysname: "REGISTER",
-    //   upgrade: function () {
-    //     addEventTargetRegistry1(EventTarget.prototype);
-    //     window.getEventListeners = getEventListeners1;
-    //   },
-    //   downgrade: downgrade,
-    // }, {
-    //   sysname: "REGISTER_once",
-    //   upgrade: function () {
-    //     addEventTargetRegistry2(EventTarget.prototype);
-    //     window.getEventListeners = getEventListeners2;
-    //   },
-    //   downgrade: downgrade,
-    // }, {
-    //   sysname: "REGISTER_once_last",
-    //   upgrade: function () {
-    //     addEventTargetRegistry3(EventTarget.prototype);
-    //     window.getEventListeners = getEventListeners3;
-    //   },
-    //   downgrade: downgrade,
+    }, {
+      sysname: "REGISTER",
+      upgrade: function () {
+        addEventTargetRegistry1(EventTarget.prototype);
+        window.getEventListeners = getEventListeners1;
+      },
+      downgrade: downgrade,
+    }, {
+      sysname: "REGISTER_once",
+      upgrade: function () {
+        addEventTargetRegistry2(EventTarget.prototype);
+        window.getEventListeners = getEventListeners2;
+      },
+      downgrade: downgrade,
+    }, {
+      sysname: "REGISTER_once_last",
+      upgrade: function () {
+        addEventTargetRegistry3(EventTarget.prototype);
+        window.getEventListeners = getEventListeners3;
+      },
+      downgrade: downgrade,
   }, {
     sysname: "REGISTER_once_last_first",
     upgrade: function () {
@@ -119,12 +119,12 @@
   import {testUnstoppable} from "./unitTests/testUnstoppable.js";
   import {lastTest, lastErrorsTest} from "./unitTests/testLast.js";
   import {firstTest, firstErrorsTest} from "./unitTests/testFirst.js";
-  import {testProp} from "./unitTests/testPropagation.js";//todo this is a test for now
+  import {testProp} from "./unitTests/testPropagation.js";     //todo this is a test for now
 
   runTests(eventSystems, testBasic);
   // runTests(testBasic, eventSystems.slice(0, 1));
   runTests(eventSystems, dynamicTest);
-  // runTests(testRegistry, eventSystems);
+  runTests(eventSystems, testRegistry);
   runTests(eventSystems, testOnce);
   runTests(eventSystems, testUnstoppable);
   runTests(eventSystems, lastTest);
@@ -132,4 +132,10 @@
   runTests(eventSystems, firstTest);
   runTests(eventSystems, firstErrorsTest);
   runTests(eventSystems, testProp);
+
+  //todo
+  // 1. cancelBubble
+  // 2. cancelBubbleImmediately
+  // 3. test these
+  // 4. test .removed from the listeners object
 </script>

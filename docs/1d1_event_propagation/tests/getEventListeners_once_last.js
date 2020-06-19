@@ -18,12 +18,6 @@ export function getEventListeners(target, type, phase) {
   throw new Error("Illegal event phase for getEventListeners: phase can only be Event.BUBBLING_PHASE, Event.CAPTURING_PHASE, or Event.AT_TARGET.");
 }
 
-//todo do we need this??
-// export function hasEventListener(target, type, phase, cb){
-//   const listeners = getEventListeners(target, type, phase);
-//   return listeners.indexOf(cb) !== -1;
-// }
-
 function findEquivalentListener(registryList, listener, useCapture) {
   return registryList.findIndex(cbOptions => cbOptions.listener === listener && cbOptions.capture === useCapture);
 }
@@ -36,8 +30,9 @@ function makeEntry(target, type, listener, options) {
   entry.bubbles = !!entry.bubbles;
   entry.once = !!entry.once;
   entry.passive = !!entry.passive;
+  entry.removed = false;
   entry.target = target;
-  Object.freeze(entry);
+  // Object.freeze(entry);
   return entry;
 }
 
@@ -66,7 +61,9 @@ function removeListener(target, type, listener, options) {
   const index = findEquivalentListener(typeListeners, listener, capture);
   if (index === -1)
     return null;
-  return typeListeners.splice(index, 1)[0];  //mutates
+  const removed = typeListeners.splice(index, 1)[0];  //mutates the list in the targetToListeners
+  removed.removed = true;//see line 96-97 in https://github.com/WebReflection/dom4/blob/master/src/event-target.js
+  return removed;
 }
 
 const entryToOnceCb = new WeakMap();
