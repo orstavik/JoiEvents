@@ -128,7 +128,9 @@ export const testUnstoppable = [{
   result: function () {
     return res;
   }
-}, {
+}];
+
+export const cancelBubbleTests =[ {
   name: "cancelBubble",
   fun: function () {
     res = "";
@@ -194,6 +196,27 @@ export const testUnstoppable = [{
     h1.dispatchEvent(new Event("click"));
   },
   expect: " a false b false",
+  result: function () {
+    return res;
+  }
+}, {
+  name: "cancelBubble 4: before propagation begins",
+  fun: function () {
+    res = "";
+    const h1 = document.createElement("h1");
+
+    function a(e) {
+      res += "a";
+    }
+    h1.addEventListener("click", a);
+    const click = new Event("click");
+    click.stopPropagation();
+    h1.dispatchEvent(click);
+    const click2 = new Event("click");
+    click2.cancelBubble = true;
+    h1.dispatchEvent(click2);
+  },
+  expect: "",
   result: function () {
     return res;
   }

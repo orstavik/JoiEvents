@@ -46,6 +46,9 @@ function cleanDom() {
   return dom;
 }
 
+let res1 = "";
+let res2 = "";
+let res3 = "";
 function addListenersToDOM(dom) {
   for (let elName in dom) {
     dom[elName].addEventListener("click", function (e) {
@@ -61,9 +64,6 @@ function addListenersToDOM(dom) {
   }
 }
 
-let res1 = "";
-let res2 = "";
-let res3 = "";
 export const testProp = [{
   name: "propagation: composed: NO bubbles: NO",
   fun: function () {
