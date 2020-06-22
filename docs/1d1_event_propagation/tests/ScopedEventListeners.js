@@ -48,7 +48,7 @@ export function isStopped(event, scoped) {
   if (!scoped && stopListener(event, globalStops.get(event)))  //check if it is non-scoped first, as that is cheapest
     return true;
   const scope = currentEventContext(event);                    //check if stopped in current context. Applies to all.
-  return !! stopListener(event, localStops.get(event)?.get(scope));
+  return !!stopListener(event, localStops.get(event)?.get(scope));
 }
 
 /**
@@ -89,7 +89,7 @@ export function addEventIsStoppedScoped(EventPrototype) {
         return beforeStops.add(this);
       const value = {currentTarget: this.currentTarget, eventPhase: this.eventPhase};
       if (!scoped)
-        return !globalStops.has(this) && globalStops.set(this, value);
+        !globalStops.has(this) && globalStops.set(this, value);
       const context = currentEventContext(this);
       let scopeMap = localStops.get(this);
       if (!scopeMap)
@@ -102,7 +102,7 @@ export function addEventIsStoppedScoped(EventPrototype) {
       if (this.eventPhase === 0)
         return beforeStops.add(this);
       if (!scoped)
-        return globalStops.set(this, true);
+        globalStops.set(this, true);
       const context = currentEventContext(this);
       let scopeMap = localStops.get(this);
       if (!scopeMap)
@@ -128,7 +128,7 @@ function makeKey(type, options) {
   return (options instanceof Object ? options.capture : options) ? type + " capture" : type;
 }
 
-function hasWrapper(target, type, cb, options){
+function hasWrapper(target, type, cb, options) {
   const dict = targetCbWrappers.get(target)?.get(cb);
   return dict && makeKey(type, options) in dict;
 }

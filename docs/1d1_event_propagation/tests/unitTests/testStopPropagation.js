@@ -60,13 +60,14 @@ function cleanDom(addListeners) {
 let res1 = "";
 let res2 = "";
 let res3 = "";
+let res4 = "";
 function addListenersToDOM(dom) {
   for (let elName in dom) {
     dom[elName].addEventListener("click", function (e) {
       res1 += elName + " ";
       res2 += "-";
       res3 += e.eventPhase;
-    }, {});
+    });
     dom[elName].addEventListener("click", function (e) {
       res1 += elName + " ";
       res2 += "+";
@@ -89,6 +90,31 @@ export const testStopProp = [{
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowComp slotSlot slotSpan slotRoot slot div +++++++-+------:111112122233333",
   result: function () {
     return res1 + res2 + ":" + res3;
+  }
+}, {
+  name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} )",
+  fun: function () {
+    res1 = res2 = res3 = res4 = "";
+    const dom = cleanDom(false);
+
+    dom.div.addEventListener("click", function(e){
+      e.stopPropagation();
+    }, true);
+
+    dom.shadowH1.addEventListener("click", function(e){
+      res4 += "DifferentScope ";
+    }, {scoped: true});
+    dom.div.addEventListener("click", function(e){
+      res4 += "SameScope ";
+    }, {scoped: true});
+    dom.div.addEventListener("click", function(e){
+      res4 += "unstoppable";
+    }, {unstoppable: true});
+    dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
+  },
+  expect: "DifferentScope unstoppable",
+  result: function () {
+    return res4;
   }
 }, {
   name: "captureTorpedo: stopPropagation(true)",
