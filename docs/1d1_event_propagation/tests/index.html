@@ -133,6 +133,7 @@
   import {lastTest, lastErrorsTest} from "./unitTests/testLast.js";
   import {firstTest, firstErrorsTest} from "./unitTests/testFirst.js";
   import {testProp} from "./unitTests/testPropagation.js";
+  import {testStopProp} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
 
   runTests(eventSystems, testBasic);
@@ -146,6 +147,7 @@
   runTests(eventSystems, firstTest);
   runTests(eventSystems, firstErrorsTest);
   runTests(eventSystems, testProp);
+  runTests(eventSystems, testStopProp);
   runTests(eventSystems, testIsStopped);
 
   //todo
