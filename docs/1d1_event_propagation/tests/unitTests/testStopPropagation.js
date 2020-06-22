@@ -61,6 +61,7 @@ let res1 = "";
 let res2 = "";
 let res3 = "";
 let res4 = "";
+
 function addListenersToDOM(dom) {
   for (let elName in dom) {
     dom[elName].addEventListener("click", function (e) {
@@ -82,7 +83,7 @@ export const testStopProp = [{
     res1 = res2 = res3 = "";
     const dom = cleanDom(true);
 
-    dom.shadowH1.addEventListener("click", function(e){
+    dom.shadowH1.addEventListener("click", function (e) {
       e.stopPropagation(true);
     });
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
@@ -92,37 +93,12 @@ export const testStopProp = [{
     return res1 + res2 + ":" + res3;
   }
 }, {
-  name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} )",
-  fun: function () {
-    res1 = res2 = res3 = res4 = "";
-    const dom = cleanDom(false);
-
-    dom.div.addEventListener("click", function(e){
-      e.stopPropagation();
-    }, true);
-
-    dom.shadowH1.addEventListener("click", function(e){
-      res4 += "DifferentScope ";
-    }, {scoped: true});
-    dom.div.addEventListener("click", function(e){
-      res4 += "SameScope ";
-    }, {scoped: true});
-    dom.div.addEventListener("click", function(e){
-      res4 += "unstoppable";
-    }, {unstoppable: true});
-    dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
-  },
-  expect: "DifferentScope unstoppable",
-  result: function () {
-    return res4;
-  }
-}, {
   name: "captureTorpedo: stopPropagation(true)",
   fun: function () {
     res1 = res2 = res3 = "";
     const dom = cleanDom(true);
 
-    dom.div.addEventListener("click", function(e){
+    dom.div.addEventListener("click", function (e) {
       e.stopPropagation(true);
     }, true);
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
@@ -137,7 +113,7 @@ export const testStopProp = [{
     res1 = res2 = res3 = "";
     const dom = cleanDom(true);
 
-    dom.slotSlot.addEventListener("click", function(e){
+    dom.slotSlot.addEventListener("click", function (e) {
       e.stopPropagation(true);
     });
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
@@ -152,7 +128,7 @@ export const testStopProp = [{
     res1 = res2 = res3 = "";
     const dom = cleanDom(true);
 
-    dom.slotRoot.addEventListener("click", function(e){
+    dom.slotRoot.addEventListener("click", function (e) {
       e.stopPropagation(true);
     }, true);
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
@@ -160,5 +136,82 @@ export const testStopProp = [{
   expect: "div slot slotRoot shadowComp shadowRoot shadowH1 shadowH1 shadowRoot shadowComp slot div +++++-+----:11121223233",
   result: function () {
     return res1 + res2 + ":" + res3;
+  }
+}];
+
+export const testStopProp2 = [{
+  name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} )",
+  fun: function () {
+    res1 = res2 = res3 = res4 = "";
+    const dom = cleanDom(false);
+
+    dom.div.addEventListener("click", function (e) {
+      e.stopPropagation();
+    }, true);
+
+    dom.shadowH1.addEventListener("click", function (e) {
+      res4 += "DifferentScope ";
+    }, {scoped: true});
+
+    dom.div.addEventListener("click", function (e) {
+      res4 += "SameScope ";
+    }, {scoped: true});
+
+    dom.div.addEventListener("click", function (e) {
+      res4 += "unstoppable";
+    }, {unstoppable: true});
+    dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
+  },
+  expect: "DifferentScope unstoppable",
+  result: function () {
+    return res4;
+  }
+}, {
+  name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} )",
+  fun: function () {
+    res1 = res2 = res3 = res4 = "";
+    const dom = cleanDom(false);
+
+    dom.shadowH1.addEventListener("click", function (e) {
+      e.stopPropagation();
+    }, true);
+
+    dom.shadowH1.addEventListener("click", function (e) {
+      res4 += "SameScope";
+    }, {scoped: true});
+
+    dom.div.addEventListener("click", function (e) {
+      res4 += "DifferentScope";
+    }, {scoped: true});
+
+    dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
+  },
+  expect: "DifferentScope",
+  result: function () {
+    return res4;
+  }
+}, {
+  name: "shadowTorpedo: Event.isScoped",
+  fun: function () {
+    res1 = res2 = res3 = res4 = "";
+    const dom = cleanDom(false);
+
+    dom.div.addEventListener("click", function (e) {
+      e.stopPropagation();
+    }, true);
+
+    dom.shadowH1.addEventListener("click", function (e) {
+      res4 += "DifferentScope";
+    });
+    dom.div.addEventListener("click", function (e) {
+      res4 += "SameScope";
+    });
+    const event = new Event("click", {composed: true, bubbles: true});
+    event.isScoped = true;
+    dom.shadowH1.dispatchEvent(event);
+  },
+  expect: "DifferentScope",
+  result: function () {
+    return res4;
   }
 }];

@@ -84,6 +84,18 @@
       window.isStopped = isStopped;
     },
     downgrade: downgrade,
+  // }, { //todo
+  //   sysname: "SCOPED_STOP_BY_DEFAULT",
+  //   upgrade: function () {
+  //     addEventIsStoppedScoped(Event.prototype);
+  //     addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
+  //     window.isStopped = isStopped;
+  //     Object.defineProperty(Event.prototype, "isScoped", {value: true});
+  //   },
+  //   downgrade: function(){
+  //     downgrade();
+  //     Object.defineProperty(Event.prototype, "isScoped", {value: undefined});
+  //   }
   }, {
     sysname: "REGISTER",
     upgrade: function () {
@@ -133,7 +145,7 @@
   import {lastTest, lastErrorsTest} from "./unitTests/testLast.js";
   import {firstTest, firstErrorsTest} from "./unitTests/testFirst.js";
   import {testProp} from "./unitTests/testPropagation.js";
-  import {testStopProp} from "./unitTests/testStopPropagation.js";
+  import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
 
   runTests(eventSystems, testBasic);
@@ -148,6 +160,7 @@
   runTests(eventSystems, firstErrorsTest);
   runTests(eventSystems, testProp);
   runTests(eventSystems, testStopProp);
+  runTests(eventSystems, testStopProp2);
   runTests(eventSystems, testIsStopped);
 
   //todo
