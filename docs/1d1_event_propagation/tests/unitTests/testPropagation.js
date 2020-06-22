@@ -55,46 +55,22 @@ export const testProp = [{
   result:getResults,
 }, {
   name: "dispatchEvent2: composed: NO bubbles: NO",
-  fun: function () {
-    res1 = res2 = res3 = "";
-    const dom = domWithListeners();
-    dom.shadowComp.dispatchEvent(new Event("click"));
-  },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp +++++-+:1111122",
-  result: function () {
-    return res1 + res2 + ":" + res3;
-  }
+  fun: makeTestFunction("shadowComp"),
+  result:getResults,
 }, {
   name: "dispatchEvent2: composed: NO bubbles: YES",
-  fun: function () {
-    res1 = res2 = res3 = "";
-    const dom = domWithListeners();
-    dom.shadowComp.dispatchEvent(new Event("click", {bubbles: true}));
-  },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div +++++-+-----:111112233333",
-  result: function () {
-    return res1 + res2 + ":" + res3;
-  }
+  fun: makeTestFunction("shadowComp", {bubbles: true}),
+  result:getResults,
 }, {
   name: "dispatchEvent2: composed: YES bubbles: NO",
-  fun: function () {
-    res1 = res2 = res3 = "";
-    const dom = domWithListeners();
-    dom.shadowComp.dispatchEvent(new Event("click", {composed: true}));
-  },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp +++++-+:1111122",
-  result: function () {
-    return res1 + res2 + ":" + res3;
-  }
+  fun: makeTestFunction("shadowComp", {composed: true}),
+  result:getResults,
 }, {
   name: "dispatchEvent2: composed: YES bubbles: YES",
-  fun: function () {
-    res1 = res2 = res3 = "";
-    const dom = domWithListeners();
-    dom.shadowComp.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
-  },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div +++++-+-----:111112233333",
-  result: function () {
-    return res1 + res2 + ":" + res3;
-  }
+  fun: makeTestFunction("shadowComp", {bubbles: true, composed: true}),
+  result:getResults,
 }];
