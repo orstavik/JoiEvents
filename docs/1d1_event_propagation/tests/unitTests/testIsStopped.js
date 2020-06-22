@@ -1,77 +1,11 @@
-//template with slotted web comp with shadowDOM
-const template = document.createElement("template");
-template.innerHTML =`
-<div id="root">
-  <slot-comp2>
-    <shadow-comp2></shadow-comp2>
-  </slot-comp2>
-</div>`;
-
-class SlotComp2 extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({mode: "open"});
-    this.shadowRoot.innerHTML = "<span><slot></slot></span>";
-  }
-}
-
-customElements.define("slot-comp2", SlotComp2);
-
-class ShadowComp2 extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({mode: "open"});
-    this.shadowRoot.innerHTML = "<h1>hello sunshine</h1>";
-  }
-}
-
-customElements.define("shadow-comp2", ShadowComp2);
-
-//method that produce a new version of this DOM each time.
-function cleanDom() {
-  const root = document.querySelector("#root");
-  root && root.remove();
-  document.body.appendChild(template.content.cloneNode(true));
-  const dom = {
-    div: document.querySelector("div"),
-    slot: document.querySelector("slot-comp2"),
-    slotRoot: document.querySelector("slot-comp2").shadowRoot,
-    slotSpan: document.querySelector("slot-comp2").shadowRoot.children[0],
-    slotSlot: document.querySelector("slot-comp2").shadowRoot.children[0].children[0],
-    shadow: document.querySelector("shadow-comp2"),
-    shadowRoot: document.querySelector("shadow-comp2").shadowRoot,
-    shadowH1: document.querySelector("shadow-comp2").shadowRoot.children[0]
-  };
-  // addListenersToDOM(dom);
-  return dom;
-}
-
 let res1 = "";
-let res2 = "";
-let res3 = "";
-function addListenersToDOM(dom) {
-  for (let elName in dom) {
-    dom[elName].addEventListener("click", function (e) {
-      res1 += elName + " ";
-      res2 += "-";
-      res3 += e.eventPhase;
-    }, {});
-    dom[elName].addEventListener("click", function (e) {
-      res1 += elName + " ";
-      res2 += "+";
-      res3 += e.eventPhase;
-    }, true);
-  }
-}
-
-let res4;
 export const testIsStopped = [{
   name: "isStopped: before dispatch",
   fun: function () {
-    res1 = res2 = res3 = res4 = "";
+    res1 = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
-      res4 += "omg";
+      res1 += "omg";
     })
     const event = new Event("click");
     event.stopPropagation();
