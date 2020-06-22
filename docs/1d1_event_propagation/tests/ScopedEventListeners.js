@@ -1,3 +1,4 @@
+//todo use the beforeStops to implement a cancel function for the blocking of events.
 /**
  * returns null before/after the event's propagation being/ends
  *         window if the event is currently propagating in the main DOM

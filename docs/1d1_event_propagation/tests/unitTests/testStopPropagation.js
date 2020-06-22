@@ -160,6 +160,7 @@ export const testStopProp2 = [{
     dom.div.addEventListener("click", function (e) {
       res4 += "unstoppable";
     }, {unstoppable: true});
+
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
   },
   expect: "DifferentScope unstoppable",
