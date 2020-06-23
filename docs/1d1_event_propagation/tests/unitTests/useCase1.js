@@ -9,15 +9,11 @@
 //              shadow-comp#root   | B. shadow-comp#root
 //                h1               | B. shadow-comp#root
 
-//template with slotted web comp with shadowDOM
-const template = document.createElement("template");
-template.innerHTML = `
-<div id="root">
-  <slot-comp>
-    <shadow-comp></shadow-comp>
-  </slot-comp>
-</div>`;
-
+//<div id="root">
+//  <slot-comp>
+//    <shadow-comp></shadow-comp>
+//  </slot-comp>
+//</div>
 
 class SlotComp extends HTMLElement {
   constructor() {
@@ -39,20 +35,20 @@ class ShadowComp extends HTMLElement {
 
 customElements.define("shadow-comp", ShadowComp);
 
-//method that produce a new version of this DOM each time.
 export function cleanDom() {
-  const root = document.querySelector("#root");
-  root && root.remove();
-  document.body.appendChild(template.content.cloneNode(true));
-  const dom = {
-    div: document.querySelector("div"),
-    slot: document.querySelector("slot-comp"),
-    slotRoot: document.querySelector("slot-comp").shadowRoot,
-    slotSpan: document.querySelector("slot-comp").shadowRoot.children[0],
-    slotSlot: document.querySelector("slot-comp").shadowRoot.children[0].children[0],
-    shadowComp: document.querySelector("shadow-comp"),
-    shadowRoot: document.querySelector("shadow-comp").shadowRoot,
-    shadowH1: document.querySelector("shadow-comp").shadowRoot.children[0]
+  const div = document.createElement("div");
+  const slotComp = document.createElement("slot-comp");
+  const shadowComp = document.createElement("shadow-comp");
+  div.appendChild(slotComp);
+  slotComp.appendChild(shadowComp);
+  return {
+    div: div,
+    slot: div.querySelector("slot-comp"),
+    slotRoot: div.querySelector("slot-comp").shadowRoot,
+    slotSpan: div.querySelector("slot-comp").shadowRoot.children[0],
+    slotSlot: div.querySelector("slot-comp").shadowRoot.children[0].children[0],
+    shadowComp: div.querySelector("shadow-comp"),
+    shadowRoot: div.querySelector("shadow-comp").shadowRoot,
+    shadowH1: div.querySelector("shadow-comp").shadowRoot.children[0]
   };
-  return dom;
 }
