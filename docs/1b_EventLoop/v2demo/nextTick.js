@@ -28,23 +28,20 @@
   levels[1].appendChild(levels[0]);
 
   function getClone(depth) {
-    if (depth < levels.length)
-      return levels[depth].cloneNode(true);
-    var span;
-    for (let i = 0; i < (depth - levels.length + 1); i++) {
-      span = document.createElement("span");
+    while (depth > levels.length) {
+      var span = document.createElement("span");//todo assumes that span is the simplest element for the browser to initiate.
       span.appendChild(levels[levels.length - 1]);
       levels.push(span);
     }
-    return span.cloneNode(true);
+    return levels[depth-1].cloneNode(true);
   }
 
   function getTopAudio(depth) {
     var top = getClone(depth);
-    var el = top;
-    while (el.children.length)
-      el = el.children[0];
-    return [top, el];
+    var audio = top;
+    while (audio.children.length)
+      audio = audio.children[0];
+    return [top, audio];
   }
 
   function ratechangeTickStart(mesoLevels) {
@@ -128,6 +125,7 @@
     promise.cancel = cancelTask.bind(null, promise); //is this safer, and is this faster??
     return promise;
   }
+
   nextTick.cancelledTask = {};
   Object.freeze(nextTick);
   Object.freeze(nextTick.cancelledTask);
