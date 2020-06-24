@@ -59,7 +59,7 @@
   } from "./getEventListeners_once_last.js";
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners_once_last_first.js";
   import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable, isStopped} from "./ScopedEventListeners.js";
-  import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync2.js";
+  import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
