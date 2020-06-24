@@ -114,6 +114,10 @@
 </script>
 
 <script>
+  function findSlot(slotName, root) {
+    return root.querySelector(slotName ? "slot[name=" + slotName + "]" : "slot:not([name]), slot[name='']");
+  }
+
   function getScopedPathsComposedTrue(target) {
     let innerRes = getScopedPathsComposedFalse(target);
     const res = [innerRes];
@@ -124,29 +128,23 @@
   }
 
   function getScopedPathsComposedFalse(target) {
-    const path = [];
-    const firstTarget = target;
-    while (target) {
-      if (target.shadowRoot && firstTarget !== target) {  //we don't check on the first run
-        const slotName = target.getAttribute("slot") || "";
-        const slot = target.shadowRoot.querySelector(!slotName ? "slot:not([name]), slot[name='']" : "slot[name=" + slotName + "]");
-        slot && path.push(getScopedPathsComposedFalse(slot));
-        //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
-      }
+    const path = [target];
+    for (target = target.parentNode; target; target = target.parentNode) {
+      let slot;
+      if (target.shadowRoot && (slot = findSlot(target.getAttribute("slot") || "", target.shadowRoot)))
+        path.push(getScopedPathsComposedFalse(slot));
+      //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
       path.push(target);
-      if (target instanceof ShadowRoot)
-        return path;
-      if (target === document) {
-        path.push(window);
-        return path;
-      }
-      target = target.parentNode;
+      if (target instanceof ShadowRoot || target === document)
+        break;
     }
+    if (target === document)
+      path.push(window);
     return path;
   }
 
   function toScope(path) {
-    if(!(path instanceof Array))
+    if (!(path instanceof Array))
       throw new Error("toBounce argument must be an array.");
     const res = [];
     for (let i = 0; i < path.length;) {
@@ -245,10 +243,10 @@
     const testOnClick = function (e) {
       const composedPath = e.composedPath();
       const toScoped = toScope(composedPath);
-      const testEqualScoped = arrayEquals(toScoped, bouncePath);
+      const testEqualScoped = arrayEquals(toScoped, bouncePath);    //toScoped doesn't work...
       const testEqualPath = arrayEquals(bouncePath.flat(100), composedPath);
       const testCorrectDOMBoundaries = sameDOMScope(bouncePath);
-      if (!testEqualPath || !testCorrectDOMBoundaries)
+      if (!testEqualPath || !testCorrectDOMBoundaries/*|| !testEqualScoped*/)
         throw new Error("omg, test failed..");
       console.log("test ok", bouncePath, composedPath);
     };
