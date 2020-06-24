@@ -118,6 +118,7 @@
     return root.querySelector(slotName ? "slot[name=" + slotName + "]" : "slot:not([name]), slot[name='']");
   }
 
+  //todo should we return the upper bounced path as a flat array? or not? This will yield a different graph structure in different settings?
   function getScopedPathsComposedTrue(target) {
     const res = [];
     while (target){
@@ -125,16 +126,16 @@
       res.push(scopedPath);
       target = scopedPath[scopedPath.length-1].host;
     }
-    //todo should we return the upper bounced path as a flat array? or not? This will yield a different graph structure in different settings?
     return res;
   }
 
   function getScopedPathsComposedFalse(target) {
     const path = [target];
     for (target = target.parentNode; target; target = target.parentNode) {
-      let slot;
-      if (target.shadowRoot && (slot = findSlot(target.getAttribute("slot") || "", target.shadowRoot)))
-        path.push(getScopedPathsComposedFalse(slot));
+      if (target.shadowRoot) {
+        const slot = findSlot(target.getAttribute("slot") || "", target.shadowRoot);
+        slot && path.push(getScopedPathsComposedFalse(slot));
+      }
       path.push(target);
     }
     if (path[path.length-1] === document)
