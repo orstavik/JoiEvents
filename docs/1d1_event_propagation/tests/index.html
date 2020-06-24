@@ -59,7 +59,7 @@
   } from "./getEventListeners_once_last.js";
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners_once_last_first.js";
   import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable, isStopped} from "./ScopedEventListeners.js";
-  import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
+  import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync2.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
@@ -182,10 +182,10 @@
     await runTests(eventSystems, lastErrorsTest);
     await runTests(eventSystems, firstTest);
     await runTests(eventSystems, firstErrorsTest);
-    await runTests(eventSystems, testProp);
     await runTests(eventSystems, testStopProp);
     await runTests(eventSystems, testStopProp2);
     await runTests(eventSystems, testIsStopped);
+    await runTests(eventSystems, testProp);
   })();
   //todo
   // 1. test stopPropagation thoroughly
