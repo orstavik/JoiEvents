@@ -1,39 +1,65 @@
 import {} from "./nextTick.js";
 
-//todo, this path needs to be tested individually?? it will be tested indirectly,
-// but it might be easier to chase the bugs, if we have separate tests for this one.. maybe
-function getComposedPath(target, composed) {
-  let slotLevel = 0;
-  const path = [];
-  const targets = [target];
-  while (true) {
-    path.push(target);
-    const shadowRoot = target.parentNode?.shadowRoot;
-    if (shadowRoot) {
-      const slotName = target.getAttribute("slot") || "";
-      target = shadowRoot.querySelector(!slotName ? "slot:not([name]), slot[name='']" : "slot[name=" + slotName + "]");
-      slotLevel++;
-      continue;
-    }
-    if (target.parentNode) {
-      target = target.parentNode;
-    } else if (target.host) {
-
-      if (!composed && !slotLevel)
-        return {propagationPath: path, targets};
-      target = target.host;
-      if(!slotLevel)
-        targets.push(target);
-      else
-        slotLevel--;
-    } else if (target.defaultView) {
-      target = target.defaultView;
-    } else {
-      break;
-    }
+/*
+ * ScopedPaths are a set of nested arrays which contain the eventTarget divided by DOM contexts.
+ * If you flatten the ScopedPaths, ie. scopedPaths(el).flat(Infinity),
+ * then you will get the same output as the composedPath.
+ *
+ * Note: scopedPaths(el, composed: false) and scopedPaths(elInTheMainDOM, composed: true)
+ * returns the result wrapped in an outer list. This makes all calls to scopedPaths(el, true|false)
+ * return an equivalent structure.
+ *
+ * @returns [[path], [path]]
+ *          where each path can consist of elements, or other slotted paths.
+ */
+export function scopedPaths(target, composed) {
+  if (!composed)
+    return [scopedPathsInner(target)];
+  const res = [];
+  while (target) {
+    const scopedPath = scopedPathsInner(target);
+    res.push(scopedPath);
+    target = scopedPath[scopedPath.length - 1].host;
   }
-  return {propagationPath: path, targets};
+  return res;
 }
+
+function scopedPathsInner(target) {
+  const path = [];
+  while (target) {
+    path.push(target);
+    target.assignedSlot && path.push(scopedPathsInner(target.assignedSlot));
+    target = target.parentNode;
+  }
+  if (path[path.length - 1] === document)
+    path.push(window);
+  return path;
+}
+
+function calculatePropagationPaths(scopedPath, bubbles) {
+  //process AT_TARGET nodes, both the normal, innermost AT_TARGET, and any composed, upper, host node AT_TARGETs.
+  const composedTargets = scopedPath.map(ar => ar[0]);
+  const lowestTarget = composedTargets.shift();      //the lowestMost target is processed separately
+
+  const raw = scopedPath.flat(Infinity);
+  raw.shift();                                       //the lowestMost target is processed separately
+
+  //BUBBLE nodes (or upper, composed AT_TARGET nodes if the event doesn't bubble)
+  const bubble = bubbles ?
+    raw.map(target => ({target: target, phase: composedTargets.indexOf(target) >= 0 ? 32 : 3})) :
+    composedTargets.map(target => ({target: target, phase: 32}));
+
+  //CAPTURE nodes
+  const capture = raw.reverse().map(target => ({
+    target: target,
+    phase: composedTargets.indexOf(target) >= 0 ? 12 : 1
+  }));
+
+  return capture.concat([{target: lowestTarget, phase: 2}]).concat(bubble);
+}
+
+//todo what about the situation when you dispatch an event on a lightDOM child, and then
+//else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
 
 function callListenerHandleError(target, listener, event) {
   if (listener.removed)
@@ -49,12 +75,12 @@ function callListenerHandleError(target, listener, event) {
   }
 }
 
-function populateEvent(event, target, propagationPath) {
+function populateEvent(event, target, scopedPath) {
   Object.defineProperties(event, {
     target: {
       get: function () {
         let lowest = target;
-        for (let t of propagationPath) {
+        for (let t of this.composedPath()) {
           if (t === this.currentTarget)
             return lowest;
           if (t instanceof DocumentFragment && t.mode === "closed")
@@ -62,8 +88,8 @@ function populateEvent(event, target, propagationPath) {
         }
       }
     },
-    composedPath: function () { //todo this assumes that there are no mode: closed, but it should still work if there are does.
-      return propagationPath.slice();
+    composedPath: function () {
+      return scopedPath.flat(Infinity);   //we can cache this if we want
     },
     //todo coordinate this with the unstoppable option. They should work the same way.
     stopImmediatePropagation: {
@@ -74,11 +100,19 @@ function populateEvent(event, target, propagationPath) {
   });
 }
 
-async function callOrQueueListenersForTargetPhase(currentTarget, event, phase, options, macrotask, listenerPhase) {
+async function callOrQueueListenersForTargetPhase(currentTarget, event, phase, options, macrotask) {
+  const listenerPhase =
+    phase === 32 ? 3 :
+      phase === 12 ? 1 :
+        phase;
   const listeners = getEventListeners(currentTarget, event.type, listenerPhase)
     .filter(listener => listener.unstoppable || !isStopped(event, event.isScoped || listener.scoped));
   if (!listeners || !listeners.length)
     return;
+  phase =
+    phase === 32 ? 2 :
+      phase === 12 ? 2 :
+        phase;
   Object.defineProperties(event, {
     "currentTarget": {value: currentTarget, writable: true},
     "eventPhase": {value: phase, writable: true}
@@ -97,36 +131,24 @@ async function callOrQueueListenersForTargetPhase(currentTarget, event, phase, o
 async function dispatchEvent(event, options) {
   if (isStopped(event)) //stopped before dispatch.. yes, it is possible to do var e = new Event("abc"); e.stopPropagation(); element.dispatchEvent(e);
     return;
-  const {propagationPath, targets} = getComposedPath(this, event.composed);
-  populateEvent(event, this, propagationPath);
+  const scopedPath = scopedPaths(this, event.composed);
+  const fullPath = calculatePropagationPaths(scopedPath, event.bubbles);
+  populateEvent(event, this, scopedPath);
 
-  let mesotaskDepth = event.bubbles ? (propagationPath.length * 2) + 1 : propagationPath.length + 1;
-  //todo should +1 when we bounce so we have space to run the default action.
   let macrotask = nextMesoTicks([function () {
-  }], mesotaskDepth + 1);//todo hack.. problem initiating without knowing the tasks
+  }], fullPath.length + 1);//todo hack.. problem initiating without knowing the tasks
+  //todo should +2 for bounce: true so we have a mesotask for the default action(s) too.
 
-  for (let i = propagationPath.length - 1; i > 0; i--) {  //note, this doesn't do i>=0. The capture phase excludes the running of the lowest target.
-    const currentTarget = propagationPath[i];
-    const phase = targets.indexOf(currentTarget) !== -1 ? Event.AT_TARGET : Event.CAPTURING_PHASE;
-    await callOrQueueListenersForTargetPhase(currentTarget, event, phase, options, macrotask, Event.CAPTURING_PHASE );
-  }
-
-  await callOrQueueListenersForTargetPhase(propagationPath[0], event, Event.AT_TARGET, options, macrotask, Event.AT_TARGET);
-
-  for (let i = 1; i < propagationPath.length; i++) {
-    let currentTarget = propagationPath[i];
-    const phase = targets.indexOf(currentTarget) !== -1 ? Event.AT_TARGET : Event.BUBBLING_PHASE;
-    if (event.bubbles || phase !== Event.BUBBLING_PHASE)
-      await callOrQueueListenersForTargetPhase(currentTarget, event, phase, options, macrotask, Event.BUBBLING_PHASE);
-  }
+  for (let {target, phase} of fullPath)
+    await callOrQueueListenersForTargetPhase(target, event, phase, options, macrotask);
 }
 
-export function addDispatchEventOptionAsync(EventTargetPrototype, sync){
+export function addDispatchEventOptionAsync(EventTargetPrototype, sync) {
   const dispatchOG = EventTargetPrototype.dispatchEvent;
 
-  function dispatchEventAsyncOnly(event, options){
-    options?.async?
-      dispatchEvent.call(this, event, options): //async
+  function dispatchEventAsyncOnly(event, options) {
+    options?.async ?
+      dispatchEvent.call(this, event, options) : //async
       dispatchOG.call(this, event);             //sync
   }
 
