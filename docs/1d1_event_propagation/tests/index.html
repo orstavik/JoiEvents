@@ -59,7 +59,7 @@
   } from "./getEventListeners_once_last.js";
   import {addEventTargetRegistry, getEventListeners} from "./getEventListeners_once_last_first.js";
   import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable, isStopped} from "./ScopedEventListeners.js";
-  import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
+  import {addDispatchEventOptionAsync, scopedPaths} from "./dispatchEventOptionAsync.js";
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   const removeEventListenerOG = EventTarget.prototype.removeEventListener;
@@ -80,6 +80,9 @@
     };
     window.isStopped = function (event, scoped) {
       return event.cancelBubble;
+    };
+    window.scopedPaths = function (element, composed) {
+      return [];
     };
   }
 
@@ -116,6 +119,12 @@
     upgrade: function () {
       addEventTargetRegistry1(EventTarget.prototype);
       window.getEventListeners = getEventListeners1;
+    },
+    downgrade: downgrade,
+  }, {
+    sysname: "scopedPaths",
+    upgrade: function () {
+      window.scopedPaths = scopedPaths;
     },
     downgrade: downgrade,
   }, {
@@ -170,6 +179,7 @@
   import {testProp} from "./unitTests/testPropagation.js";
   import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
+  import {testScopedPaths} from "./unitTests/testScopedPaths.js";
 
   (async function () {
     await runTests(eventSystems, testBasic);
@@ -186,6 +196,7 @@
     await runTests(eventSystems, testStopProp2);
     await runTests(eventSystems, testIsStopped);
     await runTests(eventSystems, testProp);
+    await runTests(eventSystems, testScopedPaths);
   })();
   //todo
   // 1. test stopPropagation thoroughly
