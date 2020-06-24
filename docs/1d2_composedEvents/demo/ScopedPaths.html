@@ -119,10 +119,12 @@
   }
 
   function getScopedPathsComposedTrue(target) {
-    let innerRes = getScopedPathsComposedFalse(target);
-    const res = [innerRes];
-    while (target = innerRes[innerRes.length - 1]?.host)
-      res.push(innerRes = getScopedPathsComposedFalse(target));
+    const res = [];
+    while (target){
+      const scopedPath = getScopedPathsComposedFalse(target);
+      res.push(scopedPath);
+      target = scopedPath[scopedPath.length-1].host;
+    }
     //todo should we return the upper bounced path as a flat array? or not? This will yield a different graph structure in different settings?
     return res;
   }
@@ -133,13 +135,15 @@
       let slot;
       if (target.shadowRoot && (slot = findSlot(target.getAttribute("slot") || "", target.shadowRoot)))
         path.push(getScopedPathsComposedFalse(slot));
-      //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
       path.push(target);
     }
     if (path[path.length-1] === document)
       path.push(window);
     return path;
   }
+  //todo what about the situation when you dispatch an event on a lightDOM child, and then
+  //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
+
 
   function toScope(path) {
     if (!(path instanceof Array))
