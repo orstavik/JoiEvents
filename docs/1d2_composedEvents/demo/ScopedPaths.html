@@ -135,10 +135,8 @@
         path.push(getScopedPathsComposedFalse(slot));
       //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
       path.push(target);
-      if (target instanceof ShadowRoot || target === document)
-        break;
     }
-    if (target === document)
+    if (path[path.length-1] === document)
       path.push(window);
     return path;
   }
