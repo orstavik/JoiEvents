@@ -18,6 +18,16 @@ class ShadowComp extends HTMLElement {
 
 customElements.define("shadow-comp", ShadowComp);
 
+class NestedShadow extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({mode: "open"});
+    this.shadowRoot.innerHTML = "<b><shadow-comp></shadow-comp></b>";
+  }
+}
+
+customElements.define("nested-shadow", NestedShadow);
+
 class MatroschkaComp extends HTMLElement {
   constructor() {
     super();
@@ -167,6 +177,50 @@ function simpleMatroschka() {
   }
 }
 
+//useCase4 nestedShadow
+
+// Flattened DOM                   | DOM context
+//----------------------------------------------------------------
+//   nested-shadow                 | 1. main
+//     nested-shadow#root          | A. nested-comp#root
+//       b                         | A. nested-comp#root
+//         shadow-comp             | A. nested-comp#root
+//           shadow-comp#root      | B. shadow-comp#root
+//             h1                  | B. shadow-comp#root
+
+// 1. main          | A. nested-comp   | B. shadow-comp
+//------------------------------------------------------------------
+//<nested-shadow>   |                  |
+//                  |#shadowRoot       |
+//                  |  <b>             |
+//                  |    <shadow-comp> |
+//                  |                  |#shadowRoot
+//                  |                  |  <h1>
+
+function nestedShadow() {
+  const nestedShadow = document.createElement("nested-shadow");
+  const nestedRoot = nestedShadow.shadowRoot;
+  const nestedB = nestedRoot.children[0];
+  const shadowComp = nestedB.children[0];
+  const shadowRoot = shadowComp.shadowRoot;
+  const shadowH1 = shadowRoot.children[0];
+  return {
+    all: {nestedShadow, nestedRoot, nestedB, shadowComp, shadowRoot, shadowH1},
+    scopedPath: [
+      [
+        shadowH1,
+        shadowRoot
+      ], [
+        shadowComp,
+        nestedB,
+        nestedRoot
+      ], [
+        nestedShadow
+      ]
+    ]
+  };
+}
+
 export const useCases = [{
   name: "shadow and slotted",
   makeDomBranch: shadowSlotted
@@ -176,6 +230,9 @@ export const useCases = [{
 }, {
   name: "lightDom el hidden by shadowDom",
   makeDomBranch: shadowCompWithExcludedLightDomDiv
+}, {
+  name: "shadow inside shadow",
+  makeDomBranch: nestedShadow
 }];
 
 export function cleanDom() {//todo replace this one with the useCases
