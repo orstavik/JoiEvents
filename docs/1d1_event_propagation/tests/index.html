@@ -180,6 +180,7 @@
   import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
   import {testScopedPaths} from "./unitTests/testScopedPaths.js";
+  import {basicPropTest} from "./unitTests/testPropagationBasic.js";
 
   (async function () {
     await runTests(eventSystems, testBasic);
@@ -199,6 +200,7 @@
     await runTests(eventSystems, testIsStopped);
     await runTests(eventSystems, testProp);
     await runTests(eventSystems, testScopedPaths);
+    await runTests(eventSystems, basicPropTest);
   })();
   //todo
   // 1. test stopPropagation thoroughly

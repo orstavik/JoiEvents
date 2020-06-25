@@ -31,6 +31,8 @@ function sameDOMScope(path) {
   );
 }
 
+import {useCases, elementsOnly} from "./useCase1.js";
+
 let res;
 
 function getResult() {
@@ -41,14 +43,17 @@ function makeTest(useCaseFun) {
   return function () {
     const useCase = useCaseFun();
     res = "";
-    const expectedScopedPath = useCase.scopedPath;
+    const expectedScopedPath = elementsOnly(useCase);
     const lowestmostTarget = expectedScopedPath[0][0];
     const producedScopedPath = scopedPaths(lowestmostTarget, true);
 
     if (!arrayEquals(producedScopedPath, expectedScopedPath))
       return res += "toScoped not implemented?";
 
-    for (let [name, element] of Object.entries(useCase.all)) {
+    const all = useCase.flat(Infinity);
+    for (let obj of all) {
+      let name = Object.getOwnPropertyNames(obj)[0];
+      let element = Object.values(obj)[0];
 
       function comparePaths(e) {
         const composedPath = e.composedPath();
@@ -63,8 +68,6 @@ function makeTest(useCaseFun) {
     }
   };
 }
-
-import {useCases} from "./useCase1.js";
 
 export const testScopedPaths = useCases.map(useCase => {
   return {

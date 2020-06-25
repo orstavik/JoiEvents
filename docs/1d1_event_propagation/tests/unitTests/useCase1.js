@@ -69,24 +69,22 @@ function shadowSlotted() {
   const shadowRoot = div.querySelector("shadow-comp").shadowRoot;
   const shadowH1 = div.querySelector("shadow-comp").shadowRoot.children[0];
 
-  return {
-    all: {div, slotComp, slotRoot, slotSpan, slotSlot, shadowComp, shadowRoot, shadowH1},
-    scopedPath: [
+  return [
+    [
+      {shadowH1},
+      {shadowRoot}
+    ],
+    [
+      {shadowComp},
       [
-        shadowH1,
-        shadowRoot
+        {slotSlot},
+        {slotSpan},
+        {slotRoot}
       ],
-      [
-        shadowComp,
-        [
-          slotSlot,
-          slotSpan,
-          slotRoot],
-        slotComp,
-        div
-      ]
+      {slotComp},
+      {div}
     ]
-  };
+  ];
 }
 
 //useCase2  lightDom element hidden from render by a shadowDom
@@ -106,19 +104,27 @@ function shadowCompWithExcludedLightDomDiv() {
   const shadowComp = document.createElement("shadow-comp");
   const div = document.createElement("div");
   shadowComp.appendChild(div);
+  return [
+    [
+      {div},
+      {shadowComp}
+    ]
+  ];
+}
+
+function simpleShadow() {
+  const shadowComp = document.createElement("shadow-comp");
 
   const shadowRoot = shadowComp.shadowRoot;
   const shadowH1 = shadowComp.shadowRoot.children[0];
-  return {
-    all: {shadowComp, shadowRoot, shadowH1, div},
-    scopedPath: [
-      [shadowH1, shadowRoot],
-      [shadowComp]
-    ],
-    alternativePath: [
-      [div, shadowComp]
+  return [
+    [
+      {shadowH1},
+      {shadowRoot}
+    ], [
+      {shadowComp}
     ]
-  };
+  ];
 }
 
 //useCase3 simple slot Matroschka
@@ -156,25 +162,22 @@ function simpleMatroschka() {
   const slotCompSpan = matroshcka.shadowRoot.children[0].shadowRoot.children[0];
   const slotCompSlot = matroshcka.shadowRoot.children[0].shadowRoot.children[0].children[0];
 
-  return {
-    all: {matroshcka, matroshckaRoot, slotComp, matroshckaSlot, slotCompRoot, slotCompSpan, slotCompSlot, div},
-    scopedPath: [
+  return [
+    [
+      {div},
       [
-        div,
+        {matroshckaSlot},
         [
-          matroshckaSlot,
-          [
-            slotCompSlot,
-            slotCompSpan,
-            slotCompRoot
-          ],
-          slotComp,
-          matroshckaRoot
+          {slotCompSlot},
+          {slotCompSpan},
+          {slotCompRoot}
         ],
-        matroshcka
-      ]
+        {slotComp},
+        {matroshckaRoot}
+      ],
+      {matroshcka}
     ]
-  }
+  ];
 }
 
 //useCase4 nestedShadow
@@ -204,22 +207,30 @@ function nestedShadow() {
   const shadowComp = nestedB.children[0];
   const shadowRoot = shadowComp.shadowRoot;
   const shadowH1 = shadowRoot.children[0];
-  return {
-    all: {nestedShadow, nestedRoot, nestedB, shadowComp, shadowRoot, shadowH1},
-    scopedPath: [
-      [
-        shadowH1,
-        shadowRoot
-      ], [
-        shadowComp,
-        nestedB,
-        nestedRoot
-      ], [
-        nestedShadow
-      ]
+  //todo convert the scopedPath into a map of elements and name objects.
+  return [
+    [
+      {shadowH1},
+      {shadowRoot}
+    ], [
+      {shadowComp},
+      {nestedB},
+      {nestedRoot}
+    ], [
+      {nestedShadow}
     ]
-  };
+  ];
 }
+
+export function elementsOnly(scopedPath) {
+  return scopedPath.map(entry => entry instanceof Array ? elementsOnly(entry) : Object.values(entry)[0]);
+}
+
+export function namesOnly(scopedPath) {
+  return scopedPath.map(entry => entry instanceof Array ? namesOnly(entry) : Object.getOwnPropertyNames(entry)[0]);
+}
+
+//todo make a popTarget???
 
 export const useCases = [{
   name: "shadow and slotted",
