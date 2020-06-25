@@ -114,35 +114,30 @@
 </script>
 
 <script>
-  function findSlot(slotName, root) {
-    return root.querySelector(slotName ? "slot[name=" + slotName + "]" : "slot:not([name]), slot[name='']");
-  }
-
-  //todo should we return the upper bounced path as a flat array? or not? This will yield a different graph structure in different settings?
-  function getScopedPathsComposedTrue(target) {
-    const res = [];
-    while (target){
-      const scopedPath = getScopedPathsComposedFalse(target);
-      res.push(scopedPath);
-      target = scopedPath[scopedPath.length-1].host;
-    }
-    return res;
-  }
-
-  function getScopedPathsComposedFalse(target) {
-    const path = [target];
-    for (target = target.parentNode; target; target = target.parentNode) {
-      if (target.shadowRoot) {
-        const slot = findSlot(target.getAttribute("slot") || "", target.shadowRoot);
-        slot && path.push(getScopedPathsComposedFalse(slot));
+  function scopedPaths(target, composed) {
+      if (!composed)
+        return [scopedPathsInner(target)];
+      const res = [];
+      while (target) {
+        const scopedPath = scopedPathsInner(target);
+        res.push(scopedPath);
+        target = scopedPath[scopedPath.length - 1].host;
       }
-      path.push(target);
+      return res;
     }
-    if (path[path.length-1] === document)
-      path.push(window);
-    return path;
-  }
-  //todo what about the situation when you dispatch an event on a lightDOM child, and then
+
+    function scopedPathsInner(target) {
+      const path = [];
+      while (target) {
+        path.push(target);
+        target.assignedSlot && path.push(scopedPathsInner(target.assignedSlot));
+        target = target.parentNode;
+      }
+      if (path[path.length - 1] === document)
+        path.push(window);
+      return path;
+    }
+    //todo what about the situation when you dispatch an event on a lightDOM child, and then
   //else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
 
 
@@ -193,61 +188,77 @@
     return true;
   }
 
-  function sameDOMScope(bouncedPath) {
-    for (let i = 0; i < bouncedPath.length; i++)
-      sameDOMScopeImpl(bouncedPath[i]);
-    return true;
+  function sameDOMScope(paths) {
+    return paths.every(path => sameDOMScopeImpl(path));
   }
 
   function sameDOMScopeImpl(path) {
-    if (path.length === 1) {
-      if (path[0] === document)
-        throw new Error("document must always be added to the window, no?");
-      if (path[0] instanceof EventTarget)
-        return;
-      throw new Error("omg, what kind of path is this? single path that is not window, shadowRoot, or element?")
+    if(!path.filter(target => target instanceof Array).every(path => sameDOMScopeImpl(path)))
+      return false;
+
+    const els = path.filter(target => !(target instanceof Array));
+    let last = els.pop();
+
+    if (last === window) {
+      if (els.length === 0)
+        return true;
+      last = els.pop();
+      return last === document && els.every(target => target.getRootNode() === last);
     }
-    let root = path[path.length - 1];
-    if (root === window) {
-      if (path[path.length - 2] !== document)
-        throw new Error("document is always the child of the window event target, no??");
-      for (let i = 0; i < path.length - 2; i++) {
-        if (path[i] instanceof Array)
-          sameDOMScopeImpl(path[i]);
-        else if (!(path[i] instanceof HTMLElement))
-          throw new Error(path[i], " is not an HTMLElement..");
-        else if (!(path[i].getRootNode() === document))
-          throw new Error(path[i], " an HTMLElement with a different root..");
-      }
-    } else if (root instanceof DocumentFragment) {
-      for (let i = 0; i < path.length - 1; i++) {
-        if (path[i] instanceof Array)
-          sameDOMScopeImpl(path[i]);
-        else if (!(path[i] instanceof HTMLElement))
-          throw new Error(path[i], " is not an HTMLElement..");
-        else if (root !== path[i].getRootNode())
-          throw new Error(path[i], " an HTMLElement with a different root..");
-      }
-    } else if (root instanceof HTMLElement) {
-      for (let i = 0; i < path.length - 1; i++) {
-        if (path[i] instanceof Array)
-          sameDOMScopeImpl(path[i]);
-        else if (!(path[i] instanceof HTMLElement))
-          throw new Error(path[i], " is not an HTMLElement..");
-        else if (undefined !== path[i].getRootNode())
-          throw new Error(path[i], " an HTMLElement with a different root..");
-      }
-    } else
-      throw new Error(root, "unknown type of root for propagation path");
+
+    if (last instanceof ShadowRoot || last instanceof HTMLElement)
+      return els.every(target => target.getRootNode() === last);
+    return false;
   }
 
+  //
+  // function sameDOMScopeImpl(path) {
+  //   if (path.length === 1) {
+  //     if (path[0] === document)
+  //       throw new Error("document must always be added to the window, no?");
+  //     if (path[0] instanceof EventTarget)
+  //       return;
+  //     throw new Error("omg, what kind of path is this? single path that is not window, shadowRoot, or element?")
+  //   }
+  //   let root = path[path.length - 1];
+  //   if (root === window) {
+  //     if (path[path.length - 2] !== document)
+  //       throw new Error("document is always the child of the window event target, no??");
+  //     for (let i = 0; i < path.length - 2; i++) {
+  //       if (path[i] instanceof Array)
+  //         sameDOMScopeImpl(path[i]);
+  //       else if (!(path[i] instanceof HTMLElement))
+  //         throw new Error(path[i], " is not an HTMLElement..");
+  //       else if (!(path[i].getRootNode() === document))
+  //         throw new Error(path[i], " an HTMLElement with a different root..");
+  //     }
+  //   } else if (root instanceof DocumentFragment) {
+  //     for (let i = 0; i < path.length - 1; i++) {
+  //       if (path[i] instanceof Array)
+  //         sameDOMScopeImpl(path[i]);
+  //       else if (!(path[i] instanceof HTMLElement))
+  //         throw new Error(path[i], " is not an HTMLElement..");
+  //       else if (root !== path[i].getRootNode())
+  //         throw new Error(path[i], " an HTMLElement with a different root..");
+  //     }
+  //   } else if (root instanceof HTMLElement) {
+  //     for (let i = 0; i < path.length - 1; i++) {
+  //       if (path[i] instanceof Array)
+  //         sameDOMScopeImpl(path[i]);
+  //       else if (!(path[i] instanceof HTMLElement))
+  //         throw new Error(path[i], " is not an HTMLElement..");
+  //       else if (undefined !== path[i].getRootNode())
+  //         throw new Error(path[i], " an HTMLElement with a different root..");
+  //     }
+  //   } else
+  //     throw new Error(root, "unknown type of root for propagation path");
+  // }
+
   function unitTest(target) {
-    const bouncePath = getScopedPathsComposedTrue(target);
+    const bouncePath = scopedPaths(target, true);
     const testOnClick = function (e) {
       const composedPath = e.composedPath();
-      const toScoped = toScope(composedPath);
-      const testEqualScoped = arrayEquals(toScoped, bouncePath);    //toScoped doesn't work...
-      const testEqualPath = arrayEquals(bouncePath.flat(100), composedPath);
+      const testEqualPath = arrayEquals(bouncePath.flat(Infinity), composedPath);
       const testCorrectDOMBoundaries = sameDOMScope(bouncePath);
       if (!testEqualPath || !testCorrectDOMBoundaries/*|| !testEqualScoped*/)
         throw new Error("omg, test failed..");
