@@ -1,5 +1,3 @@
-import {cleanDom, useCases} from "./useCase1.js";
-
 function arrayEquals(one, two) {
   if (!two)
     return false;
@@ -39,10 +37,18 @@ function getResult() {
   return res;
 }
 
-function makeTest(useCase) {
+function makeTest(useCaseFun) {
   return function () {
+    const useCase = useCaseFun();
     res = "";
-    for (let [name, element] of Object.entries(useCase)) {
+    const expectedScopedPath = useCase.scopedPath;
+    const lowestmostTarget = expectedScopedPath[0][0];
+    const producedScopedPath = scopedPaths(lowestmostTarget, true);
+
+    if (!arrayEquals(producedScopedPath, expectedScopedPath))
+      return res += "toScoped not implemented?";
+
+    for (let [name, element] of Object.entries(useCase.all)) {
 
       function comparePaths(e) {
         const composedPath = e.composedPath();
@@ -58,13 +64,13 @@ function makeTest(useCase) {
   };
 }
 
-export const testScopedPaths = useCases.map(useCaseFun=> {
-  const useCase = useCaseFun();
+import {useCases} from "./useCase1.js";
+
+export const testScopedPaths = useCases.map(useCase => {
   return {
     name: "scopedPaths: " + useCase.name,
-    fun: makeTest(useCase.all),
+    fun: makeTest(useCase.makeDomBranch),
     expect: "",
     result: getResult
   };
 });
-//todo add a test when the usecases are added to the DOM also.. Should i do this in the useCases function??

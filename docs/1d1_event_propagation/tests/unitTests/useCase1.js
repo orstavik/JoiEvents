@@ -52,19 +52,30 @@ function shadowSlotted() {
   const shadowComp = document.createElement("shadow-comp");
   div.appendChild(slotComp);
   slotComp.appendChild(shadowComp);
+
+  const slotRoot = div.querySelector("slot-comp").shadowRoot;
+  const slotSpan = div.querySelector("slot-comp").shadowRoot.children[0];
+  const slotSlot = div.querySelector("slot-comp").shadowRoot.children[0].children[0];
+  const shadowRoot = div.querySelector("shadow-comp").shadowRoot;
+  const shadowH1 = div.querySelector("shadow-comp").shadowRoot.children[0];
+
   return {
-    name: "shadow and slotted",
-    all: {
-      div: div,
-      slot: div.querySelector("slot-comp"),
-      slotRoot: div.querySelector("slot-comp").shadowRoot,
-      slotSpan: div.querySelector("slot-comp").shadowRoot.children[0],
-      slotSlot: div.querySelector("slot-comp").shadowRoot.children[0].children[0],
-      shadowComp: div.querySelector("shadow-comp"),
-      shadowRoot: div.querySelector("shadow-comp").shadowRoot,
-      shadowH1: div.querySelector("shadow-comp").shadowRoot.children[0]
-    },
-    leafs: ["shadowH1", "shadowComp"]
+    all: {div, slotComp, slotRoot, slotSpan, slotSlot, shadowComp, shadowRoot, shadowH1},
+    scopedPath: [
+      [
+        shadowH1,
+        shadowRoot
+      ],
+      [
+        shadowComp,
+        [
+          slotSlot,
+          slotSpan,
+          slotRoot],
+        slotComp,
+        div
+      ]
+    ]
   };
 }
 
@@ -85,15 +96,18 @@ function shadowCompWithExcludedLightDomDiv() {
   const shadowComp = document.createElement("shadow-comp");
   const div = document.createElement("div");
   shadowComp.appendChild(div);
+
+  const shadowRoot = shadowComp.shadowRoot;
+  const shadowH1 = shadowComp.shadowRoot.children[0];
   return {
-    name: "lightDom el hidden by shadowDom",
-    all: {
-      shadowComp,
-      shadowRoot: shadowComp.shadowRoot,
-      shadowH1: shadowComp.shadowRoot.children[0],
-      div
-    },
-    leafs: ["div", "shadowH1"]
+    all: {shadowComp, shadowRoot, shadowH1, div},
+    scopedPath: [
+      [shadowH1, shadowRoot],
+      [shadowComp]
+    ],
+    alternativePath: [
+      [div, shadowComp]
+    ]
   };
 }
 
@@ -125,25 +139,46 @@ function simpleMatroschka() {
   const matroshcka = document.createElement("matroschka-comp");
   const div = document.createElement("div");
   matroshcka.appendChild(div);
+  const matroshckaRoot = matroshcka.shadowRoot;
+  const slotComp = matroshcka.shadowRoot.children[0];
+  const matroshckaSlot = matroshcka.shadowRoot.children[0].children[0];
+  const slotCompRoot = matroshcka.shadowRoot.children[0].shadowRoot;
+  const slotCompSpan = matroshcka.shadowRoot.children[0].shadowRoot.children[0];
+  const slotCompSlot = matroshcka.shadowRoot.children[0].shadowRoot.children[0].children[0];
+
   return {
-    name: "simple SlotMatroschka",
-    all: {
-      matroshcka,
-      matroshckaRoot: matroshcka.shadowRoot,
-      slotComp: matroshcka.shadowRoot.children[0],
-      matroshckaSlot: matroshcka.shadowRoot.children[0].children[0],
-      slotCompRoot: matroshcka.shadowRoot.children[0].shadowRoot,
-      slotCompSpan: matroshcka.shadowRoot.children[0].shadowRoot.children[0],
-      slotCompSlot: matroshcka.shadowRoot.children[0].shadowRoot.children[0].children[0],
-      div
-    },
-    leafs: ["div"]
+    all: {matroshcka, matroshckaRoot, slotComp, matroshckaSlot, slotCompRoot, slotCompSpan, slotCompSlot, div},
+    scopedPath: [
+      [
+        div,
+        [
+          matroshckaSlot,
+          [
+            slotCompSlot,
+            slotCompSpan,
+            slotCompRoot
+          ],
+          slotComp,
+          matroshckaRoot
+        ],
+        matroshcka
+      ]
+    ]
   }
 }
 
-export const useCases = [shadowSlotted, simpleMatroschka, shadowCompWithExcludedLightDomDiv];
+export const useCases = [{
+  name: "shadow and slotted",
+  makeDomBranch: shadowSlotted
+}, {
+  name: "simple SlotMatroschka",
+  makeDomBranch: simpleMatroschka
+}, {
+  name: "lightDom el hidden by shadowDom",
+  makeDomBranch: shadowCompWithExcludedLightDomDiv
+}];
 
-export function cleanDom() {
+export function cleanDom() {//todo replace this one with the useCases
   const div = document.createElement("div");
   const slotComp = document.createElement("slot-comp");
   const shadowComp = document.createElement("shadow-comp");
