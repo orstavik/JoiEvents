@@ -46,21 +46,25 @@ customElements.define("matroschka-comp", MatroschkaComp);
 //  </slot-comp>
 //</div>
 
-export function cleanDom() {//todo rename to usecase1                                ゜
+function shadowSlotted() {
   const div = document.createElement("div");
   const slotComp = document.createElement("slot-comp");
   const shadowComp = document.createElement("shadow-comp");
   div.appendChild(slotComp);
   slotComp.appendChild(shadowComp);
   return {
-    div: div,
-    slot: div.querySelector("slot-comp"),
-    slotRoot: div.querySelector("slot-comp").shadowRoot,
-    slotSpan: div.querySelector("slot-comp").shadowRoot.children[0],
-    slotSlot: div.querySelector("slot-comp").shadowRoot.children[0].children[0],
-    shadowComp: div.querySelector("shadow-comp"),
-    shadowRoot: div.querySelector("shadow-comp").shadowRoot,
-    shadowH1: div.querySelector("shadow-comp").shadowRoot.children[0]
+    name: "shadow and slotted",
+    all: {
+      div: div,
+      slot: div.querySelector("slot-comp"),
+      slotRoot: div.querySelector("slot-comp").shadowRoot,
+      slotSpan: div.querySelector("slot-comp").shadowRoot.children[0],
+      slotSlot: div.querySelector("slot-comp").shadowRoot.children[0].children[0],
+      shadowComp: div.querySelector("shadow-comp"),
+      shadowRoot: div.querySelector("shadow-comp").shadowRoot,
+      shadowH1: div.querySelector("shadow-comp").shadowRoot.children[0]
+    },
+    leafs: ["shadowH1", "shadowComp"]
   };
 }
 
@@ -77,15 +81,19 @@ export function cleanDom() {//todo rename to usecase1                           
 //  <div></div>
 //</shadow-comp>
 
-export function shadowCompWithExcludedLightDomDiv() {
+function shadowCompWithExcludedLightDomDiv() {
   const shadowComp = document.createElement("shadow-comp");
   const div = document.createElement("div");
   shadowComp.appendChild(div);
   return {
-    shadowComp,
-    shadowRoot: shadowComp.shadowRoot,
-    shadowH1: shadowComp.shadowRoot.children[0],
-    div
+    name: "lightDom el hidden by shadowDom",
+    all: {
+      shadowComp,
+      shadowRoot: shadowComp.shadowRoot,
+      shadowH1: shadowComp.shadowRoot.children[0],
+      div
+    },
+    leafs: ["div", "shadowH1"]
   };
 }
 
@@ -113,18 +121,42 @@ export function shadowCompWithExcludedLightDomDiv() {
 //                  |                |    <slot>
 //  <div>           |                |
 
-export function simpleMatroschka() {
+function simpleMatroschka() {
   const matroshcka = document.createElement("matroschka-comp");
   const div = document.createElement("div");
   matroshcka.appendChild(div);
   return {
-    matroshcka,
-    matroshckaRoot: matroshcka.shadowRoot,
-    slotComp: matroshcka.shadowRoot.children[0],
-    matroshckaSlot: matroshcka.shadowRoot.children[0].children[0],
-    slotCompRoot: matroshcka.shadowRoot.children[0].shadowRoot,
-    slotCompSpan: matroshcka.shadowRoot.children[0].shadowRoot.children[0],
-    slotCompSlot: matroshcka.shadowRoot.children[0].shadowRoot.children[0].children[0],
-    div
+    name: "simple SlotMatroschka",
+    all: {
+      matroshcka,
+      matroshckaRoot: matroshcka.shadowRoot,
+      slotComp: matroshcka.shadowRoot.children[0],
+      matroshckaSlot: matroshcka.shadowRoot.children[0].children[0],
+      slotCompRoot: matroshcka.shadowRoot.children[0].shadowRoot,
+      slotCompSpan: matroshcka.shadowRoot.children[0].shadowRoot.children[0],
+      slotCompSlot: matroshcka.shadowRoot.children[0].shadowRoot.children[0].children[0],
+      div
+    },
+    leafs: ["div"]
+  }
+}
+
+export const useCases = [shadowSlotted, simpleMatroschka, shadowCompWithExcludedLightDomDiv];
+
+export function cleanDom() {
+  const div = document.createElement("div");
+  const slotComp = document.createElement("slot-comp");
+  const shadowComp = document.createElement("shadow-comp");
+  div.appendChild(slotComp);
+  slotComp.appendChild(shadowComp);
+  return {
+    div: div,
+    slot: div.querySelector("slot-comp"),
+    slotRoot: div.querySelector("slot-comp").shadowRoot,
+    slotSpan: div.querySelector("slot-comp").shadowRoot.children[0],
+    slotSlot: div.querySelector("slot-comp").shadowRoot.children[0].children[0],
+    shadowComp: div.querySelector("shadow-comp"),
+    shadowRoot: div.querySelector("shadow-comp").shadowRoot,
+    shadowH1: div.querySelector("shadow-comp").shadowRoot.children[0]
   };
 }

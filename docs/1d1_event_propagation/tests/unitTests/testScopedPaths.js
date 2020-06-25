@@ -1,4 +1,4 @@
-import {cleanDom, shadowCompWithExcludedLightDomDiv, simpleMatroschka} from "./useCase1.js";
+import {cleanDom, useCases} from "./useCase1.js";
 
 function arrayEquals(one, two) {
   if (!two)
@@ -33,46 +33,38 @@ function sameDOMScope(path) {
   );
 }
 
-let res1 = "", res2 = "";
+let res;
 
 function getResult() {
-  return res1;
+  return res;
 }
 
 function makeTest(useCase) {
   return function () {
-    res1 = "";
-    for (let name in useCase) {
+    res = "";
+    for (let [name, element] of Object.entries(useCase)) {
 
       function comparePaths(e) {
         const composedPath = e.composedPath();
-        const scopedPath = scopedPaths(composedPath[0]); //target is wrong here
-        if (!arrayEquals(scopedPath.flat(Infinity), composedPath))
-          res1 += name;
-        if (!sameDOMScope(scopedPath))
-          res2 += name;
+        const scopedPath = scopedPaths(e.target);
+        if (!arrayEquals(scopedPath.flat(Infinity), composedPath) || !sameDOMScope(scopedPath))
+          res += name;
       }
 
-      useCase[name].addEventListener("click", comparePaths);
-      useCase[name].dispatchEvent(new Event("click"));
-      useCase[name].removeEventListener("click", comparePaths);
+      element.addEventListener("click", comparePaths);
+      element.dispatchEvent(new Event("click"));
+      element.removeEventListener("click", comparePaths);
     }
   };
 }
 
-export const testScopedPaths = [{
-  name: "useCase1: inside shadow, then slotted",
-  fun: makeTest(cleanDom()),
-  expect: "",
-  result: getResult
-}, {
-  name: "useCase2: shadowCompWithExcludedLightDomDiv",
-  fun: makeTest(shadowCompWithExcludedLightDomDiv()),
-  expect: "",
-  result: getResult
-}, {
-  name: "useCase3: simple slotmatroschka",
-  fun: makeTest(simpleMatroschka()),
-  expect: "",
-  result: getResult
-}];
+export const testScopedPaths = useCases.map(useCaseFun=> {
+  const useCase = useCaseFun();
+  return {
+    name: "scopedPaths: " + useCase.name,
+    fun: makeTest(useCase.all),
+    expect: "",
+    result: getResult
+  };
+});
+//todo add a test when the usecases are added to the DOM also.. Should i do this in the useCases function??
