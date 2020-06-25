@@ -174,8 +174,8 @@
   import {testRegistry} from "./unitTests/testRegistry.js";
   import {testOnce} from "./unitTests/testOnce.js";
   import {testUnstoppable, cancelBubbleTests} from "./unitTests/testUnstoppable.js";
-  import {lastTest, lastErrorsTest} from "./unitTests/testLast.js";
-  import {firstTest, firstErrorsTest} from "./unitTests/testFirst.js";
+  import {lastTest, lastErrorsTest, last2} from "./unitTests/testLast.js";
+  import {firstTest, firstErrorsTest, first2} from "./unitTests/testFirst.js";
   import {testProp} from "./unitTests/testPropagation.js";
   import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
@@ -189,8 +189,10 @@
     await runTests(eventSystems, testUnstoppable);
     await runTests(eventSystems, cancelBubbleTests);
     await runTests(eventSystems, lastTest);
+    await runTests(eventSystems, last2);
     await runTests(eventSystems, lastErrorsTest);
     await runTests(eventSystems, firstTest);
+    await runTests(eventSystems, first2);
     await runTests(eventSystems, firstErrorsTest);
     await runTests(eventSystems, testStopProp);
     await runTests(eventSystems, testStopProp2);

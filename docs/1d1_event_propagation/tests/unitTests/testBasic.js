@@ -1,18 +1,3 @@
-// function arrayEquals(one, two) {
-//   if (!two)
-//     return false;
-//   if (one.length != two.length)
-//     return false;
-//   for (var i = 0, l = one.length; i < l; i++) {
-//     if (one[i] instanceof Array && two[i] instanceof Array) {
-//       if (!arrayEquals(one[i], two[i]))
-//         return false;
-//     } else if (one[i] != two[i]) {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
 // const funkyBoy = (msg) => console.log(msg);
 //
 // function playBoy(msg) {
@@ -116,6 +101,21 @@
 // h1.dispatchEvent(new MouseEvent("click"));
 // h1.dispatchEvent(new MouseEvent("click"));
 //
+let i = 0;
+
+function useCase(){
+  class WebComp extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = `<h1>hello sunshine!</h1>`
+    }
+  }
+
+  const name = "web-comp-" + i++;
+  customElements.define(name, WebComp);
+  return document.createElement(name);
+}
 
 let res;
 export const testBasic = [{
@@ -184,7 +184,8 @@ export const testBasic = [{
     h1.addEventListener("click", cb);
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "c", result: function () {
+  expect: "c",
+  result: function () {
     return res;
   }
 }, {
@@ -205,7 +206,33 @@ export const testBasic = [{
     h2.addEventListener("click", cb, true);
     h2.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "1223", result: function () {
+  expect: "1223",
+  result: function () {
+    return res;
+  }
+}, {
+  name: "basic: at_target order differ host/end target",
+  fun: function () {
+    res = "";
+    const webComp = useCase();
+
+    function cbCapture(e) {
+      res += e.eventPhase + "-";
+    }
+    function cbBubble(e) {
+      res += e.eventPhase + "+";
+    }
+
+    webComp.addEventListener("click", cbBubble);
+    webComp.addEventListener("click", cbCapture, true);
+    webComp.shadowRoot.addEventListener("click", cbBubble);
+    webComp.shadowRoot.addEventListener("click", cbCapture, true);
+    webComp.shadowRoot.children[0].addEventListener("click", cbBubble);
+    webComp.shadowRoot.children[0].addEventListener("click", cbCapture, true);
+    webComp.shadowRoot.children[0].dispatchEvent(new Event("click", {bubbles: true, composed: true}));
+  },
+  expect: "2-1-2+2-3+2+",
+  result: function () {
     return res;
   }
 }];
