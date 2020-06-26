@@ -234,7 +234,7 @@ export function eventTargetName(eventTarget){
   if(eventTarget === "document")
     return "document";
   if(eventTarget.host)
-    return eventTarget.host.tagName;
+    return eventTarget.host.tagName + "#root";
 }
 
 export function popTargets(scopedPath, pops) {

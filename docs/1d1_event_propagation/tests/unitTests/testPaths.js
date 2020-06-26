@@ -53,13 +53,13 @@ function makeScopedPathsTest(usecase) {
       //test composed
       let producedScopedPaths = scopedPaths(target, true);
       if (!arrayEquals(producedScopedPaths, usecaseSlice))
-        return res += "error in usecase composed?" + i;
+        return res = "notImplement/error in usecase composed?";
       let producedScopedPathsFalse = scopedPaths(target, false);
       let composedFalseExpected = usecaseSlice;
       while (composedFalseExpected[0] instanceof Array)
         composedFalseExpected = composedFalseExpected[0];
       if (!arrayEquals(producedScopedPathsFalse, composedFalseExpected))
-        return res += "error in usecase non-composed?" + i;
+        return res = "notImplement/error in usecase non-composed?";
 
       usecaseSlice = popTargets(usecaseSlice, 1);
       usecaseFlat.shift();

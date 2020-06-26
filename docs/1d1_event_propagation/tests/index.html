@@ -15,8 +15,8 @@
       cb();
       setTimeout(function () {
         r();
-      })
-    });
+      })//todo i need setTimeout(..., 1) for this to work in ff?
+    }); //todo i need 1 for this to work in ff?
     return p;
   }
 
@@ -179,7 +179,7 @@
   import {testProp} from "./unitTests/testPropagation.js";
   import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
-  import {testScopedPaths} from "./unitTests/testScopedPaths.js";
+  import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
 
   (async function () {
@@ -200,6 +200,7 @@
     await runTests(eventSystems, testIsStopped);
     await runTests(eventSystems, testProp);
     await runTests(eventSystems, testScopedPaths);
+    await runTests(eventSystems, testComposedPath);
     await runTests(eventSystems, basicPropTest);
   })();
   //todo

@@ -1,3 +1,4 @@
+import{} from "./nextTick.js";
 /*
  * ScopedPaths are a set of nested arrays which contain the eventTarget divided by DOM contexts.
  * If you flatten the ScopedPaths, ie. scopedPaths(el, trueOrFalse).flat(Infinity),
