@@ -69,22 +69,22 @@ function shadowSlotted() {
   const shadowRoot = div.querySelector("shadow-comp").shadowRoot;
   const shadowH1 = div.querySelector("shadow-comp").shadowRoot.children[0];
 
-  return [
+  const usecase = [
     [
-      {shadowH1},
-      {shadowRoot}
+      shadowH1,
+      shadowRoot
     ],
+    shadowComp,
     [
-      {shadowComp},
-      [
-        {slotSlot},
-        {slotSpan},
-        {slotRoot}
-      ],
-      {slotComp},
-      {div}
-    ]
+      slotSlot,
+      slotSpan,
+      slotRoot
+    ],
+    slotComp,
+    div
   ];
+  Object.freeze(usecase, true);
+  return usecase;
 }
 
 //useCase2  lightDom element hidden from render by a shadowDom
@@ -104,27 +104,30 @@ function shadowCompWithExcludedLightDomDiv() {
   const shadowComp = document.createElement("shadow-comp");
   const div = document.createElement("div");
   shadowComp.appendChild(div);
-  return [
-    [
-      {div},
-      {shadowComp}
-    ]
+  const usecase = [
+    div,
+    shadowComp
   ];
+  Object.freeze(usecase, true);
+  return usecase;
 }
 
-function simpleShadow() {
+function simpleShadowWithExcludedDivNotInScopedPath() {
   const shadowComp = document.createElement("shadow-comp");
+  const div = document.createElement("div");
+  shadowComp.appendChild(div);
 
   const shadowRoot = shadowComp.shadowRoot;
   const shadowH1 = shadowComp.shadowRoot.children[0];
-  return [
+  const usecase = [
     [
-      {shadowH1},
-      {shadowRoot}
-    ], [
-      {shadowComp}
-    ]
+      shadowH1,
+      shadowRoot
+    ],
+    shadowComp
   ];
+  Object.freeze(usecase, true);
+  return usecase;
 }
 
 //useCase3 simple slot Matroschka
@@ -162,22 +165,22 @@ function simpleMatroschka() {
   const slotCompSpan = matroshcka.shadowRoot.children[0].shadowRoot.children[0];
   const slotCompSlot = matroshcka.shadowRoot.children[0].shadowRoot.children[0].children[0];
 
-  return [
+  const usecase = [
+    div,
     [
-      {div},
+      matroshckaSlot,
       [
-        {matroshckaSlot},
-        [
-          {slotCompSlot},
-          {slotCompSpan},
-          {slotCompRoot}
-        ],
-        {slotComp},
-        {matroshckaRoot}
+        slotCompSlot,
+        slotCompSpan,
+        slotCompRoot
       ],
-      {matroshcka}
-    ]
+      slotComp,
+      matroshckaRoot
+    ],
+    matroshcka
   ];
+  Object.freeze(usecase, true);
+  return usecase;
 }
 
 //useCase4 nestedShadow
@@ -207,30 +210,56 @@ function nestedShadow() {
   const shadowComp = nestedB.children[0];
   const shadowRoot = shadowComp.shadowRoot;
   const shadowH1 = shadowRoot.children[0];
-  //todo convert the scopedPath into a map of elements and name objects.
-  return [
+  const usecase = [
     [
-      {shadowH1},
-      {shadowRoot}
-    ], [
-      {shadowComp},
-      {nestedB},
-      {nestedRoot}
-    ], [
-      {nestedShadow}
-    ]
+      [
+        shadowH1,
+        shadowRoot
+      ],
+      shadowComp,
+      nestedB,
+      nestedRoot
+    ],
+    nestedShadow
   ];
+  Object.freeze(usecase, true);
+  return usecase;
 }
 
-export function elementsOnly(scopedPath) {
-  return scopedPath.map(entry => entry instanceof Array ? elementsOnly(entry) : Object.values(entry)[0]);
+export function eventTargetName(eventTarget){
+  if(eventTarget.tagName)
+    return eventTarget.tagName;
+  if(eventTarget === "window")
+    return "window";
+  if(eventTarget === "document")
+    return "document";
+  if(eventTarget.host)
+    return eventTarget.host.tagName;
 }
 
-export function namesOnly(scopedPath) {
-  return scopedPath.map(entry => entry instanceof Array ? namesOnly(entry) : Object.getOwnPropertyNames(entry)[0]);
+export function popTargets(scopedPath, pops) {
+  return popTargets2(scopedPath, pops)[1];
 }
 
-//todo make a popTarget???
+function popTargets2(scopedPath, pops) {
+  const res = [];
+  let inner;
+  for (let targetArray of scopedPath) {
+    if (pops) {
+      if (targetArray instanceof Array) {
+        [pops, inner] = popTargets2(targetArray, pops);
+        if (inner.length)
+          res.push(inner);
+      } else {
+        pops--;
+      }
+    } else {
+      res.push(targetArray);
+    }
+  }
+  Object.freeze(res);
+  return [pops, res];
+}
 
 export const useCases = [{
   name: "shadow and slotted",
@@ -245,6 +274,7 @@ export const useCases = [{
   name: "shadow inside shadow",
   makeDomBranch: nestedShadow
 }];
+Object.freeze(useCases, true);
 
 export function cleanDom() {//todo replace this one with the useCases
   const div = document.createElement("div");

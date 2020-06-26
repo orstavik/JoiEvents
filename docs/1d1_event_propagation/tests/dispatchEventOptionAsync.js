@@ -1,37 +1,23 @@
-import {} from "./nextTick.js";
-
 /*
  * ScopedPaths are a set of nested arrays which contain the eventTarget divided by DOM contexts.
- * If you flatten the ScopedPaths, ie. scopedPaths(el).flat(Infinity),
- * then you will get the same output as the composedPath.
- *
- * Note: scopedPaths(el, composed: false) and scopedPaths(elInTheMainDOM, composed: true)
- * returns the result wrapped in an outer list. This makes all calls to scopedPaths(el, true|false)
- * return an equivalent structure.
+ * If you flatten the ScopedPaths, ie. scopedPaths(el, trueOrFalse).flat(Infinity),
+ * then you will get the same output as the composedPath() for that element
+ * if a composed: trueOrFalse event were dispatched to it.
  *
  * @returns [[path], [path]]
  *          where each path can consist of elements, or other slotted paths.
  */
-export function scopedPaths(target, composed) {
-  if (!composed)
-    return [scopedPathsInner(target)];
-  const res = [];
-  while (target) {
-    const scopedPath = scopedPathsInner(target);
-    res.push(scopedPath);
-    target = scopedPath[scopedPath.length - 1].host;
-  }
-  return res;
-}
-
-function scopedPathsInner(target) {
-  const path = [];
+export function scopedPaths(target, composed, originShadow){
+  let path = originShadow ? [originShadow] : [];
   while (target) {
     path.push(target);
-    target.assignedSlot && path.push(scopedPathsInner(target.assignedSlot));
+    target.assignedSlot && path.push(scopedPaths(target.assignedSlot, false));
     target = target.parentNode;
   }
-  if (path[path.length - 1] === document)
+  const last = path[path.length - 1];
+  if (composed && last.host)
+    return scopedPaths(last.host, composed, path);
+  if (last === document)
     path.push(window);
   return path;
 }

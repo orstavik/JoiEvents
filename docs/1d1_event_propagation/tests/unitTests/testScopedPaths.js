@@ -31,49 +31,77 @@ function sameDOMScope(path) {
   );
 }
 
-import {useCases, elementsOnly} from "./useCase1.js";
+import {eventTargetName, popTargets, useCases} from "./useCase1.js";
 
 let res;
 
-function getResult() {
+function result() {
   return res;
 }
 
-function makeTest(useCaseFun) {
-  return function () {
-    const useCase = useCaseFun();
+const expect = "";
+
+function makeScopedPathsTest(usecase) {
+
+  return function scopedPathsTest() {
+    const usecaseFlat = usecase.flat(Infinity);
     res = "";
-    const expectedScopedPath = elementsOnly(useCase);
-    const lowestmostTarget = expectedScopedPath[0][0];
-    const producedScopedPath = scopedPaths(lowestmostTarget, true);
+    let usecaseSlice = usecase;
+    let usecaseFlatSlice = usecaseFlat;
+    while (usecaseFlatSlice.length) {
+      let target = usecaseFlatSlice[0];
+      //test composed
+      let producedScopedPaths = scopedPaths(target, true);
+      if (!arrayEquals(producedScopedPaths, usecaseSlice))
+        return res += "error in usecase composed?" + i;
+      let producedScopedPathsFalse = scopedPaths(target, false);
+      let composedFalseExpected = usecaseSlice;
+      while (composedFalseExpected[0] instanceof Array)
+        composedFalseExpected = composedFalseExpected[0];
+      if (!arrayEquals(producedScopedPathsFalse, composedFalseExpected))
+        return res += "error in usecase non-composed?" + i;
 
-    if (!arrayEquals(producedScopedPath, expectedScopedPath))
-      return res += "toScoped not implemented?";
+      usecaseSlice = popTargets(usecaseSlice, 1);
+      usecaseFlat.shift();
+    }
+  };
+}
 
-    const all = useCase.flat(Infinity);
-    for (let obj of all) {
-      let name = Object.getOwnPropertyNames(obj)[0];
-      let element = Object.values(obj)[0];
+function makeComposedPathTest(usecaseFlat) {
 
+  return function composedPathTest() {
+    res = "";
+    for (let element of usecaseFlat) {
       function comparePaths(e) {
         const composedPath = e.composedPath();
-        const scopedPath = scopedPaths(e.target);
+        const scopedPath = scopedPaths(e.target, true);
         if (!arrayEquals(scopedPath.flat(Infinity), composedPath) || !sameDOMScope(scopedPath))
-          res += name;
+          res += eventTargetName(element);
       }
 
       element.addEventListener("click", comparePaths);
-      element.dispatchEvent(new Event("click"));
+      element.dispatchEvent(new Event("click", {composed: true}));
       element.removeEventListener("click", comparePaths);
     }
   };
 }
 
-export const testScopedPaths = useCases.map(useCase => {
+export const testScopedPaths = useCases.map(usecase => {
+  const usecaseDom = usecase.makeDomBranch();
   return {
-    name: "scopedPaths: " + useCase.name,
-    fun: makeTest(useCase.makeDomBranch),
-    expect: "",
-    result: getResult
+    name: "scopedPaths: " + usecase.name,
+    fun: makeScopedPathsTest(usecaseDom),
+    expect,
+    result
+  };
+});
+
+export const testComposedPath = useCases.map(usecase => {
+  const usecaseFlat = usecase.makeDomBranch().flat(Infinity);
+  return {
+    name: "composedPaths: " + usecase.name,
+    fun: makeComposedPathTest(usecaseFlat),
+    expect,
+    result
   };
 });
