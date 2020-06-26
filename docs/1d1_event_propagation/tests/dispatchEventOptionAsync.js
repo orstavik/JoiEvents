@@ -1,4 +1,5 @@
-import{} from "./nextTick.js";
+import {} from "./nextTick.js";
+
 /*
  * ScopedPaths are a set of nested arrays which contain the eventTarget divided by DOM contexts.
  * If you flatten the ScopedPaths, ie. scopedPaths(el, trueOrFalse).flat(Infinity),
@@ -8,7 +9,7 @@ import{} from "./nextTick.js";
  * @returns [[path], [path]]
  *          where each path can consist of elements, or other slotted paths.
  */
-export function scopedPaths(target, composed, originShadow){
+export function scopedPaths(target, composed, originShadow) {
   let path = originShadow ? [originShadow] : [];
   while (target) {
     path.push(target);
@@ -94,18 +95,12 @@ function populateEvent(event, target, scopedPath) {
 }
 
 async function callOrQueueListenersForTargetPhase(currentTarget, event, phase, options, macrotask) {
-  const listenerPhase =
-    phase === 32 ? 3 :
-      phase === 12 ? 1 :
-        phase;
+  const listenerPhase = phase === 32 ? 3 : phase === 12 ? 1 : phase;
   const listeners = getEventListeners(currentTarget, event.type, listenerPhase)
     .filter(listener => listener.unstoppable || !isStopped(event, event.isScoped || listener.scoped));
-  if (!listeners || !listeners.length)
+  if (!listeners.length)
     return;
-  phase =
-    phase === 32 ? 2 :
-      phase === 12 ? 2 :
-        phase;
+  if (phase === 32 || phase === 12) phase = 2;
   Object.defineProperties(event, {
     "currentTarget": {value: currentTarget, writable: true},
     "eventPhase": {value: phase, writable: true}
