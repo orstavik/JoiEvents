@@ -47,6 +47,7 @@ function calculatePropagationPaths(scopedPath, bubbles) {
   const capture = raw.reverse().map(target => ({
     target: target,
     phase: composedTargets.indexOf(target) >= 0 ? 12 : 1
+    // listenerPhase: composedTargets.indexOf(target) >= 0 ? 12 : 1
   }));
 
   return capture.concat([{target: lowestTarget, phase: 2}]).concat(bubble);
@@ -94,24 +95,9 @@ function populateEvent(event, target, scopedPath) {
   });
 }
 
-async function callOrQueueListenersForTargetPhase(currentTarget, event, phase, options, macrotask) {
-  const listenerPhase = phase === 32 ? 3 : phase === 12 ? 1 : phase;
-  const listeners = getEventListeners(currentTarget, event.type, listenerPhase)
-    .filter(listener => listener.unstoppable || !isStopped(event, event.isScoped || listener.scoped));
-  if (!listeners.length)
-    return;
-  if (phase === 32 || phase === 12) phase = 2;
-  Object.defineProperties(event, {
-    "currentTarget": {value: currentTarget, writable: true},
-    "eventPhase": {value: phase, writable: true}
-  });
-  if (!options?.async) {                                             //sync
-    for (let listener of listeners)
-      callListenerHandleError(currentTarget, listener, event);
-    return;
-  }
+async function callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask) {
   const cbs = listeners.map(function (listener) {                 //async
-    return callListenerHandleError.bind(null, listeners, listener, event);
+    return callListenerHandleError.bind(null, currentTarget, listener, event);
   });
   return await macrotask.nextMesoTick(cbs);
 }
@@ -127,8 +113,22 @@ async function dispatchEvent(event, options) {
   }], fullPath.length + 1);//todo hack.. problem initiating without knowing the tasks
   //todo should +2 for bounce: true so we have a mesotask for the default action(s) too.
 
-  for (let {target, phase} of fullPath)
-    await callOrQueueListenersForTargetPhase(target, event, phase, options, macrotask);
+  for (let {target, phase} of fullPath) {
+    const listenerPhase = phase === 32 ? 3 : phase === 12 ? 1 : phase;
+    const listeners = getEventListeners(target, event.type, listenerPhase)
+      .filter(listener => listener.unstoppable || !isStopped(event, event.isScoped || listener.scoped));
+    if (!listeners.length)
+      continue;
+    Object.defineProperties(event, {
+      "currentTarget": {value: target, writable: true},
+      "eventPhase": {value: (phase === 32 || phase === 12) ? 2 : phase, writable: true}
+    });
+    if (options?.async) {
+      await callOrQueueListenersForTargetPhase(target, event, listeners, options, macrotask);
+    } else {
+      listeners.forEach(listener => callListenerHandleError(target, listener, event));
+    }
+  }
 }
 
 export function addDispatchEventOptionAsync(EventTargetPrototype, sync) {
