@@ -22,9 +22,15 @@ export function scopedPaths(target, composed, originShadow){
   return path;
 }
 
+export function filterComposedTargets(scopedPath) {
+  return scopedPath[0] instanceof Array ?
+    [...filterComposedTargets(scopedPath[0]), scopedPath[1]] :
+    [scopedPath[0]];
+}
+
 function calculatePropagationPaths(scopedPath, bubbles) {
   //process AT_TARGET nodes, both the normal, innermost AT_TARGET, and any composed, upper, host node AT_TARGETs.
-  const composedTargets = scopedPath.map(ar => ar[0]);
+  const composedTargets = filterComposedTargets(scopedPath);//todo this is updated and not tested..
   const lowestTarget = composedTargets.shift();      //the lowestMost target is processed separately
 
   const raw = scopedPath.flat(Infinity);
