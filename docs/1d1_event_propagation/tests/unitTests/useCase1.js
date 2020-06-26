@@ -88,6 +88,9 @@ function shadowSlotted() {
 }
 
 //useCase2  lightDom element hidden from render by a shadowDom
+//
+//a lightDOM child hidden in view by the shadowDom of its parent node, is still a viable target for an event, and
+// it will propagate in the lightDOM.
 
 // Flattened DOM                   | DOM context
 //----------------------------------------------------------------

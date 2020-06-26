@@ -1,5 +1,5 @@
 import {eventTargetName, popTargets, useCases} from "./useCase1.js";
-import {filterComposedTargets} from "../dispatchEventOptionAsync.js";
+import {filterComposedTargets} from "../computePaths.js";
 
 let res;
 

@@ -1,60 +1,5 @@
 import {} from "./nextTick.js";
-
-/*
- * ScopedPaths are a set of nested arrays which contain the eventTarget divided by DOM contexts.
- * If you flatten the ScopedPaths, ie. scopedPaths(el, trueOrFalse).flat(Infinity),
- * then you will get the same output as the composedPath() for that element
- * if a composed: trueOrFalse event were dispatched to it.
- *
- * @returns [[path], [path]]
- *          where each path can consist of elements, or other slotted paths.
- */
-export function scopedPaths(target, composed, originShadow) {
-  let path = originShadow ? [originShadow] : [];
-  while (target) {
-    path.push(target);
-    target.assignedSlot && path.push(scopedPaths(target.assignedSlot, false));
-    target = target.parentNode;
-  }
-  const last = path[path.length - 1];
-  if (composed && last.host)
-    return scopedPaths(last.host, composed, path);
-  if (last === document)
-    path.push(window);
-  return path;
-}
-
-export function filterComposedTargets(scopedPath) {
-  return scopedPath[0] instanceof Array ?
-    [...filterComposedTargets(scopedPath[0]), scopedPath[1]] :
-    [scopedPath[0]];
-}
-
-function calculatePropagationPaths(scopedPath, bubbles) {
-  //process AT_TARGET nodes, both the normal, innermost AT_TARGET, and any composed, upper, host node AT_TARGETs.
-  const composedTargets = filterComposedTargets(scopedPath);//todo this is updated and not tested..
-  const lowestTarget = composedTargets.shift();      //the lowestMost target is processed separately
-
-  const raw = scopedPath.flat(Infinity);
-  raw.shift();                                       //the lowestMost target is processed separately
-
-  //BUBBLE nodes (or upper, composed AT_TARGET nodes if the event doesn't bubble)
-  const bubble = bubbles ?
-    raw.map(target => ({target: target, phase: composedTargets.indexOf(target) >= 0 ? 32 : 3})) :
-    composedTargets.map(target => ({target: target, phase: 32}));
-
-  //CAPTURE nodes
-  const capture = raw.reverse().map(target => ({
-    target: target,
-    phase: composedTargets.indexOf(target) >= 0 ? 12 : 1
-    // listenerPhase: composedTargets.indexOf(target) >= 0 ? 12 : 1
-  }));
-
-  return capture.concat([{target: lowestTarget, phase: 2}]).concat(bubble);
-}
-
-//todo what about the situation when you dispatch an event on a lightDOM child, and then
-//else return path; //todo this is an edge case that could tip in different directions. The browser will run the lightDOM path. It is a question if that is the right thing to do...
+import {computePropagationPath, scopedPaths} from "./computePaths.js";
 
 function callListenerHandleError(target, listener, event) {
   if (listener.removed)
@@ -102,31 +47,34 @@ async function callOrQueueListenersForTargetPhase(currentTarget, event, listener
   return await macrotask.nextMesoTick(cbs);
 }
 
+let updateEvent = function (event, target, phase) {
+  Object.defineProperties(event, {
+    "currentTarget": {value: target, writable: true},
+    "eventPhase": {value: phase, writable: true}
+  });
+};
+
 async function dispatchEvent(event, options) {
   if (isStopped(event)) //stopped before dispatch.. yes, it is possible to do var e = new Event("abc"); e.stopPropagation(); element.dispatchEvent(e);
     return;
   const scopedPath = scopedPaths(this, event.composed);
-  const fullPath = calculatePropagationPaths(scopedPath, event.bubbles);
+  const fullPath = computePropagationPath(scopedPath, event.bubbles);
   populateEvent(event, this, scopedPath);
 
   let macrotask = nextMesoTicks([function () {
   }], fullPath.length + 1);//todo hack.. problem initiating without knowing the tasks
   //todo should +2 for bounce: true so we have a mesotask for the default action(s) too.
 
-  for (let {target, phase} of fullPath) {
-    const listenerPhase = phase === 32 ? 3 : phase === 12 ? 1 : phase;
-    const listeners = getEventListeners(target, event.type, listenerPhase)
+  for (let {target: currentTarget, phase, listenerPhase} of fullPath) {
+    const listeners = getEventListeners(currentTarget, event.type, listenerPhase)
       .filter(listener => listener.unstoppable || !isStopped(event, event.isScoped || listener.scoped));
     if (!listeners.length)
       continue;
-    Object.defineProperties(event, {
-      "currentTarget": {value: target, writable: true},
-      "eventPhase": {value: (phase === 32 || phase === 12) ? 2 : phase, writable: true}
-    });
+    updateEvent(event, currentTarget, phase);
     if (options?.async) {
-      await callOrQueueListenersForTargetPhase(target, event, listeners, options, macrotask);
+      await callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask);
     } else {
-      listeners.forEach(listener => callListenerHandleError(target, listener, event));
+      listeners.forEach(listener => callListenerHandleError(currentTarget, listener, event));
     }
   }
 }
