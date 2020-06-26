@@ -41,34 +41,28 @@ const propAlternatives = [
 ];
 
 export const basicPropTest = [];
-//composed and bubbles
 
-for (let options of propAlternatives) {
-  for (let usecase of useCases) {
+for (let usecase of useCases) {
+  //att!! reusing usecase elements and listeners between tests
+  const scopedPath = usecase.makeDomBranch();
+  const targets = scopedPath.flat(Infinity);
+  addEventListeners(targets);
 
-    //att!! reusing usecase elements and listeners between tests
-    const scopedPath = usecase.makeDomBranch();
-    const targets = scopedPath.flat(Infinity);
-    addEventListeners(targets);
-
+  for (let options of propAlternatives) {
     for (let i = 0; i < targets.length; i++) {
-
+      let target = targets[i];
       let scopedPathSlice = popTargets(scopedPath, i);
       if (!options.composed) {
         while (scopedPathSlice[0] instanceof Array)
           scopedPathSlice = scopedPathSlice[0];
       }
-
-      let target = targets[i];
-
-      let expect = makeExpectationBubblesComposed(scopedPathSlice, options.bubbles);
       basicPropTest.push({
         name: `propagation: ${JSON.stringify(options)}: ${usecase.name} ${i}`,
         fun: function () {
           res = "";
           target.dispatchEvent(new Event("click", options));
         },
-        expect,
+        expect: makeExpectationBubblesComposed(scopedPathSlice, options.bubbles),
         result
       });
     }
