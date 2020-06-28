@@ -1,4 +1,30 @@
 <script>
+
+  const addEventListenerOG = EventTarget.prototype.addEventListener;
+  const removeEventListenerOG = EventTarget.prototype.removeEventListener;
+  const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+  const stopPropOG = Event.prototype.stopPropagation;
+  const stopImmediateOG = Event.prototype.stopImmediatePropagation;
+  const cancelBubbleOG = Object.getOwnPropertyDescriptor(Event.prototype, "cancelBubble");
+
+  function resetSystem() {
+    EventTarget.prototype.addEventListener = addEventListenerOG;
+    EventTarget.prototype.removeEventListener = removeEventListenerOG;
+    EventTarget.prototype.dispatchEvent = dispatchEventOG;
+    Event.prototype.stopPropagation = stopPropOG;
+    Event.prototype.stopImmediatePropagation = stopImmediateOG;
+    Object.defineProperty(Event.prototype, "cancelBubble", cancelBubbleOG);
+    window.getEventListeners = function () {
+      return [];
+    };
+    window.isStopped = function (event, scoped) {
+      return event.cancelBubble;
+    };
+    window.scopedPaths = function (element, composed) {
+      return [];
+    };
+  }
+
   function compareResults(expect, res, nativeRes, notFirst) {
     res = (res === expect ? 1 : res + " != " + expect);
     if (notFirst && res === nativeRes)
@@ -28,10 +54,11 @@
 
   async function runTests(eventSystems, tests) {
     const results = {};
-    let nativeSysName = eventSystems[0].sysname;
+    let nativeSysName = eventSystems[0].name;
     for (let test of tests)
       results[test.name] = {};
-    for (let {sysname, upgrade, downgrade} of eventSystems) {
+    for (let upgrade of eventSystems) {
+      let sysname = upgrade.name;
       await nextTick2(upgrade);
       for (const {name, fun, expect, result} of tests) {
         await nextTick2(fun);
@@ -42,7 +69,7 @@
           results[name][sysname] = compareResults(expected, res, nativeRes, sysname !== nativeSysName);
         });
       }
-      await nextTick2(downgrade);
+      await nextTick2(resetSystem);
     }
     return nextTick2(function () {
       console.table(results);
@@ -68,47 +95,16 @@
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
 
-  const addEventListenerOG = EventTarget.prototype.addEventListener;
-  const removeEventListenerOG = EventTarget.prototype.removeEventListener;
-  const dispatchEventOG = EventTarget.prototype.dispatchEvent;
-  const stopPropOG = Event.prototype.stopPropagation;
-  const stopImmediateOG = Event.prototype.stopImmediatePropagation;
-  const cancelBubbleOG = Object.getOwnPropertyDescriptor(Event.prototype, "cancelBubble");
-
-  function downgrade() {
-    EventTarget.prototype.addEventListener = addEventListenerOG;
-    EventTarget.prototype.removeEventListener = removeEventListenerOG;
-    EventTarget.prototype.dispatchEvent = dispatchEventOG;
-    Event.prototype.stopPropagation = stopPropOG;
-    Event.prototype.stopImmediatePropagation = stopImmediateOG;
-    Object.defineProperty(Event.prototype, "cancelBubble", cancelBubbleOG);
-    window.getEventListeners = function () {
-      return [];
-    };
-    window.isStopped = function (event, scoped) {
-      return event.cancelBubble;
-    };
-    window.scopedPaths = function (element, composed) {
-      return [];
-    };
-  }
-
-  downgrade();
-
-  const eventSystems = [{
-    sysname: "NATIVE",
-    upgrade: function () {
+  const eventSystems = [
+    function NATIVE() {
+      resetSystem();
     },
-    downgrade: function () {
-    },
-  }, {
-    sysname: "SCOPED_STOP",
-    upgrade: function () {
+    function SCOPED_STOP() {
       addEventIsStoppedScoped(Event.prototype);
       addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
-      window.isStopped = isStopped;
+      window.isStopped = isStopped;//todo this adding isStopped to window is not good.
     },
-    downgrade: downgrade,
+
     // }, { //todo
     //   sysname: "SCOPED_STOP_BY_DEFAULT",
     //   upgrade: function () {
@@ -121,43 +117,31 @@
     //     downgrade();
     //     Object.defineProperty(Event.prototype, "isScoped", {value: undefined});
     //   }
-  }, {
-    sysname: "REGISTER",
-    upgrade: function () {
+    function REGISTER() {
       addEventTargetRegistry1(EventTarget.prototype);
       window.getEventListeners = getEventListeners1;
     },
-    downgrade: downgrade,
-  }, {
-    sysname: "scopedPaths",
-    upgrade: function () {
+
+    function ScopedPaths() {
       window.scopedPaths = scopedPaths;
     },
-    downgrade: downgrade,
-  }, {
-    sysname: "REGISTER_once",
-    upgrade: function () {
+
+    function REGISTER_once() {
       addEventTargetRegistry2(EventTarget.prototype);
       window.getEventListeners = getEventListeners2;
     },
-    downgrade: downgrade,
-  }, {
-    sysname: "REGISTER_once_last",
-    upgrade: function () {
+
+    function REGISTER_once_last() {
       addEventTargetRegistry3(EventTarget.prototype);
       window.getEventListeners = getEventListeners3;
     },
-    downgrade: downgrade,
-  }, {
-    sysname: "REGISTER_once_last_first",
-    upgrade: function () {
+
+    function REGISTER_once_last_first() {
       addEventTargetRegistry(EventTarget.prototype);
       window.getEventListeners = getEventListeners;
     },
-    downgrade: downgrade,
-  }, {
-    sysname: "SCOPED_STOP+REGISTER_once_last_first",
-    upgrade: function () {
+
+    function SCOPED_STOP_REGISTER_once_last_first() {
       addEventIsStoppedScoped(Event.prototype);
       addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
       window.isStopped = isStopped;
@@ -165,16 +149,12 @@
       addEventTargetRegistry(EventTarget.prototype);
       window.getEventListeners = getEventListeners;
     },
-    downgrade: downgrade,
-  }, {
-    sysname: "DISPATCH+REGISTERx3",
-    upgrade: function () {
+
+    function DISPATCH_REGISTERx3() {
       // addEventTargetRegistry(EventTarget.prototype);
       addDispatchEventOptionAsync(EventTarget.prototype, true);
       // window.getEventListeners = getEventListeners;
-    },
-    downgrade: downgrade,
-  }];
+    }];
 
   import {testBasic} from "./unitTests/testBasic.js";
   import {dynamicTest} from "./unitTests/testDynamic.js";
