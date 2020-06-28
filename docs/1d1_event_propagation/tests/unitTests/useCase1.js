@@ -229,6 +229,14 @@ function nestedShadow() {
   return usecase;
 }
 
+function h1() {
+  const usecase = [
+    document.createElement("h1")
+  ];
+  Object.freeze(usecase, true);
+  return usecase;
+}
+
 export function eventTargetName(eventTarget){
   if(eventTarget.tagName)
     return eventTarget.tagName;
@@ -264,19 +272,13 @@ function popTargets2(scopedPath, pops) {
   return [pops, res];
 }
 
-export const useCases = [{
-  name: "shadow and slotted",
-  makeDomBranch: shadowSlotted
-}, {
-  name: "simple SlotMatroschka",
-  makeDomBranch: simpleMatroschka
-}, {
-  name: "lightDom el hidden by shadowDom",
-  makeDomBranch: shadowCompWithExcludedLightDomDiv
-}, {
-  name: "shadow inside shadow",
-  makeDomBranch: nestedShadow
-}];
+export const useCases = {
+  h1,
+  shadowSlotted,
+  simpleMatroschka,
+  shadowCompWithExcludedLightDomDiv,
+  nestedShadow
+};
 Object.freeze(useCases, true);
 
 export function cleanDom() {//todo replace this one with the useCases

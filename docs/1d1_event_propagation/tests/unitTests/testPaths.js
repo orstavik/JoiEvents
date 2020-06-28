@@ -86,20 +86,20 @@ function makeComposedPathTest(usecaseFlat) {
   };
 }
 
-export const testScopedPaths = useCases.map(usecase => {
-  const usecaseDom = usecase.makeDomBranch();
+export const testScopedPaths = Object.entries(useCases).map(([name, makeDomBranch]) => {
+  const usecaseDom = makeDomBranch();
   return {
-    name: "scopedPaths: " + usecase.name,
+    name: "scopedPaths: " + name,
     fun: makeScopedPathsTest(usecaseDom),
     expect,
     result
   };
 });
 
-export const testComposedPath = useCases.map(usecase => {
-  const usecaseFlat = usecase.makeDomBranch().flat(Infinity);
+export const testComposedPath = Object.entries(useCases).map(([name, makeDomBranch]) => {
+  const usecaseFlat = makeDomBranch().flat(Infinity);
   return {
-    name: "composedPaths: " + usecase.name,
+    name: "composedPaths: " + name,
     fun: makeComposedPathTest(usecaseFlat),
     expect,
     result

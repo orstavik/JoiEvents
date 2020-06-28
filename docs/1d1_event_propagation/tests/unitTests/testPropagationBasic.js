@@ -42,27 +42,26 @@ const propAlternatives = [
 
 export const basicPropTest = [];
 
-for (let usecase of useCases) {
-  const scopedPathX = usecase.makeDomBranch();
+for (let [name, makeDomBranch] of Object.entries(useCases)) {
+  const scopedPathX = makeDomBranch();
   const length = scopedPathX.flat(Infinity).length;
 
   for (let options of propAlternatives) {
     for (let i = 0; i < length; i++) {
       //att!! reusing usecase elements and listeners between tests is problem, because the addEventListener must sometimes register the event listeners
-      const scopedPath = usecase.makeDomBranch();
+      const scopedPath = makeDomBranch();
       const targets = scopedPath.flat(Infinity);
       // addEventListeners(targets);
-      let target = targets[i];
       let scopedPathSlice = popTargets(scopedPath, i);
       if (!options.composed) {
         while (scopedPathSlice[0] instanceof Array)
           scopedPathSlice = scopedPathSlice[0];
       }
       basicPropTest.push({
-        name: `propagation: ${JSON.stringify(options)}: ${usecase.name} ${i}`,
+        name: `propagation: ${JSON.stringify(options)}: ${name} ${i}`,
         fun: function (res) {
           // res = "";
-          const scopedPath = usecase.makeDomBranch();
+          const scopedPath = makeDomBranch();
           const targets = scopedPath.flat(Infinity);
           addEventListeners(targets, res);
           let target = targets[i];
