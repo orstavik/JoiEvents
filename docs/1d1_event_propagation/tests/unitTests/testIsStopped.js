@@ -1,3 +1,5 @@
+//todo this test is not good as it uses isStopped as a global method
+
 let res1 = "";
 export const testIsStopped = [{
   name: "isStopped: before dispatch",

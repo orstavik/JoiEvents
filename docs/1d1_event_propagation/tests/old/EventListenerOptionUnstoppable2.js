@@ -1,4 +1,8 @@
+const beforePropagationRoot = {}; //todo adding semantics for calling stopPropagation before propagation begins
+
 function getCurrentRoot(event) {
+  if(!event.currentTarget)        //todo adding semantics for calling stopPropagation before propagation begins
+    return beforePropagationRoot; //todo adding semantics for calling stopPropagation before propagation begins
   const root = event.currentTarget.getRootNode ? event.currentTarget.getRootNode() : event.currentTarget;
   return root === document ? window : root;
 }
@@ -7,17 +11,31 @@ const stopPropagations = new WeakMap();//event => root => whenStopPropWasCalled
                                        //whenStopPropWasCalled:
                                        //  .stopPropagation() => {currentTarget, eventPhase}
                                        //  .stopImmediatePropagation() => true
-function stopProp(event, value) {
-  let eventToRoot = stopPropagations.get(event);
+const scopedStopPropagations = new WeakMap();//event => root => whenStopPropWasCalled
+                                       //whenStopPropWasCalled:
+                                       //  .stopPropagation() => {currentTarget, eventPhase}
+                                       //  .stopImmediatePropagation() => true
+function stopProp(event, value, scoped) {
+  const map = scoped ? scopedStopPropagations : stopPropagations;
+  let eventToRoot = map.get(event);
   if (!eventToRoot)
-    stopPropagations.set(event, eventToRoot = new WeakMap());
+    map.set(event, eventToRoot = new WeakMap());
   const root = getCurrentRoot(event);
   if (value === true || !eventToRoot.has(root))
     eventToRoot.set(root, value);
 }
 
+//this is a "stopped in the DOM context of the current target"
 function isCurrentlyStopped(event) {
-  const stopProp = stopPropagations.get(event)?.get(getCurrentRoot(event));
+  const isScoped = event.isScoped;
+  //if the event is NOT scoped, we only need to check if there is set a normal stopPropagation other than on the current element in the current phase
+  //or if the event has been blocked by a scoped stopPropagation().
+  //else if the event IS scoped, then we we need to check if the event is blocked in the scope of both the maps. Then both maps are treated equally.
+  const context = getCurrentRoot(event);
+  const eventMap = stopPropagations.get(event);
+  if (eventMap?.has(beforePropagationRoot)) //todo adding semantics for calling stopPropagation before propagation begins
+    return true;                            //todo adding semantics for calling stopPropagation before propagation begins
+  const stopProp = eventMap?.get(context);
   if (!stopProp)        //the event has not been stopped under this root
     return false;
   if (stopProp === true)//the event has been called stopImmediatePropagation, under this root
@@ -64,8 +82,6 @@ export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPro
   const addEventListenerOG = EventTargetPrototype.addEventListener;
   const removeEventListenerOG = EventTargetPrototype.removeEventListener;
 
-  //todo test:  add the same function to different targets, different event types, different phases
-
   function addEventListenerUnstoppable(type, cb, options) {
     let wrapped = cb;
     if (!(options instanceof Object && options.unstoppable)) {
@@ -85,12 +101,12 @@ export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPro
     removeEventListenerOG.call(this, type, args, options);
   }
 
-  function stopPropagation() {
-    stopProp(this, {currentTarget: this.currentTarget, eventPhase: this.eventPhase});
+  function stopPropagation(scoped) {
+    stopProp(this, {currentTarget: this.currentTarget, eventPhase: this.eventPhase}, !!scoped);
   }
 
-  function stopImmediatePropagation() {
-    stopProp(this, true);
+  function stopImmediatePropagation(scoped) {
+    stopProp(this, true, !!scoped);
   }
 
   function getCancelBubble() {
@@ -101,6 +117,11 @@ export function addEventListenerOptionUnstoppable(EventTargetPrototype, EventPro
     return value && this.stopPropagation();
   }
 
+  // function isStopped(){
+  //   return isCurrentlyStopped(this);
+  // }
+  //
+  // Object.defineProperty(EventPrototype, "isStopped", {get: isStopped});
   Object.defineProperty(EventPrototype, "cancelBubble", {get: getCancelBubble, set: setCancelBubble});
   Object.defineProperty(EventPrototype, "stopPropagation", {value: stopPropagation});
   Object.defineProperty(EventPrototype, "stopImmediatePropagation", {value: stopImmediatePropagation});

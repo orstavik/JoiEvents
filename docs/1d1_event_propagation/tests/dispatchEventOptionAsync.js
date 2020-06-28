@@ -1,8 +1,12 @@
 import {} from "./nextTick.js";
 import {computePropagationPath, scopedPaths} from "./computePaths.js";
+import {getEventListeners, addEventTargetRegistry} from "./getEventListeners_once_last_first.js";
+import {addEventListenerOptionScopedUnstoppable, isStopped, addEventIsStoppedScoped} from "./ScopedEventListeners.js";
 
 function callListenerHandleError(target, listener, event) {
   if (listener.removed)
+    return;
+  if (!listener.unstoppable && isStopped(event, listener.scoped))
     return;
   try {
     const cb = listener.listener;
@@ -15,7 +19,9 @@ function callListenerHandleError(target, listener, event) {
   }
 }
 
-function populateEvent(event, target, scopedPath) {
+function initializeEvent(event, target) {
+  //we need to freeze the composedPath at the point of first dispatch
+  const composedPath = scopedPaths(target, event.composed).flat(Infinity);
   Object.defineProperties(event, {
     target: {
       get: function () {
@@ -28,17 +34,24 @@ function populateEvent(event, target, scopedPath) {
         }
       }
     },
-    composedPath: function () {
-      return scopedPath.flat(Infinity);   //we can cache this if we want
-    },
-    //todo coordinate this with the unstoppable option. They should work the same way.
-    stopImmediatePropagation: {
+    composedPath: {
       value: function () {
-        this._propagationStoppedImmediately = true;
-      }
+        return composedPath;   //we can cache this if we want
+      },
+      writable: false
+      //todo there are some minor performance upgrades that can be made around stopImmediatePropgation()..
+      // but they are more complex than the naive implementation below suggests, as they need to take into account
+      // the scoped and non-scoped nature of the calls.
+    // },
+    // stopImmediatePropagation: {
+    //   value: function () {
+    //     immediatelyStopped.add(this);
+    //   }
     }
   });
 }
+const immediatelyStopped = new WeakSet();
+
 
 async function callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask) {
   const cbs = listeners.map(function (listener) {                 //async
@@ -57,29 +70,41 @@ let updateEvent = function (event, target, phase) {
 async function dispatchEvent(event, options) {
   if (isStopped(event)) //stopped before dispatch.. yes, it is possible to do var e = new Event("abc"); e.stopPropagation(); element.dispatchEvent(e);
     return;
-  const scopedPath = scopedPaths(this, event.composed);
-  const fullPath = computePropagationPath(scopedPath, event.bubbles);
-  populateEvent(event, this, scopedPath);
+  const fullPath = computePropagationPath(this, event.composed, event.bubbles);
+  initializeEvent(event, this);
 
   let macrotask = nextMesoTicks([function () {
   }], fullPath.length + 1);//todo hack.. problem initiating without knowing the tasks
   //todo should +2 for bounce: true so we have a mesotask for the default action(s) too.
 
   for (let {target: currentTarget, phase, listenerPhase} of fullPath) {
-    const listeners = getEventListeners(currentTarget, event.type, listenerPhase)
-      .filter(listener => listener.unstoppable || !isStopped(event, event.isScoped || listener.scoped));
+    let listeners = getEventListeners(currentTarget, event.type, listenerPhase);
+    //todo this filter works fine for stopPropagation on the node level, but it doesn't handle the stopImmediatePropagation.
     if (!listeners.length)
       continue;
     updateEvent(event, currentTarget, phase);
+    listeners = listeners.filter(listener => listener.unstoppable || !isStopped(event, listener.scoped)); //isStopped require the currentTarget and phase
+    if (!listeners.length)
+      continue;
     if (options?.async) {
       await callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask);
     } else {
-      listeners.forEach(listener => callListenerHandleError(currentTarget, listener, event));
+      for (let listener of listeners)
+        //todo here i would need to check if stopImmediatePropagation was called.
+        callListenerHandleError(currentTarget, listener, event);
     }
+    //removing once manually, like we handle the unstoppable and isStopped manually
+    for (let listener of listeners)
+      listener.once && currentTarget.removeEventListener(listener.type, listener.listener, listener.capture);
   }
 }
 
 export function addDispatchEventOptionAsync(EventTargetPrototype, sync) {
+  //todo here we need to add the prototypes to the scoped stopPropagatoin and eventListener registry
+  addEventIsStoppedScoped(Event.prototype);
+  addEventListenerOptionScopedUnstoppable(EventTarget.prototype);
+  addEventTargetRegistry(EventTarget.prototype);
+
   const dispatchOG = EventTargetPrototype.dispatchEvent;
 
   function dispatchEventAsyncOnly(event, options) {

@@ -43,13 +43,15 @@ const propAlternatives = [
 export const basicPropTest = [];
 
 for (let usecase of useCases) {
-  //att!! reusing usecase elements and listeners between tests
-  const scopedPath = usecase.makeDomBranch();
-  const targets = scopedPath.flat(Infinity);
-  addEventListeners(targets);
+  const scopedPathX = usecase.makeDomBranch();
+  const length = scopedPathX.flat(Infinity).length;
 
   for (let options of propAlternatives) {
-    for (let i = 0; i < targets.length; i++) {
+    for (let i = 0; i < length; i++) {
+      //att!! reusing usecase elements and listeners between tests is problem, because the addEventListener must sometimes register the event listeners
+      const scopedPath = usecase.makeDomBranch();
+      const targets = scopedPath.flat(Infinity);
+      // addEventListeners(targets);
       let target = targets[i];
       let scopedPathSlice = popTargets(scopedPath, i);
       if (!options.composed) {
@@ -60,6 +62,10 @@ for (let usecase of useCases) {
         name: `propagation: ${JSON.stringify(options)}: ${usecase.name} ${i}`,
         fun: function () {
           res = "";
+          const scopedPath = usecase.makeDomBranch();
+          const targets = scopedPath.flat(Infinity);
+          addEventListeners(targets);
+          let target = targets[i];
           target.dispatchEvent(new Event("click", options));
         },
         expect: makeExpectationBubblesComposed(scopedPathSlice, options.bubbles),

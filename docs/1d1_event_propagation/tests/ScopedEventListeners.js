@@ -10,7 +10,7 @@
  * @param event
  * @returns {null|window|ShadowRoot}
  */
-export function currentEventContext(event) {
+export function currentEventContext(event) {//todo rename to getPropagationRootNode(event)??
   if (!event.currentTarget)
     return null;
   const root = event.currentTarget.getRootNode ? event.currentTarget.getRootNode() : event.currentTarget;
@@ -33,9 +33,11 @@ function stopListener(e, stop) {
 }
 
 /**
+ * Implied parameter is event.isScoped. This property can be set on each event before dispatch, or
+ * it can be set to true on the Event.prototype to force all events to be isScoped by default.
  *
  * @param event whose propagation is to be checked if it has been stopped.
- * @param scoped if true, then only check if the propagation has been stopped in the current DOM context.
+ * @param listenerIsScoped if true, then only check if the propagation has been stopped in the current DOM context.
  * @returns {boolean} true if somebody has called stopPropagation on it before the event has begun propagaton,
  *                    true if the event is stopped in this current DOM context, and if a previous event listener
  *                         on the same target node has called stopImmediatePropagation, and
@@ -43,10 +45,10 @@ function stopListener(e, stop) {
  *                         in a different DOM propagation context, ie. inside another web component or
  *                         in the main dom outside a web component that the event currently propagates in.
  */
-export function isStopped(event, scoped) {
+export function isStopped(event, listenerIsScoped) {
   if (beforeStops.has(event))
     return true;
-  if (!scoped && stopListener(event, globalStops.get(event)))  //check if it is non-scoped first, as that is cheapest
+  if (!listenerIsScoped && !event.isScoped && stopListener(event, globalStops.get(event)))  //check if it is non-scoped first, as that is cheapest
     return true;
   const scope = currentEventContext(event);                    //check if stopped in current context. Applies to all.
   return !!stopListener(event, localStops.get(event)?.get(scope));

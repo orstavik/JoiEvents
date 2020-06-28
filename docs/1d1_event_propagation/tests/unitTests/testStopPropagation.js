@@ -108,7 +108,7 @@ export const testStopProp2 = [{
     return res4;
   }
 }, {
-  name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} )",
+  name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} ) 2",
   fun: function () {
     res1 = res4 = "";
     const dom = cleanDom();

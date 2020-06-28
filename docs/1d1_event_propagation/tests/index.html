@@ -20,6 +20,12 @@
     return p;
   }
 
+  //first i upgrade.
+  //then i make the usecase
+  //then i pass the usecase to the test.
+  //this means that the test gets a usecase.
+  //this is a dom branch presented as a manually defined scopedPath
+
   async function runTests(eventSystems, tests) {
     const results = {};
     let nativeSysName = eventSystems[0].sysname;
@@ -161,11 +167,11 @@
     },
     downgrade: downgrade,
   }, {
-    sysname: "DISPATCH_ASYNC+REGISTER_once_last_first",
+    sysname: "DISPATCH+REGISTERx3",
     upgrade: function () {
-      addEventTargetRegistry(EventTarget.prototype);
-      addDispatchEventOptionAsync(EventTarget.prototype)
-      window.getEventListeners = getEventListeners;
+      // addEventTargetRegistry(EventTarget.prototype);
+      addDispatchEventOptionAsync(EventTarget.prototype, true);
+      // window.getEventListeners = getEventListeners;
     },
     downgrade: downgrade,
   }];
@@ -198,7 +204,7 @@
     await runTests(eventSystems, firstErrorsTest);
     await runTests(eventSystems, testStopProp);
     await runTests(eventSystems, testStopProp2);
-    await runTests(eventSystems, testIsStopped);
+    // await runTests(eventSystems, testIsStopped);
     await runTests(eventSystems, testProp);
     await runTests(eventSystems, testScopedPaths);
     await runTests(eventSystems, testComposedPath);

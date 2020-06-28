@@ -24,7 +24,7 @@ export const lastTest = [{
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: true});
     h1.addEventListener("click", b);
-    h1.dispatchEvent(new MouseEvent("click"))
+    h1.dispatchEvent(new MouseEvent("click"));
   },
   expect: "ba",
   result: getResult

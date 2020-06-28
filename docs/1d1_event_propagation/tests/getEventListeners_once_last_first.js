@@ -51,15 +51,20 @@ function addListener(target, type, listener, options) {
   if (index !== -1)
     return null;
   const entry = makeEntry(target, type, listener, options);
-  typeListeners.push(entry);
+  if (typeListeners.length && typeListeners[typeListeners.length - 1].last)
+    typeListeners.splice(typeListeners.length - 1, 0, entry)
+  else if (entry.first)
+    typeListeners.unshift(entry);
+  else
+    typeListeners.push(entry);
   return entry;
 }
 
 function removeListener(target, type, listener, options) {
-  let allListeners = targetToListeners.get(target);
+  const allListeners = targetToListeners.get(target);
   if (!allListeners)
     return null;
-  let typeListeners = allListeners[type];
+  const typeListeners = allListeners[type];
   if (!typeListeners)
     return null;
   const capture = !!(options instanceof Object ? options.capture : options);
@@ -69,10 +74,36 @@ function removeListener(target, type, listener, options) {
   return typeListeners.splice(index, 1)[0];  //mutates the list in the targetToListeners
 }
 
+function hasListener(target, type, listener, options) {
+  const allListeners = targetToListeners.get(target);
+  if (!allListeners)
+    return false;
+  const typeListeners = allListeners[type];
+  if (!typeListeners)
+    return false;
+  const capture = !!(options instanceof Object ? options.capture : options);
+  return findEquivalentListener(typeListeners, listener, capture) !== -1;
+}
+
 const entryToOnceCb = new WeakMap();
 const targetToLastEntry = new WeakMap();
 const targetToFirstEntry = new WeakMap();
 const dynamicallyRemovedEntries = new WeakSet();
+
+function verifyFirstLast(target, options) {
+  if (!(options instanceof Object))
+    return;
+  if (options.last && options.capture)
+    throw new Error("last option can only be used with bubble phase (at_target bubble phase) event listeners");
+  if (options.first && !options.capture)
+    throw new Error("first option can only be used with capture phase (at_target capture phase) event listeners");
+  const previousLastEntry = targetToLastEntry.get(target);
+  if (options.last && previousLastEntry)
+    throw new Error("only one event listener {last: true} can be added to the same target and event type.");
+  const previousFirstEntry = targetToFirstEntry.get(target);
+  if (options.first && previousFirstEntry)
+    throw new Error("only one event listener {first: true} can be added to the same target and event type.");
+}
 
 export function addEventTargetRegistry(EventTargetPrototype) {
   const ogAdd = EventTargetPrototype.addEventListener;
@@ -80,17 +111,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
 
   function addEntry(entry) {
     //check first and last options for illegal combinations
-    if (entry.last && entry.capture)
-      throw new Error("last option can only be used with bubble phase (at_target bubble phase) event listeners");
-    if (entry.first && !entry.capture)
-      throw new Error("first option can only be used with capture phase (at_target capture phase) event listeners");
     const previousLastEntry = targetToLastEntry.get(entry.target);
-    if (entry.last && previousLastEntry)
-      throw new Error("only one event listener {last: true} can be added to the same target and event type.");
-    const previousFirstEntry = targetToFirstEntry.get(entry.target);
-    if (entry.first && previousFirstEntry)
-      throw new Error("only one event listener {first: true} can be added to the same target and event type.");
-
     let target = entry.target;
     let type = entry.type;
     let cb = entry.listener;
@@ -118,7 +139,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
     if (entry.first) {
       targetToFirstEntry.set(entry.target, entry);
       removedFirsts = targetToListeners.get(target)[type].slice();
-      removedFirsts.pop();
+      removedFirsts.splice(removedFirsts.indexOf(entry), 1);
       for (let previousEntry of removedFirsts)
         removeEntry(previousEntry);
     }
@@ -153,6 +174,10 @@ export function addEventTargetRegistry(EventTargetPrototype) {
 
   function addEventListenerRegistry(type, listener, options) {
     //register/make the entry, will return null if equivalent listener is already added.
+    //redundancy check which fail silently is performed first, to make it most compatible with existing behavior
+    if (hasListener(this, type, listener, options))
+      return;
+    verifyFirstLast(this, options);
     const entry = addListener(this, type, listener, options);
     entry && addEntry(entry);
     //the inside of the system sees the more elaborate options object.
@@ -162,7 +187,7 @@ export function addEventTargetRegistry(EventTargetPrototype) {
   function removeEventListenerRegistry(type, listener, options) {
     //removeListener returns null when there is no registered listener for the given type, cb, capture combo
     const entry = removeListener(this, type, listener, options);
-    if(!entry)
+    if (!entry)
       return;
     dynamicallyRemovedEntries.add(entry);
     removeEntry(entry);

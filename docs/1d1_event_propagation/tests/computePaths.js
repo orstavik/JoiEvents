@@ -28,7 +28,8 @@ export function filterComposedTargets(scopedPath) {
     [scopedPath[0]];
 }
 
-export function computePropagationPath(scopedPath, bubbles) {
+export function computePropagationPath(target,composed, bubbles) {
+  const scopedPath = scopedPaths(target, composed);
   //process AT_TARGET nodes, both the normal, innermost AT_TARGET, and any composed, upper, host node AT_TARGETs.
   const composedTargets = filterComposedTargets(scopedPath);
   const lowestTarget = composedTargets.shift();      //the lowestMost target is processed separately
