@@ -237,14 +237,27 @@ function h1() {
   return usecase;
 }
 
-export function eventTargetName(eventTarget){
-  if(eventTarget.tagName)
+function webcomp() {
+  const webcomp = document.createElement("shadow-comp");
+  const usecase = [
+    [
+      webcomp.shadowRoot.children[0],
+      webcomp.shadowRoot
+    ],
+    webcomp
+  ];
+  Object.freeze(usecase, true);
+  return usecase;
+}
+
+export function eventTargetName(eventTarget) {
+  if (eventTarget.tagName)
     return eventTarget.tagName;
-  if(eventTarget === "window")
+  if (eventTarget === "window")
     return "window";
-  if(eventTarget === "document")
+  if (eventTarget === "document")
     return "document";
-  if(eventTarget.host)
+  if (eventTarget.host)
     return eventTarget.host.tagName + "#root";
 }
 
@@ -274,6 +287,7 @@ function popTargets2(scopedPath, pops) {
 
 export const useCases = {
   h1,
+  webcomp,
   shadowSlotted,
   simpleMatroschka,
   shadowCompWithExcludedLightDomDiv,
