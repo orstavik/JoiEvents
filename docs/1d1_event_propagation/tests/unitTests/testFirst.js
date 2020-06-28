@@ -1,27 +1,24 @@
 import {cleanDom} from "./useCase1.js";
 
-let res;
-
-function a(e) {
-  res += "a";
-}
-
-function b(e) {
-  res += "b";
-}
-
-function c(e) {
-  res += "c";
-}
-
 function getResult() {
   return res;
 }
 
 export const firstTest = [{
   name: "first is true: {first: true, capture: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a);
     h1.addEventListener("click", b, {first: true, capture: true});
@@ -31,8 +28,19 @@ export const firstTest = [{
   result: getResult
 }, {
   name: "first is true: {first: 1}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", b, {capture: true});
     h1.addEventListener("click", a, {first: 1, capture: true});
@@ -42,8 +50,19 @@ export const firstTest = [{
   result: getResult
 }, {
   name: "first is true: {first: []}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {capture: true});
     h1.addEventListener("click", b, {first: [], capture: true});
@@ -53,8 +72,19 @@ export const firstTest = [{
   result: getResult
 }, {
   name: "first is false: {first: false}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a);
     h1.addEventListener("click", b, {first: false});
@@ -64,8 +94,19 @@ export const firstTest = [{
   result: getResult
 }, {
   name: "first is false: {first: 0}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a);
     h1.addEventListener("click", b, {first: 0});
@@ -75,8 +116,19 @@ export const firstTest = [{
   result: getResult
 }, {
   name: "first is false: {first: ''}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a);
     h1.addEventListener("click", b, {first: ''});
@@ -112,44 +164,77 @@ export const firstTest = [{
 //   }
 }, {
   name: "First: removeEventListener() {first: true, capture: true} and then define new first event listener",
-  fun: function () {
-    res = "";
-    const h1 = document.createElement("h1");
-
-    function a() {
-      res += "a";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
     }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
+    const h1 = document.createElement("h1");
 
     h1.addEventListener("click", a, {first: true, capture: true});
     h1.removeEventListener("click", a, {capture: true});
     h1.addEventListener("click", b, {first: true, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
 
-  },
+  }
+
+  ,
   expect: "b",
   result: getResult
 }, {
   name: "First: removeEventListener() {first: true, capture: true} when there is no event listener to remove",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
     h1.removeEventListener("click", a, {first: true, capture: true});
-  },
+  }
+
+  ,
   expect: "",
   result: getResult
 }];
 
 export const firstErrorsTest = [{
   name: "First error: adding two first listeners",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
 
     h1.addEventListener("click", a, {first: true, capture: true});
     try {
       h1.addEventListener("click", b, {first: true, capture: true});
     } catch (e) {
-      res += "error ";
+      res.push("error ");
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
@@ -157,19 +242,30 @@ export const firstErrorsTest = [{
   result: getResult
 }, {
   name: "First error: first on bubble phase",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const h1 = document.createElement("h1");
 
     try {
       h1.addEventListener("click", a, {first: true});
     } catch (e) {
-      res += "1";
+      res.push("1");
     }
     try {
       h1.addEventListener("click", b, {first: true, capture: false});
     } catch (e) {
-      res += "2";
+      res.push("2");
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
@@ -179,8 +275,19 @@ export const firstErrorsTest = [{
 
 export const first2 = [{
   name: "first: 1",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", b);
     dom.div.addEventListener("click", a, {first: 1, capture: true});
@@ -190,8 +297,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: removeEventListener",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", a, {first: true, capture: true});
     dom.div.removeEventListener("click", a, {capture: true});
@@ -203,8 +321,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: add {first: true, capture: true} to THE SAME element twice",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", a);
     dom.div.addEventListener("click", b, {first: true, capture: true});
@@ -212,7 +341,7 @@ export const first2 = [{
       dom.div.addEventListener("click", c, {first: true, capture: true});
       dom.div.addEventListener("click", c);
     } catch (e) {
-      res += "error ";
+      res.push("error ");
     }
     dom.div.dispatchEvent(new Event("click",));
 
@@ -221,8 +350,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: add {first: true, capture: true} to DIFFERENT element twice",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", b, true);
     dom.div.addEventListener("click", a, {first: true, capture: true});
@@ -236,15 +376,26 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {capture:true, first: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", a, {first: true, capture: true});
     try {
       dom.div.addEventListener("click", b, {first: true, capture: true});
       dom.div.addEventListener("click", c, {first: true, capture: true});
     } catch (e) {
-      res += "error ";
+      res.push("error ");
     }
     dom.div.dispatchEvent(new Event("click",));
   },
@@ -252,8 +403,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: does not propagate through shadowRoot",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     dom.div.addEventListener("click", b);
     dom.shadowH1.addEventListener("click", a, {first: true, capture: true});
@@ -264,8 +426,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {capture:true, bubbles: false, first: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     dom.div.addEventListener("click", a);
     dom.div.addEventListener("click", b, {first: true, capture: true});
@@ -273,7 +446,7 @@ export const first2 = [{
     try {
       dom.div.addEventListener("click", a, {capture: true, bubbles: false, first: true});
     } catch (e) {
-      res += " error "
+      res.push(" error ");
     }
     dom.div.dispatchEvent(new Event("click"));
   },
@@ -281,13 +454,24 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {capture:true, first: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     try {
       dom.div.addEventListener("click", a, {capture: true, first: true});
     } catch (e) {
-      res += " error "
+      res.push(" error ");
     }
     dom.div.addEventListener("click", a);
     dom.div.dispatchEvent(new Event("click",));
@@ -296,15 +480,26 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {capture:true, first: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     dom.div.addEventListener("click", a);
     dom.div.addEventListener("click", b, {capture: true, first: true});
     try {
       dom.div.addEventListener("click", c, {capture: true, first: true});
     } catch (e) {
-      res += " error "
+      res.push(" error ");
     }
     dom.div.dispatchEvent(new Event("click"));
 
@@ -313,8 +508,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: slotted element",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     dom.slot.addEventListener("click", b, true);
     dom.slot.addEventListener("click", a, {first: true, capture: true});
@@ -325,8 +531,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {first: true, once: true, capture: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     dom.slot.addEventListener("click", b, true);
     dom.slot.addEventListener("click", a, {first: true, once: true, capture: true});
@@ -338,8 +555,19 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {first: true, once: true, capture: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     dom.slot.addEventListener("click", a, {first: true, once: true, capture: true});
     dom.slot.addEventListener("click", b);
@@ -351,13 +579,24 @@ export const first2 = [{
   result: getResult
 }, {
   name: "first: {first: true, last: true, capture: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
     try {
       dom.slot.addEventListener("click", a, {first: true, last: true, capture: true});
     } catch (e) {
-      res = "error "
+      res.push("error ");
     }
     dom.slot.addEventListener("click", b);
 

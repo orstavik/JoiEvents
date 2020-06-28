@@ -1,26 +1,19 @@
 import {cleanDom} from "./useCase1.js";
 
-let res;
-
-function a(e) {
-  res += "a";
-}
-
-function b(e) {
-  res += "b";
-}
-
-function c(e) {
-  res += "c";
-}
-
 const getResult = function () {
   return res;
 };
 export const lastTest = [{
   name: "last is true: {last: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: true});
     h1.addEventListener("click", b);
@@ -30,8 +23,11 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last:adding the same function object with last: true twice",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", a, {last: true});
     dom.div.addEventListener("click", a, {last: true});
@@ -41,8 +37,15 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last is true: {last: 1}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: 1});
     h1.addEventListener("click", b);
@@ -52,8 +55,15 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last is true: {last: []}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: []});
     h1.addEventListener("click", b);
@@ -63,8 +73,15 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last is false: {last: false}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: false});
     h1.addEventListener("click", b);
@@ -74,8 +91,15 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last is false: {last: 0}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: 0});
     h1.addEventListener("click", b);
@@ -85,8 +109,15 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last is false: {last: ''}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: ''});
     h1.addEventListener("click", b);
@@ -96,8 +127,15 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "last: removeEventListener twice",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: true});
     h1.removeEventListener("click", a);
@@ -109,13 +147,21 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "Last: removeEventListener() {last: true} and then define new last event listener",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+
     const h1 = document.createElement("h1");
     h1.addEventListener("click", a, {last: true});
     h1.removeEventListener("click", a);
     h1.dispatchEvent(new MouseEvent("click"));
-    res += ".";
+    res.push(".");
     h1.addEventListener("click", b, {last: true});
     h1.dispatchEvent(new MouseEvent("click"));
   },
@@ -123,8 +169,12 @@ export const lastTest = [{
   result: getResult
 }, {
   name: "Last: removeEventListener() {last: true} when there is no event listener to remove",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+
     const h1 = document.createElement("h1");
     h1.removeEventListener("click", a);
   },
@@ -134,15 +184,23 @@ export const lastTest = [{
 
 export const lastErrorsTest = [{
   name: "Last error: adding two last listeners",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+
     const h1 = document.createElement("h1");
 
     h1.addEventListener("click", a, {last: true});
     try {
       h1.addEventListener("click", b, {last: true});
     } catch (e) {
-      res += "1";
+      res.push("1");
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
@@ -150,14 +208,17 @@ export const lastErrorsTest = [{
   result: getResult
 }, {
   name: "Last error: capture phase listener ",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
     const h1 = document.createElement("h1");
 
     try {
       h1.addEventListener("click", a, {last: true, capture: true});
     } catch (e) {
-      res += "1";
+      res.push("1");
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
@@ -167,8 +228,19 @@ export const lastErrorsTest = [{
 
 export const last2 = [{
   name: "last: add {last: true} to THE SAME element twice",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", a);
     dom.div.addEventListener("click", a, {last: true});
@@ -180,8 +252,19 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: add {last: true} to DIFFERENT element twice",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
     dom.div.addEventListener("click", a, {last: true});
     dom.slot.addEventListener("click", b, {last: true});
@@ -194,8 +277,19 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: {capture:true, last: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     let dom = cleanDom();
 
 
@@ -204,7 +298,7 @@ export const last2 = [{
       dom.div.addEventListener("click", b, {last: true});
       dom.div.addEventListener("click", c, {last: true});
     } catch (e) {
-      res += " error ";
+      res.push(" error ");
     }
     dom.div.dispatchEvent(new Event("click",));
   },
@@ -212,8 +306,15 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: does not propagate through shadowRoot",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const dom = cleanDom(true);
 
 
@@ -226,8 +327,15 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: {capture:true, bubbles: true, last: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const dom = cleanDom(true);
 
 
@@ -237,7 +345,7 @@ export const last2 = [{
     try {
       dom.div.addEventListener("click", a, {capture: true, bubbles: true, last: true});
     } catch (e) {
-      res += " error "
+      res.push(" error ");
     }
     dom.div.dispatchEvent(new Event("click", {bubbles: true}));
 
@@ -246,15 +354,19 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: {capture:true, last: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+
     const dom = cleanDom(true);
 
 
     try {
       dom.div.addEventListener("click", a, {capture: true, last: true});
     } catch (e) {
-      res += " error "
+      res.push(" error ");
     }
     dom.div.addEventListener("click", a);
     dom.div.dispatchEvent(new Event("click", {bubbles: true}));
@@ -264,8 +376,19 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: {capture:false, last: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
+    function c(e) {
+      res.push("c");
+    }
+
     const dom = cleanDom(true);
 
 
@@ -275,7 +398,7 @@ export const last2 = [{
     try {
       dom.div.addEventListener("click", c, {capture: false, last: true});
     } catch (e) {
-      res += "error ";
+      res.push("error ");
     }
     dom.div.dispatchEvent(new Event("click"));
 
@@ -284,8 +407,15 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: slotted element",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const dom = cleanDom(true);
 
 
@@ -298,8 +428,15 @@ export const last2 = [{
   result: getResult
 }, {
   name: "last: {last: true, once: true}",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    function a(e) {
+      res.push("a");
+    }
+
+    function b(e) {
+      res.push("b");
+    }
+
     const dom = cleanDom(true);
 
 
@@ -311,5 +448,4 @@ export const last2 = [{
   },
   expect: "bab",
   result: getResult
-},
-];
+}];

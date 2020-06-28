@@ -1,27 +1,20 @@
 import {cleanDom} from "./useCase1.js";
 
-let res1 = "";
-
-function domWithListeners() {
-  const dom = cleanDom();
-  for (let elName in dom) {
-    dom[elName].addEventListener("click", function (e) {
-      res1 += elName + " ";
-    }, {});
-    dom[elName].addEventListener("click", function (e) {
-      res1 += elName + " ";
-    }, true);
-  }
-  return dom;
-}
-
-let res4 = "";
+// let res = "";
 
 export const testStopProp = [{
   name: "shadowTorpedo: stopPropagation(true)",
-  fun: function () {
-    res1 = "";
-    const dom = domWithListeners();
+  fun: function(res) {
+    // res = "";
+      const dom = cleanDom();
+  for (let elName in dom) {
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, {});
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, true);
+  }
 
     dom.shadowH1.addEventListener("click", function (e) {
       e.stopPropagation(true);
@@ -30,13 +23,21 @@ export const testStopProp = [{
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowComp slotSlot slotSpan slotRoot slot div ",
   result: function () {
-    return res1;
+    return res;
   }
 }, {
   name: "captureTorpedo: stopPropagation(true)",
-  fun: function () {
-    res1 = "";
-    const dom = domWithListeners();
+  fun: function(res) {
+    //res = "";
+      const dom = cleanDom();
+  for (let elName in dom) {
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, {});
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, true);
+  }
 
     dom.div.addEventListener("click", function (e) {
       e.stopPropagation(true);
@@ -45,13 +46,21 @@ export const testStopProp = [{
   },
   expect: "div slotRoot slotSpan slotSlot shadowRoot shadowH1 shadowH1 shadowRoot slotSlot slotSpan slotRoot ",
   result: function () {
-    return res1;
+    return res;
   }
 }, {
   name: "slotTorpedo: stopPropagation(true)",
-  fun: function () {
-    res1 = "";
-    const dom = domWithListeners();
+  fun: function(res) {
+    //res = "";
+      const dom = cleanDom();
+  for (let elName in dom) {
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, {});
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, true);
+  }
 
     dom.slotSlot.addEventListener("click", function (e) {
       e.stopPropagation(true);
@@ -60,13 +69,21 @@ export const testStopProp = [{
   },
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowRoot shadowComp slotSlot slot div ",
   result: function () {
-    return res1;
+    return res;
   }
 }, {
   name: "slotCaptureTorpedo: stopPropagation(true)",
-  fun: function () {
-    res1 = "";
-    const dom = domWithListeners();
+  fun: function(res) {
+    //res = "";
+      const dom = cleanDom();
+  for (let elName in dom) {
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, {});
+    dom[elName].addEventListener("click", function (e) {
+      res.push(elName + " ");
+    }, true);
+  }
 
     dom.slotRoot.addEventListener("click", function (e) {
       e.stopPropagation(true);
@@ -75,14 +92,14 @@ export const testStopProp = [{
   },
   expect: "div slot slotRoot shadowComp shadowRoot shadowH1 shadowH1 shadowRoot shadowComp slot div ",
   result: function () {
-    return res1;
+    return res;
   }
 }];
 
 export const testStopProp2 = [{
   name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} )",
-  fun: function () {
-    res1 = res4 = "";
+  fun: function(res) {
+    //res = "";
     const dom = cleanDom();
 
     dom.div.addEventListener("click", function (e) {
@@ -90,27 +107,27 @@ export const testStopProp2 = [{
     }, true);
 
     dom.shadowH1.addEventListener("click", function (e) {
-      res4 += "DifferentScope ";
+      res.push("DifferentScope ");
     }, {scoped: true});
 
     dom.div.addEventListener("click", function (e) {
-      res4 += "SameScope ";
+      res.push("SameScope ");
     }, {scoped: true});
 
     dom.div.addEventListener("click", function (e) {
-      res4 += "unstoppable";
+      res.push("unstoppable");
     }, {unstoppable: true});
 
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
   },
   expect: "DifferentScope unstoppable",
   result: function () {
-    return res4;
+    return res;
   }
 }, {
   name: "shadowTorpedo: addEventListener(.., .., {scoped: true}/{unstoppable: true} ) 2",
-  fun: function () {
-    res1 = res4 = "";
+  fun: function(res) {
+    //res = "";
     const dom = cleanDom();
 
     dom.shadowH1.addEventListener("click", function (e) {
@@ -118,23 +135,23 @@ export const testStopProp2 = [{
     }, true);
 
     dom.shadowH1.addEventListener("click", function (e) {
-      res4 += "SameScope";
+      res.push("SameScope");
     }, {scoped: true});
 
     dom.div.addEventListener("click", function (e) {
-      res4 += "DifferentScope";
+      res.push("DifferentScope");
     }, {scoped: true});
 
     dom.shadowH1.dispatchEvent(new Event("click", {composed: true, bubbles: true}));
   },
   expect: "DifferentScope",
   result: function () {
-    return res4;
+    return res;
   }
 }, {
   name: "shadowTorpedo: Event.isScoped",
-  fun: function () {
-    res1 = res4 = "";
+  fun: function(res) {
+    //res = "";
     const dom = cleanDom();
 
     dom.div.addEventListener("click", function (e) {
@@ -142,10 +159,10 @@ export const testStopProp2 = [{
     }, true);
 
     dom.shadowH1.addEventListener("click", function (e) {
-      res4 += "DifferentScope";
+      res.push("DifferentScope");
     });
     dom.div.addEventListener("click", function (e) {
-      res4 += "SameScope";
+      res.push("SameScope");
     });
     const event = new Event("click", {composed: true, bubbles: true});
     event.isScoped = true;
@@ -153,6 +170,6 @@ export const testStopProp2 = [{
   },
   expect: "DifferentScope",
   result: function () {
-    return res4;
+    return res;
   }
 }];

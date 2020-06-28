@@ -1,8 +1,8 @@
-let res;
+// let res;
 export const testUnstoppable = [{
   name: "unstoppable: normal stopPropagation",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
@@ -10,7 +10,7 @@ export const testUnstoppable = [{
     }
 
     function b(e) {
-      res += "b";
+      res.push("b");
     }
 
     h1.addEventListener("click", a);
@@ -23,8 +23,8 @@ export const testUnstoppable = [{
   }
 }, {
   name: "unstoppable: different type",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
     const span = document.createElement("span");
     h1.appendChild(span);
@@ -34,7 +34,7 @@ export const testUnstoppable = [{
     }
 
     function b(e) {
-      res += "b";
+      res.push("b");
     }
 
     h1.addEventListener("click", a);
@@ -50,8 +50,8 @@ export const testUnstoppable = [{
   }
 }, {
   name: "unstoppable: different phase",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
     const span = document.createElement("span");
     h1.appendChild(span);
@@ -61,11 +61,11 @@ export const testUnstoppable = [{
     }
 
     function b(e) {
-      res += "b";
+      res.push("b");
     }
 
     function c(e) {
-      res += "c";
+      res.push("c");
     }
 
     span.addEventListener("click", a);
@@ -81,8 +81,8 @@ export const testUnstoppable = [{
   }
 }, {
   name: "unstoppable: stopPropagation",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
@@ -90,7 +90,7 @@ export const testUnstoppable = [{
     }
 
     function b(e) {
-      res += "b";
+      res.push("b");
     }
 
     h1.addEventListener("click", a);
@@ -103,8 +103,8 @@ export const testUnstoppable = [{
   }
 }, {
   name: "unstoppable: stopImmediatePropagation",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
@@ -112,11 +112,11 @@ export const testUnstoppable = [{
     }
 
     function b(e) {
-      res += "b";
+      res.push("b");
     }
 
     function c(e) {
-      res += "c";
+      res.push("c");
     }
 
     h1.addEventListener("click", a);
@@ -132,17 +132,17 @@ export const testUnstoppable = [{
 
 export const cancelBubbleTests =[ {
   name: "cancelBubble",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
-      res += " a " + e.cancelBubble;
+      res.push(" a " + e.cancelBubble);
       e.stopPropagation();
     }
 
     function b(e) {
-      res += " b " + e.cancelBubble;
+      res.push(" b " + e.cancelBubble);
     }
 
     h1.addEventListener("click", a);
@@ -155,17 +155,17 @@ export const cancelBubbleTests =[ {
   }
 }, {
   name: "cancelBubble 2",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
-      res += " a " + e.cancelBubble;
+      res.push(" a " + e.cancelBubble);
       e.cancelBubble = "yes, do it!!";
     }
 
     function b(e) {
-      res += " b " + e.cancelBubble;
+      res.push(" b " + e.cancelBubble);
     }
 
     h1.addEventListener("click", a);
@@ -178,17 +178,17 @@ export const cancelBubbleTests =[ {
   }
 }, {
   name: "cancelBubble 3",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
-      res += " a " + e.cancelBubble;
+      res.push(" a " + e.cancelBubble);
       e.cancelBubble = 0;
     }
 
     function b(e) {
-      res += " b " + e.cancelBubble;
+      res.push(" b " + e.cancelBubble);
     }
 
     h1.addEventListener("click", a);
@@ -201,12 +201,12 @@ export const cancelBubbleTests =[ {
   }
 }, {
   name: "cancelBubble 4: before propagation begins",
-  fun: function () {
-    res = "";
+  fun: function(res) {
+    //res = "";
     const h1 = document.createElement("h1");
 
     function a(e) {
-      res += "a";
+      res.push("a");
     }
     h1.addEventListener("click", a);
     const click = new Event("click");

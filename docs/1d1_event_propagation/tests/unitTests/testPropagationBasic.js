@@ -1,22 +1,22 @@
 import {eventTargetName, popTargets, useCases} from "./useCase1.js";
 import {filterComposedTargets} from "../computePaths.js";
 
-let res;
+// let res;
 
 function result() {
   return res;
 }
 
-function addEventListeners(targets) {
+function addEventListeners(targets, res) {
   for (let el of targets) {
     let name = eventTargetName(el);
     const capture = name.toUpperCase() + " ";
     const bubble = name.toLowerCase() + " ";
     el.addEventListener("click", function (e) {
-      res += capture;
+      res.push(capture);
     }, true);
     el.addEventListener("click", function (e) {
-      res += bubble;
+      res.push(bubble);
     });
   }
 }
@@ -60,11 +60,11 @@ for (let usecase of useCases) {
       }
       basicPropTest.push({
         name: `propagation: ${JSON.stringify(options)}: ${usecase.name} ${i}`,
-        fun: function () {
-          res = "";
+        fun: function (res) {
+          // res = "";
           const scopedPath = usecase.makeDomBranch();
           const targets = scopedPath.flat(Infinity);
-          addEventListeners(targets);
+          addEventListeners(targets, res);
           let target = targets[i];
           target.dispatchEvent(new Event("click", options));
         },

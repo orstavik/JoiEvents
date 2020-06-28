@@ -120,29 +120,29 @@ function useCase(){
 let res;
 export const testBasic = [{
   name: "target only (addEventListener with different options, not connected to the DOM, called twice)",
-  fun: function () {
-    res = "";
+  fun: function (res) {
+    // //res = "";
     const h1 = document.createElement("h1");
     h1.addEventListener("click", function (e) {
-      res += "a";
+      res.push("a");
     });
     h1.addEventListener("click", function (e) {
-      res += "b";
+      res.push("b");
     }, {});
     h1.addEventListener("click", function (e) {
-      res += "c";
+      res.push("c");
     }, true);
     h1.addEventListener("click", function (e) {
-      res += "d";
+      res.push("d");
     }, false);
     h1.addEventListener("click", function (e) {
-      res += "e";
+      res.push("e");
     }, {capture: true});
     h1.addEventListener("click", function (e) {
-      res += "f";
+      res.push("f");
     }, {capture: false});
     h1.addEventListener("click", function (e) {
-      res += "g";
+      res.push("g");
     }, {capture: "omg"});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
     h1.dispatchEvent(new Event("click", {bubbles: true}));
@@ -153,12 +153,12 @@ export const testBasic = [{
   }
 }, {
   name: "removeEventListener",
-  fun: function () {
-    res = "";
+  fun: function(res){
+    //res = "";
     const h1 = document.createElement("h1");
 
     function cb(e) {
-      res += "omg";
+      res.push("omg");
     }
 
     h1.addEventListener("click", cb, {});
@@ -171,12 +171,12 @@ export const testBasic = [{
   }
 }, {
   name: "removeEventListener and add it again",
-  fun: function () {
-    res = "";
+  fun: function(res){
+    //res = "";
     const h1 = document.createElement("h1");
 
     function cb(e) {
-      res += "c";
+      res.push("c");
     }
 
     h1.addEventListener("click", cb);
@@ -190,14 +190,14 @@ export const testBasic = [{
   }
 }, {
   name: "simple capture, at_target, bubble",
-  fun: function () {
-    res = "";
+  fun: function(res){
+    //res = "";
     const h1 = document.createElement("h1");
     const h2 = document.createElement("h2");
     h1.appendChild(h2);
 
     function cb(e) {
-      res += e.eventPhase;
+      res.push(e.eventPhase);
     }
 
     h1.addEventListener("click", cb);
@@ -212,15 +212,15 @@ export const testBasic = [{
   }
 }, {
   name: "basic: at_target order differ host/end target",
-  fun: function () {
-    res = "";
+  fun: function(res){
+    //res = "";
     const webComp = useCase();
 
     function cbCapture(e) {
-      res += e.eventPhase + "-";
+      res.push(e.eventPhase + "-");
     }
     function cbBubble(e) {
-      res += e.eventPhase + "+";
+      res.push(e.eventPhase + "+");
     }
 
     webComp.addEventListener("click", cbBubble);

@@ -61,9 +61,12 @@
       let sysname = upgrade.name;
       await nextTick2(upgrade);
       for (const {name, fun, expect, result} of tests) {
-        await nextTick2(fun);
+        let result = [];
         await nextTick2(function () {
-          const res = result();
+          fun(result);
+        });
+        await nextTick2(function () {
+          const res = result.join("");
           const expected = expect instanceof Function ? expect() : expect;
           const nativeRes = results[name][nativeSysName];
           results[name][sysname] = compareResults(expected, res, nativeRes, sysname !== nativeSysName);

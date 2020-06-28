@@ -33,7 +33,7 @@ function sameDOMScope(path) {
 
 import {eventTargetName, popTargets, useCases} from "./useCase1.js";
 
-let res;
+// let res;
 
 function result() {
   return res;
@@ -43,9 +43,9 @@ const expect = "";
 
 function makeScopedPathsTest(usecase) {
 
-  return function scopedPathsTest() {
+  return function scopedPathsTest(res) {
     const usecaseFlat = usecase.flat(Infinity);
-    res = "";
+    // res = "";
     let usecaseSlice = usecase;
     let usecaseFlatSlice = usecaseFlat;
     while (usecaseFlatSlice.length) {
@@ -53,13 +53,13 @@ function makeScopedPathsTest(usecase) {
       //test composed
       let producedScopedPaths = scopedPaths(target, true);
       if (!arrayEquals(producedScopedPaths, usecaseSlice))
-        return res = "notImplement/error in usecase composed?";
+        return res.push("notImplement/error in usecase composed?");
       let producedScopedPathsFalse = scopedPaths(target, false);
       let composedFalseExpected = usecaseSlice;
       while (composedFalseExpected[0] instanceof Array)
         composedFalseExpected = composedFalseExpected[0];
       if (!arrayEquals(producedScopedPathsFalse, composedFalseExpected))
-        return res = "notImplement/error in usecase non-composed?";
+        return res.push("notImplement/error in usecase non-composed?");
 
       usecaseSlice = popTargets(usecaseSlice, 1);
       usecaseFlat.shift();
@@ -69,14 +69,14 @@ function makeScopedPathsTest(usecase) {
 
 function makeComposedPathTest(usecaseFlat) {
 
-  return function composedPathTest() {
-    res = "";
+  return function composedPathTest(res) {
+    // res = "";
     for (let element of usecaseFlat) {
       function comparePaths(e) {
         const composedPath = e.composedPath();
         const scopedPath = scopedPaths(e.target, true);
         if (!arrayEquals(scopedPath.flat(Infinity), composedPath) || !sameDOMScope(scopedPath))
-          res += eventTargetName(element);
+          res.push(eventTargetName(element));
       }
 
       element.addEventListener("click", comparePaths);
