@@ -1,13 +1,17 @@
+//todo we should add a stopPropagationRoot for the scopedPaths
+// a shadowRoot that will cause the scopedPaths to stop adding scopes.
+//this is a
+
 /*
- * ScopedPaths are a set of nested arrays which contain the eventTarget divided by DOM contexts.
- * If you flatten the ScopedPaths, ie. scopedPaths(el, trueOrFalse).flat(Infinity),
+ * SCOPEDPATHS are a set of nested arrays which contain the eventTarget divided by DOM contexts.
+ * If you flatten the SCOPEDPATHS, ie. scopedPaths(el, trueOrFalse).flat(Infinity),
  * then you will get the same output as the composedPath() for that element
  * if a composed: trueOrFalse event were dispatched to it.
  *
  * @returns [[path], [path]]
  *          where each path can consist of elements, or other slotted paths.
  */
-export function scopedPaths(target, composed, originShadow) {
+export function scopedPaths(target, composed, originShadow) {//todo   , topRoot
   let path = originShadow ? [originShadow] : [];
   while (target) {
     path.push(target);
@@ -28,7 +32,7 @@ export function filterComposedTargets(scopedPath) {
     [scopedPath[0]];
 }
 
-export function computePropagationPath(target,composed, bubbles) {
+export function computePropagationPath(target, composed, bubbles) {
   const scopedPath = scopedPaths(target, composed);
   //process AT_TARGET nodes, both the normal, innermost AT_TARGET, and any composed, upper, host node AT_TARGETs.
   const composedTargets = filterComposedTargets(scopedPath);

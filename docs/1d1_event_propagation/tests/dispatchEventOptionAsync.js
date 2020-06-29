@@ -1,7 +1,9 @@
 import {} from "./nextTick.js";
 import {computePropagationPath, scopedPaths} from "./computePaths.js";
 import {addEventTargetRegistry} from "./getEventListeners_once_last_first.js";
-import {addEventListenerOptionScopedUnstoppable, isStopped, addEventIsStoppedScoped} from "./ScopedEventListeners.js";
+import {addEventListenerOptionScopedUnstoppable, addEventIsStoppedScoped} from "./ScopedEventListeners.js";
+
+let isStopped;
 
 function callListenerHandleError(target, listener, event) {
   if (listener.removed)
@@ -101,7 +103,7 @@ async function dispatchEvent(event, options) {
 
 export function addDispatchEventOptionAsync(EventTargetPrototype, sync) {
   //todo here we need to add the prototypes to the scoped stopPropagatoin and eventListener registry
-  addEventIsStoppedScoped(Event.prototype);
+  isStopped = addEventIsStoppedScoped(Event.prototype);
   addEventListenerOptionScopedUnstoppable(EventTarget.prototype);
   const getEventListeners = addEventTargetRegistry(EventTarget.prototype);
 

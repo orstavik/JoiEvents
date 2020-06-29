@@ -103,34 +103,23 @@
   import {addEventTargetRegistry as addEventTargetRegistry2} from "./getEventListeners_once.js";
   import {addEventTargetRegistry as addEventTargetRegistry3} from "./getEventListeners_once_last.js";
   import {addEventTargetRegistry} from "./getEventListeners_once_last_first.js";
-  import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable, isStopped} from "./ScopedEventListeners.js";
+  import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable} from "./ScopedEventListeners.js";
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
 
+  function SCOPEDPATHS() {
+    window.scopedPaths = scopedPaths;
+  }
+
   const eventSystems = [
     function NATIVE() {
-      resetSystem();
+      // resetSystem();
     },
     function SCOPED_STOP() {
-      addEventIsStoppedScoped(Event.prototype);
+      //todo this adding isStopped to window is not super good. We could instead add this to a test resource module passed into the test..
+      window.isStopped = addEventIsStoppedScoped(Event.prototype);
       addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
-      window.isStopped = isStopped;//todo this adding isStopped to window is not good.
-    },
-
-    // }, { //todo
-    //   sysname: "SCOPED_STOP_BY_DEFAULT",
-    //   upgrade: function () {
-    //     addEventIsStoppedScoped(Event.prototype);
-    //     addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
-    //     window.isStopped = isStopped;
-    //     Object.defineProperty(Event.prototype, "isScoped", {value: true});
-    //   },
-    //   downgrade: function(){
-    //     downgrade();
-    //     Object.defineProperty(Event.prototype, "isScoped", {value: undefined});
-    //   }
-    function ScopedPaths() {
-      window.scopedPaths = scopedPaths;
+      //     Object.defineProperty(Event.prototype, "isScoped", {value: true}); todo test making isScoped=true by default/globally too..
     },
 
     function REGISTER() {
@@ -150,15 +139,13 @@
     },
 
     function SCOPED_STOP_REGISTER_once_last_first() {
-      addEventIsStoppedScoped(Event.prototype);
+      window.isStopped = addEventIsStoppedScoped(Event.prototype);
       addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
-      window.isStopped = isStopped;
       // addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
       window.getEventListeners = addEventTargetRegistry(EventTarget.prototype);
     },
 
     function DISPATCH_REGISTER() {
-      // addEventTargetRegistry(EventTarget.prototype);
       window.getEventListeners = addDispatchEventOptionAsync(EventTarget.prototype, true);
     }];
 
@@ -179,7 +166,7 @@
   (async function () {
     await runTests(eventSystems, testBasic);
     await runTests(eventSystems, dynamicTest);
-    await runTests(eventSystems, testRegistry);
+    await runTests(eventSystems.filter(fun => fun.name.indexOf("REGISTER") >= 0), testRegistry);
     await runTests(eventSystems, testOnce);
     await runTests(eventSystems, testUnstoppable);
     await runTests(eventSystems, cancelBubbleTests);
@@ -193,8 +180,8 @@
     await runTests(eventSystems, testStopProp2);
     // await runTests(eventSystems, testIsStopped);
     await runTests(eventSystems, testProp);
-    await runTests(eventSystems, testScopedPaths, Object.values(useCases));
-    await runTests(eventSystems, testComposedPath, Object.values(useCases));
+    await runTests([SCOPEDPATHS], testScopedPaths, Object.values(useCases));
+    await runTests([SCOPEDPATHS], testComposedPath, Object.values(useCases));
     await runTests(eventSystems, basicPropTest, Object.values(useCases));
   })();
   //todo

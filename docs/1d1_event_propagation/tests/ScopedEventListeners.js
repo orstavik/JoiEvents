@@ -10,7 +10,7 @@
  * @param event
  * @returns {null|window|ShadowRoot}
  */
-export function currentEventContext(event) {//todo rename to getPropagationRootNode(event)??
+export function currentEventContext(event) {//todo rename to getPropagationRootNode(event)?? //todo move to computePaths.js??
   if (!event.currentTarget)
     return null;
   const root = event.currentTarget.getRootNode ? event.currentTarget.getRootNode() : event.currentTarget;
@@ -45,7 +45,7 @@ function stopListener(e, stop) {
  *                         in a different DOM propagation context, ie. inside another web component or
  *                         in the main dom outside a web component that the event currently propagates in.
  */
-export function isStopped(event, listenerIsScoped) {
+function isStopped(event, listenerIsScoped) {
   if (beforeStops.has(event))
     return true;
   if (!listenerIsScoped && !event.isScoped && stopListener(event, globalStops.get(event)))  //check if it is non-scoped first, as that is cheapest
@@ -120,6 +120,8 @@ export function addEventIsStoppedScoped(EventPrototype) {
       return value && this.stopPropagation();
     }
   });
+
+  return isStopped;
 }
 
 //"scope" and "unstoppable" options for event listener
