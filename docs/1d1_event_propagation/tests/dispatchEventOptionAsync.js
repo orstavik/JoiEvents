@@ -19,7 +19,7 @@ function callListenerHandleError(target, listener, event) {
   }
 }
 
-function initializeEvent(event, target) {
+function initializeEvent(event, target, scoped) {
   //we need to freeze the composedPath at the point of first dispatch
   const composedPath = scopedPaths(target, event.composed).flat(Infinity);
   Object.defineProperties(event, {
@@ -41,6 +41,7 @@ function initializeEvent(event, target) {
       writable: false
     }
   });
+  scoped && Object.defineProperty(event, "isScoped", {value: true});
 }
 
 
@@ -58,35 +59,42 @@ let updateEvent = function (event, target, phase) {
   });
 };
 
+/**
+ *
+ * @param event
+ * @param options {async: true, cutOff: shadowRoot/document, scoped: true/false}
+ * @returns {Promise<void>}
+ */
 async function dispatchEvent(event, options) {
   if (isStopped(event)) //stopped before dispatch.. yes, it is possible to do var e = new Event("abc"); e.stopPropagation(); element.dispatchEvent(e);
     return;
-  const fullPath = computePropagationPath(this, event.composed, event.bubbles);
-  initializeEvent(event, this);
+
+  const fullPath = computePropagationPath(this, event.composed, event.bubbles, options?.cutOff);
+  initializeEvent(event, this, !!options?.scoped);
 
   let macrotask = nextMesoTicks([function () {
   }], fullPath.length + 1);//todo hack.. problem initiating without knowing the tasks
   //todo should +2 for bounce: true so we have a mesotask for the default action(s) too.
 
-  for (let {target: currentTarget, phase, listenerPhase} of fullPath) {
-    let listeners = getEventListeners(currentTarget, event.type, listenerPhase);
+  for (let {target, phase, listenerPhase} of fullPath) {
+    let listeners = getEventListeners(target, event.type, listenerPhase);
     if (!listeners.length)
       continue;
-    updateEvent(event, currentTarget, phase);
+    updateEvent(event, target, phase);//todo why did i do this here again?
     //the filter below works for regular stopPropagation() calls, but not stopImmediatePropagation() calls.
     listeners = listeners.filter(listener => listener.unstoppable || !isStopped(event, listener.scoped));
     if (!listeners.length)
       continue;
     if (options?.async) {
-      await callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask);
+      await callOrQueueListenersForTargetPhase(target, event, listeners, options, macrotask);
     } else {
       for (let listener of listeners)
         //todo here i would need to check if stopImmediatePropagation was called.
-        callListenerHandleError(currentTarget, listener, event);
+        callListenerHandleError(target, listener, event);
     }
     //removing once manually, like we handle the unstoppable and isStopped manually
     for (let listener of listeners)
-      listener.once && currentTarget.removeEventListener(listener.type, listener.listener, listener.capture);
+      listener.once && target.removeEventListener(listener.type, listener.listener, listener.capture);
   }
 }
 
