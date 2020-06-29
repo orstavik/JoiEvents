@@ -1,9 +1,7 @@
 import {} from "./nextTick.js";
 import {computePropagationPath, scopedPaths} from "./computePaths.js";
-import {addEventTargetRegistry} from "./getEventListeners_once_last_first.js";
-import {addEventListenerOptionScopedUnstoppable, addEventIsStoppedScoped} from "./ScopedEventListeners.js";
 
-let isStopped;
+let isStopped, getEventListeners;
 
 function callListenerHandleError(target, listener, event) {
   if (listener.removed)
@@ -52,7 +50,7 @@ function initializeEvent(event, target) {
     }
   });
 }
-const immediatelyStopped = new WeakSet();
+// const immediatelyStopped = new WeakSet();
 
 
 async function callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask) {
@@ -101,12 +99,9 @@ async function dispatchEvent(event, options) {
   }
 }
 
-export function addDispatchEventOptionAsync(EventTargetPrototype, sync) {
-  //todo here we need to add the prototypes to the scoped stopPropagatoin and eventListener registry
-  isStopped = addEventIsStoppedScoped(Event.prototype);
-  addEventListenerOptionScopedUnstoppable(EventTarget.prototype);
-  const getEventListeners = addEventTargetRegistry(EventTarget.prototype);
-
+export function addDispatchEventOptionAsync(EventTargetPrototype, sync, isStoppedImpl, getEventListenersImpl) {
+  isStopped = isStoppedImpl;
+  getEventListeners = getEventListenersImpl;
   const dispatchOG = EventTargetPrototype.dispatchEvent;
 
   function dispatchEventAsyncOnly(event, options) {
@@ -117,5 +112,4 @@ export function addDispatchEventOptionAsync(EventTargetPrototype, sync) {
 
   const dispatchMethod = sync ? dispatchEvent : dispatchEventAsyncOnly;
   Object.defineProperty(EventTargetPrototype, "dispatchEvent", {value: dispatchMethod});
-  return getEventListeners;
 }
