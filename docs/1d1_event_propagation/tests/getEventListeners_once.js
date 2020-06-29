@@ -1,7 +1,7 @@
 const targetToListeners = new WeakMap();
 
 //this thing returns immutable listeners
-export function getEventListeners(target, type, phase) {
+function getEventListeners(target, type, phase) {
   const allListeners = targetToListeners.get(target);
   if (!allListeners)
     return [];
@@ -118,4 +118,6 @@ export function addEventTargetRegistry(EventTargetPrototype) {
 
   Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerRegistry});
   Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerRegistry});
+
+  return getEventListeners;
 }

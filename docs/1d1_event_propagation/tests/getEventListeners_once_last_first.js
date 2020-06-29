@@ -1,7 +1,7 @@
 const targetToListeners = new WeakMap();
 
 //this thing returns immutable listeners
-export function getEventListeners(target, type, phase) {
+function getEventListeners(target, type, phase) {
   const allListeners = targetToListeners.get(target);
   if (!allListeners)
     return [];
@@ -105,6 +105,11 @@ function verifyFirstLast(target, options) {
     throw new Error("only one event listener {first: true} can be added to the same target and event type.");
 }
 
+/**
+ *
+ * @param EventTargetPrototype
+ * @returns {getEventListeners} the function that can be used to retrieve the event listeners from the event listener registry
+ */
 export function addEventTargetRegistry(EventTargetPrototype) {
   const ogAdd = EventTargetPrototype.addEventListener;
   const ogRemove = EventTargetPrototype.removeEventListener;
@@ -195,4 +200,6 @@ export function addEventTargetRegistry(EventTargetPrototype) {
 
   Object.defineProperty(EventTargetPrototype, "addEventListener", {value: addEventListenerRegistry});
   Object.defineProperty(EventTargetPrototype, "removeEventListener", {value: removeEventListenerRegistry});
+
+  return getEventListeners;
 }

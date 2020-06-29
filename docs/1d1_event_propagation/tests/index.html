@@ -99,19 +99,10 @@
 </script>
 
 <script type="module">
-  import {
-    addEventTargetRegistry as addEventTargetRegistry1,
-    getEventListeners as getEventListeners1
-  } from "./getEventListeners.js";
-  import {
-    addEventTargetRegistry as addEventTargetRegistry2,
-    getEventListeners as getEventListeners2
-  } from "./getEventListeners_once.js";
-  import {
-    addEventTargetRegistry as addEventTargetRegistry3,
-    getEventListeners as getEventListeners3
-  } from "./getEventListeners_once_last.js";
-  import {addEventTargetRegistry, getEventListeners} from "./getEventListeners_once_last_first.js";
+  import {addEventTargetRegistry as addEventTargetRegistry1} from "./getEventListeners.js";
+  import {addEventTargetRegistry as addEventTargetRegistry2} from "./getEventListeners_once.js";
+  import {addEventTargetRegistry as addEventTargetRegistry3} from "./getEventListeners_once_last.js";
+  import {addEventTargetRegistry} from "./getEventListeners_once_last_first.js";
   import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable, isStopped} from "./ScopedEventListeners.js";
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
@@ -138,28 +129,24 @@
     //     downgrade();
     //     Object.defineProperty(Event.prototype, "isScoped", {value: undefined});
     //   }
-    function REGISTER() {
-      addEventTargetRegistry1(EventTarget.prototype);
-      window.getEventListeners = getEventListeners1;
-    },
-
     function ScopedPaths() {
       window.scopedPaths = scopedPaths;
     },
 
+    function REGISTER() {
+      window.getEventListeners = addEventTargetRegistry1(EventTarget.prototype);
+    },
+
     function REGISTER_once() {
-      addEventTargetRegistry2(EventTarget.prototype);
-      window.getEventListeners = getEventListeners2;
+      window.getEventListeners = addEventTargetRegistry2(EventTarget.prototype);
     },
 
     function REGISTER_once_last() {
-      addEventTargetRegistry3(EventTarget.prototype);
-      window.getEventListeners = getEventListeners3;
+      window.getEventListeners = addEventTargetRegistry3(EventTarget.prototype);
     },
 
     function REGISTER_once_last_first() {
-      addEventTargetRegistry(EventTarget.prototype);
-      window.getEventListeners = getEventListeners;
+      window.getEventListeners = addEventTargetRegistry(EventTarget.prototype);
     },
 
     function SCOPED_STOP_REGISTER_once_last_first() {
@@ -167,14 +154,12 @@
       addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
       window.isStopped = isStopped;
       // addEventListenerOptionUnstoppable(EventTarget.prototype, Event.prototype);
-      addEventTargetRegistry(EventTarget.prototype);
-      window.getEventListeners = getEventListeners;
+      window.getEventListeners = addEventTargetRegistry(EventTarget.prototype);
     },
 
-    function DISPATCH_REGISTERx3() {
+    function DISPATCH_REGISTER() {
       // addEventTargetRegistry(EventTarget.prototype);
-      addDispatchEventOptionAsync(EventTarget.prototype, true);
-      // window.getEventListeners = getEventListeners;
+      window.getEventListeners = addDispatchEventOptionAsync(EventTarget.prototype, true);
     }];
 
   import {testBasic} from "./unitTests/testBasic.js";
