@@ -14,15 +14,9 @@
     Event.prototype.stopPropagation = stopPropOG;
     Event.prototype.stopImmediatePropagation = stopImmediateOG;
     Object.defineProperty(Event.prototype, "cancelBubble", cancelBubbleOG);
-    window.getEventListeners = function () {
-      return [];
-    };
-    window.isStopped = function (event, scoped) {
-      return event.cancelBubble;
-    };
-    window.scopedPaths = function (element, composed) {
-      return [];
-    };
+    window.getEventListeners = undefined;
+    window.isStopped = undefined;
+    window.scopedPaths = undefined;
   }
 
   function nextTick2(cb) {
@@ -74,7 +68,7 @@
     usecases = usecases || [{name: undefined}];
     const results = {};
     for (let system of eventSystems) {
-      await nextTick2(system);                //todo do we need async here?? i think not??
+      system();
       for (const {name: testName, fun, expect} of tests) {
         for (let usecase of usecases) {
 
@@ -82,15 +76,13 @@
           setValue(results, testName + ":" + usecase.name, "expected", expected);
 
           let result = [];
-          await nextTick2(function () {
-            fun(result, usecase);
-          });
-          await nextTick2(function () {
-            setValue(results, testName + ":" + usecase.name, system.name, result.join(""));
-          });
+          fun(result, usecase);
+          await nextTick2(() => 1);  //just wait a t1ck, for any queued propagation to complete
+          setValue(results, testName + ":" + usecase.name, system.name, result.join(""));
+          await nextTick2(() => 1);  //just wait a t0ck, for any queued tasks of the propagation to complete
         }
       }
-      await nextTick2(resetSystem);           //todo do we need async here?? i think not?? must check with the async dispatch
+      resetSystem();
     }
     return nextTick2(function () {
       printResults(results);
@@ -103,7 +95,8 @@
   import {addEventTargetRegistry as addEventTargetRegistry2} from "./getEventListeners_once.js";
   import {addEventTargetRegistry as addEventTargetRegistry3} from "./getEventListeners_once_last.js";
   import {addEventTargetRegistry} from "./getEventListeners_once_last_first.js";
-  import {addEventIsStoppedScoped, addEventListenerOptionScopedUnstoppable} from "./ScopedEventListeners.js";
+  import {addEventListenerOptionScopedUnstoppable} from "./EventListenersOptionUnstoppableScoped.js";
+  import {addEventIsStoppedScoped} from "./ScopedStopPropagation.js";
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
 
@@ -111,16 +104,19 @@
     window.scopedPaths = scopedPaths;
   }
 
-  function SCOPED_STOP() {
-    //todo this adding isStopped to window is not super good. We could instead add this to a test resource module passed into the test..
-    window.isStopped = addEventIsStoppedScoped(Event.prototype);
-    addEventListenerOptionScopedUnstoppable(EventTarget.prototype)
-    //     Object.defineProperty(Event.prototype, "isScoped", {value: true}); todo test making isScoped=true by default/globally too..
+  /**
+   * @param byDefault, if true, then all events are isScoped=true by default/globally
+   */
+  function SCOPED_STOP(byDefault) {
+    const isStopped = addEventIsStoppedScoped(Event.prototype);
+    addEventListenerOptionScopedUnstoppable(EventTarget.prototype, isStopped);
+    byDefault && Object.defineProperty(Event.prototype, "isScoped", {value: true});
   }
 
   function REGISTER() {//once, last, first
     window.getEventListeners = addEventTargetRegistry(EventTarget.prototype);
   }
+
   const registers = [
     REGISTER,
     function REGISTER_no_options() {
@@ -142,13 +138,12 @@
       SCOPED_STOP();
       REGISTER();
     },
-
     function DISPATCH_REGISTER() {
       const isStopped = addEventIsStoppedScoped(Event.prototype);
-      addEventListenerOptionScopedUnstoppable(EventTarget.prototype);
+      addEventListenerOptionScopedUnstoppable(EventTarget.prototype, isStopped);
+      //patches the native events, doesn't do anything for the custom dispatchEvent
       const getEventListeners = addEventTargetRegistry(EventTarget.prototype);
-
-      window.getEventListeners = addDispatchEventOptionAsync(EventTarget.prototype, true, isStopped, getEventListeners);
+      addDispatchEventOptionAsync(EventTarget.prototype, true, isStopped, getEventListeners);
     }];
 
   import {testBasic} from "./unitTests/testBasic.js";
@@ -168,7 +163,7 @@
   (async function () {
     await runTests(eventSystems, testBasic);
     await runTests(eventSystems, dynamicTest);
-    await runTests(registers, testRegistry);//todo this should run on usecases.. That would be more powerful..
+    await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
     await runTests(eventSystems, testOnce);
     await runTests(eventSystems, testUnstoppable);
     await runTests(eventSystems, cancelBubbleTests);

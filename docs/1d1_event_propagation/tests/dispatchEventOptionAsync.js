@@ -39,18 +39,9 @@ function initializeEvent(event, target) {
         return composedPath;   //we can cache this if we want
       },
       writable: false
-      //todo there are some minor performance upgrades that can be made around stopImmediatePropgation()..
-      // but they are more complex than the naive implementation below suggests, as they need to take into account
-      // the scoped and non-scoped nature of the calls.
-    // },
-    // stopImmediatePropagation: {
-    //   value: function () {
-    //     immediatelyStopped.add(this);
-    //   }
     }
   });
 }
-// const immediatelyStopped = new WeakSet();
 
 
 async function callOrQueueListenersForTargetPhase(currentTarget, event, listeners, options, macrotask) {
@@ -79,11 +70,11 @@ async function dispatchEvent(event, options) {
 
   for (let {target: currentTarget, phase, listenerPhase} of fullPath) {
     let listeners = getEventListeners(currentTarget, event.type, listenerPhase);
-    //todo this filter works fine for stopPropagation on the node level, but it doesn't handle the stopImmediatePropagation.
     if (!listeners.length)
       continue;
     updateEvent(event, currentTarget, phase);
-    listeners = listeners.filter(listener => listener.unstoppable || !isStopped(event, listener.scoped)); //isStopped require the currentTarget and phase
+    //the filter below works for regular stopPropagation() calls, but not stopImmediatePropagation() calls.
+    listeners = listeners.filter(listener => listener.unstoppable || !isStopped(event, listener.scoped));
     if (!listeners.length)
       continue;
     if (options?.async) {
@@ -100,10 +91,10 @@ async function dispatchEvent(event, options) {
 }
 
 export function addDispatchEventOptionAsync(EventTargetPrototype, sync, isStoppedImpl, getEventListenersImpl) {
-  isStopped = isStoppedImpl;
-  getEventListeners = getEventListenersImpl;
-  const dispatchOG = EventTargetPrototype.dispatchEvent;
+  isStopped = isStoppedImpl;                    //todo || window.isStopped;
+  getEventListeners = getEventListenersImpl;    //todo || window.isStopped;
 
+  const dispatchOG = EventTargetPrototype.dispatchEvent;
   function dispatchEventAsyncOnly(event, options) {
     options?.async ?
       dispatchEvent.call(this, event, options) : //async
