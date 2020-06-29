@@ -1,4 +1,4 @@
-import {cleanDom} from "./useCase1.js";
+import {cleanDom} from "../unitTests/useCase1.js";
 
 function domWithListeners(res1, res2, res3) {
   const dom = cleanDom();
@@ -40,61 +40,48 @@ export let testProp = [{
   name: "dispatchEvent: shadowH1: composed NO bubbles NO async NO",
   expect: "shadowRoot shadowH1 shadowH1 :+-+:122...",
   fun: makeTestFunction("shadowH1"),
-  result: getResults
 }, {
   name: "dispatchEvent: shadowH1: composed: NO bubbles: YES",
   expect: "shadowRoot shadowH1 shadowH1 shadowRoot :+-+-:1223....",
   fun: makeTestFunction("shadowH1", {bubbles: true}),
-  result: getResults
 }, {
   name: "dispatchEvent: shadowH1: composed: YES bubbles: NO",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowComp :+++++++-+-:1111121222..........",
   fun: makeTestFunction("shadowH1", {composed: true}),
-  result: getResults,
 }, {
   name: "dispatchEvent: shadowH1: composed: YES bubbles: YES",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowRoot shadowH1 shadowH1 shadowRoot shadowComp slotSlot slotSpan slotRoot slot div :+++++++-+-------:1111121223233333................",
   fun: makeTestFunction("shadowH1", {composed: true, bubbles: true}),
-  result: getResults,
 }, {
   name: "dispatchEvent2: composed: NO bubbles: NO",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp :+++++-+:1111122.......",
   fun: makeTestFunction("shadowComp"),
-  result: getResults,
 }, {
   name: "dispatchEvent2: composed: NO bubbles: YES",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div :+++++-+-----:111112233333............",
   fun: makeTestFunction("shadowComp", {bubbles: true}),
-  result: getResults,
 }, {
   name: "dispatchEvent2: composed: YES bubbles: NO",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp :+++++-+:1111122.......",
   fun: makeTestFunction("shadowComp", {composed: true}),
-  result: getResults,
 }, {
   name: "dispatchEvent2: composed: YES bubbles: YES",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div :+++++-+-----:111112233333............",
   fun: makeTestFunction("shadowComp", {bubbles: true, composed: true}),
-  result: getResults,
 }, {
   name: "dispatchEventAsync: composed",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp :+++++-+:1.1.1.1.1.2.2.",
   fun: makeTestFunction("shadowComp", {composed: true}, {async: true}),
-  result: getResults,
 }, {
   name: "dispatchEventAsync: bubbles",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div :+++++-+-----:1.1.1.1.1.2.2.3.3.3.3.3.",
   fun: makeTestFunction("shadowComp", {bubbles: true}, {async: true}),
-  result: getResults,
 }, {
   name: "dispatchEventAsync: ",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp :+++++-+:1.1.1.1.1.2.2.",
   fun: makeTestFunction("shadowComp", undefined, {async: true}),
-  result: getResults,
 }, {
   name: "dispatchEventAsync: composed bubbles",
   expect: "div slot slotRoot slotSpan slotSlot shadowComp shadowComp slotSlot slotSpan slotRoot slot div :+++++-+-----:1.1.1.1.1.2.2.3.3.3.3.3.",
   fun: makeTestFunction("shadowComp", {bubbles: true, composed: true}, {async: true}),
-  result: getResults,
 }];
-// testProp = testProp.reverse().slice(0,1);

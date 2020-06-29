@@ -1,9 +1,5 @@
 import {cleanDom} from "./useCase1.js";
 
-function getResult() {
-  return res;
-}
-
 export const firstTest = [{
   name: "first is true: {first: true, capture: true}",
   fun: function (res) {
@@ -24,8 +20,7 @@ export const firstTest = [{
     h1.addEventListener("click", b, {first: true, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: "ba",
-  result: getResult
+  expect: "ba"
 }, {
   name: "first is true: {first: 1}",
   fun: function (res) {
@@ -46,8 +41,7 @@ export const firstTest = [{
     h1.addEventListener("click", a, {first: 1, capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: "ab",
-  result: getResult
+  expect: "ab"
 }, {
   name: "first is true: {first: []}",
   fun: function (res) {
@@ -68,8 +62,7 @@ export const firstTest = [{
     h1.addEventListener("click", b, {first: [], capture: true});
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: "ba",
-  result: getResult
+  expect: "ba"
 }, {
   name: "first is false: {first: false}",
   fun: function (res) {
@@ -90,8 +83,7 @@ export const firstTest = [{
     h1.addEventListener("click", b, {first: false});
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: "ab",
-  result: getResult
+  expect: "ab"
 }, {
   name: "first is false: {first: 0}",
   fun: function (res) {
@@ -112,8 +104,7 @@ export const firstTest = [{
     h1.addEventListener("click", b, {first: 0});
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: "ab",
-  result: getResult
+  expect: "ab"
 }, {
   name: "first is false: {first: ''}",
   fun: function (res) {
@@ -134,8 +125,7 @@ export const firstTest = [{
     h1.addEventListener("click", b, {first: ''});
     h1.dispatchEvent(new MouseEvent("click"));
   },
-  expect: "ab",
-  result: getResult
+  expect: "ab"
   //todo move this into a test of both last_first
 // }, {
 //   name: "first on bubble and capture side {capture: true, first: true}",
@@ -187,8 +177,7 @@ export const firstTest = [{
   }
 
   ,
-  expect: "b",
-  result: getResult
+  expect: "b"
 }, {
   name: "First: removeEventListener() {first: true, capture: true} when there is no event listener to remove",
   fun: function (res) {
@@ -209,8 +198,7 @@ export const firstTest = [{
   }
 
   ,
-  expect: "",
-  result: getResult
+  expect: ""
 }];
 
 export const firstErrorsTest = [{
@@ -238,8 +226,7 @@ export const firstErrorsTest = [{
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: "error a",
-  result: getResult
+  expect: "error a"
 }, {
   name: "First error: first on bubble phase",
   fun: function (res) {
@@ -269,8 +256,7 @@ export const firstErrorsTest = [{
     }
     h1.dispatchEvent(new MouseEvent("click"))
   },
-  expect: "12",
-  result: getResult
+  expect: "12"
 }];
 
 export const first2 = [{
@@ -293,8 +279,7 @@ export const first2 = [{
     dom.div.addEventListener("click", a, {first: 1, capture: true});
     dom.div.dispatchEvent(new Event("click"));
   },
-  expect: "ab",
-  result: getResult
+  expect: "ab"
 }, {
   name: "first: removeEventListener",
   fun: function (res) {
@@ -317,8 +302,7 @@ export const first2 = [{
     dom.div.removeEventListener("click", a, {last: true, capture: true});
     dom.div.dispatchEvent(new Event("click"));
   },
-  expect: "",
-  result: getResult
+  expect: ""
 }, {
   name: "first: add {first: true, capture: true} to THE SAME element twice",
   fun: function (res) {
@@ -346,8 +330,7 @@ export const first2 = [{
     dom.div.dispatchEvent(new Event("click",));
 
   },
-  expect: "error ba",
-  result: getResult
+  expect: "error ba"
 }, {
   name: "first: add {first: true, capture: true} to DIFFERENT element twice",
   fun: function (res) {
@@ -372,8 +355,7 @@ export const first2 = [{
     dom.div.dispatchEvent(new Event("click", {bubbles: true}));
     dom.slot.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "ababab",
-  result: getResult
+  expect: "ababab"
 }, {
   name: "first: {capture:true, first: true}",
   fun: function (res) {
@@ -399,8 +381,7 @@ export const first2 = [{
     }
     dom.div.dispatchEvent(new Event("click",));
   },
-  expect: "error a",
-  result: getResult
+  expect: "error a"
 }, {
   name: "first: does not propagate through shadowRoot",
   fun: function (res) {
@@ -422,8 +403,7 @@ export const first2 = [{
 
     dom.shadowH1.dispatchEvent(new Event("click"));
   },
-  expect: "a",
-  result: getResult
+  expect: "a"
 }, {
   name: "first: {capture:true, bubbles: false, first: true}",
   fun: function (res) {
@@ -450,8 +430,7 @@ export const first2 = [{
     }
     dom.div.dispatchEvent(new Event("click"));
   },
-  expect: " error ba",
-  result: getResult
+  expect: " error ba"
 }, {
   name: "first: {capture:true, first: true}",
   fun: function (res) {
@@ -476,8 +455,7 @@ export const first2 = [{
     dom.div.addEventListener("click", a);
     dom.div.dispatchEvent(new Event("click",));
   },
-  expect: " error a",
-  result: getResult
+  expect: " error a"
 }, {
   name: "first: {capture:true, first: true}",
   fun: function (res) {
@@ -504,8 +482,7 @@ export const first2 = [{
     dom.div.dispatchEvent(new Event("click"));
 
   },
-  expect: " error ba", //
-  result: getResult
+  expect: " error ba"
 }, {
   name: "first: slotted element",
   fun: function (res) {
@@ -527,8 +504,7 @@ export const first2 = [{
 
     dom.slot.dispatchEvent(new Event("click",));
   },
-  expect: "ab",
-  result: getResult
+  expect: "ab"
 }, {
   name: "first: {first: true, once: true, capture: true}",
   fun: function (res) {
@@ -551,8 +527,7 @@ export const first2 = [{
     dom.slot.dispatchEvent(new Event("click"));
     dom.slot.dispatchEvent(new Event("click"));
   },
-  expect: "abb",
-  result: getResult
+  expect: "abb"
 }, {
   name: "first: {first: true, once: true, capture: true}",
   fun: function (res) {
@@ -575,8 +550,7 @@ export const first2 = [{
     dom.slot.dispatchEvent(new Event("click"));
     dom.slot.dispatchEvent(new Event("click"));
   },
-  expect: "abb",
-  result: getResult
+  expect: "abb"
 }, {
   name: "first: {first: true, last: true, capture: true}",
   fun: function (res) {
@@ -602,6 +576,5 @@ export const first2 = [{
 
     dom.slot.dispatchEvent(new Event("click"));
   },
-  expect: "error b",
-  result: getResult
+  expect: "error b"
 }];

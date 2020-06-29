@@ -153,11 +153,12 @@
   import {testUnstoppable, cancelBubbleTests} from "./unitTests/testUnstoppable.js";
   import {lastTest, lastErrorsTest, last2} from "./unitTests/testLast.js";
   import {firstTest, firstErrorsTest, first2} from "./unitTests/testFirst.js";
-  import {testProp} from "./unitTests/testPropagation.js";
   import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
+  import {asyncPropTest} from "./unitTests/testPropagationAsync.js";
+
   import {useCases} from "./unitTests/useCase1.js";
 
   (async function () {
@@ -176,10 +177,10 @@
     await runTests(eventSystems, testStopProp);
     await runTests(eventSystems, testStopProp2);
     // await runTests(eventSystems, testIsStopped);
-    await runTests(eventSystems, testProp);
     await runTests([SCOPED_PATHS], testScopedPaths, Object.values(useCases));
     await runTests([SCOPED_PATHS], testComposedPath, Object.values(useCases));
     await runTests(eventSystems, basicPropTest, Object.values(useCases));
+    await runTests(eventSystems, asyncPropTest, Object.values(useCases));
   })();
   //todo
   // 1. test stopPropagation thoroughly
