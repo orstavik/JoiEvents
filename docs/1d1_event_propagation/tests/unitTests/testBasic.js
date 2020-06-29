@@ -101,28 +101,12 @@
 // h1.dispatchEvent(new MouseEvent("click"));
 // h1.dispatchEvent(new MouseEvent("click"));
 //
-let i = 0;
+import {useCases} from "./useCase1.js";
 
-function useCase(){
-  class WebComp extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = `<h1>hello sunshine!</h1>`
-    }
-  }
-
-  const name = "web-comp-" + i++;
-  customElements.define(name, WebComp);
-  return document.createElement(name);
-}
-
-let res;
 export const testBasic = [{
   name: "target only (addEventListener with different options, not connected to the DOM, called twice)",
-  fun: function (res) {
-    // //res = "";
-    const h1 = document.createElement("h1");
+  fun: function (res, usecase) {
+    const h1 = useCases.h1()[0];
     h1.addEventListener("click", function (e) {
       res.push("a");
     });
@@ -147,10 +131,7 @@ export const testBasic = [{
     h1.dispatchEvent(new Event("click", {bubbles: true}));
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "abcdefgabcdefg",
-  result: function () {
-    return res;
-  }
+  expect: "abcdefgabcdefg"
 }, {
   name: "removeEventListener",
   fun: function(res){
@@ -165,10 +146,7 @@ export const testBasic = [{
     h1.removeEventListener("click", cb, {});
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "",
-  result: function () {
-    return res;
-  }
+  expect: ""
 }, {
   name: "removeEventListener and add it again",
   fun: function(res){
@@ -184,14 +162,10 @@ export const testBasic = [{
     h1.addEventListener("click", cb);
     h1.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "c",
-  result: function () {
-    return res;
-  }
+  expect: "c"
 }, {
   name: "simple capture, at_target, bubble",
   fun: function(res){
-    //res = "";
     const h1 = document.createElement("h1");
     const h2 = document.createElement("h2");
     h1.appendChild(h2);
@@ -206,15 +180,11 @@ export const testBasic = [{
     h2.addEventListener("click", cb, true);
     h2.dispatchEvent(new Event("click", {bubbles: true}));
   },
-  expect: "1223",
-  result: function () {
-    return res;
-  }
+  expect: "1223"
 }, {
   name: "basic: at_target order differ host/end target",
   fun: function(res){
-    //res = "";
-    const webComp = useCase();
+    const webComp = useCases.webcomp()[1];
 
     function cbCapture(e) {
       res.push(e.eventPhase + "-");
@@ -231,8 +201,5 @@ export const testBasic = [{
     webComp.shadowRoot.children[0].addEventListener("click", cbCapture, true);
     webComp.shadowRoot.children[0].dispatchEvent(new Event("click", {bubbles: true, composed: true}));
   },
-  expect: "2-1-2+2-3+2+",
-  result: function () {
-    return res;
-  }
+  expect: "2-1-2+2-3+2+"
 }];

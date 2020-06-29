@@ -1,28 +1,25 @@
-import {eventTargetName, popTargets, useCases} from "./useCase1.js";
+import {eventTargetName} from "./useCase1.js";
 import {filterComposedTargets} from "../computePaths.js";
 
-// let res;
-
-function result() {
-  return res;
-}
-
-function addEventListeners(targets, res) {
+function addEventListeners(targets, res) {//todo push this into the usecase file?
   for (let el of targets) {
     let name = eventTargetName(el);
-    const capture = name.toUpperCase() + " ";
-    const bubble = name.toLowerCase() + " ";
     el.addEventListener("click", function (e) {
-      res.push(capture);
+      res.push(name.toUpperCase() + " ");
     }, true);
     el.addEventListener("click", function (e) {
-      res.push(bubble);
+      res.push(name.toLowerCase() + " ");
     });
   }
 }
 
-function makeExpectationBubblesComposed(scopedPath, bubbles) {
-  const bubbleOrTargetTrailNodes = bubbles ?
+function makeExpectationBubblesComposed(usecase, options) {
+  let scopedPath = usecase();
+  if (!options.composed) {
+    while (scopedPath[0] instanceof Array)
+      scopedPath = scopedPath[0];
+  }
+  const bubbleOrTargetTrailNodes = options.bubbles ?
     scopedPath.flat(Infinity) :
     filterComposedTargets(scopedPath);
   const captureTrailNodes = scopedPath.flat(Infinity).reverse();
@@ -33,6 +30,8 @@ function makeExpectationBubblesComposed(scopedPath, bubbles) {
   return captureTrail.join(" ") + " " + bubbleOrTargetTrail.join(" ") + " ";
 }
 
+export const basicPropTest = [];
+
 const propAlternatives = [
   {composed: true, bubbles: true},
   {composed: true, bubbles: false},
@@ -40,36 +39,16 @@ const propAlternatives = [
   {composed: false, bubbles: false}
 ];
 
-export const basicPropTest = [];
-
-for (let [name, makeDomBranch] of Object.entries(useCases)) {
-  const scopedPathX = makeDomBranch();
-  const length = scopedPathX.flat(Infinity).length;
-
-  for (let options of propAlternatives) {
-    for (let i = 0; i < length; i++) {
-      //att!! reusing usecase elements and listeners between tests is problem, because the addEventListener must sometimes register the event listeners
-      const scopedPath = makeDomBranch();
-      const targets = scopedPath.flat(Infinity);
-      // addEventListeners(targets);
-      let scopedPathSlice = popTargets(scopedPath, i);
-      if (!options.composed) {
-        while (scopedPathSlice[0] instanceof Array)
-          scopedPathSlice = scopedPathSlice[0];
-      }
-      basicPropTest.push({
-        name: `propagation: ${JSON.stringify(options)}: ${name} ${i}`,
-        fun: function (res) {
-          // res = "";
-          const scopedPath = makeDomBranch();
-          const targets = scopedPath.flat(Infinity);
-          addEventListeners(targets, res);
-          let target = targets[i];
-          target.dispatchEvent(new Event("click", options));
-        },
-        expect: makeExpectationBubblesComposed(scopedPathSlice, options.bubbles),
-        result
-      });
+for (let options of propAlternatives) {
+  basicPropTest.push({
+    name: `propagation: ${JSON.stringify(options)}`,
+    fun: function (res, usecase) {
+      const targets = usecase().flat(Infinity);
+      addEventListeners(targets, res);
+      targets[0].dispatchEvent(new Event("click", options));
+    },
+    expect: function(usecase){
+      return makeExpectationBubblesComposed(usecase, options);
     }
-  }
+  });
 }

@@ -25,13 +25,6 @@
     };
   }
 
-  function compareResults(expect, res, nativeRes, notFirst) {
-    res = (res === expect ? 1 : res + " != " + expect);
-    if (notFirst && res === nativeRes)
-      res = res === 1 ? null : undefined;
-    return res;
-  }
-
   function nextTick2(cb) {
     let r;
     const p = new Promise(function (resolve) {
@@ -46,36 +39,61 @@
     return p;
   }
 
+  function setValue(obj, a, b, value) {
+    !obj[a] && (obj[a] = {});
+    !obj[a][b] && (obj[a][b] = {});
+    obj[a][b] = value;
+  }
+
   //first i upgrade.
   //then i make the usecase
   //then i pass the usecase to the test.
   //this means that the test gets a usecase.
   //this is a dom branch presented as a manually defined scopedPath
 
-  async function runTests(eventSystems, tests) {
-    const results = {};
-    let nativeSysName = eventSystems[0].name;
-    for (let test of tests)
-      results[test.name] = {};
-    for (let upgrade of eventSystems) {
-      let sysname = upgrade.name;
-      await nextTick2(upgrade);
-      for (const {name, fun, expect, result} of tests) {
-        let result = [];
-        await nextTick2(function () {
-          fun(result);
-        });
-        await nextTick2(function () {
-          const res = result.join("");
-          const expected = expect instanceof Function ? expect() : expect;
-          const nativeRes = results[name][nativeSysName];
-          results[name][sysname] = compareResults(expected, res, nativeRes, sysname !== nativeSysName);
-        });
+  function printResults(results) {
+    for (let [testName, testResults] of Object.entries(results)) {
+      const expected = testResults.expected;
+      delete testResults.expected;
+      const native = testResults.NATIVE;
+      for (let [systemName, result] of Object.entries(testResults)) {
+        if (systemName === "NATIVE")
+          testResults[systemName] = result === expected ? 1 : result;
+        else
+          testResults[systemName] =
+            (result === expected && result === native) ? null :
+              (result === expected) ? 1 :
+                (result === native) ? undefined :
+                  result;
       }
-      await nextTick2(resetSystem);
+    }
+    console.table(results);
+  }
+
+  async function runTests(eventSystems, tests, usecases) {
+    usecases = usecases || [{name: undefined}];
+    const results = {};
+    for (let system of eventSystems) {
+      await nextTick2(system);                //todo do we need async here?? i think not??
+      for (const {name: testName, fun, expect} of tests) {
+        for (let usecase of usecases) {
+
+          const expected = expect instanceof Function ? expect(usecase) : expect;
+          setValue(results, testName + ":" + usecase.name, "expected", expected);
+
+          let result = [];
+          await nextTick2(function () {
+            fun(result, usecase);
+          });
+          await nextTick2(function () {
+            setValue(results, testName + ":" + usecase.name, system.name, result.join(""));
+          });
+        }
+      }
+      await nextTick2(resetSystem);           //todo do we need async here?? i think not?? must check with the async dispatch
     }
     return nextTick2(function () {
-      console.table(results);
+      printResults(results);
     });
   }
 </script>
@@ -171,6 +189,7 @@
   import {testIsStopped} from "./unitTests/testIsStopped.js";
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
+  import {useCases} from "./unitTests/useCase1.js";
 
   (async function () {
     await runTests(eventSystems, testBasic);
@@ -189,9 +208,9 @@
     await runTests(eventSystems, testStopProp2);
     // await runTests(eventSystems, testIsStopped);
     await runTests(eventSystems, testProp);
-    await runTests(eventSystems, testScopedPaths);
-    await runTests(eventSystems, testComposedPath);
-    await runTests(eventSystems, basicPropTest);
+    await runTests(eventSystems, testScopedPaths, Object.values(useCases));
+    await runTests(eventSystems, testComposedPath, Object.values(useCases));
+    await runTests(eventSystems, basicPropTest, Object.values(useCases));
   })();
   //todo
   // 1. test stopPropagation thoroughly

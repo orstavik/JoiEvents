@@ -31,77 +31,55 @@ function sameDOMScope(path) {
   );
 }
 
-import {eventTargetName, popTargets, useCases} from "./useCase1.js";
+import {eventTargetName, popTargets} from "./useCase1.js";
 
-// let res;
+function scopedPathsTest(res, usecase) {
+  const dom = usecase();
+  const usecaseFlat = dom.flat(Infinity);
+  let usecaseSlice = dom;
+  let usecaseFlatSlice = usecaseFlat;
+  while (usecaseFlatSlice.length) {
+    let target = usecaseFlatSlice[0];
+    //test composed
+    let producedScopedPaths = scopedPaths(target, true);
+    if (!arrayEquals(producedScopedPaths, usecaseSlice))
+      return res.push("notImplement/error in usecase composed?");
+    let producedScopedPathsFalse = scopedPaths(target, false);
+    let composedFalseExpected = usecaseSlice;
+    while (composedFalseExpected[0] instanceof Array)
+      composedFalseExpected = composedFalseExpected[0];
+    if (!arrayEquals(producedScopedPathsFalse, composedFalseExpected))
+      return res.push("notImplement/error in usecase non-composed?");
 
-function result() {
-  return res;
+    usecaseSlice = popTargets(usecaseSlice, 1);
+    usecaseFlat.shift();
+  }
 }
 
-const expect = "";
-
-function makeScopedPathsTest(usecase) {
-
-  return function scopedPathsTest(res) {
-    const usecaseFlat = usecase.flat(Infinity);
-    // res = "";
-    let usecaseSlice = usecase;
-    let usecaseFlatSlice = usecaseFlat;
-    while (usecaseFlatSlice.length) {
-      let target = usecaseFlatSlice[0];
-      //test composed
-      let producedScopedPaths = scopedPaths(target, true);
-      if (!arrayEquals(producedScopedPaths, usecaseSlice))
-        return res.push("notImplement/error in usecase composed?");
-      let producedScopedPathsFalse = scopedPaths(target, false);
-      let composedFalseExpected = usecaseSlice;
-      while (composedFalseExpected[0] instanceof Array)
-        composedFalseExpected = composedFalseExpected[0];
-      if (!arrayEquals(producedScopedPathsFalse, composedFalseExpected))
-        return res.push("notImplement/error in usecase non-composed?");
-
-      usecaseSlice = popTargets(usecaseSlice, 1);
-      usecaseFlat.shift();
+function composedPathTest(res, usecase) {
+  const usecaseFlat = usecase().flat(Infinity);
+  for (let element of usecaseFlat) {
+    function comparePaths(e) {
+      const composedPath = e.composedPath();
+      const scopedPath = scopedPaths(e.target, true);
+      if (!arrayEquals(scopedPath.flat(Infinity), composedPath) || !sameDOMScope(scopedPath))
+        res.push(eventTargetName(element));
     }
-  };
+
+    element.addEventListener("click", comparePaths);
+    element.dispatchEvent(new Event("click", {composed: true}));
+    element.removeEventListener("click", comparePaths);
+  }
 }
 
-function makeComposedPathTest(usecaseFlat) {
+export const testScopedPaths = [{
+  name: "scopedPathsTest",
+  fun: scopedPathsTest,
+  expect: ""
+}];
 
-  return function composedPathTest(res) {
-    // res = "";
-    for (let element of usecaseFlat) {
-      function comparePaths(e) {
-        const composedPath = e.composedPath();
-        const scopedPath = scopedPaths(e.target, true);
-        if (!arrayEquals(scopedPath.flat(Infinity), composedPath) || !sameDOMScope(scopedPath))
-          res.push(eventTargetName(element));
-      }
-
-      element.addEventListener("click", comparePaths);
-      element.dispatchEvent(new Event("click", {composed: true}));
-      element.removeEventListener("click", comparePaths);
-    }
-  };
-}
-
-export const testScopedPaths = Object.entries(useCases).map(([name, makeDomBranch]) => {
-  const usecaseDom = makeDomBranch();
-  return {
-    name: "scopedPaths: " + name,
-    fun: makeScopedPathsTest(usecaseDom),
-    expect,
-    result
-  };
-});
-
-export const testComposedPath = Object.entries(useCases).map(([name, makeDomBranch]) => {
-  const usecaseFlat = makeDomBranch().flat(Infinity);
-  return {
-    name: "composedPaths: " + name,
-    fun: makeComposedPathTest(usecaseFlat),
-    expect,
-    result
-  };
-});
+export const testComposedPath = [{
+  name: "composedPaths",
+  fun: composedPathTest,
+  expect: ""
+}];
