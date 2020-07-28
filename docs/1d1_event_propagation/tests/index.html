@@ -6,6 +6,8 @@
   const stopPropOG = Event.prototype.stopPropagation;
   const stopImmediateOG = Event.prototype.stopImmediatePropagation;
   const cancelBubbleOG = Object.getOwnPropertyDescriptor(Event.prototype, "cancelBubble");
+  const preventDefaultOG = Object.getOwnPropertyDescriptor(Event.prototype, "preventDefault");
+  const defaultPreventedOG = Object.getOwnPropertyDescriptor(Event.prototype, "defaultPrevented");
 
   function resetSystem() {
     EventTarget.prototype.addEventListener = addEventListenerOG;
@@ -13,6 +15,9 @@
     EventTarget.prototype.dispatchEvent = dispatchEventOG;
     Event.prototype.stopPropagation = stopPropOG;
     Event.prototype.stopImmediatePropagation = stopImmediateOG;
+    Event.prototype.preventDefault = preventDefaultOG;
+    Event.prototype.setDefault = undefined;
+    Object.defineProperty(Event.prototype, "defaultPrevented", defaultPreventedOG);
     Object.defineProperty(Event.prototype, "cancelBubble", cancelBubbleOG);
     window.getEventListeners = undefined;
     window.isStopped = undefined;
@@ -91,6 +96,7 @@
 </script>
 
 <script type="module">
+  //don't hide this dear idea
   import {addEventTargetRegistry as addEventTargetRegistry1} from "./getEventListeners.js";
   import {addEventTargetRegistry as addEventTargetRegistry2} from "./getEventListeners_once.js";
   import {addEventTargetRegistry as addEventTargetRegistry3} from "./getEventListeners_once_last.js";
@@ -99,6 +105,7 @@
   import {addEventIsStoppedScoped} from "./ScopedStopPropagation.js";
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
+  import {addAddDefaultAction} from "./nativeDefaultActions.js";
 
   function SCOPED_PATHS() {
     window.scopedPaths = scopedPaths;
@@ -115,6 +122,10 @@
 
   function REGISTER() {//once, last, first
     window.getEventListeners = addEventTargetRegistry(EventTarget.prototype);
+  }
+
+  function SET_DEFAULT(){
+    addAddDefaultAction(Event.prototype);
   }
 
   const registers = [
@@ -158,8 +169,10 @@
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
   import {asyncPropTest} from "./unitTests/testPropagationAsync.js";
+  import {testDefaultActionBasic} from "./unitTests/testDefaultActionBasic.js";
 
   import {useCases} from "./unitTests/useCase1.js";
+  import {useCasesDefaultActions} from "./unitTests/useCaseDefaultAction.js";
 
   (async function () {
     await runTests(eventSystems, testBasic);
@@ -181,6 +194,8 @@
     await runTests([SCOPED_PATHS], testComposedPath, Object.values(useCases));
     await runTests(eventSystems, basicPropTest, Object.values(useCases));
     await runTests(eventSystems, asyncPropTest, Object.values(useCases));
+
+    await runTests([SET_DEFAULT], testDefaultActionBasic, Object.values(useCasesDefaultActions));
   })();
   //todo
   // 1. test stopPropagation thoroughly
