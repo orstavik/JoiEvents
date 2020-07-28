@@ -81,6 +81,9 @@ async function dispatchEvent(event, options) {
     if (!listeners.length)
       continue;
     updateEvent(event, target, phase);//todo why did i do this here again?
+    //todo I think this was to update the event so that the phase is not nill. But i think this is wrong.
+    // I think we should filter the list first, if the event listener is filtered out by a stopPropagation call, we don't need the update.
+    // move the filter up, and do only on listeners.length then continue check.
     //the filter below works for regular stopPropagation() calls, but not stopImmediatePropagation() calls.
     listeners = listeners.filter(listener => listener.unstoppable || !isStopped(event, listener.scoped));
     if (!listeners.length)
