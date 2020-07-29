@@ -42,13 +42,14 @@ function makeElementFilter(elementQuery) {
   return function (e) {
     const targets = e.composedPath(); //this implies access to closed shadowRoots
     targetLoop: for (let i = 0; i < targets.length; i++) {
-      for (let j = 0; j < matchers.length; j++) {
+      let j = 0;
+      for (; j < matchers.length; j++) {
         let matcher = matchers[j];
         const checkTarget = targets[i + j];
         if (!checkTarget.matches(matcher))
           continue targetLoop;
       }
-      return targets[i];
+      return targets[i+j];
     }
     return null;
   };
