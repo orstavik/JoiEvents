@@ -105,7 +105,7 @@
   import {addEventIsStoppedScoped} from "./ScopedStopPropagation.js";
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
-  import {addAddDefaultAction} from "./nativeDefaultActions.js";
+  import {addAddDefaultAction} from "./defaultActions.js";
 
   function SCOPED_PATHS() {
     window.scopedPaths = scopedPaths;
@@ -169,10 +169,10 @@
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
   import {asyncPropTest} from "./unitTests/testPropagationAsync.js";
-  import {testDefaultActionBasic} from "./unitTests/testDefaultActionBasic.js";
+  import {testDefaultActionBasic, testDefaultActionNative} from "./unitTests/testDefaultActionBasic.js";
 
   import {useCases} from "./unitTests/useCase1.js";
-  import {useCasesDefaultActions} from "./unitTests/useCaseDefaultAction.js";
+  import {useCasesDefaultActions, useCasesDefaultActions2} from "./unitTests/useCaseDefaultAction.js";
 
   (async function () {
     // await runTests(eventSystems, testBasic);
@@ -196,6 +196,7 @@
     // await runTests(eventSystems, asyncPropTest, Object.values(useCases));
 
     await runTests([SET_DEFAULT], testDefaultActionBasic, Object.values(useCasesDefaultActions));
+    await runTests([SET_DEFAULT], testDefaultActionNative, Object.values(useCasesDefaultActions2));
   })();
   //todo
   // 0. implement the systems using dependencies.

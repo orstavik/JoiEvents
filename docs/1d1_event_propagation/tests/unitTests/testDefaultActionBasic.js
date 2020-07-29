@@ -2,13 +2,13 @@ export const testDefaultActionBasic = [{
   name: "setDefault 1",
   fun: function (res, usecase) {
     const dom = usecase();
-    const root = dom[dom.length-1];
+    const root = dom[dom.length - 1];
     const target = dom[0];
 
-    root.addEventListener("click", function(){
+    root.addEventListener("click", function () {
       res.push("1click");  //should be "" empty string, then "requestClick"
     });
-    root.addEventListener("default-action", function(e){
+    root.addEventListener("default-action", function (e) {
       res.push("2defaultAction" + e.trigger);  //should be "" empty string, then "requestClick"
     });
     // clickAuxclick.addEventListener("auxclick", function(){
@@ -27,4 +27,32 @@ export const testDefaultActionBasic = [{
     res.push(1);
   },
   expect: "1" //function(usecase) or string
+}];
+
+export const testDefaultActionNative = [{
+  name: "setDefault native/non-native",
+  fun: function (res, usecase) {
+    //clean the hash.
+    location.hash = "";
+    const dom = usecase();
+    const flatDom = dom.flat(1000);
+    const root = flatDom[flatDom.length - 1];
+    const target = flatDom[0];
+
+    const pushEventType = function (e) {
+      res.push(e.type);
+    };
+
+    root.addEventListener("click", pushEventType);
+    root.addEventListener("default-action", pushEventType);
+    root.addEventListener("input", pushEventType);
+    target.click(); //sync dispatch
+  },
+  expect: function(usecase){
+    const dom = usecase();
+    const flatDom = dom.flat(1000);
+    if(flatDom[0] instanceof HTMLInputElement)
+      return "clickinput";
+    return "clickdefault-action";
+  }
 }];

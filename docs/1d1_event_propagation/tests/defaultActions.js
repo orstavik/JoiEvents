@@ -81,24 +81,26 @@ export function addAddDefaultAction(EventPrototype) {
 
 function processDefaultAction(event) {
   //1. if preventDefault() has been called on one of the two topmost contexts, then we should call the native preventDefault() and simply return
-  if (event.preventDefaults.indexOf("") >= 0 || event.preventDefaults.indexOf("A") >= 0) {
+  if (event.preventDefaults.has("") || event.preventDefaults.has("A")) {
     nativePreventDefault.call(event);
     return;
   }
   //x. add the lowest most native exclusive default action to the list.
-  let lowestExclusiveNativeDefaultAction = lowestExclusiveNativeDefaultActions(event);//todo must return [{target, false}, task], where task might nothing
-  const lowestExclusiveNativeDefaultActionContextID = getContextID(event, lowestExclusiveNativeDefaultAction.element);
-  for (let preventedContextID of event.preventDefaults) {
-    if (lowestExclusiveNativeDefaultActionContextID.startsWith(preventedContextID)) {
-      nativePreventDefault.call(event);
-      lowestExclusiveNativeDefaultAction = undefined;
+  let lowestExclusiveNativeDefaultActionTarget = lowestExclusiveNativeDefaultActions(event)?.element;//todo must return [{target, false}, task], where task might nothing
+  if (lowestExclusiveNativeDefaultActionTarget) {
+    const lowestExclusiveNativeDefaultActionContextID = getContextID(event, lowestExclusiveNativeDefaultActionTarget);
+    for (let preventedContextID of event.preventDefaults) {
+      if (lowestExclusiveNativeDefaultActionContextID.startsWith(preventedContextID)) {
+        nativePreventDefault.call(event);
+        lowestExclusiveNativeDefaultActionTarget = undefined;
+      }
     }
   }
 
   //2. filter all the defaultActions based on preventDefault
   //   if the context is prevented below, then i take out all the default actions, exclusive and additive,
   //   from the list of default actions.
-  const filteredDefaultActions = event.defaultActions.entries().filter(function ([{target, additive}, task]) {
+  const filteredDefaultActions = Array.from(event.defaultActions).filter(function ([{target, additive}, task]) {
     const targetContext = getContextID(event, target);
     for (let preventedContextID of event.preventDefaults) {
       if (targetContext.startsWith(preventedContextID))
@@ -124,14 +126,14 @@ function processDefaultAction(event) {
 
   const path = event.composedPath();
   //y. select between the native and custom exclusive default actions
-  if (lowestExclusiveNativeDefaultAction && lowestExclusiveCustomDefaultAction) {
-    const nativePosition = path.indexOf(lowestExclusiveNativeDefaultAction[0].target);
+  if (lowestExclusiveNativeDefaultActionTarget && lowestExclusiveCustomDefaultAction) {
+    const nativePosition = path.indexOf(lowestExclusiveNativeDefaultActionTarget);
     const customPosition = path.indexOf(lowestExclusiveCustomDefaultAction[0].target);
     if (nativePosition < customPosition)
       lowestExclusiveCustomDefaultAction = undefined;
     else {
       nativePreventDefault.call(event);
-      lowestExclusiveNativeDefaultAction = undefined; //is this necessary??
+      lowestExclusiveNativeDefaultActionTarget = undefined; //is this necessary??
     }
   }
 
@@ -179,7 +181,7 @@ function instantiateDefaultActionOnDemand(event) {
 // the position of the default action in the array is the position of the currentTarget in the DOM.
 // default actions that are set before the event begins propagating, is set as the last priority/at the end of the array.
 // the first default action added will be chosen. You cannot override default action for the same element.
-function setDefault(defaultAction, {target = this.currentTarget, additive = false}) {
+function setDefault(defaultAction, {target = this.currentTarget, additive = false} = {}) {
   if (!this.cancelable)
     return;
   if (target === null)
