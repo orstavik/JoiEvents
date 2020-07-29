@@ -19,7 +19,7 @@ function callListenerHandleError(target, listener, event) {
   }
 }
 
-function initializeEvent(event, target, scoped) {
+function initializeEvent(event, target, scoped, async) {
   //we need to freeze the composedPath at the point of first dispatch
   const composedPath = scopedPaths(target, event.composed).flat(Infinity);
   Object.defineProperties(event, {
@@ -39,8 +39,17 @@ function initializeEvent(event, target, scoped) {
         return composedPath;   //we can cache this if we want
       },
       writable: false
+    },
+    async: {                    //todo untested cannot be overwritten
+      get: function () {
+        return async;
+      }
     }
   });
+  //todo this needs a little work. unsafe, can be modified.
+  // should have better names. etc. review if weakmap/weakset should be used
+  event.defaultActions = new Map();
+  event.preventDefaults = new Set();
   scoped && Object.defineProperty(event, "isScoped", {value: true});
 }
 
@@ -70,7 +79,7 @@ async function dispatchEvent(event, options) {
     return;
 
   const fullPath = computePropagationPath(this, event.composed, event.bubbles, options?.cutOff);
-  initializeEvent(event, this, !!options?.scoped);
+  initializeEvent(event, this, !!options?.scoped, !!options?.async);
 
   let macrotask = nextMesoTicks([function () {
   }], fullPath.length + 1);//todo hack.. problem initiating without knowing the tasks
@@ -106,6 +115,7 @@ export function addDispatchEventOptionAsync(EventTargetPrototype, sync, isStoppe
   getEventListeners = getEventListenersImpl;    //todo || window.isStopped;
 
   const dispatchOG = EventTargetPrototype.dispatchEvent;
+
   function dispatchEventAsyncOnly(event, options) {
     options?.async ?
       dispatchEvent.call(this, event, options) : //async

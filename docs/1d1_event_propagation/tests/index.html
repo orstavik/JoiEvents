@@ -96,7 +96,7 @@
 </script>
 
 <script type="module">
-  //don't hide this dear idea
+  //don't hide this dear ide
   import {addEventTargetRegistry as addEventTargetRegistry1} from "./getEventListeners.js";
   import {addEventTargetRegistry as addEventTargetRegistry2} from "./getEventListeners_once.js";
   import {addEventTargetRegistry as addEventTargetRegistry3} from "./getEventListeners_once_last.js";
@@ -175,29 +175,30 @@
   import {useCasesDefaultActions} from "./unitTests/useCaseDefaultAction.js";
 
   (async function () {
-    await runTests(eventSystems, testBasic);
-    await runTests(eventSystems, dynamicTest);
-    await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
-    await runTests(eventSystems, testOnce);
-    await runTests(eventSystems, testUnstoppable);
-    await runTests(eventSystems, cancelBubbleTests);
-    await runTests(eventSystems, lastTest);
-    await runTests(eventSystems, last2);
-    await runTests(eventSystems, lastErrorsTest);
-    await runTests(eventSystems, firstTest);
-    await runTests(eventSystems, first2);
-    await runTests(eventSystems, firstErrorsTest);
-    await runTests(eventSystems, testStopProp);
-    await runTests(eventSystems, testStopProp2);
-    // await runTests(eventSystems, testIsStopped);
-    await runTests([SCOPED_PATHS], testScopedPaths, Object.values(useCases));
-    await runTests([SCOPED_PATHS], testComposedPath, Object.values(useCases));
-    await runTests(eventSystems, basicPropTest, Object.values(useCases));
-    await runTests(eventSystems, asyncPropTest, Object.values(useCases));
+    // await runTests(eventSystems, testBasic);
+    // await runTests(eventSystems, dynamicTest);
+    // await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
+    // await runTests(eventSystems, testOnce);
+    // await runTests(eventSystems, testUnstoppable);
+    // await runTests(eventSystems, cancelBubbleTests);
+    // await runTests(eventSystems, lastTest);
+    // await runTests(eventSystems, last2);
+    // await runTests(eventSystems, lastErrorsTest);
+    // await runTests(eventSystems, firstTest);
+    // await runTests(eventSystems, first2);
+    // await runTests(eventSystems, firstErrorsTest);
+    // await runTests(eventSystems, testStopProp);
+    // await runTests(eventSystems, testStopProp2);
+    // // await runTests(eventSystems, testIsStopped);
+    // await runTests([SCOPED_PATHS], testScopedPaths, Object.values(useCases));
+    // await runTests([SCOPED_PATHS], testComposedPath, Object.values(useCases));
+    // await runTests(eventSystems, basicPropTest, Object.values(useCases));
+    // await runTests(eventSystems, asyncPropTest, Object.values(useCases));
 
     await runTests([SET_DEFAULT], testDefaultActionBasic, Object.values(useCasesDefaultActions));
   })();
   //todo
+  // 0. implement the systems using dependencies.
   // 1. test stopPropagation thoroughly
   // 2. perform the same check outside in the dispatchEvent loop as is done inside in the scopedStop wrappers.
   //this is redundant.. we could have a wrapper method for that one..

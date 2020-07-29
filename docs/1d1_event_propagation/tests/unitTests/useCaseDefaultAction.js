@@ -7,7 +7,9 @@ class ClickAuxclick extends HTMLElement {
   }
 
   requestClick() {
-    this.defaultActionState += "requestClick";
+    const event = new Event("default-action", {bubbles: true, composed: true});
+    event.trigger = "click";
+    this.dispatchEvent(event);
   }
 
   // requestAuxclick() {
@@ -22,6 +24,7 @@ class ClickAuxclick extends HTMLElement {
     if (!path[index - 1].matches("div"))  //filter event path
       return;
     event.setDefault(this.requestClick.bind(this));  //setDefault
+    //todo here we add the default action to the host node, and so we don't need to add a target option
   }
 
   // onAuxclick(event) {
@@ -63,3 +66,21 @@ export const useCasesDefaultActions = {
   useCaseClickAuxclickDiv
 };
 Object.freeze(useCasesDefaultActions, true);
+
+
+// const usecase2 = [
+//   [
+//     {el: shadowH1, context: shadowRoot, contextPos: "12"},
+//     {el: shadowRoot, context: shadowRoot, contextPos: "12"},
+//   ],
+//   {el: shadowComp, context: div, contextPos: "1"},
+//   [
+//     {el: slotSlot, context: slotRoot, contextPos: "11"},
+//     {el: slotSpan, context: slotRoot, contextPos: "11"},
+//     {el: slotRoot, context: slotRoot, contextPos: "11"},
+//   ],
+//   {el: slotComp, context: div, contextPos: "1"},
+//   {el: div, context: div, contextPos: "1"},
+// ];
+// Object.freeze(usecase2, true);
+// usecase2.flat(Math.Infinity).map(obj=>obj.el);
