@@ -9,15 +9,31 @@
 // 3. add more and check the list of all exposed requestDefaultAction methods.. we use modern chrome behavior as guide.
 
 //expose the requestSelect method of the HTMLSelectElement
-function requestSelect(option) {
-  //this = the select element
-  const beforeinput = new InputEvent("beforeinput", {bubbles: true, composed: "don't remember"});
-  this.dispatchEvent(beforeinput);
-  if (beforeinput.defaultPrevented)
-    return;
-  this.selectedIndex = option.index; //pseudocode, doesn't work
-  const select = new InputEvent("select", {bubbles: true, composed: "don't remember"});
-  this.dispatchEvent(select);
+function requestOptionSelect(option) {
+  function optionSelectEndMouseup() {
+    //option.color = orange?? //there is no way to trigger this behavior from js... It is completely hidden in the browser.
+    const input = new InputEvent("input", {bubbles: true, composed: true});
+    this.dispatchEvent(input);
+    const change = new InputEvent("change", {bubbles: true, composed: false});
+    this.dispatchEvent(change);
+  }
+
+  function optionsSelectEndMousemoveChrome(e) {
+    !(e.buttons & 1) && optionSelectEndMouseup();
+  }
+
+  this.value = option.value;    //changes the selected option. The option.value is always something,
+  //This is done by all browsers: Chrome, FF(, Safari??)
+  window.addEventListener("mouseup", optionSelectEndMouseup, {capture: true, once: true, first: true});
+
+  //This is done only in Chrome (and Safari??), but not FF
+  window.addEventListener("mousemove", optionsSelectEndMousemoveChrome, {capture: true, once: true, first: true});
+  // in Chrome the alert() function will cancel the change and input events..
+  // how to catch that event/function call without highjacking the window.alert() function, i don't know.
+  // window.addEventListener("alert", function () {
+  //   window.removeEventListener("mouseup", optionSelectEndMouseup, {capture: true, once: true, first: true});
+  //   window.removeEventListener("mousemove", optionsSelectEndMousemoveChrome, {capture: true, once: true, first: true});
+  // }, {capture: true, once: true, first: true});
 }
 
 //expose the requestNavigation method of the HTMLAnchorElement
@@ -38,13 +54,6 @@ function requestCheckboxToggle() {
   this.dispatchEvent(input);
 }
 
-//todo expose requestReset() if the .reset() method on the form doesn't dispatch a reset event
-// function requestReset() {
-//   this.reset();
-//   const reset = new Event("reset", {bubbles: true, composed: "don't remember"});
-//   this.dispatchEvent(reset);
-// }
-
 // the event has the same syntax as url query parameters
 // the element has similar syntax as querySelectors:
 //  1. "," comma separated alternatives split and run as separate processes
@@ -56,6 +65,10 @@ function requestCheckboxToggle() {
 //     "form input[type=reset], form button[type=reset]" is an example
 //  3b. Then, each entry is matched a parent child relationship that can span multiple elements
 //  *. no default action parent child relationship can cross shadowDOM borders.
+
+const focusableQuerySelector = "a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, [tabindex], [contentEditable=true]";//option is not considered focusable, bad legacy design.
+
+const tabbableQuerySelector = "a[href]:not([tabindex='-1']), area[href]:not([tabindex='-1']), input:not([disabled]):not([tabindex='-1']), select:not([disabled]):not([tabindex='-1']), textarea:not([disabled]):not([tabindex='-1']), button:not([disabled]):not([tabindex='-1']), iframe:not([tabindex='-1']), [tabindex]:not([tabindex='-1']), [contentEditable=true]:not([tabindex='-1'])";
 
 const listOfDefaultActions = [{
   eventQuery: "click?button=0&isTrusted=true",
@@ -74,27 +87,29 @@ const listOfDefaultActions = [{
   elementQuery: "details > summary",
   method: details => HTMLDetailsElement.prototype.toggle.bind(details)
 }, {
-  eventQuery: "mousedown?button=0&isTrusted=true",
+  eventQuery: "mousedown?button=0&isTrusted=true",//i think this is implemented using a different strategy. It think that when an option is given focus, that triggers a set of event listeners for mouseup/mousemove etc that will cause a problem.
   elementQuery: "select > option, select > optgroup > option",
-  method: (select, option) => requestSelect.bind(select, option)
+  method: (select, option) => requestOptionSelect.bind(select, option)
 // }, {
 //   eventQuery: "keydown?key=tab&isTrusted=true",
 //   elementQuery: "select, input, body, textarea, button, blablabla",
 //   method: focusable => nextTabIndex function how is that??
 // }, {
-//   eventQuery: "keydown?key=/[not a tab nor enter in regex]/&isTrusted=true", //todo here we need the regex, and is not legal inside the regex would be a simple solution.
+//   eventQuery: "beforeinput?key=/[not a tab nor enter in regex]/&isTrusted=true",
+  //todo here we need the regex, and is not legal inside the regex would be a simple solution.
 //   elementQuery: "input, textarea",
 //   method: textInput => if textInput instanceof input, add character to input, else add character to textarea
-// }, {
-//   eventQuery: "mousedown?button=0&isTrusted=true",
-//   elementQuery: "select, input, body, textarea, button, blablabla",
-//   method: focusable => HTMLElement.prototype.focus.bind(focusable)
 }, {
-  eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
+  eventQuery: "mousedown?button=0&isTrusted=true",
+  elementQuery: focusableQuerySelector,
+  method: focusable => HTMLElement.prototype.focus.bind(focusable),
+  additive: true
+}, {
+  eventQuery: "click?button=0",     //isTrusted is not necessary for reset
   elementQuery: "form button[type=reset], form input[type=reset]",
   method: form => HTMLFormElement.prototype.reset.bind(form)
 }, {
-  eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
+  eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for submit??
   elementQuery: "form button[type=submit], form input[type=submit]",
   method: (form, button) => HTMLFormElement.prototype.requestSubmit.bind(form, button)
 }];
@@ -105,6 +120,8 @@ const listOfDefaultActions = [{
 //event controller default actions
 //1. contextmenu, this applies to all elements, so it would be more efficient to control it via an event controller.
 //2. keydown enter produces click, definitively an event controller, as it produces just another event.
+//3. the deadcaps controller. produces composition events and beforeinput (except in old firefox).
+//   deadcaps are currently actually handled by input and textarea.. this is a mess..
 
 function makeEventFilter(eventQuery) {
   const question = eventQuery.indexOf("?");
@@ -185,12 +202,13 @@ function makeElementFilter(query) {
 }
 
 let nativeDefaultActions = [];
-for (let {eventQuery, elementQuery, method} of listOfDefaultActions) {
+for (let {eventQuery, elementQuery, method, additive} of listOfDefaultActions) {
   for (let elementQuery1 of elementQuery.split(",")) {
     nativeDefaultActions.push({
       eventQuery: makeEventFilter(eventQuery),
       elementQuery: makeElementFilter(elementQuery1.trim()),
-      method
+      method,
+      additive
     });
   }
 }
@@ -213,4 +231,24 @@ export function lowestExclusiveNativeDefaultActions(e) {
     };
   }
   return lowest;
+}
+
+export function nativeDefaultActions(e) {
+  const list = [];
+  for (let {eventQuery, elementQuery, method, additive} of nativeDefaultActions) {
+    if (!eventQuery(e))
+      continue;
+    const [childIndex, parentMatch, childMatch] = elementQuery(e);
+    if (!parentMatch)
+      continue;
+    list.push({
+      index: childIndex,
+      element: parentMatch,
+      task: method(parentMatch, childMatch) ,
+      additive
+    });
+  }
+  //todo
+  // list.filter(something => filter out all the exclusive default actions, except the one with the lowest index)
+  return list;
 }
