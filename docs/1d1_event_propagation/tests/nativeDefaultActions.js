@@ -1,3 +1,13 @@
+//todo
+// 1. we are lacking the support for regex in the event property query.
+//    This is important when we work with keydown default actions.
+//    ivar
+// 2. we need to complete the full list of default actions.
+//    a. write up the default actions, and be careful not to add event controller default actions, such as contextmenu.
+//       examples of event controller default actions are contextmenu and keypress-to-click
+//       write a list of both the default actions that come from event controllers and elements here.
+// 3. add more and check the list of all exposed requestDefaultAction methods.. we use modern chrome behavior as guide.
+
 //expose the requestSelect method of the HTMLSelectElement
 function requestSelect(option) {
   //this = the select element
@@ -67,6 +77,18 @@ const listOfDefaultActions = [{
   eventQuery: "mousedown?button=0&isTrusted=true",
   elementQuery: "select > option, select > optgroup > option",
   method: (select, option) => requestSelect.bind(select, option)
+// }, {
+//   eventQuery: "keydown?key=tab&isTrusted=true",
+//   elementQuery: "select, input, body, textarea, button, blablabla",
+//   method: focusable => nextTabIndex function how is that??
+// }, {
+//   eventQuery: "keydown?key=/[not a tab nor enter in regex]/&isTrusted=true", //todo here we need the regex, and is not legal inside the regex would be a simple solution.
+//   elementQuery: "input, textarea",
+//   method: textInput => if textInput instanceof input, add character to input, else add character to textarea
+// }, {
+//   eventQuery: "mousedown?button=0&isTrusted=true",
+//   elementQuery: "select, input, body, textarea, button, blablabla",
+//   method: focusable => HTMLElement.prototype.focus.bind(focusable)
 }, {
   eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
   elementQuery: "form button[type=reset], form input[type=reset]",
@@ -76,6 +98,13 @@ const listOfDefaultActions = [{
   elementQuery: "form button[type=submit], form input[type=submit]",
   method: (form, button) => HTMLFormElement.prototype.requestSubmit.bind(form, button)
 }];
+//tab?? does this produce a default action?? I think yes
+//other characters for input and textarea..
+
+
+//event controller default actions
+//1. contextmenu, this applies to all elements, so it would be more efficient to control it via an event controller.
+//2. keydown enter produces click, definitively an event controller, as it produces just another event.
 
 function makeEventFilter(eventQuery) {
   const question = eventQuery.indexOf("?");
