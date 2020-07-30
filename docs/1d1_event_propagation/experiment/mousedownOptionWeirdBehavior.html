@@ -1,0 +1,36 @@
+<form>
+  <label>Select</label>
+  <select id="boo" name="select[]" multiple>
+    <option value="selection_1">selection 1</option>
+    <option value="selection_2">selection 2</option>
+    <option id="three" value="selection_3">will cause alert(boo!)</option>
+  </select>
+
+</form>
+
+<script>
+  function poll() {
+    console.log(document.querySelector("select#boo").value);
+    requestAnimationFrame(poll);
+  }
+  requestAnimationFrame(poll);
+
+  function log(e) {
+    console.log(e.type, document.querySelector("select#boo").value);
+  }
+
+  function log2(e) {
+    console.log(e.type);
+  }
+
+  window.addEventListener("mousedown", log, true);
+  window.addEventListener("mouseup", log, true);
+  window.addEventListener("mousemove", log2, true);
+  window.addEventListener("beforeinput", log, true);
+  window.addEventListener("change", log, true);
+  window.addEventListener("input", log, true);
+
+  document.querySelector("option#three").addEventListener("mousedown", function () {
+    alert("boo!");
+  });
+</script>

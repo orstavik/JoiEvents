@@ -1,0 +1,26 @@
+<details>
+  <summary>hello</summary>
+  sunshine
+</details>
+<script>
+  const details = document.querySelector("details");
+  const summary = document.querySelector("summary");
+
+  details.addEventListener("toggle", e => console.log("toggle"));
+  details.addEventListener("click", e => console.log("click"));
+
+  details.open = !details.open;  //this will dispatch a toggle event
+
+  setTimeout(()=>{
+    details.addEventListener("click", e => details.open = !details.open);
+    summary.click();
+  }, 2000);
+  //this dispatches a click event which causes an event listener AND a default action to toggle the details element
+  //first false, and then true again.
+  //The problem here is twofold:
+  // 1. The default action will run even though event listeners for the click event that drives the default action also
+  //    alters the same state property that the default action will change. This is unexpected. It could be argued
+  //    that changing the details open attribute would cause the details.toggle default action of click to be prevented.
+  // 2. The state of the details open is the same when the toggle event is dispatched as when the first requestToggle
+  //    was made of the details element. you get a toggle event when there is no change in the state of the details element.
+</script>

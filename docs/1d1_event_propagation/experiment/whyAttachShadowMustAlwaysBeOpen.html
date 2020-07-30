@@ -1,0 +1,40 @@
+<h1>Why attachShadow() must always set {mode: "open"}.</h1>
+
+<p>
+  When you need to find out if a native default action has been triggered inside a closed-mode shadowRoot,
+  then if you only intercept the event outside of the closed-mode web component, that information would be lost.
+</p>
+
+<script>
+  class ClosedComp extends HTMLElement {
+    constructor() {
+      super();
+      const closedRoot = this.attachShadow({mode: "closed"}); //or  = this.attachShadow();
+      closedRoot.innerHTML = "<div>a</div><a href='#darkness'>hello</a>";
+      this.div = closedRoot.children[0];
+      this.a = closedRoot.children[1];
+    }
+  }
+
+  customElements.define("closed-comp", ClosedComp);
+
+  const closed = document.createElement("closed-comp");
+  closed.addEventListener("click", function (e) {
+    console.log("Path information: ", e.composedPath());
+  });
+  //click randomly on either the div or the a element inside the closed shadowRoot
+  const randomAOrDiv = [closed.div, closed.a][Math.round(Math.random())];
+  randomAOrDiv.click();
+  //either way, outside of the closed ShadowRoot, you will always see:
+  //Path information: [closed-comp]
+
+  //the problem here is that if you click on the:
+  // a) <a> element, then there is a default action added to the click event, but
+  // b) <div> element, then there is a no default action added to the click event.
+  //
+  //If you then reuse the closed-mode web component inside another web component,
+  //and you inside this other web component need to add an exclusive default action,
+  // then you would need to know if the event target inside the closed-mode web component was the <a> or the <div> element.
+  // With closed-mode web components, this information would be lost forever, if you didn't listen for all composed: true
+  // events inside the closed-mode shadowRoot *always*.
+</script>
