@@ -9,6 +9,13 @@
 //  *. no default action parent child relationship can cross shadowDOM borders.
 
 const listOfDefaultActions = [{
+  eventQuery: "mousedown?button=0",
+  elementQuery: "select > option, select > optgroup > option",
+  exclusive: true,
+  method: function (parent, child) {
+    parent.requestSelect(child);
+  }
+}, {
   eventQuery: "click?button=0&isTrusted=true",
   elementQuery: "a[href]",
   exclusive: true,
@@ -28,13 +35,6 @@ const listOfDefaultActions = [{
   exclusive: true,
   method: function (parent) {
     parent.checked = !parent.checked;
-  }
-}, {
-  eventQuery: "mousedown?button=0",
-  elementQuery: "select > option, select > optgroup > option",
-  exclusive: true,
-  method: function (parent, child) {
-    parent.requestSelect(child);
   }
 }, {
   eventQuery: "click?button=0",
@@ -74,7 +74,8 @@ function makeElementFilter(elementQueries) {
           if (!(checkTarget instanceof HTMLElement) || !checkTarget.matches(matcher))
             continue targetLoop;
         }
-        return [targets[i], targets[i + j]];
+        j--;
+        return [i, targets[i + j], targets[i]];
       }
     }
     return [];
@@ -95,22 +96,21 @@ function parseListOfDefaultActions(list) {
 const parsedListOfDefaultActions = parseListOfDefaultActions(listOfDefaultActions);
 
 export function lowestExclusiveNativeDefaultActions(e) {
-  const targetToNative = parsedListOfDefaultActions.map(function ({eventQuery, elementQuery, exclusive, method}) {
-    const matchesEvent = eventQuery(e);
-    const [parentMatch, childMatch] = elementQuery(e);
-    return {
-      event: matchesEvent,
+  let lowest;
+  for (let {eventQuery, elementQuery, exclusive, method} of parsedListOfDefaultActions) {
+    if (!eventQuery(e))
+      continue;
+    const [childIndex, parentMatch, childMatch] = elementQuery(e);       //todo check childmatch and parentMatch
+    if (!parentMatch)
+      continue;
+    if (lowest && lowest.index <= childIndex)
+      continue;
+    lowest = {
+      index: childIndex,
       element: parentMatch,
       exclusive,
       task: method.bind(null, parentMatch, childMatch)
     };
-  });
-  const filteredNative = targetToNative.filter(({event, element}) => !!event && !!element);
-  let lowest = filteredNative.pop();
-  const path = e.composedPath();
-  for (let next of filteredNative) {
-    if (path.indexOf(lowest.element) > path.indexOf(next.element))
-      lowest = next;
   }
   return lowest;
 }
