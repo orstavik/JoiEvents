@@ -93,8 +93,7 @@ function makeEventFilter(eventQuery) {
   };
 }
 
-function makeElementFilter(query) {
-  const matchers = query.split(">").reverse();
+function makeDirectChildFilter(matchers) {
   return function matchParentChild(e) {
     const targets = e.composedPath();                     //this implies access to closed shadowRoots
     targetLoop: for (let i = 0; i < targets.length; i++) {
@@ -110,6 +109,46 @@ function makeElementFilter(query) {
     }
     return [];
   };
+}
+
+// function makeDescendantChildFilter(matchers) {
+//   return function matchParentDescendant(e) {
+//     const targets = e.composedPath();                     //this implies access to closed shadowRoots
+//     targetLoop: for (let i = 0; i < targets.length; i++) {
+//       let j = 0;
+//       for (; j < matchers.length; j++) {
+//         let matcher = matchers[j];
+//         const checkTarget = targets[i + j];
+//         if (!(checkTarget instanceof HTMLElement) || !checkTarget.matches(matcher))
+//           continue targetLoop;
+//       }
+//       j--;
+//       return [i, targets[i + j], targets[i]];
+//     }
+//     return [];
+//   };
+// }
+//
+function makeSingularFilter(matcher) {
+  return function matchElement(e) {
+    const targets = e.composedPath();                     //this implies access to closed shadowRoots
+    for (let i = 0; i < targets.length; i++) {
+      const checkTarget = targets[i];
+      if (checkTarget instanceof HTMLElement && checkTarget.matches(matcher))
+        return [i, targets[i], undefined];
+    }
+    return [];
+  };
+}
+
+function makeElementFilter(query) {
+  let matchers = query.split(">").reverse();
+  if (matchers.length > 1)
+    return makeDirectChildFilter(matchers);
+  // matchers = query.split(" ").reverse();
+  // if (matchers.length > 1)
+  //   return makeDescendantChildFilter(matchers);
+  return makeSingularFilter(query);
 }
 
 let nativeDefaultActions = [];
