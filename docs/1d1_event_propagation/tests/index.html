@@ -175,11 +175,13 @@
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
   import {asyncPropTest} from "./unitTests/testPropagationAsync.js";
-  import {mousedownNativeDefaultActions, mousedownNativeDefaultActionsNotWorking} from "./unitTests/testLowestNativeDefaultAction.js";
+  import {mousedownNativeDefaultActions, mousedownNativeDefaultActionsNotWorking, formNativeDefaultActions} from "./unitTests/testLowestNativeDefaultAction.js";
   import {testDefaultActionBasic, testDefaultActionNative} from "./unitTests/testDefaultActionBasic.js";
 
   import {useCases} from "./unitTests/useCase1.js";
-  import {selectUseCases, selectUseCasesError} from "./unitTests/useCaseNativeDefaultActions.js";
+  import {selectUseCases, selectUseCasesError} from "./unitTests/useCaseSelectNativeDefaultActions.js";
+  import {formUseCases} from "./unitTests/useCaseSelectFormDefaultActions.js";
+
   import {useCasesDefaultActions, useCasesDefaultActions2} from "./unitTests/useCaseDefaultAction.js";
 
   (async function () {
@@ -205,6 +207,7 @@
 
     await runTests([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, Object.values(selectUseCases));
     await runTests([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActionsNotWorking, Object.values(selectUseCasesError));
+    await runTests([NATIVE_DEFAULT_ACTION], formNativeDefaultActions, Object.values(formUseCases));
 
     await runTests([SET_DEFAULT], testDefaultActionBasic, Object.values(useCasesDefaultActions));
     await runTests([SET_DEFAULT], testDefaultActionNative, Object.values(useCasesDefaultActions2));

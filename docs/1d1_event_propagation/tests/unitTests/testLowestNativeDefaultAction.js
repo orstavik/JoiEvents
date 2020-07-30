@@ -42,3 +42,20 @@ export const mousedownNativeDefaultActionsNotWorking = [{
   },
   expect: ""
 }];
+
+export const formNativeDefaultActions = [{
+  name: "click on form native default actions working",
+  fun: function (res, usecase) {
+    const dom = usecase();
+    const flat = dom.flat(1000);
+    const target = flat[0];
+
+    target.addEventListener("click", function (e) {
+      const spoofE = spoofIsTrusted(e);
+      const nativeDefaultAction = lowestExclusiveNativeDefaultActions(spoofE);
+      res.push(nativeDefaultAction?.element?.tagName);
+    });
+    target.click();
+  },
+  expect: "FORM"
+}];

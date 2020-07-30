@@ -62,7 +62,7 @@ const listOfDefaultActions = [{
 }, {
   eventQuery: "click?button=0",
   elementQuery: "details > summary",
-  method: details => HTMLDetailsElement.toggle.bind(details)
+  method: details => HTMLDetailsElement.prototype.toggle.bind(details)
 }, {
   eventQuery: "mousedown?button=0&isTrusted=true",
   elementQuery: "select > option, select > optgroup > option",
@@ -70,11 +70,11 @@ const listOfDefaultActions = [{
 }, {
   eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
   elementQuery: "form button[type=reset], form input[type=reset]",
-  method: form => HTMLFormElement.reset.bind(form)
+  method: form => HTMLFormElement.prototype.reset.bind(form)
 }, {
   eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
   elementQuery: "form button[type=submit], form input[type=submit]",
-  method: (form, button) => HTMLFormElement.requestSubmit.bind(form, button)
+  method: (form, button) => HTMLFormElement.prototype.requestSubmit.bind(form, button)
 }];
 
 function makeEventFilter(eventQuery) {
@@ -111,24 +111,26 @@ function makeDirectChildFilter(matchers) {
   };
 }
 
-// function makeDescendantChildFilter(matchers) {
-//   return function matchParentDescendant(e) {
-//     const targets = e.composedPath();                     //this implies access to closed shadowRoots
-//     targetLoop: for (let i = 0; i < targets.length; i++) {
-//       let j = 0;
-//       for (; j < matchers.length; j++) {
-//         let matcher = matchers[j];
-//         const checkTarget = targets[i + j];
-//         if (!(checkTarget instanceof HTMLElement) || !checkTarget.matches(matcher))
-//           continue targetLoop;
-//       }
-//       j--;
-//       return [i, targets[i + j], targets[i]];
-//     }
-//     return [];
-//   };
-// }
-//
+function makeDescendantChildFilter(matchers) {
+  const [child, parent] = matchers;
+  return function matchParentDescendant(e) {
+    const targets = e.composedPath();                     //this implies access to closed shadowRoots
+    targetLoop: for (let i = 0; i < targets.length; i++) {
+      const childTarget = targets[i];
+      if (!(childTarget instanceof HTMLElement) || !childTarget.matches(child))
+        continue;
+      for (let j = i + 1; j < targets.length; j++) {
+        const parentTarget = targets[j];
+        if (!(parentTarget instanceof HTMLElement))
+          continue targetLoop;
+        if (parentTarget.matches(parent))
+          return [i, parentTarget, childTarget];
+      }
+    }
+    return [];
+  };
+}
+
 function makeSingularFilter(matcher) {
   return function matchElement(e) {
     const targets = e.composedPath();                     //this implies access to closed shadowRoots
@@ -142,13 +144,15 @@ function makeSingularFilter(matcher) {
 }
 
 function makeElementFilter(query) {
-  let matchers = query.split(">").reverse();
+  let matchers = query.split(">");
   if (matchers.length > 1)
-    return makeDirectChildFilter(matchers);
-  // matchers = query.split(" ").reverse();
-  // if (matchers.length > 1)
-  //   return makeDescendantChildFilter(matchers);
-  return makeSingularFilter(query);
+    return makeDirectChildFilter(matchers.reverse());
+  matchers = query.split(" ");
+  if (matchers.length === 2)
+    return makeDescendantChildFilter(matchers.reverse());
+  if (matchers.length === 1)
+    return makeSingularFilter(query);
+  throw new SyntaxError("element filter syntax error");
 }
 
 let nativeDefaultActions = [];
