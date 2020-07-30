@@ -1,48 +1,80 @@
+//expose the requestSelect method of the HTMLSelectElement
+function requestSelect(option) {
+  //this = the select element
+  const beforeinput = new InputEvent("beforeinput", {bubbles: true, composed: "don't remember"});
+  this.dispatchEvent(beforeinput);
+  if (beforeinput.defaultPrevented)
+    return;
+  this.selectedIndex = option.index; //pseudocode, doesn't work
+  const select = new InputEvent("select", {bubbles: true, composed: "don't remember"});
+  this.dispatchEvent(select);
+}
+
+//expose the requestNavigation method of the HTMLAnchorElement
+function requestNavigation(option) {
+  document.open(this.getAttribute("href"), option);
+}
+
+//expose the requestToggle method of the HTMLInputElement
+function requestCheckboxToggle() {
+  if (this.type !== "checkbox")
+    throw new Error("requestCheckboxToggle() should only be possible to invoke on input type=checkbox");
+  const beforeinput = new InputEvent("beforeinput", {bubbles: true, composed: "don't remember"});
+  this.dispatchEvent(beforeinput);
+  if (beforeinput.defaultPrevented)
+    return;
+  this.checked = !this.checked;
+  const input = new InputEvent("input", {bubbles: true, composed: "don't remember"});
+  this.dispatchEvent(input);
+}
+
+//todo expose requestReset() if the .reset() method on the form doesn't dispatch a reset event
+// function requestReset() {
+//   this.reset();
+//   const reset = new Event("reset", {bubbles: true, composed: "don't remember"});
+//   this.dispatchEvent(reset);
+// }
+
 // the event has the same syntax as url query parameters
 // the element has similar syntax as querySelectors:
 //  1. "," comma separated alternatives split and run as separate processes
-//  2. ">" relationships across several elements must be specified via direct children separators.
-//     But the parent > child relationship can span 3 or more levels, ie. "select > optgroup > option", or
-//     "form > * > input".. There is a lack of support for button and forms..
-//     todo we need to support " " separated parent child relationships
-//  3. Then, each entry is matched with each link in the parent child relationship
+//  2a. ">" relationships across TWO OR MORE elements must be specified via direct children separators.
+//     The parent > child relationship can span 3 or more levels, ie. "select > optgroup > option".
+//  3a. Then, each entry is matched with each link in the parent child relationship
+
+//  2b. " " relationships across TWO elements must be specified using the space " " separator.
+//     "form input[type=reset], form button[type=reset]" is an example
+//  3b. Then, each entry is matched a parent child relationship that can span multiple elements
 //  *. no default action parent child relationship can cross shadowDOM borders.
 
 const listOfDefaultActions = [{
-  eventQuery: "mousedown?button=0",
-  elementQuery: "select > option, select > optgroup > option",
-  exclusive: true,
-  method: function (parent, child) {
-    parent.requestSelect(child);
-  }
-}, {
   eventQuery: "click?button=0&isTrusted=true",
   elementQuery: "a[href]",
-  exclusive: true,
-  method: function (parent) {
-    document.open(parent.getAttribute("href"));
-  }
+  method: a => requestNavigation.bind(a)
 }, {
-  eventQuery: "auxclick?button=1",
+  eventQuery: "auxclick?button=1&isTrusted=true",
   elementQuery: "a[href]",
-  exclusive: true,
-  method: function (parent) {
-    document.open(parent.getAttribute("href"), "_BLANK");
-  }
+  method: a => requestNavigation.bind(a, "_BLANK")
 }, {
   eventQuery: "click?button=0",
   elementQuery: "input[type=checkbox]",
-  exclusive: true,
-  method: function (parent) {
-    parent.checked = !parent.checked;
-  }
+  method: input => requestCheckboxToggle.bind(input)
 }, {
   eventQuery: "click?button=0",
   elementQuery: "details > summary",
-  exclusive: true,
-  method: function (currentTarget) {
-    currentTarget.toggle();
-  }
+  method: details => HTMLDetailsElement.toggle.bind(details)
+}, {
+  eventQuery: "mousedown?button=0&isTrusted=true",
+  elementQuery: "select > option, select > optgroup > option",
+  method: (select, option) => requestSelect.bind(select, option)
+}, {
+  eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
+  elementQuery: "form button[type=reset], form input[type=reset]",
+  method: form => HTMLFormElement.reset.bind(form)
+}, {
+  eventQuery: "click?button=0&isTrusted=true",     //todo isTrusted necessary for reset and submit??
+  elementQuery: "form button[type=submit], form input[type=submit]",
+  method: (form, button) => HTMLFormElement.requestSubmit.bind(form, button)
 }];
 
 function makeEventFilter(eventQuery) {
@@ -61,46 +93,43 @@ function makeEventFilter(eventQuery) {
   };
 }
 
-function makeElementFilter(elementQueries) {
-  const queries = elementQueries.split(",").map(query => query.split(">").reverse());
+function makeElementFilter(query) {
+  const matchers = query.split(">").reverse();
   return function matchParentChild(e) {
-    for (let matchers of queries) {
-      const targets = e.composedPath();                     //this implies access to closed shadowRoots
-      targetLoop: for (let i = 0; i < targets.length; i++) {
-        let j = 0;
-        for (; j < matchers.length; j++) {
-          let matcher = matchers[j];
-          const checkTarget = targets[i + j];
-          if (!(checkTarget instanceof HTMLElement) || !checkTarget.matches(matcher))
-            continue targetLoop;
-        }
-        j--;
-        return [i, targets[i + j], targets[i]];
+    const targets = e.composedPath();                     //this implies access to closed shadowRoots
+    targetLoop: for (let i = 0; i < targets.length; i++) {
+      let j = 0;
+      for (; j < matchers.length; j++) {
+        let matcher = matchers[j];
+        const checkTarget = targets[i + j];
+        if (!(checkTarget instanceof HTMLElement) || !checkTarget.matches(matcher))
+          continue targetLoop;
       }
+      j--;
+      return [i, targets[i + j], targets[i]];
     }
     return [];
   };
 }
 
-function parseListOfDefaultActions(list) {
-  return list.map(function ({eventQuery, elementQuery, exclusive, method}) {
-    return {
+let nativeDefaultActions = [];
+for (let {eventQuery, elementQuery, method} of listOfDefaultActions) {
+  for (let elementQuery1 of elementQuery.split(",")) {
+    nativeDefaultActions.push({
       eventQuery: makeEventFilter(eventQuery),
-      elementQuery: makeElementFilter(elementQuery),
-      exclusive,
+      elementQuery: makeElementFilter(elementQuery1.trim()),
       method
-    };
-  });
+    });
+  }
 }
 
-const parsedListOfDefaultActions = parseListOfDefaultActions(listOfDefaultActions);
-
+//todo make another method that finds all the nativeDefaultActions, not just the lowest one
 export function lowestExclusiveNativeDefaultActions(e) {
   let lowest;
-  for (let {eventQuery, elementQuery, exclusive, method} of parsedListOfDefaultActions) {
+  for (let {eventQuery, elementQuery, method} of nativeDefaultActions) {
     if (!eventQuery(e))
       continue;
-    const [childIndex, parentMatch, childMatch] = elementQuery(e);       //todo check childmatch and parentMatch
+    const [childIndex, parentMatch, childMatch] = elementQuery(e);
     if (!parentMatch)
       continue;
     if (lowest && lowest.index <= childIndex)
@@ -108,8 +137,7 @@ export function lowestExclusiveNativeDefaultActions(e) {
     lowest = {
       index: childIndex,
       element: parentMatch,
-      exclusive,
-      task: method.bind(null, parentMatch, childMatch)
+      task: method(parentMatch, childMatch)
     };
   }
   return lowest;
