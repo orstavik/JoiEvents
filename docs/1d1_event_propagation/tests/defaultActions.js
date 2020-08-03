@@ -1,4 +1,4 @@
-import {getContextID, lastPropagationTarget} from "./computePaths.js";
+import {composedPathContextIDs, lastPropagationTarget, getContextID} from "./computePaths.js";
 import {nativeDefaultActions} from "./nativeDefaultActions.js";
 
 let nativePreventDefault;
@@ -80,78 +80,42 @@ export function addAddDefaultAction(EventPrototype) {
  */
 
 function processDefaultAction(event) {
-  //1. if preventDefault() has been called on one of the two topmost contexts, then we should call the native preventDefault() and simply return
-  if (event.preventDefaults.has("") || event.preventDefaults.has("A")) {
-    nativePreventDefault.call(event);
-    return;
-  }
-  //x. add the lowest most native exclusive default action to the list.
+  //1. if preventDefault() has been called on one of the two topmost contexts, then we can simply call the native preventDefault() and return
+  if (event.preventDefaults.has("") || event.preventDefaults.has("A"))
+    return nativePreventDefault.call(event);
+  const contextIDs = composedPathContextIDs(event.composedPath());
+  //2. get native default actions
   let nativeActions = nativeDefaultActions(event);  //[{element, task, additive, index}]
-  let lowestExclusiveNativeDefaultActionTarget = nativeActions.find(({additive})=>!additive);
-  if (lowestExclusiveNativeDefaultActionTarget) {
-    const lowestExclusiveNativeDefaultActionContextID = getContextID(event, lowestExclusiveNativeDefaultActionTarget);
-    for (let preventedContextID of event.preventDefaults) {
-      if (lowestExclusiveNativeDefaultActionContextID.startsWith(preventedContextID)) {
-        nativePreventDefault.call(event);
-        lowestExclusiveNativeDefaultActionTarget = undefined;
-      }
-    }
-  }
-
-  //2. filter all the defaultActions based on preventDefault
-  //   if the context is prevented below, then i take out all the default actions, exclusive and additive,
-  //   from the list of default actions.
-  const filteredDefaultActions = Array.from(event.defaultActions).filter(function ([{target, additive}, task]) {
-    const targetContext = getContextID(event, target);
-    for (let preventedContextID of event.preventDefaults) {
-      if (targetContext.startsWith(preventedContextID))
-        return false;
-    }
-    return true;
-  });
-
-  //2b. filter out all the exclusive default actions, and add back only the lowest most exclusive default action
-  let lowestExclusiveCustomDefaultAction;
-  const filteredDefaultActions2 = filteredDefaultActions.filter(function ([{target, additive}, task]) {
-    if (additive)
-      return true;
-    if (!lowestExclusiveCustomDefaultAction)
-      lowestExclusiveCustomDefaultAction = [{target, additive}, task];
-    else {
-      const path = event.composedPath();
-      if (path.indexOf(target) < path.indexOf(lowestExclusiveCustomDefaultAction[0].target))
-        lowestExclusiveCustomDefaultAction = [{target, additive}, task];
-    }
-    return false;
-  });
-
-  const path = event.composedPath();
-  //y. select between the native and custom exclusive default actions
-  if (lowestExclusiveNativeDefaultActionTarget && lowestExclusiveCustomDefaultAction) {
-    const nativePosition = path.indexOf(lowestExclusiveNativeDefaultActionTarget);
-    const customPosition = path.indexOf(lowestExclusiveCustomDefaultAction[0].target);
-    if (nativePosition < customPosition)
-      lowestExclusiveCustomDefaultAction = undefined;
-    else {
+  //2b. filter native default actions for preventDefault(). This is an all or nothing filter, due to the properties of the native preventDefault().
+  for (let action of nativeActions) {
+    if (event.preventDefaults.has(contextIDs[action.index])) {
+      nativeActions = [];
       nativePreventDefault.call(event);
-      lowestExclusiveNativeDefaultActionTarget = undefined; //is this necessary??
     }
   }
-
-  if (lowestExclusiveCustomDefaultAction)
-    filteredDefaultActions2.push(lowestExclusiveCustomDefaultAction);
-
-  //sort the tasks in the list of custom default actions based on the position of their target.
-  filteredDefaultActions2.sort((a, b) => {
-    const aPos = path.indexOf(a[0].target);
-    const bPos = path.indexOf(b[0].target);
-    return aPos <= bPos;
-  });
-  //execute the default action in that order
-  const tasksOnly = filteredDefaultActions2.map(([options, task]) => task);
+  //3. get custom default actions
+  let customActions = event.defaultActions;         //[{element, task, additive}]
+  customActions.forEach(defAct => defAct.index = event.composedPath().indexOf(defAct.element)); //add index
+  //3b. filter custom default actions for preventDefault();
+  customActions = customActions.filter(defAct => !event.preventDefaults.has(contextIDs[defAct.index]));
+  //4. find the lowest non-additive/exclusive native default action
+  let lowestExclusiveNative;
+  nativeActions.forEach(defAct => !defAct.additive && (!lowestExclusiveNative || lowestExclusiveNative.index > defAct.index) && (lowestExclusiveNative = defAct));
+  //4b. find the lowest non-additive/exclusive custom default action
+  let lowestExclusiveCustom;
+  customActions = customActions.filter(defAct => !defAct.additive && (!lowestExclusiveCustom || lowestExclusiveCustom.index > defAct.index) && (lowestExclusiveCustom = defAct));
+  if (lowestExclusiveNative && lowestExclusiveCustom) {
+    if (lowestExclusiveNative.index > lowestExclusiveCustom.index) {
+      nativePreventDefault.call(event);
+    } else {
+      customActions.splice(customActions.indexOf(lowestExclusiveCustom), 1);
+    }
+  }
+  //5. iterate the customDefaultActions and call the tasks
+  const tasks = customActions.map(({task}) => task);
   if (event.async)
-    return nextMesoTicks(tasksOnly, 1);
-  for (let task of tasksOnly) task();
+    return nextMesoTicks(tasks, 1);
+  for (let task of tasks) task();
 }
 
 /**
@@ -171,7 +135,7 @@ function processDefaultAction(event) {
  */
 function instantiateDefaultActionOnDemand(event) {
   //todo weakmaps outside of the event object, so they cannot be manipulated.
-  event.defaultActions = new Map();
+  event.defaultActions = [];
   event.preventDefaults = new Set();
   //patch the post propagation callback for processing the default action
   const lastNode = lastPropagationTarget(event);
@@ -179,29 +143,15 @@ function instantiateDefaultActionOnDemand(event) {
   lastNode.addEventListener(event.type, processDefaultAction, {unstoppable: true, last: true, once: true});
 }
 
-// the position of the default action in the array is the position of the currentTarget in the DOM.
 // default actions that are set before the event begins propagating, is set as the last priority/at the end of the array.
 // the first default action added will be chosen. You cannot override default action for the same element.
-function setDefault(defaultAction, {target = this.currentTarget, additive = false} = {}) {
+function setDefault(task, host, additive = false) {
   if (!this.cancelable)
     return;
-  //todo make so that all setDefault adds a target. I can do that by breaking the code and see where it fails.
-  //todo the target should be the host node
-  if (!target)
-    throw new Error("if you call setDefault(task, option) before the event begins propagation, you should add the eventTarget node that will be the future target of the event, as the {target} of the second 'option' argument.");
-  // target = target || this.currentTarget;//todo this is good, because this would enable us to call setDefault() before the event is dispatched.
-  //additive is whether or not the default action should be added to the sequence of default actions, or be excluded
-  //by other lower defaultActions.
+  if (!host)
+    throw new Error("omg.");
   this.defaultActions || instantiateDefaultActionOnDemand(this);
-  this.defaultActions.set({target, additive}, defaultAction);
-  //the custom default actions should be stored on this format:
-  //todo
-  //  {
-  //    index: index || event.composedPath().indexOf(target),
-  //    element: target,
-  //    task: defaultAction,
-  //    additive
-  //  }
+  this.defaultActions.push({task, element: host, additive});
 }
 
 /**
@@ -248,15 +198,23 @@ function getDefaultPrevented() {
  * the uppermost slotted element also has a shadowDOM in itself.
  *
  * registers which DOM context the event listener from where preventDefault() has been called.
+ *
+ * It is possible to pass in a particular DOM Node which is in the context that should be prevented.
+ *
+ * todo the native preventDefault works
+ *  a) globally, which we alter, and
+ *  b) in the same DOM context, and
+ *  c) from the current node and down in the flattened eventPath.
+ *  we could choose to say that
+ *   a) if the argument is not given, then preventDefault applies to all
+ *   b) if the argument is given, then preventDefault applies to only that scope of the path, but not upwards from scoped contexts..
+ *   some parts of the context. ie. that would be that the index is lower, but that the call is limited to the scoped context.
  */
-function preventDefault() {
+function preventDefault(nodeInContext) {
   if (!this.cancelable)
     return;
-  //todo we should first check to see if the context is topmost.
-  // We do not need to add a dynamic event listener postProp callback when
-  // preventDefault is called from either the '' or 'A' contexts.
   //1. Patch event defaultAction processing if it is not there
   this.preventDefaults || instantiateDefaultActionOnDemand(this);
-  const contextID = getContextID(this, this.currentTarget);
+  const contextID = getContextID(this, contextRef || this.currentTarget);
   this.preventDefaults.add(contextID);
 }

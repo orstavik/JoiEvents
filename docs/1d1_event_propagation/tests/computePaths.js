@@ -89,7 +89,7 @@ export function lastPropagationTarget(event) {
  *  5. Every time the path passes by a slot, the algorithm drops out to the previous context ID
  *     by dropping the last character from the current context ID.
  */
-function composedPathContextIDs(path) {
+export function composedPathContextIDs(path) {
   const res = [];
   let currentID = "A";
   const usedIDs = [currentID];

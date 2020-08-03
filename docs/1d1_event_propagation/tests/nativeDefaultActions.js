@@ -215,16 +215,20 @@ for (let {eventQuery, elementQuery, method, additive} of listOfDefaultActions) {
 }
 
 export function nativeDefaultActions(e) {
-  const nativeDefaultActionsThatMatchEvent = listOfDefaultActions2.filter(({eventQuery}) => eventQuery(e));
-  const nativeDefaultActionsThatMatchPath = nativeDefaultActionsThatMatchEvent.map(defAct => {
-    const [childIndex, parentMatch, childMatch] = defAct.elementQuery(e);
-    return !parentMatch ? null : {
-      index: childIndex,
-      element: parentMatch,
-      task: defAct.method(parentMatch, childMatch),
-      additive: defAct.additive
-    };
-  }).filter(defAct => !!defAct).sort((a,b) => a.index <= b.index);
-  let firstIndex;
-  return nativeDefaultActionsThatMatchPath.filter((defAct, index) => defAct.additive || (firstIndex === undefined && (firstIndex = index || true)));
+  return listOfDefaultActions2
+    .filter(({eventQuery}) => eventQuery(e))
+    .reduce((acc, defAct) => {
+      const [childIndex, parent, child] = defAct.elementQuery(e);
+      if (parent) {
+        acc.push({
+          index: childIndex,
+          element: parent,
+          task: defAct.method(parent, child),
+          native: true,
+          additive: defAct.additive
+        });
+      }
+      return acc;
+    }, [])
+    .sort((a, b) => a.index < b.index);
 }

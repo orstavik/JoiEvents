@@ -22,7 +22,7 @@ class ClickAuxclick extends HTMLElement {
     const index = path.indexOf(this);     //filter event path
     if (!path[index - 1].matches("div"))  //filter event path
       return;
-    event.setDefault(this.requestClick.bind(this));  //setDefault
+    event.setDefault(this.requestClick.bind(this), this);  //setDefault
     //todo here we add the default action to the host node, and so we don't need to add a target option
   }
 
@@ -82,7 +82,7 @@ class DefaultActionAroundClickWithDivCheckbox extends HTMLElement {
   onClick(e) {
     if (e.button !== 0)
       return;
-    e.setDefault(this.requestClickAction.bind(this));
+    e.setDefault(this.requestClickAction.bind(this), this);
   }
 
   requestClickAction() {
