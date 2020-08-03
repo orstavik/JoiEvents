@@ -22,7 +22,7 @@
     window.getEventListeners = undefined;
     window.isStopped = undefined;
     window.scopedPaths = undefined;
-    window.lowestExclusiveNativeDefaultActions = undefined;
+    window.nativeDefaultActions = undefined;
   }
 
   function nextTick2(cb) {
@@ -107,7 +107,7 @@
   import {addDispatchEventOptionAsync} from "./dispatchEventOptionAsync.js";
   import {scopedPaths} from "./computePaths.js";
   import {addAddDefaultAction} from "./defaultActions.js";
-  import {lowestExclusiveNativeDefaultActions} from "./nativeDefaultActions.js";
+  import {nativeDefaultActions} from "./nativeDefaultActions.js";
 
   function SCOPED_PATHS() {
     window.scopedPaths = scopedPaths;
@@ -131,7 +131,7 @@
   }
 
   function NATIVE_DEFAULT_ACTION(){
-    window.lowestExclusiveNativeDefaultActions = lowestExclusiveNativeDefaultActions;
+    window.nativeDefaultActions = nativeDefaultActions;
   }
 
   const registers = [
@@ -175,7 +175,7 @@
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {basicPropTest} from "./unitTests/testPropagationBasic.js";
   import {asyncPropTest} from "./unitTests/testPropagationAsync.js";
-  import {mousedownNativeDefaultActions, mousedownNativeDefaultActionsNotWorking, formNativeDefaultActions} from "./unitTests/testLowestNativeDefaultAction.js";
+  import {mousedownNativeDefaultActions, mousedownNativeDefaultActionsNotWorking, formNativeDefaultActions} from "./unitTests/testNativeDefaultAction.js";
   import {testDefaultActionBasic, testDefaultActionNative} from "./unitTests/testDefaultActionBasic.js";
 
   import {useCases} from "./unitTests/useCase1.js";

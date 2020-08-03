@@ -1,5 +1,5 @@
 import {getContextID, lastPropagationTarget} from "./computePaths.js";
-import {lowestExclusiveNativeDefaultActions} from "./nativeDefaultActions.js";
+import {nativeDefaultActions} from "./nativeDefaultActions.js";
 
 let nativePreventDefault;
 
@@ -86,7 +86,8 @@ function processDefaultAction(event) {
     return;
   }
   //x. add the lowest most native exclusive default action to the list.
-  let lowestExclusiveNativeDefaultActionTarget = lowestExclusiveNativeDefaultActions(event)?.element;//todo must return [{target, false}, task], where task might nothing
+  let nativeActions = nativeDefaultActions(event);  //[{element, task, additive, index}]
+  let lowestExclusiveNativeDefaultActionTarget = nativeActions.find(({additive})=>!additive);
   if (lowestExclusiveNativeDefaultActionTarget) {
     const lowestExclusiveNativeDefaultActionContextID = getContextID(event, lowestExclusiveNativeDefaultActionTarget);
     for (let preventedContextID of event.preventDefaults) {
@@ -184,13 +185,23 @@ function instantiateDefaultActionOnDemand(event) {
 function setDefault(defaultAction, {target = this.currentTarget, additive = false} = {}) {
   if (!this.cancelable)
     return;
-  if (target === null)
+  //todo make so that all setDefault adds a target. I can do that by breaking the code and see where it fails.
+  //todo the target should be the host node
+  if (!target)
     throw new Error("if you call setDefault(task, option) before the event begins propagation, you should add the eventTarget node that will be the future target of the event, as the {target} of the second 'option' argument.");
   // target = target || this.currentTarget;//todo this is good, because this would enable us to call setDefault() before the event is dispatched.
   //additive is whether or not the default action should be added to the sequence of default actions, or be excluded
   //by other lower defaultActions.
   this.defaultActions || instantiateDefaultActionOnDemand(this);
   this.defaultActions.set({target, additive}, defaultAction);
+  //the custom default actions should be stored on this format:
+  //todo
+  //  {
+  //    index: index || event.composedPath().indexOf(target),
+  //    element: target,
+  //    task: defaultAction,
+  //    additive
+  //  }
 }
 
 /**

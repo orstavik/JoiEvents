@@ -39,7 +39,7 @@ function selectOption() {
 //    option
 function selectDivOption() {
   const {select, div, option2} = makeSelectBranch();
-  const usecase = [select, div, option2];
+  const usecase = [option2, div, select];
   Object.freeze(usecase);
   return usecase;
 }

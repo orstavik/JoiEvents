@@ -18,12 +18,12 @@ export const mousedownNativeDefaultActions = [{
 
     target.addEventListener("mousedown", function (e) {
       const spoofE = spoofIsTrusted(e);
-      const nativeDefaultAction = lowestExclusiveNativeDefaultActions(spoofE);
-      res.push(nativeDefaultAction?.element?.tagName);
+      const nativeActions = nativeDefaultActions(spoofE);
+      res.push(nativeActions?.length);
     });
     target.dispatchEvent(new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true}));
   },
-  expect: "SELECT"
+  expect: "2"
 }];
 
 export const mousedownNativeDefaultActionsNotWorking = [{
@@ -35,12 +35,13 @@ export const mousedownNativeDefaultActionsNotWorking = [{
 
     target.addEventListener("mousedown", function (e) {
       const spoofE = spoofIsTrusted(e);
-      const nativeDefaultAction = lowestExclusiveNativeDefaultActions(spoofE);
-      res.push(nativeDefaultAction);
+      const nativeActions = nativeDefaultActions(spoofE);
+      res.push(nativeActions?.length);
+      //ensure that it is only the mousedown focus() that will be triggered, not the mousedown selectOption().
     });
     target.dispatchEvent(new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true}));
   },
-  expect: ""
+  expect: "1"
 }];
 
 export const formNativeDefaultActions = [{
@@ -52,10 +53,10 @@ export const formNativeDefaultActions = [{
 
     target.addEventListener("click", function (e) {
       const spoofE = spoofIsTrusted(e);
-      const nativeDefaultAction = lowestExclusiveNativeDefaultActions(spoofE);
-      res.push(nativeDefaultAction?.element?.tagName);
+      const nativeActions = nativeDefaultActions(spoofE);
+      res.push(nativeActions?.length);
     });
     target.click();
   },
-  expect: "FORM"
+  expect: "1"
 }];

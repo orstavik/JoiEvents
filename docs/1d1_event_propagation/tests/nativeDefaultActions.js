@@ -117,11 +117,12 @@ const listOfDefaultActions = [{
 //other characters for input and textarea..
 
 
-//event controller default actions
-//1. contextmenu, this applies to all elements, so it would be more efficient to control it via an event controller.
-//2. keydown enter produces click, definitively an event controller, as it produces just another event.
-//3. the deadcaps controller. produces composition events and beforeinput (except in old firefox).
-//   deadcaps are currently actually handled by input and textarea.. this is a mess..
+//generic default actions
+//1. contextmenu, "*".
+//2. drag'n'drop, "[draggable]". add more to the queryselector here, not everything marked [draggable] can be dragged?? We also need a queryselector format that queries for css properties..
+//3. keydown enter produces click. I think this should be "a[href], input, button, textarea, select"?? is it the same as focusable?? no there are special rules here..
+//4. the deadcaps controller. this is a mess.. produces composition events and beforeinput (except in old firefox).
+//   deadcaps are currently actually handled by input and textarea..
 
 function makeEventFilter(eventQuery) {
   const question = eventQuery.indexOf("?");
@@ -201,10 +202,10 @@ function makeElementFilter(query) {
   throw new SyntaxError("element filter syntax error");
 }
 
-let nativeDefaultActions = [];
+let listOfDefaultActions2 = [];
 for (let {eventQuery, elementQuery, method, additive} of listOfDefaultActions) {
   for (let elementQuery1 of elementQuery.split(",")) {
-    nativeDefaultActions.push({
+    listOfDefaultActions2.push({
       eventQuery: makeEventFilter(eventQuery),
       elementQuery: makeElementFilter(elementQuery1.trim()),
       method,
@@ -213,42 +214,17 @@ for (let {eventQuery, elementQuery, method, additive} of listOfDefaultActions) {
   }
 }
 
-//todo make another method that finds all the nativeDefaultActions, not just the lowest one
-export function lowestExclusiveNativeDefaultActions(e) {
-  let lowest;
-  for (let {eventQuery, elementQuery, method} of nativeDefaultActions) {
-    if (!eventQuery(e))
-      continue;
-    const [childIndex, parentMatch, childMatch] = elementQuery(e);
-    if (!parentMatch)
-      continue;
-    if (lowest && lowest.index <= childIndex)
-      continue;
-    lowest = {
-      index: childIndex,
-      element: parentMatch,
-      task: method(parentMatch, childMatch)
-    };
-  }
-  return lowest;
-}
-
 export function nativeDefaultActions(e) {
-  const list = [];
-  for (let {eventQuery, elementQuery, method, additive} of nativeDefaultActions) {
-    if (!eventQuery(e))
-      continue;
-    const [childIndex, parentMatch, childMatch] = elementQuery(e);
-    if (!parentMatch)
-      continue;
-    list.push({
+  const nativeDefaultActionsThatMatchEvent = listOfDefaultActions2.filter(({eventQuery}) => eventQuery(e));
+  const nativeDefaultActionsThatMatchPath = nativeDefaultActionsThatMatchEvent.map(defAct => {
+    const [childIndex, parentMatch, childMatch] = defAct.elementQuery(e);
+    return !parentMatch ? null : {
       index: childIndex,
       element: parentMatch,
-      task: method(parentMatch, childMatch) ,
-      additive
-    });
-  }
-  //todo
-  // list.filter(something => filter out all the exclusive default actions, except the one with the lowest index)
-  return list;
+      task: defAct.method(parentMatch, childMatch),
+      additive: defAct.additive
+    };
+  }).filter(defAct => !!defAct).sort((a,b) => a.index <= b.index);
+  let firstIndex;
+  return nativeDefaultActionsThatMatchPath.filter((defAct, index) => defAct.additive || (firstIndex === undefined && (firstIndex = index || true)));
 }
