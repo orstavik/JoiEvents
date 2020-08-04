@@ -92,14 +92,13 @@
     });
   }
 
-  async function runTestUsecaseResult(eventSystems, test, usecases, expects) {
+  async function runTest2(eventSystems, test, usecasesExpects) {
     const {name: testName, fun} = test;
     const results = {};
     for (let system of eventSystems) {
       system();
-      for (let i = 0; i < usecases.length; i++) {
-        let usecase = usecases[i];
-        let expected = expects[i];
+      for (let i = 0; i < usecasesExpects.length; i++) {
+        let [usecase, expected] = usecasesExpects[i];
 
         setValue(results, testName + ":" + usecase.name, "expected", expected);
 
@@ -195,14 +194,14 @@
   import {testIsStopped} from "./unitTests/testIsStopped.js";
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
   import {
-    propagationBubblesComposed,
-    propagationBubblesOnly,
-    propagationComposedOnly,
-    propagationNoComposedNoBubbles,
-    propagationBubblesComposedAsync,
-    propagationBubblesOnlyAsync,
-    propagationComposedOnlyAsync,
-    propagationNoComposedNoBubblesAsync,
+    propBC,
+    propB,
+    propC,
+    prop,
+    propABC,
+    propAB,
+    propAC,
+    propA,
   } from "./unitTests/testPropagationBasic.js";
   import {
     mousedownNativeDefaultActions,
@@ -251,143 +250,110 @@
     // // await runTests(eventSystems, testIsStopped);
 
 
-    await runTestUsecaseResult([SCOPED_PATHS], testScopedPaths, [h1,
-      webcomp,
-      shadowSlotted,
-      simpleMatroschka,
-      shadowCompWithExcludedLightDomDiv,
-      nestedShadow], ["", "", "", "", "", ""]);
-    await runTestUsecaseResult([SCOPED_PATHS], testComposedPath, [h1,
-      webcomp,
-      shadowSlotted,
-      simpleMatroschka,
-      shadowCompWithExcludedLightDomDiv,
-      nestedShadow], ["", "", "", "", "", ""]);
-    await runTestUsecaseResult(eventSystems, propagationBubblesComposed, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 h1 ",
-        "SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp ",
-        "DIV SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp slot span slot-comp#root slot-comp div ",
-        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div slot slot span slot-comp#root slot-comp matroschka-comp#root matroschka-comp ",
-        "SHADOW-COMP DIV div shadow-comp ",
-        "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp b nested-shadow#root nested-shadow ",
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationComposedOnly, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 h1 ",
-        "SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp ",
-        "DIV SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp ",
-        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div ",
-        "SHADOW-COMP DIV div ",
-        "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp nested-shadow ",
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationBubblesOnly, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 h1 ",
-        "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
-        "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
-        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div slot slot span slot-comp#root slot-comp matroschka-comp#root matroschka-comp ",
-        "SHADOW-COMP DIV div shadow-comp ",
-        "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationNoComposedNoBubbles, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 h1 ",
-        "SHADOW-COMP#ROOT H1 h1 ",
-        "SHADOW-COMP#ROOT H1 h1 ",
-        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div ",
-        "SHADOW-COMP DIV div ",
-        "SHADOW-COMP#ROOT H1 h1 "
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationBubblesComposedAsync, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 .h1 .",
-        "SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .",
-        "DIV .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .slot .span .slot-comp#root .slot-comp .div .",
-        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .slot .slot .span .slot-comp#root .slot-comp .matroschka-comp#root .matroschka-comp .",
-        "SHADOW-COMP .DIV .div .shadow-comp .",
-        "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .b .nested-shadow#root .nested-shadow .",
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationComposedOnlyAsync, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 .h1 .",
-        "SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .",
-        "DIV .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .",
-        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .",
-        "SHADOW-COMP .DIV .div .",
-        "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .nested-shadow .",
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationBubblesOnlyAsync, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 .h1 .",
-        "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
-        "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
-        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .slot .slot .span .slot-comp#root .slot-comp .matroschka-comp#root .matroschka-comp .",
-        "SHADOW-COMP .DIV .div .shadow-comp .",
-        "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
-      ]);
-    await runTestUsecaseResult(eventSystems, propagationNoComposedNoBubblesAsync, [h1,
-        webcomp,
-        shadowSlotted,
-        simpleMatroschka,
-        shadowCompWithExcludedLightDomDiv,
-        nestedShadow],
-      [
-        "H1 .h1 .",
-        "SHADOW-COMP#ROOT .H1 .h1 .",
-        "SHADOW-COMP#ROOT .H1 .h1 .",
-        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .",
-        "SHADOW-COMP .DIV .div .",
-        "SHADOW-COMP#ROOT .H1 .h1 ."
-      ]);
+    await runTest2([SCOPED_PATHS], testScopedPaths, [
+      [h1, ""],
+      [webcomp, ""],
+      [shadowSlotted, ""],
+      [simpleMatroschka, ""],
+      [shadowCompWithExcludedLightDomDiv, ""],
+      [nestedShadow, ""]
+    ]);
 
-    await runTestUsecaseResult([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, [selectOption,
-      selectOptgroupOption], ["2", "2"]);
-    await runTestUsecaseResult([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActionsNotWorking, [selectDivOption,
-        selectOptgroupSpanOption]
-      , ["1", "1"]);
-    await runTestUsecaseResult([NATIVE_DEFAULT_ACTION], formNativeDefaultActions, [formButtonReset], ["1"]);
+    await runTest2([SCOPED_PATHS], testComposedPath, [
+      [h1, ""],
+      [webcomp, ""],
+      [shadowSlotted, ""],
+      [simpleMatroschka, ""],
+      [shadowCompWithExcludedLightDomDiv, ""],
+      [nestedShadow, ""]
+    ]);
 
-    await runTestUsecaseResult([SET_DEFAULT], testDefaultActionBasic, [useCaseClickAuxclickDiv], ["1click2defaultActionclickx1click2defaultActionclicky"]);
-    await runTestUsecaseResult([SET_DEFAULT], testDefaultActionNative, [
-      useCaseClickWithDivCheckbox1,
-      useCaseClickWithDivCheckbox2
-    ], ["clickdefault-action", "clickinput"]);
+    await runTest2(eventSystems, propBC, [
+      [h1, "H1 h1 "],
+      [webcomp, "SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp "],
+      [shadowSlotted, "DIV SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp slot span slot-comp#root slot-comp div "],
+      [simpleMatroschka, "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div slot slot span slot-comp#root slot-comp matroschka-comp#root matroschka-comp "],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP DIV div shadow-comp "],
+      [nestedShadow, "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp b nested-shadow#root nested-shadow "]
+    ]);
+
+    await runTest2(eventSystems, propC, [
+      [h1, "H1 h1 "],
+      [webcomp, "SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp "],
+      [shadowSlotted, "DIV SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp "],
+      [simpleMatroschka, "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div "],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP DIV div "],
+      [nestedShadow, "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp nested-shadow "]
+    ]);
+
+    await runTest2(eventSystems, propB, [
+      [h1, "H1 h1 "],
+      [webcomp, "SHADOW-COMP#ROOT H1 h1 shadow-comp#root "],
+      [shadowSlotted, "SHADOW-COMP#ROOT H1 h1 shadow-comp#root "],
+      [simpleMatroschka, "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div slot slot span slot-comp#root slot-comp matroschka-comp#root matroschka-comp "],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP DIV div shadow-comp "],
+      [nestedShadow, "SHADOW-COMP#ROOT H1 h1 shadow-comp#root "]
+    ]);
+
+    await runTest2(eventSystems, prop, [
+      [h1, "H1 h1 "],
+      [webcomp, "SHADOW-COMP#ROOT H1 h1 "],
+      [shadowSlotted, "SHADOW-COMP#ROOT H1 h1 "],
+      [simpleMatroschka, "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div "],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP DIV div "],
+      [nestedShadow, "SHADOW-COMP#ROOT H1 h1 "]
+    ]);
+
+    await runTest2(eventSystems, propABC, [
+      [h1, "H1 .h1 ."],
+      [webcomp, "SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp ."],
+      [shadowSlotted, "DIV .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .slot .span .slot-comp#root .slot-comp .div ."],
+      [simpleMatroschka, "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .slot .slot .span .slot-comp#root .slot-comp .matroschka-comp#root .matroschka-comp ."],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP .DIV .div .shadow-comp ."],
+      [nestedShadow, "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .b .nested-shadow#root .nested-shadow ."]
+    ]);
+
+    await runTest2(eventSystems, propAC, [
+      [h1, "H1 .h1 ."],
+      [webcomp, "SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp ."],
+      [shadowSlotted, "DIV .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp ."],
+      [simpleMatroschka, "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div ."],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP .DIV .div ."],
+      [nestedShadow, "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .nested-shadow ."]]);
+
+    await runTest2(eventSystems, propAB, [
+      [h1, "H1 .h1 ."],
+      [webcomp, "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root ."],
+      [shadowSlotted, "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root ."],
+      [simpleMatroschka, "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .slot .slot .span .slot-comp#root .slot-comp .matroschka-comp#root .matroschka-comp ."],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP .DIV .div .shadow-comp ."],
+      [nestedShadow, "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root ."]]);
+
+    await runTest2(eventSystems, propA, [
+      [h1, "H1 .h1 ."],
+      [webcomp, "SHADOW-COMP#ROOT .H1 .h1 ."],
+      [shadowSlotted, "SHADOW-COMP#ROOT .H1 .h1 ."],
+      [simpleMatroschka, "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div ."],
+      [shadowCompWithExcludedLightDomDiv, "SHADOW-COMP .DIV .div ."],
+      [nestedShadow, "SHADOW-COMP#ROOT .H1 .h1 ."]]);
+
+    await runTest2([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, [
+      [selectOption, "2"],
+      [selectOptgroupOption, "2"]]);
+    await runTest2([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActionsNotWorking, [
+      [selectDivOption, "1"],
+      [selectOptgroupSpanOption, "1"]]);
+    await runTest2([NATIVE_DEFAULT_ACTION], formNativeDefaultActions, [
+      [formButtonReset, "1"]
+    ]);
+
+    await runTest2([SET_DEFAULT], testDefaultActionBasic, [
+      [useCaseClickAuxclickDiv, "1click2defaultActionclickx1click2defaultActionclicky"]]
+    );
+    await runTest2([SET_DEFAULT], testDefaultActionNative, [
+      [useCaseClickWithDivCheckbox1, "clickdefault-action"],
+      [useCaseClickWithDivCheckbox2, "clickinput"]
+    ]);
   })();
   //todo
   // 0. implement the systems using dependencies.

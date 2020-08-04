@@ -1,5 +1,4 @@
 import {eventTargetName} from "./useCase1.js";
-import {filterComposedTargets} from "../computePaths.js";
 
 function addEventListeners(targets, res, async) {//todo push this into the usecase file?
   for (let el of targets) {
@@ -21,88 +20,51 @@ function addListenersAndDispatchEvent(usecase, res, options) {
   targets[0].dispatchEvent(new Event("click", options), options.async ? {async: true} : undefined);
 }
 
-function makeExpectationBubblesComposed(usecase, options) {
-  let scopedPath = usecase();
-  if (!options.composed) {
-    while (scopedPath[0] instanceof Array)
-      scopedPath = scopedPath[0];
-  }
-  const bubbleOrTargetTrailNodes = options.bubbles ?
-    scopedPath.flat(Infinity) :
-    filterComposedTargets(scopedPath);
-  const captureTrailNodes = scopedPath.flat(Infinity).reverse();
-
-  const bubbleOrTargetTrail = bubbleOrTargetTrailNodes.map(name => eventTargetName(name).toLowerCase());
-  const captureTrail = captureTrailNodes.map(name => eventTargetName(name).toUpperCase());
-
-  return captureTrail.join(" ") + " " + bubbleOrTargetTrail.join(" ") + " ";
-}
-
-export const propagationBubblesComposed = {
+export const propBC = {
   name: `propagation: {composed: true, bubbles: true}`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {composed: true, bubbles: true});
   }
 };
-export const propagationComposedOnly = {
+export const propC = {
   name: `propagation: {composed: true, bubbles: false}`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {composed: true, bubbles: false});
   }
 };
-export const propagationBubblesOnly = {
+export const propB = {
   name: `propagation: {composed: false, bubbles: true}`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {composed: false, bubbles: true});
   }
 };
-export const propagationNoComposedNoBubbles = {
+export const prop = {
   name: `propagation: {composed: false, bubbles: false`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {composed: false, bubbles: false});
   }
 };
-export const propagationBubblesComposedAsync  = {
+export const propABC  = {
   name: `propagation: {async: true, composed: true, bubbles: true}`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {async: true, composed: true, bubbles: true});
   }
 };
-export const propagationComposedOnlyAsync = {
+export const propAC = {
   name: `propagation: {async: true, composed: true, bubbles: false}`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {async: true, composed: true, bubbles: false});
   }
 };
-export const propagationBubblesOnlyAsync = {
+export const propAB = {
   name: `propagation: {async: true, composed: false, bubbles: true}`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {async: true, composed: false, bubbles: true});
   }
 };
-export const propagationNoComposedNoBubblesAsync = {
+export const propA = {
   name: `propagation: {async: true, composed: false, bubbles: false`,
   fun: function (res, usecase) {
     addListenersAndDispatchEvent(usecase, res, {async: true, composed: false, bubbles: false});
   }
 };
-//
-// const propAlternatives = [
-//   {composed: true, bubbles: true},
-//   {composed: true, bubbles: false},
-//   {composed: false, bubbles: true},
-//   {composed: false, bubbles: false}
-// ];
-//
-// for (let options of propAlternatives) {
-//   basicPropTest.push({
-//     name: `propagation: ${JSON.stringify(options)}`,
-//     fun: function (res, usecase) {
-//       addListenersAndDispatchEvent(usecase, res, options);
-//     },
-//     expect: function (usecase) {
-//       return makeExpectationBubblesComposed(usecase, options);
-//     }
-//   });
-// }
-

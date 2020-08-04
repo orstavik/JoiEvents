@@ -27,7 +27,7 @@ function scopedPathsImpl(target, composed, cutOff, path) {
   return path;
 }
 
-export function filterComposedTargets(scopedPath) {
+function filterComposedTargets(scopedPath) {
   return scopedPath[0] instanceof Array ?
     [...filterComposedTargets(scopedPath[0]), scopedPath[1]] :
     [scopedPath[0]];
