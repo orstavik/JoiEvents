@@ -205,8 +205,7 @@
   } from "./unitTests/testPropagationBasic.js";
   import {
     mousedownNativeDefaultActions,
-    mousedownNativeDefaultActionsNotWorking,
-    formNativeDefaultActions
+    clickNativeDefaultActions
   } from "./unitTests/testNativeDefaultAction.js";
   import {testDefaultActionBasic, testDefaultActionNative} from "./unitTests/testDefaultActionBasic.js";
 
@@ -233,20 +232,20 @@
   } from "./unitTests/useCaseDefaultAction.js";
 
   (async function () {
-    await runTests(eventSystems, testBasic);
-    await runTests(eventSystems, dynamicTest);
-    await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
-    await runTests(eventSystems, testOnce);
-    await runTests(eventSystems, testUnstoppable);
-    await runTests(eventSystems, cancelBubbleTests);
-    await runTests(eventSystems, lastTest);
-    await runTests(eventSystems, last2);
-    await runTests(eventSystems, lastErrorsTest);
-    await runTests(eventSystems, firstTest);
-    await runTests(eventSystems, first2);
-    await runTests(eventSystems, firstErrorsTest);
-    await runTests(eventSystems, testStopProp);
-    await runTests(eventSystems, testStopProp2);
+    // await runTests(eventSystems, testBasic);
+    // await runTests(eventSystems, dynamicTest);
+    // await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
+    // await runTests(eventSystems, testOnce);
+    // await runTests(eventSystems, testUnstoppable);
+    // await runTests(eventSystems, cancelBubbleTests);
+    // await runTests(eventSystems, lastTest);
+    // await runTests(eventSystems, last2);
+    // await runTests(eventSystems, lastErrorsTest);
+    // await runTests(eventSystems, firstTest);
+    // await runTests(eventSystems, first2);
+    // await runTests(eventSystems, firstErrorsTest);
+    // await runTests(eventSystems, testStopProp);
+    // await runTests(eventSystems, testStopProp2);
     // // await runTests(eventSystems, testIsStopped);
 
 
@@ -339,11 +338,11 @@
 
     await runTest2([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, [
       [selectOption, "2"],
-      [selectOptgroupOption, "2"]]);
-    await runTest2([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActionsNotWorking, [
+      [selectOptgroupOption, "2"],
       [selectDivOption, "1"],
-      [selectOptgroupSpanOption, "1"]]);
-    await runTest2([NATIVE_DEFAULT_ACTION], formNativeDefaultActions, [
+      [selectOptgroupSpanOption, "1"]
+    ]);
+    await runTest2([NATIVE_DEFAULT_ACTION], clickNativeDefaultActions, [
       [formButtonReset, "1"]
     ]);
 

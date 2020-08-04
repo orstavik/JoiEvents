@@ -9,54 +9,32 @@ function spoofIsTrusted(e) {
   });
 }
 
+function dispatchEventAndReadNativeDefaultActions(event, usecase, res) {
+  const dom = usecase();
+  const flat = dom.flat(1000);
+  const target = flat[0];
+  const origin = flat[flat.length - 1];
+
+  origin.addEventListener(event.type, function (e) {
+    const spoofE = spoofIsTrusted(e);
+    const nativeActions = nativeDefaultActions(spoofE);
+    res.push(nativeActions?.length);
+  });
+  target.dispatchEvent(event);
+}
+
 export const mousedownNativeDefaultActions = {
   name: "mousedown native default actions working",
   fun: function (res, usecase) {
-    const dom = usecase();
-    const flat = dom.flat(1000);
-    const target = flat[0];
-
-    target.addEventListener("mousedown", function (e) {
-      const spoofE = spoofIsTrusted(e);
-      const nativeActions = nativeDefaultActions(spoofE);
-      res.push(nativeActions?.length);
-    });
-    target.dispatchEvent(new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true}));
-  },
-  expect: "2"
+    const event = new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true});
+    dispatchEventAndReadNativeDefaultActions(event, usecase, res);
+  }
 };
 
-export const mousedownNativeDefaultActionsNotWorking = {
-  name: "mousedown native default actions wrong",
-  fun: function (res, usecase) {
-    const dom = usecase();
-    const flat = dom.flat(1000);
-    const target = flat[0];
-
-    target.addEventListener("mousedown", function (e) {
-      const spoofE = spoofIsTrusted(e);
-      const nativeActions = nativeDefaultActions(spoofE);
-      res.push(nativeActions?.length);
-      //ensure that it is only the mousedown focus() that will be triggered, not the mousedown selectOption().
-    });
-    target.dispatchEvent(new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true}));
-  },
-  expect: "1"
-};
-
-export const formNativeDefaultActions = {
+export const clickNativeDefaultActions = {
   name: "click on form native default actions working",
   fun: function (res, usecase) {
-    const dom = usecase();
-    const flat = dom.flat(1000);
-    const target = flat[0];
-
-    target.addEventListener("click", function (e) {
-      const spoofE = spoofIsTrusted(e);
-      const nativeActions = nativeDefaultActions(spoofE);
-      res.push(nativeActions?.length);
-    });
-    target.click();
-  },
-  expect: "1"
+    const event = new MouseEvent("click", {button: 0, composed: true, bubbles: true});
+    dispatchEventAndReadNativeDefaultActions(event, usecase, res);
+  }
 };
