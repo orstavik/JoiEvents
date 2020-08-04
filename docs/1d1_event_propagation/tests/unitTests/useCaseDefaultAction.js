@@ -48,7 +48,7 @@ customElements.define("click-auxclick", ClickAuxclick);
 //  <div></div>
 //</click-auxclick>
 
-function useCaseClickAuxclickDiv() {
+export function useCaseClickAuxclickDiv() {
   const clickAuxclick = document.createElement("click-auxclick");
   const div = document.createElement("div");
   clickAuxclick.appendChild(div);
@@ -113,7 +113,7 @@ customElements.define("default-action-around-click-with-div-checkbox", DefaultAc
 //  /#shadowRoot
 //</default-action-around-click-with-div-checkbox>
 
-function useCaseClickWithDivCheckbox1() {
+export function useCaseClickWithDivCheckbox1() {
   const defaultActionAroundClickWithDivCheckbox = document.createElement("default-action-around-click-with-div-checkbox");
   const shadow1 = defaultActionAroundClickWithDivCheckbox.shadowRoot;
   const clickWithDivCheckbox = shadow1.children[0];
@@ -155,7 +155,7 @@ function useCaseClickWithDivCheckbox1() {
 //  /#shadowRoot
 //</default-action-around-click-with-div-checkbox>
 
-function useCaseClickWithDivCheckbox2() {
+export function useCaseClickWithDivCheckbox2() {
   const defaultActionAroundClickWithDivCheckbox = document.createElement("default-action-around-click-with-div-checkbox");
   const shadow1 = defaultActionAroundClickWithDivCheckbox.shadowRoot;
   const clickWithDivCheckbox = shadow1.children[0];

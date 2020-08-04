@@ -70,15 +70,41 @@
     console.table(results);
   }
 
-  async function runTests(eventSystems, tests, usecases) {
-    usecases = usecases || [{name: undefined}];
+  async function runTests(eventSystems, tests) {
     const results = {};
     for (let system of eventSystems) {
       system();
       for (const {name: testName, fun, expect} of tests) {
-        for (let usecase of usecases) {
 
-          const expected = expect instanceof Function ? expect(usecase) : expect;
+        const expected = expect instanceof Function ? expect() : expect;
+        setValue(results, testName, "expected", expected);
+
+        let result = [];
+        fun(result);
+        await nextTick2(() => 1);  //just wait a t1ck, for any queued propagation to complete
+        setValue(results, testName, system.name, result.join(""));
+        await nextTick2(() => 1);  //just wait a t0ck, for any queued tasks of the propagation to complete
+      }
+      resetSystem();
+    }
+    return nextTick2(function () {
+      printResults(results);
+    });
+  }
+
+  async function runTestUsecaseResult(eventSystems, tests, usecases, expects) {
+    if (!usecases) {
+      usecases = [{name: undefined}];
+      expects = [{name: undefined}];
+    }
+    const results = {};
+    for (let system of eventSystems) {
+      system();
+      for (const {name: testName, fun, expect} of tests) {
+        for (let i = 0; i < usecases.length; i++) {
+          let usecase = usecases[i];
+          let expected = expects[i];
+
           setValue(results, testName + ":" + usecase.name, "expected", expected);
 
           let result = [];
@@ -126,11 +152,11 @@
     window.getEventListeners = addEventTargetRegistry(EventTarget.prototype);
   }
 
-  function SET_DEFAULT(){
+  function SET_DEFAULT() {
     addAddDefaultAction(Event.prototype);
   }
 
-  function NATIVE_DEFAULT_ACTION(){
+  function NATIVE_DEFAULT_ACTION() {
     window.nativeDefaultActions = nativeDefaultActions;
   }
 
@@ -173,44 +199,202 @@
   import {testStopProp, testStopProp2} from "./unitTests/testStopPropagation.js";
   import {testIsStopped} from "./unitTests/testIsStopped.js";
   import {testScopedPaths, testComposedPath} from "./unitTests/testPaths.js";
-  import {basicPropTest} from "./unitTests/testPropagationBasic.js";
-  import {asyncPropTest} from "./unitTests/testPropagationAsync.js";
-  import {mousedownNativeDefaultActions, mousedownNativeDefaultActionsNotWorking, formNativeDefaultActions} from "./unitTests/testNativeDefaultAction.js";
+  import {
+    propagationBubblesComposed,
+    propagationBubblesOnly,
+    propagationComposedOnly,
+    propagationNoComposedNoBubbles,
+    propagationBubblesComposedAsync,
+    propagationBubblesOnlyAsync,
+    propagationComposedOnlyAsync,
+    propagationNoComposedNoBubblesAsync,
+  } from "./unitTests/testPropagationBasic.js";
+  import {
+    mousedownNativeDefaultActions,
+    mousedownNativeDefaultActionsNotWorking,
+    formNativeDefaultActions
+  } from "./unitTests/testNativeDefaultAction.js";
   import {testDefaultActionBasic, testDefaultActionNative} from "./unitTests/testDefaultActionBasic.js";
 
-  import {useCases} from "./unitTests/useCase1.js";
-  import {selectUseCases, selectUseCasesError} from "./unitTests/useCaseSelectNativeDefaultActions.js";
-  import {formUseCases} from "./unitTests/useCaseFormNativeDefaultActions.js";
+  import {
+    useCases,
+    h1,
+    webcomp,
+    shadowSlotted,
+    simpleMatroschka,
+    shadowCompWithExcludedLightDomDiv,
+    nestedShadow
+  } from "./unitTests/useCase1.js";
+  import {
+    selectOption,
+    selectOptgroupOption,
+    selectDivOption,
+    selectOptgroupSpanOption
+  } from "./unitTests/useCaseSelectNativeDefaultActions.js";
+  import {formButtonReset} from "./unitTests/useCaseFormNativeDefaultActions.js";
 
-  import {useCasesDefaultActions, useCasesDefaultActions2} from "./unitTests/useCaseDefaultAction.js";
+  import {
+    useCaseClickAuxclickDiv,
+    useCaseClickWithDivCheckbox1,
+    useCaseClickWithDivCheckbox2
+  } from "./unitTests/useCaseDefaultAction.js";
 
   (async function () {
-    // await runTests(eventSystems, testBasic);
-    // await runTests(eventSystems, dynamicTest);
-    // await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
-    // await runTests(eventSystems, testOnce);
-    // await runTests(eventSystems, testUnstoppable);
-    // await runTests(eventSystems, cancelBubbleTests);
-    // await runTests(eventSystems, lastTest);
-    // await runTests(eventSystems, last2);
-    // await runTests(eventSystems, lastErrorsTest);
-    // await runTests(eventSystems, firstTest);
-    // await runTests(eventSystems, first2);
-    // await runTests(eventSystems, firstErrorsTest);
-    // await runTests(eventSystems, testStopProp);
-    // await runTests(eventSystems, testStopProp2);
+    await runTests(eventSystems, testBasic);
+    await runTests(eventSystems, dynamicTest);
+    await runTests(registers, testRegistry);      //todo this should run on usecases.. That would be more powerful..
+    await runTests(eventSystems, testOnce);
+    await runTests(eventSystems, testUnstoppable);
+    await runTests(eventSystems, cancelBubbleTests);
+    await runTests(eventSystems, lastTest);
+    await runTests(eventSystems, last2);
+    await runTests(eventSystems, lastErrorsTest);
+    await runTests(eventSystems, firstTest);
+    await runTests(eventSystems, first2);
+    await runTests(eventSystems, firstErrorsTest);
+    await runTests(eventSystems, testStopProp);
+    await runTests(eventSystems, testStopProp2);
     // // await runTests(eventSystems, testIsStopped);
-    // await runTests([SCOPED_PATHS], testScopedPaths, Object.values(useCases));
-    // await runTests([SCOPED_PATHS], testComposedPath, Object.values(useCases));
-    // await runTests(eventSystems, basicPropTest, Object.values(useCases));
-    // await runTests(eventSystems, asyncPropTest, Object.values(useCases));
 
-    await runTests([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, Object.values(selectUseCases));
-    await runTests([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActionsNotWorking, Object.values(selectUseCasesError));
-    await runTests([NATIVE_DEFAULT_ACTION], formNativeDefaultActions, Object.values(formUseCases));
 
-    await runTests([SET_DEFAULT], testDefaultActionBasic, Object.values(useCasesDefaultActions));
-    await runTests([SET_DEFAULT], testDefaultActionNative, Object.values(useCasesDefaultActions2));
+    await runTestUsecaseResult([SCOPED_PATHS], testScopedPaths, [h1,
+      webcomp,
+      shadowSlotted,
+      simpleMatroschka,
+      shadowCompWithExcludedLightDomDiv,
+      nestedShadow], ["", "", "", "", "", ""]);
+    await runTestUsecaseResult([SCOPED_PATHS], testComposedPath, [h1,
+      webcomp,
+      shadowSlotted,
+      simpleMatroschka,
+      shadowCompWithExcludedLightDomDiv,
+      nestedShadow], ["", "", "", "", "", ""]);
+    await runTestUsecaseResult(eventSystems, [propagationBubblesComposed], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 h1 ",
+        "SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp ",
+        "DIV SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp slot span slot-comp#root slot-comp div ",
+        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div slot slot span slot-comp#root slot-comp matroschka-comp#root matroschka-comp ",
+        "SHADOW-COMP DIV div shadow-comp ",
+        "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp b nested-shadow#root nested-shadow ",
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationComposedOnly], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 h1 ",
+        "SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp ",
+        "DIV SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp ",
+        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div ",
+        "SHADOW-COMP DIV div ",
+        "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp nested-shadow ",
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationBubblesOnly], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 h1 ",
+        "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
+        "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
+        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div slot slot span slot-comp#root slot-comp matroschka-comp#root matroschka-comp ",
+        "SHADOW-COMP DIV div shadow-comp ",
+        "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationNoComposedNoBubbles], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 h1 ",
+        "SHADOW-COMP#ROOT H1 h1 ",
+        "SHADOW-COMP#ROOT H1 h1 ",
+        "MATROSCHKA-COMP MATROSCHKA-COMP#ROOT SLOT-COMP SLOT-COMP#ROOT SPAN SLOT SLOT DIV div ",
+        "SHADOW-COMP DIV div ",
+        "SHADOW-COMP#ROOT H1 h1 "
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationBubblesComposedAsync], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 .h1 .",
+        "SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .",
+        "DIV .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .slot .span .slot-comp#root .slot-comp .div .",
+        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .slot .slot .span .slot-comp#root .slot-comp .matroschka-comp#root .matroschka-comp .",
+        "SHADOW-COMP .DIV .div .shadow-comp .",
+        "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .b .nested-shadow#root .nested-shadow .",
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationComposedOnlyAsync], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 .h1 .",
+        "SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .",
+        "DIV .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .",
+        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .",
+        "SHADOW-COMP .DIV .div .",
+        "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .nested-shadow .",
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationBubblesOnlyAsync], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 .h1 .",
+        "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
+        "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
+        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .slot .slot .span .slot-comp#root .slot-comp .matroschka-comp#root .matroschka-comp .",
+        "SHADOW-COMP .DIV .div .shadow-comp .",
+        "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
+      ]);
+    await runTestUsecaseResult(eventSystems, [propagationNoComposedNoBubblesAsync], [h1,
+        webcomp,
+        shadowSlotted,
+        simpleMatroschka,
+        shadowCompWithExcludedLightDomDiv,
+        nestedShadow],
+      [
+        "H1 .h1 .",
+        "SHADOW-COMP#ROOT .H1 .h1 .",
+        "SHADOW-COMP#ROOT .H1 .h1 .",
+        "MATROSCHKA-COMP .MATROSCHKA-COMP#ROOT .SLOT-COMP .SLOT-COMP#ROOT .SPAN .SLOT .SLOT .DIV .div .",
+        "SHADOW-COMP .DIV .div .",
+        "SHADOW-COMP#ROOT .H1 .h1 ."
+      ]);
+
+    await runTestUsecaseResult([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, [selectOption,
+      selectOptgroupOption], ["2", "2"]);
+    await runTestUsecaseResult([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActionsNotWorking, [selectDivOption,
+        selectOptgroupSpanOption]
+      , ["1", "1"]);
+    await runTestUsecaseResult([NATIVE_DEFAULT_ACTION], formNativeDefaultActions, [formButtonReset], ["1"]);
+
+    await runTestUsecaseResult([SET_DEFAULT], testDefaultActionBasic, [useCaseClickAuxclickDiv], ["1click2defaultActionclickx1click2defaultActionclicky"]);
+    await runTestUsecaseResult([SET_DEFAULT], testDefaultActionNative, [
+      useCaseClickWithDivCheckbox1
+      ,
+      useCaseClickWithDivCheckbox2
+    ], ["clickdefault-action", "clickinput"]);
   })();
   //todo
   // 0. implement the systems using dependencies.

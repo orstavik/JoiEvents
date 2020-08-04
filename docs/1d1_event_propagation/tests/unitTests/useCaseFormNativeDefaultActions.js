@@ -19,14 +19,9 @@ function makeFormBranch() {
 
 //form
 //  button[type=reset]
-function formButtonReset() {
+export function formButtonReset() {
   const {form, button} = makeFormBranch();
   const usecase = [button, form];
   Object.freeze(usecase);
   return usecase;
 }
-
-export const formUseCases = {
-  formButtonReset
-};
-Object.freeze(formUseCases);

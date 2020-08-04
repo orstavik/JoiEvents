@@ -6,7 +6,7 @@
 //    <option3>
 //    <span>
 //      <option4>
-function makeSelectBranch() {
+export function makeSelectBranch() {
   const select = document.createElement("select");
   const option1 = document.createElement("option");
   const div = document.createElement("div");
@@ -27,7 +27,7 @@ function makeSelectBranch() {
 
 //select
 //  option
-function selectOption() {
+export function selectOption() {
   const {select, option1} = makeSelectBranch();
   const usecase = [option1, select];
   Object.freeze(usecase);
@@ -37,7 +37,7 @@ function selectOption() {
 //select
 //  div
 //    option
-function selectDivOption() {
+export function selectDivOption() {
   const {select, div, option2} = makeSelectBranch();
   const usecase = [option2, div, select];
   Object.freeze(usecase);
@@ -47,7 +47,7 @@ function selectDivOption() {
 //select
 //  optgroup
 //    option
-function selectOptgroupOption() {
+export function selectOptgroupOption() {
   const {select, option3, optgroup} = makeSelectBranch();
   const usecase = [option3, optgroup, select];
   Object.freeze(usecase);
@@ -58,7 +58,7 @@ function selectOptgroupOption() {
 //  optgroup
 //    span
 //      option
-function selectOptgroupSpanOption() {
+export function selectOptgroupSpanOption() {
   const {select, option4, optgroup, span} = makeSelectBranch();
   const usecase = [option4, span, optgroup, select];
   Object.freeze(usecase);

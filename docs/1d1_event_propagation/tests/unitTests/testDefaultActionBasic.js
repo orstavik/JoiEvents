@@ -19,14 +19,7 @@ export const testDefaultActionBasic = [{
     target.click(); //sync dispatch
     res.push("y");  //should be "requestClickrequestClick"
 
-  },
-  expect: "1click2defaultActionclickx1click2defaultActionclicky" //function(usecase) or string
-}, {
-  name: "default action 1",
-  fun: function (res, usecase) {
-    res.push(1);
-  },
-  expect: "1" //function(usecase) or string
+  }
 }];
 
 export const testDefaultActionNative = [{
@@ -47,12 +40,5 @@ export const testDefaultActionNative = [{
     root.addEventListener("default-action", pushEventType);
     root.addEventListener("input", pushEventType);
     target.click(); //sync dispatch
-  },
-  expect: function(usecase){
-    const dom = usecase();
-    const flatDom = dom.flat(1000);
-    if(flatDom[0] instanceof HTMLInputElement)
-      return "clickinput";
-    return "clickdefault-action";
   }
 }];

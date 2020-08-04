@@ -56,7 +56,7 @@ customElements.define("matroschka-comp", MatroschkaComp);
 //  </slot-comp>
 //</div>
 
-function shadowSlotted() {
+export function shadowSlotted() {
   const div = document.createElement("div");
   const slotComp = document.createElement("slot-comp");
   const shadowComp = document.createElement("shadow-comp");
@@ -103,7 +103,7 @@ function shadowSlotted() {
 //  <div></div>
 //</shadow-comp>
 
-function shadowCompWithExcludedLightDomDiv() {
+export function shadowCompWithExcludedLightDomDiv() {
   const shadowComp = document.createElement("shadow-comp");
   const div = document.createElement("div");
   shadowComp.appendChild(div);
@@ -115,7 +115,7 @@ function shadowCompWithExcludedLightDomDiv() {
   return usecase;
 }
 
-function simpleShadowWithExcludedDivNotInScopedPath() {
+export function simpleShadowWithExcludedDivNotInScopedPath() {
   const shadowComp = document.createElement("shadow-comp");
   const div = document.createElement("div");
   shadowComp.appendChild(div);
@@ -157,7 +157,7 @@ function simpleShadowWithExcludedDivNotInScopedPath() {
 //                  |                |    <slot>
 //  <div>           |                |
 
-function simpleMatroschka() {
+export function simpleMatroschka() {
   const matroshcka = document.createElement("matroschka-comp");
   const div = document.createElement("div");
   matroshcka.appendChild(div);
@@ -206,7 +206,7 @@ function simpleMatroschka() {
 //                  |                  |#shadowRoot
 //                  |                  |  <h1>
 
-function nestedShadow() {
+export function nestedShadow() {
   const nestedShadow = document.createElement("nested-shadow");
   const nestedRoot = nestedShadow.shadowRoot;
   const nestedB = nestedRoot.children[0];
@@ -229,7 +229,7 @@ function nestedShadow() {
   return usecase;
 }
 
-function h1() {
+export function h1() {
   const usecase = [
     document.createElement("h1")
   ];
@@ -237,7 +237,7 @@ function h1() {
   return usecase;
 }
 
-function webcomp() {
+export function webcomp() {
   const webcomp = document.createElement("shadow-comp");
   const usecase = [
     [
@@ -295,7 +295,8 @@ export const useCases = {
 };
 Object.freeze(useCases, true);
 
-export function cleanDom() {//todo replace this one with the useCases
+//todo replace all use of this function with one or more usecases
+export function cleanDom() {
   const div = document.createElement("div");
   const slotComp = document.createElement("slot-comp");
   const shadowComp = document.createElement("shadow-comp");
