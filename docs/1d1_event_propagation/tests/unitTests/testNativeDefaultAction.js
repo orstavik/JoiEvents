@@ -9,7 +9,7 @@ function spoofIsTrusted(e) {
   });
 }
 
-export const mousedownNativeDefaultActions = [{
+export const mousedownNativeDefaultActions = {
   name: "mousedown native default actions working",
   fun: function (res, usecase) {
     const dom = usecase();
@@ -24,9 +24,9 @@ export const mousedownNativeDefaultActions = [{
     target.dispatchEvent(new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true}));
   },
   expect: "2"
-}];
+};
 
-export const mousedownNativeDefaultActionsNotWorking = [{
+export const mousedownNativeDefaultActionsNotWorking = {
   name: "mousedown native default actions wrong",
   fun: function (res, usecase) {
     const dom = usecase();
@@ -42,9 +42,9 @@ export const mousedownNativeDefaultActionsNotWorking = [{
     target.dispatchEvent(new MouseEvent("mousedown", {button: 0, composed: true, bubbles: true}));
   },
   expect: "1"
-}];
+};
 
-export const formNativeDefaultActions = [{
+export const formNativeDefaultActions = {
   name: "click on form native default actions working",
   fun: function (res, usecase) {
     const dom = usecase();
@@ -59,4 +59,4 @@ export const formNativeDefaultActions = [{
     target.click();
   },
   expect: "1"
-}];
+};

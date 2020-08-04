@@ -1,4 +1,4 @@
-export const testDefaultActionBasic = [{
+export const testDefaultActionBasic = {
   name: "setDefault 1",
   fun: function (res, usecase) {
     const dom = usecase();
@@ -20,9 +20,9 @@ export const testDefaultActionBasic = [{
     res.push("y");  //should be "requestClickrequestClick"
 
   }
-}];
+};
 
-export const testDefaultActionNative = [{
+export const testDefaultActionNative = {
   name: "setDefault native/non-native",
   fun: function (res, usecase) {
     //clean the hash.
@@ -41,4 +41,4 @@ export const testDefaultActionNative = [{
     root.addEventListener("input", pushEventType);
     target.click(); //sync dispatch
   }
-}];
+};

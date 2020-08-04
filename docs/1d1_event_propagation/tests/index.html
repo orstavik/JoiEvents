@@ -92,27 +92,22 @@
     });
   }
 
-  async function runTestUsecaseResult(eventSystems, tests, usecases, expects) {
-    if (!usecases) {
-      usecases = [{name: undefined}];
-      expects = [{name: undefined}];
-    }
+  async function runTestUsecaseResult(eventSystems, test, usecases, expects) {
+    const {name: testName, fun} = test;
     const results = {};
     for (let system of eventSystems) {
       system();
-      for (const {name: testName, fun, expect} of tests) {
-        for (let i = 0; i < usecases.length; i++) {
-          let usecase = usecases[i];
-          let expected = expects[i];
+      for (let i = 0; i < usecases.length; i++) {
+        let usecase = usecases[i];
+        let expected = expects[i];
 
-          setValue(results, testName + ":" + usecase.name, "expected", expected);
+        setValue(results, testName + ":" + usecase.name, "expected", expected);
 
-          let result = [];
-          fun(result, usecase);
-          await nextTick2(() => 1);  //just wait a t1ck, for any queued propagation to complete
-          setValue(results, testName + ":" + usecase.name, system.name, result.join(""));
-          await nextTick2(() => 1);  //just wait a t0ck, for any queued tasks of the propagation to complete
-        }
+        let result = [];
+        fun(result, usecase);
+        await nextTick2(() => 1);  //just wait a t1ck, for any queued propagation to complete
+        setValue(results, testName + ":" + usecase.name, system.name, result.join(""));
+        await nextTick2(() => 1);  //just wait a t0ck, for any queued tasks of the propagation to complete
       }
       resetSystem();
     }
@@ -217,7 +212,6 @@
   import {testDefaultActionBasic, testDefaultActionNative} from "./unitTests/testDefaultActionBasic.js";
 
   import {
-    useCases,
     h1,
     webcomp,
     shadowSlotted,
@@ -269,7 +263,7 @@
       simpleMatroschka,
       shadowCompWithExcludedLightDomDiv,
       nestedShadow], ["", "", "", "", "", ""]);
-    await runTestUsecaseResult(eventSystems, [propagationBubblesComposed], [h1,
+    await runTestUsecaseResult(eventSystems, propagationBubblesComposed, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -283,7 +277,7 @@
         "SHADOW-COMP DIV div shadow-comp ",
         "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp#root shadow-comp b nested-shadow#root nested-shadow ",
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationComposedOnly], [h1,
+    await runTestUsecaseResult(eventSystems, propagationComposedOnly, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -297,7 +291,7 @@
         "SHADOW-COMP DIV div ",
         "NESTED-SHADOW NESTED-SHADOW#ROOT B SHADOW-COMP SHADOW-COMP#ROOT H1 h1 shadow-comp nested-shadow ",
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationBubblesOnly], [h1,
+    await runTestUsecaseResult(eventSystems, propagationBubblesOnly, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -311,7 +305,7 @@
         "SHADOW-COMP DIV div shadow-comp ",
         "SHADOW-COMP#ROOT H1 h1 shadow-comp#root ",
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationNoComposedNoBubbles], [h1,
+    await runTestUsecaseResult(eventSystems, propagationNoComposedNoBubbles, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -325,7 +319,7 @@
         "SHADOW-COMP DIV div ",
         "SHADOW-COMP#ROOT H1 h1 "
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationBubblesComposedAsync], [h1,
+    await runTestUsecaseResult(eventSystems, propagationBubblesComposedAsync, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -339,7 +333,7 @@
         "SHADOW-COMP .DIV .div .shadow-comp .",
         "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .shadow-comp .b .nested-shadow#root .nested-shadow .",
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationComposedOnlyAsync], [h1,
+    await runTestUsecaseResult(eventSystems, propagationComposedOnlyAsync, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -353,7 +347,7 @@
         "SHADOW-COMP .DIV .div .",
         "NESTED-SHADOW .NESTED-SHADOW#ROOT .B .SHADOW-COMP .SHADOW-COMP#ROOT .H1 .h1 .shadow-comp .nested-shadow .",
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationBubblesOnlyAsync], [h1,
+    await runTestUsecaseResult(eventSystems, propagationBubblesOnlyAsync, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -367,7 +361,7 @@
         "SHADOW-COMP .DIV .div .shadow-comp .",
         "SHADOW-COMP#ROOT .H1 .h1 .shadow-comp#root .",
       ]);
-    await runTestUsecaseResult(eventSystems, [propagationNoComposedNoBubblesAsync], [h1,
+    await runTestUsecaseResult(eventSystems, propagationNoComposedNoBubblesAsync, [h1,
         webcomp,
         shadowSlotted,
         simpleMatroschka,
@@ -391,8 +385,7 @@
 
     await runTestUsecaseResult([SET_DEFAULT], testDefaultActionBasic, [useCaseClickAuxclickDiv], ["1click2defaultActionclickx1click2defaultActionclicky"]);
     await runTestUsecaseResult([SET_DEFAULT], testDefaultActionNative, [
-      useCaseClickWithDivCheckbox1
-      ,
+      useCaseClickWithDivCheckbox1,
       useCaseClickWithDivCheckbox2
     ], ["clickdefault-action", "clickinput"]);
   })();

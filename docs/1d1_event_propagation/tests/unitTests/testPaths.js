@@ -72,14 +72,12 @@ function composedPathTest(res, usecase) {
   }
 }
 
-export const testScopedPaths = [{
+export const testScopedPaths = {
   name: "scopedPathsTest",
-  fun: scopedPathsTest,
-  expect: ""
-}];
+  fun: scopedPathsTest
+};
 
-export const testComposedPath = [{
+export const testComposedPath = {
   name: "composedPaths",
   fun: composedPathTest,
-  expect: ""
-}];
+};
