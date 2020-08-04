@@ -10,7 +10,7 @@ function spoofIsTrusted(e) {
 }
 
 function printDefaultActions(actions){
-  return actions.map(da=> da.element.tagName +":" +da.task.name + (da.additive ? "+" : "-")).join(" ");
+  return actions.map(da=> da.index + da.element.tagName +":" +da.task.name + (da.additive ? "+" : "-")).join(" ");
 }
 
 function dispatchEventAndReadNativeDefaultActions(event, usecase, res) {
