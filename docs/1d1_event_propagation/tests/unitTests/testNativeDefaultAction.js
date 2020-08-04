@@ -9,6 +9,10 @@ function spoofIsTrusted(e) {
   });
 }
 
+function printDefaultActions(actions){
+  return actions.map(da=> da.element.tagName +":" +da.task.name + (da.additive ? "+" : "-")).join(" ");
+}
+
 function dispatchEventAndReadNativeDefaultActions(event, usecase, res) {
   const dom = usecase();
   const flat = dom.flat(1000);
@@ -17,8 +21,9 @@ function dispatchEventAndReadNativeDefaultActions(event, usecase, res) {
 
   origin.addEventListener(event.type, function (e) {
     const spoofE = spoofIsTrusted(e);
-    const nativeActions = nativeDefaultActions(spoofE);
-    res.push(nativeActions?.length);
+    const actions = nativeDefaultActions(spoofE);
+    const str = printDefaultActions(actions);
+    res.push(str);
   });
   target.dispatchEvent(event);
 }

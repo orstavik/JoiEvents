@@ -337,13 +337,13 @@
       [nestedShadow, "SHADOW-COMP#ROOT .H1 .h1 ."]]);
 
     await runTest2([NATIVE_DEFAULT_ACTION], mousedownNativeDefaultActions, [
-      [selectOption, "2"],
-      [selectOptgroupOption, "2"],
-      [selectDivOption, "1"],
-      [selectOptgroupSpanOption, "1"]
+      [selectOption, "SELECT:bound requestOptionSelect- SELECT:bound focus+"],
+      [selectOptgroupOption, "SELECT:bound requestOptionSelect- SELECT:bound focus+"],
+      [selectDivOption, "SELECT:bound focus+"],
+      [selectOptgroupSpanOption, "SELECT:bound focus+"]
     ]);
     await runTest2([NATIVE_DEFAULT_ACTION], clickNativeDefaultActions, [
-      [formButtonReset, "1"]
+      [formButtonReset, "FORM:bound reset-"]
     ]);
 
     await runTest2([SET_DEFAULT], testDefaultActionBasic, [
