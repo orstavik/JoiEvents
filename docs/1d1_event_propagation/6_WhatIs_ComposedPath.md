@@ -189,11 +189,7 @@ function dispatchEvent(target, event) {
 </script>
 ```
 
-## Correct implementation
-
-Questions:
-1. What happens if an event is dispatched on an element that is under another element that has a shadowDOM that doesn't have a slot element? Or, if the element has the wrong slot=name? Does the propagation path include the host node all? or does it go up to the host node that didn't connect it to its shadowDOM? todo test this with ratechange on an audio element added under a web comp with a different shadowDOM.
-2.  
+## Implementation (with slots, but without focus cutoff) 
 
 ```javascript
 function getComposedPath(target, composed) {
@@ -222,6 +218,44 @@ function getComposedPath(target, composed) {
 }
 ``` 
 
+What happens if an event is dispatched on an element that is under another element that has a shadowDOM that doesn't have a slot element? 
+
+Or, if the element has the wrong slot attribute `slot=name`?
+
+In both instances the shadowDOM of the other element is just ignored, it is as if the element doesn't have a shadowDOM. The situation then becomes that the element are not visible in the visible DOM (they are hidden, parallel dimensions). 
+
+# Calculating the composedPath with a cutoff document 
+
+`focusin`, `focusout`, `focus`, and `blur` are special events. Even though they are `composed: true`, they can often be "cutoff at the top". They only propagate in the document whose `.activeElement` changes. That means that if the focus change within the `shadowRoot` of a web component, then the focus events will only propagate upto and including that `shadowRoot`. This in turn means that the function that calculates the composed path needs to be able to tackle a cutoff point, specified as a `Document` node.
+
+```javascript
+function getComposedPath(target, composed, cutoffDocumentNode) {
+  const path = [];
+  while (true) {
+    path.push(target);
+    if(target === cutoffDocumentNode)           //see here
+      break;                                    //see here
+    const shadowRoot = target.parentNode.shadowRoot;
+    if (shadowRoot){
+      const slotName = target.getAttribute("slot")|| "";
+      target = shadowRoot.querySelector(!slotName? "slot:not([name]), slot[name='']":"slot[name="+slotName+"]");
+      continue;
+    }
+    if (target.parentNode) {
+      target = target.parentNode;
+    } else if (target.host) {
+      if (!composed)
+        return path;
+      target = target.host;
+    } else if (target.defaultView) {
+      target = target.defaultView;
+    } else {
+      break;
+    }
+  }
+  return path;
+}
+``` 
 
 ## References
 
