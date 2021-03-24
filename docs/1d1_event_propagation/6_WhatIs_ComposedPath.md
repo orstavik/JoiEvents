@@ -47,7 +47,7 @@ Result:
 2. However, as the shadowRoot is `closed`. As the event propagates outside this closed shadowRoot, the  `target` of the event is replaced with the `host` node of the web component, ie. the `<hello-sunshine>` element.
 3. The second `click` event has `composed: false` (the default value). This event *does not propagate* outside/above the shadowRoot of the `<hello-sunshine>` element, and therefore only reaches the first event listener inside the web component. 
 
-## Implementation
+## Implementation (without slotted paths and focus cutoff)
 
 With shadowDOM we need to make *two* adjustments:
 1. The algorithm for finding propagationPath must include host nodes *and* a check of the event's composed property to evaluate if the `window` or a `shadowRoot` should be the origin of propagation.
@@ -188,6 +188,40 @@ function dispatchEvent(target, event) {
   dispatchEvent(sunshineTarget, new MouseEvent("click", {bubbles: true}));
 </script>
 ```
+
+## Correct implementation
+
+Questions:
+1. What happens if an event is dispatched on an element that is under another element that has a shadowDOM that doesn't have a slot element? Or, if the element has the wrong slot=name? Does the propagation path include the host node all? or does it go up to the host node that didn't connect it to its shadowDOM? todo test this with ratechange on an audio element added under a web comp with a different shadowDOM.
+2.  
+
+```javascript
+function getComposedPath(target, composed) {
+  const path = [];
+  while (true) {
+    path.push(target);
+    const shadowRoot = target.parentNode.shadowRoot;
+    if (shadowRoot){
+      const slotName = target.getAttribute("slot")|| "";
+      target = shadowRoot.querySelector(!slotName? "slot:not([name]), slot[name='']":"slot[name="+slotName+"]");
+      continue;
+    }
+    if (target.parentNode) {
+      target = target.parentNode;
+    } else if (target.host) {
+      if (!composed)
+        return path;
+      target = target.host;
+    } else if (target.defaultView) {
+      target = target.defaultView;
+    } else {
+      break;
+    }
+  }
+  return path;
+}
+``` 
+
 
 ## References
 
