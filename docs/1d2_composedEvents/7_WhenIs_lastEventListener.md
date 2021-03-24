@@ -17,7 +17,7 @@ function lastPropagationNode(event) {
       return top;
     top = path[i];
   }
-  return last;
+  return top;
 }
 //todo untested
 ```
