@@ -1,0 +1,225 @@
+<script>
+
+  function mergeDefaultActions(clazz) {
+    if (!clazz)
+      return undefined;
+    const superDefaultActions = mergeDefaultActions(Object.getPrototypeOf(clazz));
+    const myDefaultActions = clazz.defaultActions;
+    if (!superDefaultActions && !myDefaultActions)
+      return undefined;
+    if (!superDefaultActions)
+      return myDefaultActions;
+    if (!myDefaultActions)
+      return superDefaultActions;
+    const defaultActions = Object.assign({}, myDefaultActions);
+    for (let [type, das] of Object.entries(superDefaultActions))
+      defaultActions[type] = defaultActions[type] ? [...defaultActions[type], ...das] : [...das];
+    return defaultActions;
+  }
+
+  const defineOG = CustomElementRegistry.prototype.define;
+
+  CustomElementRegistry.prototype.define = function (name, clazz, options) {
+    const defaultActions = mergeDefaultActions(clazz);
+    if (defaultActions) {
+      clazz = defaultActionMixin(clazz);
+      Object.defineProperty(clazz, "defaultActions", {
+        get: function () {
+          return defaultActions;
+        }
+      });
+    }
+    defineOG.call(this, name, clazz, options);
+  }
+
+  //this for bubble/at_target phase only
+  //target => "eventName" => [target, type, cb, options]
+  const targetTypeLast = new WeakMap();
+
+  //return false, if already there, true if not and setLast is successful
+  function setLast(target, type, cb, options) {
+    let typeToLast = targetTypeLast.get(target);
+    !typeToLast && targetTypeLast.set(target, typeToLast = {});
+    if (type in typeToLast) return false;
+    return typeToLast[type] = [target, type, cb, options], true;
+  }
+
+  function getLast(target, type) {
+    const typeToLast = targetTypeLast.get(target);
+    return typeToLast ? typeToLast[type] : undefined;
+  }
+
+  const addEventListenerOG = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (type, cb, options) {
+    addEventListenerOG.call(this, type, cb, options);
+    const last = getLast(this, type);
+    if (!last) return;
+    EventTarget.prototype.removeEventListener.call(...last);
+    addEventListenerOG.call(...last);
+  }
+
+  function addLastEventListener(target, type, cb, options) {
+    const didSetLast = setLast(target, type, cb, options);
+    didSetLast && addEventListenerOG.call(target, type, cb, options);
+  }
+
+
+  function lastPropagationNode(event) {
+    const path = event.composedPath();
+    if (event.bubbles) return path[path.length - 1];
+    if (!event.composed) return path[0];
+    //non-bubbling and composed
+    //We iterate top-down until we either hit a shadowRoot, or the bottom
+    let top = path[path.length - 1];
+    for (let i = path.length - 2; i >= 0; i--) {
+      if (path[i] instanceof ShadowRoot)
+        return top;
+      top = path[i];
+    }
+    return top;
+  }
+
+  const eventToLowestTarget = new WeakMap();
+
+  //todo not tested
+  function zipComposedPaths(A, B) {
+    const res = [];
+    let i = A.length - 1, j = B.length - 1;
+    while (i >= 0 && j >= 0) {
+      const a = A[i], b = B[j];
+      if (a === b) {
+        res.push(a);
+        i--;
+        j--;
+      } else if (b instanceof ShadowRoot) {
+        while (j >= 0 && b !== a)
+          res.push(B[j--]);
+      } else if (a instanceof ShadowRoot) {
+        while (i >= 0 && a !== b)
+          res.push(A[i--]);
+      }
+    }
+    while (i >= 0) res.push(A[i--]);
+    while (j >= 0) res.push(B[j--]);
+    return res;
+  }
+
+  function cacheComposedPath(e) {
+    const cachedComposedPath = eventToLowestTarget.get(e);
+    const nowComposedPath = e.composedPath();
+    if (!cachedComposedPath) {   //first time for this event
+      eventsWithCompletedDefaultActions.delete(e);  //in case the event is reused, we also clear any
+      eventToLowestTarget.set(e, nowComposedPath);
+    } else
+      eventToLowestTarget.set(e, zipComposedPaths(nowComposedPath, cachedComposedPath));
+  }
+
+  function captureSniffer(e) {
+    cacheComposedPath(e);
+    const lastTarget = lastPropagationNode(e);
+    if (lastTarget === this)
+      return;
+    addLastEventListener(lastTarget, e.type, runDefaultActions, {once: true});
+  }
+
+  function bubbleSniffer(e) {
+    const lastTarget = lastPropagationNode(e);
+    if (lastTarget !== this)
+      return;
+    runDefaultActions.call(this, e);
+  }
+
+  function defaultActionMixin(Base) {
+    return class DefaultActionElement extends Base {
+      constructor() {
+        super();
+        const das = Object.getPrototypeOf(this).constructor.defaultActions;
+        if (!das)
+          return;
+        for (let eventType of Object.keys(das)) {
+          this.addEventListener(eventType, captureSniffer, true);
+          addLastEventListener(this, eventType, bubbleSniffer);
+        }
+      }
+    }
+  }
+
+  function getComposedPath(target, composed, cutoffDocumentNode) {
+    const path = [];
+    while (true) {
+      path.push(target);
+      if (target === cutoffDocumentNode)           //see here
+        break;                                    //see here
+      const shadowRoot = target.parentNode?.shadowRoot; //todo bug, update the doc
+      if (shadowRoot) {
+        const slotName = target.getAttribute("slot") || "";
+        target = shadowRoot.querySelector(!slotName ? "slot:not([name]), slot[name='']" : "slot[name=" + slotName + "]");
+        continue;
+      }
+      if (target.parentNode) {
+        target = target.parentNode;
+      } else if (target.host) {
+        if (!composed)
+          return path;
+        target = target.host;
+      } else if (target.defaultView) {
+        target = target.defaultView;
+      } else {
+        break;
+      }
+    }
+    return path;
+  }
+
+  const eventsWithCompletedDefaultActions = new WeakSet();
+
+  function runDefaultActions(e) {
+    if (eventsWithCompletedDefaultActions.has(e)) //another listen has finished the job.
+      return;
+    //this is the event node
+    const deepestComposedEventPath = eventToLowestTarget.get(e);
+    const postPropagationPath = getComposedPath(deepestComposedEventPath[0], e.composed, deepestComposedEventPath[deepestComposedEventPath.length - 1]);
+    //we can calculate cutOff target inside the getComposedPath for focusin/focusout events.
+    let preventableHasRun;
+    const defaultPrevented = e.defaultPrevented;  //these two properties are locked before the iteration of events.
+    const type = e.type;
+
+    for (let target of postPropagationPath) {         //todo .reverse() if the innerTarget is not postPropPath[0]
+      const das = Object.getPrototypeOf(target).constructor.defaultActions;
+      if (!das) continue;
+      const eventDas = das[type];
+      if (!eventDas) continue;
+      for (let da of eventDas) {
+        if (da.preventable && defaultPrevented) continue;
+        if (da.preventable && preventableHasRun && !target.hasAttribute("additive")) continue;
+        try {
+          da.fun.call(target, e);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+    eventsWithCompletedDefaultActions.add(e);
+    eventToLowestTarget.delete(e);
+  }
+</script>
+
+<script>
+  class RedClick extends HTMLElement {
+
+    static get defaultActions() {
+      return {
+        "click": [{preventable: true, fun: RedClick.prototype.onClick}]
+      };
+    }
+
+    onClick() {
+      this.style.background = 'red';
+    }
+  }
+
+  customElements.define('red-click', RedClick);
+</script>
+
+<red-click>hello sunshine</red-click>
+
