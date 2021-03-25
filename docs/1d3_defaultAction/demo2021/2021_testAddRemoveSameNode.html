@@ -1,0 +1,267 @@
+1. make an md for how to extend the customElements.define
+<script>
+
+  function mergeDefaultActions(clazz) {
+    const superDefaultActions = mergeDefaultActions(Object.getPrototypeOf(clazz));
+    const myDefaultActions = clazz.defaultActions;
+    if (!superDefaultActions && !myDefaultActions)
+      return undefined;
+    if (!superDefaultActions)
+      return myDefaultActions;
+    if (!myDefaultActions)
+      return superDefaultActions;
+    const defaultActions = Object.assign({}, myDefaultActions);
+    for (let [type, das] of Object.entries(superDefaultActions))
+      defaultActions[type] = defaultActions[type] ? [...defaultActions[type], ...das] : [...das];
+    return defaultActions;
+  }
+
+
+  const defineOG = customElements.define;
+
+  customElements.define = function (name, clazz, options) {
+    const defaultActions = mergeDefaultActions(clazz);
+    if (defaultActions) {
+      clazz = defaultActionMixin(clazz);
+      Object.defineProperty(clazz, "defaultActions", {
+        get: function () {
+          return defaultActions;
+        }
+      });
+    }
+    defineOG(name, clazz, options);
+  }
+</script>
+
+2. make an md about how to add postPropagation callback on an element. we need two sniffers, and addLastEventListener.
+
+<script>
+  //this for bubble/at_target phase only
+  //target => "eventName" => [target, type, cb, options]
+  const targetTypeLast = new WeakMap();
+
+  //return false, if already there, true if not and setLast is successful
+  function setLast(target, type, cb, options) {
+    let typeToLast = targetTypeLast.get(target);
+    !typeToLast && targetTypeLast.set(target, typeToLast = {});
+    if (type in typeToLast) return false;
+    return typeToLast[type] = [target, type, cb, options], true;
+  }
+
+  function getLast(target, type) {
+    const typeToLast = targetTypeLast.get(target);
+    return typeToLast ? typeToLast[type] : undefined;
+  }
+
+  const addEventListenerOG = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (type, cb, options) {
+    addEventListenerOG.call(this, type, cb, options);
+    const last = getLast(this, type);
+    EventTarget.prototype.removeEventListener.call(...last);
+    addEventListenerOG.call(...last);
+  }
+
+  function addLastEventListener(target, type, cb, options) {
+    const didSetLast = setLast(target, type, cb, options);
+    didSetLast && addEventListenerOG.call(target, type, cb, options);
+  }
+
+
+  function lastPropagationNode(event) {
+    const path = event.composedPath();
+    if (event.bubbles) return path[path.length - 1];
+    if (!event.composed) return path[0];
+    //non-bubbling and composed
+    //We iterate top-down until we either hit a shadowRoot, or the bottom
+    let top = path[path.length - 1];
+    for (let i = path.length - 2; i >= 0; i--) {
+      if (path[i] instanceof ShadowRoot)
+        return top;
+      top = path[i];
+    }
+    return top;
+  }
+
+  const eventToLowestTarget = new WeakMap();
+
+  //todo not tested
+  function zipComposedPaths(A, B) {
+    const res = [];
+    let i = A.length - 1, j = B.length - 1;
+    while (i >= 0 && j >= 0) {
+      const a = A[i], b = B[j];
+      if (a === b) {
+        res.push(a);
+        i--;
+        j--;
+      } else if (b instanceof ShadowRoot) {
+        while (j >= 0 && b !== a)
+          res.push(B[j--]);
+      } else if (a instanceof ShadowRoot) {
+        while (i >= 0 && a !== b)
+          res.push(A[i--]);
+      }
+    }
+    while (i >= 0) res.push(A[i--]);
+    while (j >= 0) res.push(B[j--]);
+    return res;
+  }
+
+  function cacheComposedPath(e) {
+    const cachedComposedPath = eventToLowestTarget.get(e);
+    const nowComposedPath = e.composedPath();
+    if (!cachedComposedPath) {   //first time for this event
+      eventsWithCompletedDefaultActions.remove(e);  //in case the event is reused, we also clear any
+      eventToLowestTarget.set(e, nowComposedPath);
+    } else
+      eventToLowestTarget.set(e, zipComposedPaths(nowComposedPath, cachedComposedPath));
+  }
+
+  function captureSniffer(e) {
+    cacheComposedPath(e);
+    const lastTarget = lastPropagationNode(e);
+    if (lastTarget === this)
+      return;
+    addLastEventListener(lastTarget, e.type, runDefaultActions, {once: true});
+  }
+
+  function bubbleSniffer(e) {
+    const lastTarget = lastPropagationNode(e);
+    if (lastTarget !== this)
+      return;
+    runDefaultActions.call(this, e);
+  }
+
+  function defaultActionMixin(Base) {
+    return class DefaultActionElement extends Base {
+      constructor() {
+        super();
+        const das = Object.getPrototypeOf(target).defaultActions;
+        if (das)
+          return;
+        for (let eventType of Object.keys(das)) {
+          this.addEventListener(eventType, captureSniffer, true);
+          addLastEventListener(this, eventType, bubbleSniffer);
+        }
+      }
+    }
+  }
+</script>
+
+3. then make the md about the defaultAction function. Assumption: the function is the last eventlistener.
+It then a) finds a new composedPath. b) make the list of default actions (bottom-up) using the static defaultAction on each element (and event.defaultPrevented), c). run each DA inside try catch (bottom up).
+
+<script>
+  const eventsWithCompletedDefaultActions = new WeakSet();
+
+  function runDefaultActions(e) {
+    if (eventsWithCompletedDefaultActions.has(e)) //another listen has finished the job.
+      return;
+    //this is the event node
+    const deepestComposedEventPath = eventToLowestTarget.get(e);
+    const postPropagationPath = getComposedPath(deepestComposedEventPath[0], e, e.composed, cutOffTarget);
+    //we can calculate cutOff target inside the getComposedPath for focusin/focusout events.
+    let preventableHasRun;
+    const defaultPrevented = e.defaultPrevented;  //these two properties are locked before the iteration of events.
+    const type = e.type;
+
+    for (let target of postPropagationPath) {         //todo .reverse() if the innerTarget is not postPropPath[0]
+      const das = Object.getPrototypeOf(target).defaultActions;
+      if (!das) continue;
+      const eventDas = das[type];
+      if (!eventDas) continue;
+      for (let da of eventDas) {
+        if (da.preventable && defaultPrevented) continue;
+        if (da.preventable && preventableHasRun && !target.hasAttribute("additive")) continue;
+        try {
+          da.fun.call(target, e);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+    eventsWithCompletedDefaultActions.add(e);
+    eventToLowestTarget.remove(e);
+  }
+</script>
+
+Ok.
+we need to add 3! event listeners for the defaultAction sniffer.
+1. capture sniffer
+if composedPath[0] is the same as the currentTarget, then
+2. bubble sniffer
+if the target is the current event, and if the  only adds a dynamic one at the target of the current event. If this one runs
+2. bubble phase
+
+//to check for static props on a class, use
+classObj.defaultActions and then get the super of that class using Object.getPrototypeOf(type).
+
+When customElements.define is called, then we simply find all the defaultActions, for all super classes up to HTMLElement, and
+make a new static method for those.
+
+Then, we add the function for listing those arguments:
+Object.getPrototypeOf(this).constructor.defaultActions
+
+//to check for object methods, then
+classObj.prototype.methodName. That is simple.
+
+
+1. we need a different structure for defaultActions on non-bubbling and bubbling events. This cannot be foreseen during propagation, because of the bubbling in at-target phase on non-bubbling events and the lack of
+
+defaultAction for bubbling events, they will simply find the top root, and then add an event listener there.
+
+defaultAction for non-bubbling events, they will find the last node, and
+
+Ok. I need to add a last event listener twice! First, a lastEvent listener is added on the node of the element itself. Then, the event listener moves itself to the end node, and position itself last there. That way, we know that the event listener will only ever run in bubble mode.
+
+<div>
+  <my-el>
+  </my-el>
+</div>
+
+<script>
+
+  class TripleClickElement extends HTMLElement {
+    static get defaultActions() {
+      return ['gggg'];
+    }
+  }
+
+  class MyEl extends TripleClickElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({mode: "closed"});
+      shadow.innerHTML = "<h1>hello sunshine</h1>";
+      setTimeout(() => shadow.children[0].dispatchEvent(new Event('bob', {bubbles: false, composed: true})));
+    }
+
+    testIvvv() {
+
+    }
+
+    static get defaultActions() {
+      return ['hello'];
+    }
+  }
+
+  debugger
+
+  customElements.define('my-el', MyEl);
+
+  const div = document.querySelector("div");
+  const myEl = document.querySelector("my-el");
+
+  const one = console.log.bind(null, "one");
+  const two = console.log.bind(null, "two");
+  const three = console.log.bind(null, "three");
+  const four = console.log.bind(null, "four");
+
+  myEl.addEventListener('bob', one, true);
+  myEl.addEventListener('bob', two, false);
+  myEl.addEventListener('bob', function () {
+    debugger;
+    myEl.addEventListener('bob', four, false);
+    // myEl.removeEventListener('bob', three, false);
+  }, false);
+  myEl.addEventListener('bob', three, false);
+</script>

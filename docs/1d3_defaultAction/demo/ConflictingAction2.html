@@ -17,12 +17,84 @@
 <hr>
 <details>
   <summary> Hello
-    <audio src="music.mp3"></audio>
+    <audio src="http://weblab011.com/code/town.mp3" controls></audio>
   </summary>
+  sunshine
 </details>
+
+audio only: <audio src="http://weblab011.com/code/town.mp3" controls></audio>
 
 <p>
   copy some text to your clipboard, and then paste it into the "hello" textbox using your wheel mouse button.
   You should see that the browser will do TWO default actions: 1) paste the text in the input element and
   2) open the link in a new tab/window.
+
+  This is now fixed in latest Chrome and Firefox, but not in latest Web (Safari on Ubuntu).
 </p>
+
+
+<pre>
+  #window
+    document
+      html
+        body
+          my-a
+           ------------------
+           |#myARoot        |
+           |  a             |               //2
+           |    slot(my-a)  |
+           ------------------
+                  my-shadow
+  ----------------------------------------------
+                    #myShadowRoot                      checkbox, then this default action would rise to the my-shadow
+                      details
+                        summary             //1
+                          helloworld
+
+
+  1. setDefault(func) adds an exclusive, lowestWins default action as we are accustomed to in the native elements.
+  2. addDefault(func) adds a non-exclusive, additive default action that will run in addition to any other exclusive default action.
+     This is not really implemented in the browser, but is an addition that enable developers to wrap around other elements in their context.
+     Additive default actions only add when there is no exclusive default action, or when the exclusive default action chosen is UNDER the same DOM
+     context as it is.
+
+
+#window
+  document
+    html
+      body
+        my-a
+         ----------------
+         |#myARoot      |               //additive
+         |  slot(my-a)  |
+         ----------------
+              my-shadow
+----------------------------------------------
+                 #myShadowRoot
+                   details
+                     summary             //1
+                       helloworld
+
+
+#window
+  document
+    html
+      body
+        my-details
+          #myDetailsRoot
+            slot(my-details)
+              my-summary
+                #mySummaryRoot
+                  slot(my-summary)
+                    my-a
+                     ----------------
+                     |#myARoot      |               //additive
+                     |  slot(my-a)  |
+                     ----------------
+                          my-shadow
+----------------------------------------------
+                            #myShadowRoot
+                              details
+                                summary             //1
+                                  helloworld
+</pre>

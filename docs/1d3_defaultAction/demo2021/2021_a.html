@@ -1,0 +1,10 @@
+<input type="checkbox">
+<script>
+  const input = document.querySelector("input");
+  addEventListener('pointerup', e => console.log(e.type));
+  addEventListener('mouseup', e => console.log(e.type));
+  addEventListener('click', e => console.log(input.checked));
+  addEventListener('click', e => e.preventDefault());
+  addEventListener('click', e => console.log(input.checked));
+  addEventListener('click', e => setTimeout(()=>console.log(input.checked)));
+</script>
