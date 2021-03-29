@@ -169,28 +169,6 @@ M, M, M, M, M, M
 
 The problem here is the number of times that the event passes from one `Document` to another. It quickly becomes terrible complex to foresee when event listener *might* be called. But. To understand this problem, we must first repeat *why* we want to separate our code in different `Document`s in the first place. 
 
-## Why: different `Document`s?
-
-Or, more precisely, why web components? Well, the raison d'être for web components is: a) reuseability and b) modularity. In other words, one developer should be able to create a web component in isolation, and have that web component also work in the context of another web `Document` (inside an `.html` file or inside the shadowDOM of another web component).    
-
-To be able to write web components in isolation: the html elements of the web component is separated in a ShadowDOM, the CSS of the web component is separated from the rest of the CSS in the application, and the web component has its own class and some callback functions that enable it to stay apart from the rest of the JS application.
-
-To be able to interact with other web components: the ShadowDOM is connected to other DOMs via the hostNode and `<slot>` elements; CSS (custom) properties can be inherited along the hostNode and `<slot>` elements; and JS methods can be called more or less freely across web component borders.
-
-For events, the `composed: false` enable the developer to keep events inside one `Document`; `composed: true` enable the developers to share an event across `Document` borders.
-
-## HowTo: isolate event control?
-
-However, `composed: true` is a *bad* way to share an event between different DOM contexts that should be written in isolation. Why?
-
-`composed: true` sorts the propagation sequence in event phase first, then `Document`. In the simple example with the `<check-box>` element, this might not be too bad: *first* the main document receives the event relay baton (in the capture phase, *second* the shadowDOM gets event relay baton, *finally* main document receives the event relay baton (bubble phase). 
-
-But, the more web components are involved, the more complex things get: if the main document had placed the `<check-box>` inside a `<details><summary>` for example, you would now have the following event relay baton: 1. main capture, 2. details shadow capture, 3. main capture (summary element), 4. summary shadow capture, 5. main capture/at-target (`<check-box>` element), 6. `<check-box>` shadow capture-bubble, 7. main bubble/at-target (`<check-box>` element), 8. summary shadow bubble, 9. main bubble (summary element), 10. details shadow bubble, 11. main bubble. If every document was written by a different developer, this would be four different developers exchanging one event ten(!) times.
-
-Why are these exchanges a problem? Are they not only a technicality? No. Every time a developer gets the event he gets the control to do state changes. He can for example call `stopPropagation()`, `preventDefault()`, change a property inside his own document, read a property on another element (that can also be changed from inside the element), etc. etc. Especially when the event passes in and out of slotted shadowDOM context, developers don't consider that such state changes might have occured between one event listener and another inside his own `Document`. Therefore, you don't want to pass the same event in and out of different documents that many times, you want one developer to finish his part of the race before handing the control over to the next developer, and so forth. (Imagine how exciting and chaotic a 4x100m relay sprint would be if the runners had to pass the baton between them 10 times, instead of 3, per run.)
-
-The `eventPhase` property plays no such role. Work isn't isolated based on `eventPhase`, work is isolated based on `Document`s (web components, html files, etc.). Thus, it doesn't have any negative consequence of moving `eventPhase` down a peg and prioritize event propagation on `Document` order *first*. 
-
 ## References
 
 *

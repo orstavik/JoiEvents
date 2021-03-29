@@ -19,6 +19,7 @@ These two simple adjustments a) solve *all* the problems associated with `compos
 8. For each event target, event listeners are sorted FIFO per eventPhase (as usual).
 9. `.stopPropagation()` only apply to event listeners within the same `Document`: `stopPropagation()` never applies to event listeners in neither HostShadowDoms nor SlottedShadowDoms.
 10. `.preventDefault()` applies to event listeners marked `preventable` in subsequent `Document`s, but does not apply to any event listener inside the same `Document`.
+11. There are only *two* `eventPhase`s: capture and bubble. No more "target". To find out if the event phase would correspond to the old at-target, just check if `event.currentTarget === event.path[0]`.
 
 ## HowTo: convert `composedPath` to `bouncedPath`?
 
