@@ -1,4 +1,4 @@
-# Problem: event listener sequence and control
+# Why: sequence event listeners?
 
 The premises for this discussion are:
 1. The existing algorithm for prioritizing and sequencing event listeners for events we call "sequencing-of-event-listeners-for-composed-true-and-false-events", or just "composed sequencing" for short.
