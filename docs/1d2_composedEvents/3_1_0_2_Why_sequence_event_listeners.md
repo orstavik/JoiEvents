@@ -121,7 +121,7 @@ All event listeners should be sequenced:
 
 This is the Bounced sequence of event listeners.
 
-## HowTo: control `composed` sequence?
+# HowTo: control `composed` sequence?
 
 Can event listeners be fully controlled when they follow `composed` sequence? 
 
@@ -129,16 +129,16 @@ tldr: no.
           
 In order to get event listeners in a `composed` sequence to comply to the needs addressed above, we would need to implement a series of "soft rules" across *all* HTML `Document`s in an app. These additional soft rules would be difficult to implement, and impossible to enforce. However, it is good to see them lined up so as to more readily see the consequence for state change chaos when these soft rules are broken. 
 
-### Soft rule 1: target=capture,slot=bubble
+## Soft rule 1: target=capture,slot=bubble
 
 All event listeners to elements that has a `<slot>` descendant in their `Document` be `capture: false` and all event listeners that do not have a `<slot>` descendant be `capture: true`. The overall effect of this rule would be to:
 
 1. force all hostNodeTargets to primarily run top-down in the capture phase, and
-2. then have all the event listeners in the slotted ShadowDOM contexts run bottom-up, as required by five thumb rule 1 and 2.
+2. then have all the event listeners in the slotted ShadowDOM contexts run bottom-up, as required by five thumb rule 1,2, and 3.
 
-The egg broken/use case deemed impossible by this rule is listening for non-bubbling events inside a slotted ShadowDOM context.
+The egg broken/use case deemed impossible by this rule is listening for non-bubbling events inside a slotted ShadowDOM context: you can't work with non-bubbling events using a slotting web component.
 
-### Soft rule 2: move slot ancestor down onto slot 
+## Soft rule 2: move slot ancestor down onto slot 
    
 To ensure that the useR slotting `Document` runs before the useD slotting `Document` in a SlotMatroska, all event listeners to an ancestor to a `<slot>` element within the same `Document` should be moved *down* onto the `<slot>` element itself. Only from the `<slot>` element itself will the useR slotting `Document` be able to control the useD slotting `Document`.
 
@@ -146,7 +146,16 @@ However, this rule do *not* apply to siblings and other nodes that is not an anc
 
 The egg broken/use case deemed impossible by this rule is that using a "frame" around a slotted element as a `click` target for example is not possible without doing some kind of hacky layout manipulation of the `<slot>` element itself.
 
+## Problems with the soft rules.
 
+The problems with these soft rules are:
+1. Even the premise of these soft rules are commonly considered difficult: `capture` is mostly not known by developers, and much less used deliberately and with control. I therefore consider it extremely likely that such soft rules *could be* followed.
+2. Even if different web developers applied these soft rules as a convention, due to the same reasons as above, it is extremely likely that they would make mistakes. Thus, such soft rules would require constant maintenance, vigilance, and still cause many bugs.
+3. When the DOM is manipulated dynamically, elements with event listeners might be altered so as to break the above rules.
+
+Add demo here.
+
+# old drafts, place them back in where needed.
 ## Why: different `Document`s?
 
 Or, more precisely, why web components? Well, the raison d'être for web components is: a) reuseability and b) modularity. In other words, one developer should be able to create a web component in isolation, and have that web component also work in the context of another web `Document` (inside an `.html` file or inside the shadowDOM of another web component).
