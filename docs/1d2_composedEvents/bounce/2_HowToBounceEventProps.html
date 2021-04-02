@@ -149,8 +149,6 @@
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   EventTarget.prototype.addEventListener = function (type, cb, options) {
-    // if(!(cb instanceof Function))
-    //   return;//fail silently?
     const capture = options instanceof Object ? options.capture : !!options;
     if (getListener(this, type, cb, capture))
       return;
