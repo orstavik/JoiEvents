@@ -1,0 +1,22 @@
+<script>
+
+  //opinion #1: Event objects should not be reused. Override dispatchEvent() to clone all events that has propagated before.
+  //            The modern js engines can implement object reuse under the surfasce anyway, and
+  //            you would like to leave the dirty checking ability for events open for other forms of optimization.
+  //            Re-dispatching event objects is a trap.
+
+  const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+  EventTarget.prototype.dispatchEvent = function (e) {
+    if (spentEvents.has(e)) {
+      const clone = new Event(e);
+      Object.assign(clone, e);
+      e = clone;
+    }
+    dispatchEventOG.call(this, e);
+  }
+
+//todo make a demo that illustrate the problem of redispatching the event:
+  // 1.the timestamp being the time of creation, not the time of dispatch,
+  // 2. dirty checking possibly giving false responses when the event is dispatched to a different target for example.
+  // 3. caching against path using the event object? that wasn't smart.
+</script>

@@ -1,0 +1,256 @@
+<script type="module">
+  //todo 1. check the input arguments to addEventListener. add this special object with handle(e) function?
+  //todo 2. dispatchEvent that add composed: root as option to composed: true (window) and false (getPropagationRoot()) alternative.
+  //        this dispatchEvent method needs to have add
+
+  const listeners = Symbol("listeners");
+  const frame = Symbol("frame");
+
+  function getPropagationRoot(el) {
+    const root = el.getRootNode && el.getRootNode() || window;//todo should the window be separated as its own document?
+    return root === document ? window : root;
+  }
+
+  function makeBouncedPath(composedPath) {
+    const docs = [];
+    for (let el of composedPath) {
+      const root = getPropagationRoot(el);
+      const doc = docs.find(({root: oldRoot}) => oldRoot === root);
+      doc ?                   //first encounter
+        doc.nodes.push(el) :
+        el instanceof HTMLSlotElement ?
+          docs.push({root, nodes: [el]}) :
+          docs.unshift({root, nodes: [el]});
+    }
+    return docs;
+  }
+
+  const stopImmediatePropagationOG = Event.prototype.stopImmediatePropagation;
+  const composedPathOG = Event.prototype.composedPath;
+  Object.defineProperties(Event.prototype, {
+    'stopPropagation': {
+      value: function () {
+        return this[frame].stop = this[frame].target;
+      }
+    },
+    'stopImmediatePropagation': {
+      value: function () {
+        return this[frame].stopImmediate = true;
+      }
+    },
+    'currentTarget': {
+      get: function () {
+        return this[frame].currentTarget();
+      }
+    },
+    'eventPhase': {
+      get: function () {
+        return this[frame].eventPhase();
+      }
+    },
+    'currentDocument': {
+      get: function () {
+        return this[frame].currentDocument();
+      }
+    },
+    'path': {
+      get: function () {
+        return this[frame].path();
+      }
+    },
+    'composedPath': {
+      get: function () { //returns a copy of the bouncedPath, making bouncedPath immutable.
+        return this[frame].bouncedPath.map(({root, nodes}) => ({root, nodes: nodes.slice()}));
+      }
+    }
+  });
+
+  export class EventFrame {
+    constructor(event) {
+      this.event = event;
+      event[frame] = this;
+      this.bouncedPath = makeBouncedPath(composedPathOG.call(event));
+      this.doc = 0;
+      this.phase = 0;
+      this.target = 0;
+      this.listener = -1;
+      this.stop = false;
+      this.stopImmediate = false;
+    }
+
+    next() {
+      if (this.stopImmediate)
+        this.doc++, this.phase = this.target = this.listener = 0, this.stop = this.stopImmediate = false;
+      else
+        this.listener++;
+      main: for (; this.doc < this.bouncedPath.length; this.doc++) {
+        const {root, nodes: targets} = this.bouncedPath[this.doc];
+        for (; this.phase < 2; this.phase++) {
+          for (; this.target < targets.length; this.target++) {
+            if (this.phase === 0 && this.target === targets.length - 1) continue; //skip at_target during capture
+            const elCapBub = this.phase ? this.target : targets.length - 1 - this.target;
+            const target = targets[elCapBub];
+            const listenerEntries = target[listeners];
+            if (listenerEntries) {
+              for (; this.listener < listenerEntries.length; this.listener++) {
+                const listener = listenerEntries[this.listener];
+                if (listener.type !== this.event.type)
+                  continue;
+                if ((this.phase === 1 && this.target === 0) || listener.capture ^ this.phase) //at target or same phase
+                  return listener;
+              }
+              if (this.stop) {
+                this.doc++, this.phase = this.target = this.listener = 0, this.stop = this.stopImmediate = false;
+                continue main;
+              }
+            }
+            this.listener = 0;
+          }
+          this.target = 0;
+        }
+        this.phase = 0;
+      }
+    }
+
+    currentTarget() {
+      return this.path && this.path[this.target];
+    }
+
+    currentDocument() {
+      return this.bouncedPath[this.doc]?.root;
+    }
+
+    eventPhase() {
+      return this.listener === -1 ? 0 :                //0 not yet started
+        this.doc >= this.bouncedPath.length ? 4 :      //4 ended
+          this.phase === 0 ? 1 :                       //1 capture
+            this.target === 0 ? 2 :                    //2 at_target
+              3;                                       //3 bubble
+    }
+
+    path() {
+      return this.bouncedPath[this.doc]?.nodes;
+    }
+  }
+
+  const removedListeners = [];
+  const eventStack = [];
+
+  function eventTick(e) {
+    stopImmediatePropagationOG.call(e);
+
+    const frame = new EventFrame(e);
+    eventStack.unshift(frame);
+
+    for (let listener; listener = frame.next();) {
+      listener.once && removedListeners.push(listener);
+      listener.cb.call(listener.target, e);
+    }
+    if (frame !== eventStack.shift()) throw 'omg';
+    eventStack.length === 0 && removedListeners.forEach(removeListenerImpl);
+  }
+
+  function getListener(target, type, cb, capture) {
+    target[listeners] || (target[listeners] = []);
+    return target[listeners].find(old => old.type === type && old.cb === cb && old.capture === capture && !old.removed);
+  }
+
+  function defaultPassiveValue(type, target) {
+    return (type === 'touchstart' || type === 'touchmove') && (target === window || target === document || target === body);
+  }
+
+  function addListenerImpl(l) {
+    l.target[listeners].push(l);
+    addEventListenerOG.call(l.target, l.type, l.realCb, {capture: l.capture, passive: l.passive});
+  }
+
+  function removeListenerImpl(l) {
+    l.target[listeners].splice(l.target[listeners].indexOf(l), 1);
+    removeEventListenerOG.call(l.target, l.type, l.realCb, {capture: l.capture, passive: l.passive});
+  }
+
+  const addEventListenerOG = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (type, cb, options) {
+    // if(!(cb instanceof Function))
+    //   return;//fail silently?
+    const capture = options instanceof Object ? options.capture : !!options;
+    if (getListener(this, type, cb, capture))
+      return;
+    const target = this;
+    const passive = options instanceof Object && 'passive' in options ? options.passive : defaultPassiveValue(type, target);
+    const once = options instanceof Object && 'once' in options && options.once;
+    const listener = {target, type, cb, capture, passive, once};
+    listener.realCb = eventTick.bind(listener); //we don't use the listener object, but we need to bind the eventTick to something to get a unique realCb.
+    addListenerImpl(listener);
+  }
+
+  const removeEventListenerOG = EventTarget.prototype.removeEventListener;
+  EventTarget.prototype.removeEventListener = function (type, cb, options) {
+    const capture = options instanceof Object ? options.capture : !!options;
+    const listener = getListener(this, type, cb, capture);
+    listener && (listener.removed = true) && removedListeners.push(listener);
+  }
+</script>
+
+<div>
+  <link-slot>
+    <span>
+      <outer-host></outer-host>
+    </span>
+    <h2>hello world</h2>
+  </link-slot>
+</div>
+
+<script type="module">
+
+  class OuterHost extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<link-slot><inner-host></inner-host></link-slot>';
+    }
+  }
+
+  class InnerHost extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<h1>hello sunshine</h1>';
+    }
+  }
+
+  class LinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<frame-slot><slot></slot></frame-slot>';
+    }
+  }
+
+  class FrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  customElements.define("outer-host", OuterHost);
+  customElements.define("inner-host", InnerHost);
+  customElements.define("link-slot", LinkSlot);
+  customElements.define("frame-slot", FrameSlot);
+
+  const outerHost = document.querySelector("outer-host");
+  const h1 = outerHost.shadowRoot.children[0].children[0].shadowRoot.children[0];
+  h1.addEventListener('alice', e => {
+    for (let node of e.composedPath()) {
+      let root = node.getRootNode ? node.getRootNode() : node;
+      root = root.host ? root.host.nodeName + '#shadow' : root.nodeName || 'window';
+      node.addEventListener('bob', e => console.log(root, 'capture', node.nodeName || 'window'), true);
+      node.addEventListener('bob', e => console.log(root, 'bubble', node.nodeName || 'window'));
+    }
+    console.log("setting up");
+  }, {once: true});
+  h1.dispatchEvent(new Event('alice', {composed: true, bubbles: true}));
+  h1.dispatchEvent(new Event('bob', {composed: true, bubbles: true}));
+</script>
