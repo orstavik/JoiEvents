@@ -1,6 +1,17 @@
 <script type="module">
+  //todo 1. check the input arguments to addEventListener. add this special object with handle(e) function?
+
   const listeners = Symbol("listeners");
   const frame = Symbol("frame");
+  const propagationRoot = Symbol("propagationRoot");
+
+  dispatchEventOG = EventTarget.prototype.dispatchEvent;
+  EventTarget.prototype.dispatchEvent = function (event, {root}) {
+    //this method illustrate with all clarity that composed is an option to the act
+    //of dispatching the event, not the event as an object. when events are reused, that is.
+    event[propagationRoot] = root;
+    dispatchEventOG.call(this, event);
+  }
 
   function getPropagationRoot(el) {
     const root = el.getRootNode && el.getRootNode() || window;
@@ -65,7 +76,11 @@
     constructor(event) {
       this.event = event;
       event[frame] = this;
-      this.bouncedPath = makeBouncedPath(composedPathOG.call(event));
+      let fullPath = composedPathOG.call(event);
+      const index = fullPath.indexOf(event[propagationRoot])
+      if(index >= 0)
+        fullPath = fullPath.slice(0, index);
+      this.bouncedPath = makeBouncedPath(fullPath);
       this.doc = 0;
       this.phase = 0;
       this.target = 0;
@@ -167,6 +182,8 @@
 
   const addEventListenerOG = EventTarget.prototype.addEventListener;
   EventTarget.prototype.addEventListener = function (type, cb, options) {
+    // if(!(cb instanceof Function))
+    //   return;//fail silently?
     const capture = options instanceof Object ? options.capture : !!options;
     if (getListener(this, type, cb, capture))
       return;
