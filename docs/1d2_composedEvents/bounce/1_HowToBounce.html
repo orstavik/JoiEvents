@@ -1,5 +1,4 @@
 <script type="module">
-  //rule #1: event objects cannot be reused. Override dispatchEvent() to clone all events that has propagated before.
   //rule #2: all events propagate sync. No more async propagation for UI events. Which is good, because you can never
   //         tell if an event is async or sync.
   //rule #3: all adding of event listeners are dynamic.
@@ -8,6 +7,11 @@
   //         shuffle all capture and bubble event listeners in one common insertion order.
 
   //tip 1:   all event listeners are removed when the event stack is empty.
+
+  //opinion #1: Event objects should not be reused. Override dispatchEvent() to clone all events that has propagated before.
+  //            The modern js engines can implement object reuse under the surfasce anyway, and
+  //            you would like to leave the dirty checking ability for events open for other forms of optimization.
+  //            Re-dispatching event objects is a trap.
 
   function getPropagationRoot(el) {
     const root = el.getRootNode && el.getRootNode() || window;//todo should the window be separated as its own document?
@@ -37,35 +41,31 @@
       this.phase = 0;
       this.target = 0;
       this.listener = -1;
+      const frame = this;
       Object.defineProperties(event, {
         'currentTarget': {
           get: function () {
-            debugger;
-            return this.currentDocument && this.currentDocument[this.target];
+            return frame.currentDocument && frame.currentDocument[frame.target];
           }
         },
         'eventPhase': {
           get: function () {
-            debugger;
-            return this.phase ? 3 : 1
+            return frame.phase ? 3 : 1
           }
         },
         'currentDocument': {
           get: function () {
-            debugger;
-            return this.bouncedPath[this.doc]?.root;
+            return frame.bouncedPath[frame.doc]?.root;
           }
         },
         'path': {
           get: function () {
-            debugger;
-            return this.currentDocument?.nodes;
+            return frame.currentDocument?.nodes;
           }
         },
         'bouncedPath': {
           get: function () {
-            debugger;
-            return this.bouncedPath;
+            return frame.bouncedPath;
           }
         }
       });
