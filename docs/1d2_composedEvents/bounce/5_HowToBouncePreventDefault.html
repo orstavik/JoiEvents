@@ -1,4 +1,5 @@
 <script type="module">
+  //todo 1. check the input arguments to addEventListener. add this special object with handle(e) function?
 
   const listeners = Symbol("listeners");
   const frame = Symbol("frame");
@@ -25,8 +26,8 @@
       doc ?                   //first encounter
         doc.nodes.push(el) :
         el instanceof HTMLSlotElement ?
-          docs.push({root, nodes: [el]}) :
-          docs.unshift({root, nodes: [el]});
+          docs.push({root, nodes: [el], parent: root.host ? getPropagationRoot(root): undefined}) :
+          docs.unshift({root, nodes: [el], parent: root.host ? getPropagationRoot(root): undefined});
     }
     return docs;
   }
