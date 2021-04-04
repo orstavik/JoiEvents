@@ -18,6 +18,11 @@
     return root === document ? window : root;
   }
 
+  function makeDocumentEntry(root, el) {                                                                  //todo added
+    const parent = root.host ? getPropagationRoot(root.host) : undefined;                                 //todo added
+    return {root, nodes: [el], parent};                                                                   //todo added
+  }                                                                                                       //todo added
+
   function makeBouncedPath(composedPath) {
     const docs = [];
     for (let el of composedPath) {
@@ -26,15 +31,27 @@
       doc ?                   //first encounter
         doc.nodes.push(el) :
         el instanceof HTMLSlotElement ?
-          docs.push({root, nodes: [el], parent: root.host ? getPropagationRoot(root): undefined}) :
-          docs.unshift({root, nodes: [el], parent: root.host ? getPropagationRoot(root): undefined});
+          docs.push(makeDocumentEntry(root, el)) :                                                        //todo added
+          docs.unshift(makeDocumentEntry(root, el));                                                      //todo added
     }
     return docs;
   }
 
+  const preventDefaultOG = Event.prototype.preventDefault;                                                //todo added
+  // const defaultPreventedOG = Object.getOwnPropertyDescriptor(Event.prototype, 'defaultPrevented').get; //todo added
   const stopImmediatePropagationOG = Event.prototype.stopImmediatePropagation;
   const composedPathOG = Event.prototype.composedPath;
   Object.defineProperties(Event.prototype, {
+    'preventDefault': {                                                                                   //todo added
+      value: function () {                                                                                //todo added
+        this[frame].preventDescendantDocuments(this.currentDocument, false);                              //todo added
+      }                                                                                                   //todo added
+    },                                                                                                    //todo added
+    'defaultPrevented': {                                                                                 //todo added
+      get: function () {                                                                                  //todo added
+        this[frame].defaultPrevented();                                                                   //todo added
+      }                                                                                                   //todo added
+    },                                                                                                    //todo added
     'stopPropagation': {
       value: function () {
         return this[frame].stop = this[frame].target;
@@ -78,7 +95,7 @@
       event[frame] = this;
       let fullPath = composedPathOG.call(event);
       const index = fullPath.indexOf(event[propagationRoot])
-      if(index >= 0)
+      if (index >= 0)
         fullPath = fullPath.slice(0, index);
       this.bouncedPath = makeBouncedPath(fullPath);
       this.doc = 0;
@@ -131,6 +148,29 @@
       return this.bouncedPath[this.doc]?.root;
     }
 
+    preventDescendantDocuments(root, second) {                                                            //todo added
+      for (let docEntry of this.bouncedPath) {                                                            //todo added
+        if (root === docEntry.root) {                                                                     //todo added
+          if ('defaultPrevented' in docEntry)                                                             //todo added
+            return;                                                                                       //todo added
+          docEntry.defaultPrevented = second;                                                             //todo added
+          this.preventDescendantDocuments(docEntry.root, true);                                           //todo added
+        }                                                                                                 //todo added
+      }                                                                                                   //todo added
+    }                                                                                                     //todo added
+                                                                                                          //todo added
+    defaultPrevented() {                                                                                  //todo added
+      return !!this.bouncedPath[this.doc]?.defaultPrevented;                                              //todo added
+    }                                                                                                     //todo added
+                                                                                                          //todo added
+    defaultPreventedForNativeElement(hostNode) {                                                          //todo added
+      for (let doc of this.bouncedPath) {                                                                 //todo added
+        if(doc.nodes.includes(hostNode))                                                                  //todo added
+          return 'defaultPrevented' in doc;                                                               //todo added
+      }                                                                                                   //todo added
+      return false;                                                                                       //todo added
+    }                                                                                                     //todo added
+                                                                                                          //todo added
     eventPhase() {
       return this.listener === -1 ? 0 :                //0 not yet started
         this.doc >= this.bouncedPath.length ? 4 :      //4 ended
@@ -141,6 +181,15 @@
 
     path() {
       return this.bouncedPath[this.doc]?.nodes;
+    }
+  }
+
+  function getDefaultActionElement(e) {
+    for (let target of e.composedPath) {
+      if (e.type === 'click' && target.tagName === 'A' && target.hasAttribute('href'))
+        return target;
+      if (e.type === 'click' && target.tagName === 'SUMMARY')
+        return target;
     }
   }
 
@@ -157,6 +206,9 @@
       listener.once && removedListeners.push(listener);
       listener.cb.call(listener.target, e);
     }
+    const lowestNativeDefaultAction = getDefaultActionElement(e);
+    if (frame.defaultPreventedForNativeElement(lowestNativeDefaultAction))
+      preventDefaultOG.call(e);
     if (frame !== eventStack.shift()) throw 'omg';
     eventStack.length === 0 && removedListeners.forEach(removeListenerImpl);
   }
