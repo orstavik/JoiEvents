@@ -1,7 +1,9 @@
 //Event.stopProp version
 
-// rule #4: // 'stopPropagation' and 'stopImmediatePropagation' works only per document.
-// rule #5: // 'event.bubbles' turned into a static reader for the {bubbles: true/false} property of the event/dispatch.
+// rule #4: 'stopPropagation' and 'stopImmediatePropagation' works only per document.
+// rule #5: 'event.bubbles' turned into a static reader for the {bubbles: true/false} property of the event/dispatch.
+// rule #6: if you call stopPropagation() or stopImmediatePropagation() *before* event propagation begins, then
+//          you will not run any event listeners. This is slightly a different behavior than the platform.
 
 (function () {
 
@@ -29,17 +31,19 @@
     'stopPropagation': {
       value: function () {
         const frame = this.__frame;
-        if (frame.listener !== -1)
-          frame.bouncedPath[frame.doc].stop = [frame.eventPhase, frame.currentTarget, frame.listener];
-        //the details are not used, but could be used for debugging purposes in the future
+        if (frame.listener === -1)
+          frame.bouncedPath.forEach(context => context.stopImmediate = true);
+        else
+          frame.bouncedPath[frame.doc].stop = true;
       }
     },
     'stopImmediatePropagation': {
       value: function () {
         const frame = this.__frame;
-        if (frame.listener !== -1)
-          frame.bouncedPath[frame.doc].stopImmediate = [frame.eventPhase, frame.currentTarget, frame.listener];
-        //the details are not used, but could be used for debugging purposes in the future
+        if (frame.listener === -1)
+          frame.bouncedPath.forEach(context => context.stopImmediate = true);
+        else
+          frame.bouncedPath[frame.doc].stopImmediate = true;
       }
     },
     'bubbles': {
@@ -120,6 +124,8 @@
         }
       }
       this.listener = -1;
+      for (let context of this.bouncedPath)
+        delete context.stop, delete context.stopImmediate;
     }
   }
 
