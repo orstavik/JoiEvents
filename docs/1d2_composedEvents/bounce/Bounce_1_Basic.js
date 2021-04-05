@@ -44,7 +44,8 @@
     next() {
       this.listener++;
       for (; this.doc < this.bouncedPath.length; this.doc++, this.phase = 0) {
-        const {root, path} = this.bouncedPath[this.doc];
+        const context = this.bouncedPath[this.doc];
+        const path = context.path;
         for (; this.phase < 2; this.phase++, this.target = 0) {
           for (; this.target < path.length; this.target++, this.listener = 0) {
             if (this.phase === 0 && this.target === path.length - 1) continue; //skip at_target during capture
@@ -72,11 +73,9 @@
   const eventStack = [];
 
   function eventTick(e) {
-    e.stopImmediatePropagation();
-
     const frame = new EventFrame(e);
     eventStack.unshift(frame);
-
+    e.stopImmediatePropagation();
     for (let listener; listener = frame.next();) {
       listener.once && removedListeners.push(listener);
       listener.cb.call(listener.target, e);
