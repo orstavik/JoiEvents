@@ -21,10 +21,10 @@
       const root = getPropagationRoot(el);
       const doc = docs.find(({root: oldRoot}) => oldRoot === root);
       doc ?                   //first encounter
-        doc.nodes.push(el) :
+        doc.path.push(el) :
         el instanceof HTMLSlotElement ?
-          docs.push({root, nodes: [el]}) :
-          docs.unshift({root, nodes: [el]});
+          docs.push({root, path: [el]}) :
+          docs.unshift({root, path: [el]});
     }
     return docs;
   }
@@ -43,12 +43,12 @@
     next() {
       this.listener++;
       for (; this.doc < this.bouncedPath.length; this.doc++) {
-        const {root, nodes: targets} = this.bouncedPath[this.doc];
+        const {root, path} = this.bouncedPath[this.doc];
         for (; this.phase < 2; this.phase++) {
-          for (; this.target < targets.length; this.target++) {
-            if (this.phase === 0 && this.target === targets.length - 1) continue; //skip at_target during capture
-            const elCapBub = this.phase ? this.target : targets.length - 1 - this.target;
-            const target = targets[elCapBub];
+          for (; this.target < path.length; this.target++) {
+            if (this.phase === 0 && this.target === path.length - 1) continue; //skip at_target during capture
+            const elCapBub = this.phase ? this.target : path.length - 1 - this.target;
+            const target = path[elCapBub];
             const listenerEntries = target[listeners];
             if (listenerEntries) {
               for (; this.listener < listenerEntries.length; this.listener++) {
