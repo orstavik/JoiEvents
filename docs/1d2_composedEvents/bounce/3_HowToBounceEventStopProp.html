@@ -46,12 +46,12 @@
     },
     'currentDocument': {
       get: function () {
-        return this[frame].currentDocument();
+        return this[frame].currentContext()?.root;
       }
     },
     'path': {
       get: function () {
-        return this[frame].path();
+        return this[frame].currentContext()?.path;
       }
     },
     'composedPath': {
@@ -112,8 +112,8 @@
       return this.path && this.path[this.target];
     }
 
-    currentDocument() {
-      return this.bouncedPath[this.doc]?.root;
+    currentContext() {
+      return this.bouncedPath[this.doc];
     }
 
     eventPhase() {
@@ -122,10 +122,6 @@
           this.phase === 0 ? 1 :                       //1 capture
             this.target === 0 ? 2 :                    //2 at_target
               3;                                       //3 bubble
-    }
-
-    path() {
-      return this.bouncedPath[this.doc]?.path;
     }
   }
 
