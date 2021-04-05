@@ -1,4 +1,18 @@
-//Event.preventDefault version
+//Event.dispatchEvent version (disallow redispatching of events)
+
+//reasons why re-dispatching events are bad:
+//1. timestamp should be at initial dispatch, not event object creation.
+//2. properties such as composed and bubbles are really associated with a single dispatch instance.
+//3. confusion arise if you use an event as key and then expect properties such as target, path, composedPath() etc to be constant.
+//   if somebody uses the event as a key in a map/set, or as an object to dirtycheck against, it is 95% likely that the
+//   thing checked is the dispatch instance, and not the event object per se.
+//4. preventDefault applies across dispatches.
+//5. but stopPropagation is reset for each new dispatch.
+//6. the browser can reuse objects to optimize in the background, there are not really any performance benefits to gain here.
+
+//In this system, re-dispatchEvent is disallowed mainly because it cannot function smoothly with defaultActions.
+//you cannot both read .preventDefault after the event has completed propagation, And call .preventDefault() *before* the
+//event begins propagation, And call .preventDefault() on an event, and then re-dispatchEvent it.
 
 (function () {
 
@@ -75,7 +89,6 @@
           frame.bouncedPath.find(({root}) => root === rootOrHost).prevented = true;
           return;
         }
-        //todo not yet implemented support for native defaultActions.
       }
     },
     'defaultPrevented': {
@@ -121,8 +134,18 @@
     }
   });
 
+  const spentEvents = new WeakSet();
+
+  const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+  EventTarget.prototype.dispatchEvent = function (e) {
+    if (spentEvents.has(e))
+      throw new Error('Re-dispatch of events disallowed.');
+    dispatchEventOG.call(this, e);
+  }
+
   class EventFrame {
     constructor(event) {
+      spentEvents.add(event);
       event.__frame = this;
       this.event = event;
       this.bouncedPath = makeBouncedPath(event.composedPath());
@@ -161,8 +184,6 @@
         }
       }
       this.listener = -1;
-      for (let context of this.bouncedPath)
-        delete context.stop, delete context.stopImmediate;
     }
   }
 
