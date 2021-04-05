@@ -21,8 +21,42 @@
     return docs;
   }
 
+  Object.defineProperties(Event.prototype, {
+    'currentTarget': {
+      get: function () {
+        const frame = this.__frame;
+        return frame.listener === -1 ? null : frame.bouncedPath[frame.doc].path[frame.target];
+      }
+    },
+    'eventPhase': {
+      get: function () {  //0 not_started/ended, 1 capture, 2 at_target, 3 bubble
+        const frame = this.__frame;
+        return frame.listener === -1 ? 0 : frame.phase === 0 ? 1 : frame.target === 0 ? 2 : 3;
+      }
+    },
+    'path': {
+      get: function () {
+        const frame = this.__frame;
+        return frame.listener === -1 ? [] : frame.bouncedPath[frame.doc].path.slice();
+      }
+    },
+    'currentDocument': {
+      get: function () {
+        const frame = this.__frame;
+        return frame.listener === -1 ? null : frame.bouncedPath[frame.doc].root;
+      }
+    },
+    'bouncedPath': {
+      get: function () { //returns a copy of the bouncedPath (preserving the original bouncedPath immutable).
+        const frame = this.__frame;
+        return frame.bouncedPath.map(({root, path}) => ({root, path: path.slice()}));
+      }
+    }
+  });
+
   class EventFrame {
     constructor(event) {
+      event.__frame = this;
       this.event = event;
       this.bouncedPath = makeBouncedPath(event.composedPath());
       this.doc = 0;
