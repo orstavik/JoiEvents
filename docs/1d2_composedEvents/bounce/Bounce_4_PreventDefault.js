@@ -2,21 +2,27 @@
 
 (function () {
 
-  function getPropagationRoot(el) {
+  function getPropagationRoot(el, documentBecomesWindow) {                               //todo includeWindow
     const root = el.getRootNode && el.getRootNode() || window;
-    return root === document ? window : root;
+    return documentBecomesWindow && root === document ? window : root;                   //todo includeWindow
+  }
+
+  function makeDocumentEntry(root, el, includeWindow) {
+    const parent = root.host ? getPropagationRoot(root.host, includeWindow) : undefined;  //todo includeWindow
+    return {root, nodes: [el], parent};
   }
 
   function makeBouncedPath(composedPath) {
     const docs = [];
     for (let el of composedPath) {
-      const root = getPropagationRoot(el);
+      const includeWindow = composedPath[composedPath.length - 1] === window;     //todo includeWindow
+      const root = getPropagationRoot(el, includeWindow);                         //todo includeWindow
       const doc = docs.find(({root: oldRoot}) => oldRoot === root);
       doc ?                   //first encounter
         doc.path.push(el) :
         el instanceof HTMLSlotElement ?
-          docs.push({root, path: [el]}) :
-          docs.unshift({root, path: [el]});
+          docs.push(makeDocumentEntry(root, el, includeWindow)) :                 //todo includeWindow
+          docs.unshift(makeDocumentEntry(root, el, includeWindow));               //todo includeWindow
     }
     return docs;
   }
@@ -45,6 +51,42 @@
       get: function () {
         const frame = this.__frame;
         return frame.bubbles;
+      }
+    },
+    'preventDefault': {
+      value: function (rootOrHost) {
+        const frame = this.__frame;
+        if (arguments.length === 0) {
+          frame.bouncedPath[frame.doc].prevented = true;
+          return;
+        }
+        if (frame.listener === -1) {
+          frame.bouncedPath[0].prevented = true;
+          return;
+        }
+        if (!frame.event.composedPath().includes(rootOrHost))
+          throw new IllegalArgumentError('illegal argument. The argument is not an EventTarget of the current event.', rootOrHost);
+        const composedPath = frame.event.composedPath();
+        if (rootOrHost === document && composedPath[composedPath.length - 1] === window)
+          rootOrHost = window;
+        else if (rootOrHost instanceof HTMLElement && rootOrHost.shadowRoot && frame.event.composedPath().includes(rootOrHost.shadowRoot))
+          rootOrHost = rootOrHost.shadowRoot;
+        if (rootOrHost instanceof Document) {
+          frame.bouncedPath.find(({root}) => root === rootOrHost).prevented = true;
+          return;
+        }
+        //todo not yet implemented support for native defaultActions.
+      }
+    },
+    'defaultPrevented': {
+      get: function () {
+        const frame = this.__frame;
+        if (frame.listener === -1)
+          return frame.bouncedPath[0].prevented;
+
+        for (let c = frame.bouncedPath[frame.doc]; c; c = frame.bouncedPath.find(({root}) => root === c.parent))
+          if (c.prevented) return true;
+        return false;
       }
     },
     'currentTarget': {
