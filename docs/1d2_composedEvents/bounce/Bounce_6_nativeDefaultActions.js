@@ -203,28 +203,27 @@
     }
   });
 
-  const spentEvents = new WeakSet();
-  const propagationRoots = new WeakMap();
-
   const dispatchEventOG = EventTarget.prototype.dispatchEvent;
   EventTarget.prototype.dispatchEvent = function (e, options) {
-    if (spentEvents.has(e))
-      throw new Error('Re-dispatch of events disallowed.');
+    if (e.__isSpent)
+      throw new Error('Re-dispatch of events is disallowed.');
     if (options instanceof Object && root instanceof EventTarget)
-      propagationRoots.set(e, root);
+      e.__propagationRoot = root;
     dispatchEventOG.call(this, e);
+  }
+
+  function cutPath(fullPath, last) {
+    const index = fullPath.indexOf(last);
+    return index >= 0 ? fullPath.slice(0, index) : fullPath;
   }
 
   class EventFrame {
     constructor(event) {
-      spentEvents.add(event);
+      event.__isSpent = true;
       event.__frame = this;
       this.event = event;
-      let fullPath = composedPathOG.call(event);
-      const index = fullPath.indexOf(propagationRoots.get(event));
-      if (index >= 0)
-        fullPath = fullPath.slice(0, index);
-      this.bouncedPath = makeBouncedPath(fullPath);
+      this.composedPath = cutPath(composedPathOG.call(event), event.__propagationRoot);
+      this.bouncedPath = makeBouncedPath(this.composedPath);
       this.doc = 0;
       this.phase = 0;
       this.target = 0;

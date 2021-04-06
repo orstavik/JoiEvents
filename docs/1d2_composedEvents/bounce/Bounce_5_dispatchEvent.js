@@ -17,7 +17,8 @@
 //event begins propagation, And call .preventDefault() on an event, and then re-dispatchEvent it.
 
 (function () {
-
+  //todo can there ever be an event that propagates up to document only?
+  //todo I can't find a positive to this question. Focusin doesn't work this way.
   function getPropagationRoot(el, documentBecomesWindow) {                               //todo includeWindow
     const root = el.getRootNode && el.getRootNode() || window;
     return documentBecomesWindow && root === document ? window : root;                   //todo includeWindow
@@ -46,6 +47,8 @@
   const stopImmediatePropagationOG = Event.prototype.stopImmediatePropagation;
   Object.defineProperties(Event.prototype, {
     'stopPropagation': {
+      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
+      //todo create a pre-frame for that?
       value: function () {
         const frame = this.__frame;
         if (frame.listener === -1)
@@ -55,6 +58,8 @@
       }
     },
     'stopImmediatePropagation': {
+      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
+      //todo create a pre-frame for that?
       value: function () {
         const frame = this.__frame;
         if (frame.listener === -1)
@@ -70,6 +75,8 @@
       }
     },
     'preventDefault': {
+      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
+      //todo create a pre-frame for that?
       value: function (rootOrHost) {
         const frame = this.__frame;
         if (arguments.length === 0) {
@@ -94,6 +101,8 @@
       }
     },
     'defaultPrevented': {
+      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
+      //todo create a pre-frame for that?
       get: function () {
         const frame = this.__frame;
         if (frame.listener === -1)
@@ -107,57 +116,62 @@
     'currentTarget': {
       get: function () {
         const frame = this.__frame;
-        return frame.listener === -1 ? null : frame.bouncedPath[frame.doc].path[frame.target];
+        return !frame || frame.listener === -1 ? null : frame.bouncedPath[frame.doc].path[frame.target];
       }
     },
     'eventPhase': {
       get: function () {  //0 not_started/ended, 1 capture, 2 at_target, 3 bubble
         const frame = this.__frame;
-        return frame.listener === -1 ? 0 : frame.phase === 0 ? 1 : frame.target === 0 ? 2 : 3;
+        return !frame || frame.listener === -1 ? 0 : frame.phase === 0 ? 1 : frame.target === 0 ? 2 : 3;
       }
     },
     'path': {
       get: function () {
         const frame = this.__frame;
-        return frame.listener === -1 ? [] : frame.bouncedPath[frame.doc].path.slice();
+        return !frame || frame.listener === -1 ? [] : frame.bouncedPath[frame.doc].path.slice();
       }
     },
     'currentDocument': {
       get: function () {
         const frame = this.__frame;
-        return frame.listener === -1 ? null : frame.bouncedPath[frame.doc].root;
+        return !frame || frame.listener === -1 ? null : frame.bouncedPath[frame.doc].root;
       }
     },
     'bouncedPath': {
       get: function () { //returns a copy of the bouncedPath (preserving the original bouncedPath immutable).
         const frame = this.__frame;
-        return frame.bouncedPath.map(({root, path}) => ({root, path: path.slice()}));
+        return !frame || frame.bouncedPath.map(({root, path}) => ({root, path: path.slice()}));
+      }
+    },
+    'composedPath': {
+      get: function () {
+        const frame = this.__frame;
+        return !frame || frame.listener === -1 ? []: frame.composedPath;
       }
     }
   });
 
-  const spentEvents = new WeakSet();
-  const propagationRoots = new WeakMap();
-
   const dispatchEventOG = EventTarget.prototype.dispatchEvent;
   EventTarget.prototype.dispatchEvent = function (e, options) {
-    if (spentEvents.has(e))
-      throw new Error('Re-dispatch of events disallowed.');
+    if (e.__isSpent)
+      throw new Error('Re-dispatch of events is disallowed.');
     if (options instanceof Object && root instanceof EventTarget)
-      propagationRoots.set(e, root);
+      e.__propagationRoot = root;
     dispatchEventOG.call(this, e);
+  }
+
+  function cutPath(fullPath, last) {
+    const index = fullPath.indexOf(last);
+    return index >= 0 ? fullPath.slice(0, index) : fullPath;
   }
 
   class EventFrame {
     constructor(event) {
-      spentEvents.add(event);
+      event.__isSpent = true;
       event.__frame = this;
       this.event = event;
-      let fullPath = composedPathOG.call(event);
-      const index = fullPath.indexOf(propagationRoots.get(event));
-      if (index >= 0)
-        fullPath = fullPath.slice(0, index);
-      this.bouncedPath = makeBouncedPath(fullPath);
+      this.composedPath = cutPath(composedPathOG.call(event), event.__propagationRoot);
+      this.bouncedPath = makeBouncedPath(this.composedPath);
       this.doc = 0;
       this.phase = 0;
       this.target = 0;
