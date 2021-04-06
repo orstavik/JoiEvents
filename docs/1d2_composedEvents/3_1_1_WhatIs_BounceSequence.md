@@ -55,6 +55,28 @@ function makeBouncedPath(composedPath) {
 
 The sequence in `bouncedPath` closely echo the sequence in `composedPath`, hence the simple conversion function.
 
+The below method converts a composedPath into a bouncedPath correctly based on a topDownBounce algorithm.
+
+```javascript
+function topDownBounce(composedPath, parent) {
+  const root = composedPath.pop();
+  const context = {parent, root, path: [root]};
+  let res = [];
+  while (composedPath.length) {
+    if (composedPath[composedPath.length - 1] instanceof ShadowRoot) {
+      const shadow = topDownBounce(composedPath, root);
+      res = [...shadow, ...res];
+    } else {
+      const target = composedPath.pop();
+      context.path.unshift(target);
+      if (target instanceof HTMLSlotElement && composedPath[composedPath.length - 1]?.assignedSlot === target)
+        return [context, ...res];
+    }
+  }
+  return [context, ...res];
+}
+```
+
 ## Demo: `bouncePath()`
 
 This demo illustrate what the `bouncePath()` looks like when applied to the same structure as `.composedPath()`.
@@ -166,11 +188,11 @@ windown, #document, BODY, DIV, LINK-SLOT, SPAN, OUTER-HOST, SPAN, LINK-SLOT, DIV
 
 In bounce sequencing there are *two* principles that appear contradictory:
 
-1. `Document`s are sorted *top-down* for `host` node shadows, but then 
+1. `Document`s are sorted *top-down* for `host` node shadows, but then
 2. *bottom-up* for slotted shadows.
 
 Why is that?
-              
+
 ## draft on the reason for bounce sequence.
 
 1. the uppermost document is the "end-user-developer".
