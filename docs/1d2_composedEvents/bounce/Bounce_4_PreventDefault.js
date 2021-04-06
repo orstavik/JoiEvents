@@ -2,27 +2,24 @@
 
 (function () {
 
-  function getPropagationRoot(el, documentBecomesWindow) {                               //todo includeWindow
-    const root = el.getRootNode && el.getRootNode() || window;
-    return documentBecomesWindow && root === document ? window : root;                   //todo includeWindow
+  function getPropagationRoot(target, composedPath) {
+    if (target === window) return target;
+    const root = target.getRootNode();
+    return root === document ? composedPath[composedPath.length - 1] : root;
   }
 
-  function makeDocumentEntry(root, el, includeWindow) {
-    const parent = root.host ? getPropagationRoot(root.host, includeWindow) : undefined;  //todo includeWindow
-    return {root, nodes: [el], parent};
-  }
-
+  //this only works when the composedPath is "fresh".
   function makeBouncedPath(composedPath) {
     const docs = [];
     for (let el of composedPath) {
-      const includeWindow = composedPath[composedPath.length - 1] === window;     //todo includeWindow
-      const root = getPropagationRoot(el, includeWindow);                         //todo includeWindow
+      const root = getPropagationRoot(el, composedPath);
       const doc = docs.find(({root: oldRoot}) => oldRoot === root);
-      doc ?                   //first encounter
-        doc.path.push(el) :
-        el instanceof HTMLSlotElement ?
-          docs.push(makeDocumentEntry(root, el, includeWindow)) :                 //todo includeWindow
-          docs.unshift(makeDocumentEntry(root, el, includeWindow));               //todo includeWindow
+      if (!doc) {
+        const parent = root.host ? getPropagationRoot(root.host, path) : undefined;
+        const entry = {root, path: [el], parent};
+        el instanceof HTMLSlotElement ? docs.push(entry) : docs.unshift(entry);
+      } else
+        doc.path.push(el);
     }
     return docs;
   }
