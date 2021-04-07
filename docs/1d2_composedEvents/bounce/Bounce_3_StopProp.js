@@ -5,7 +5,7 @@
 // rule #6: if you call stopPropagation() or stopImmediatePropagation() *before* event propagation begins, then
 //          you will not run any event listeners. This is slightly a different behavior than the platform.
 
-import {bounceSequence} from "./BouncedPath.js";
+import {bounceSequence} from "./lib/BouncedPath.js";
 
 function getPropagationRoot(el) {
   const root = el.getRootNode && el.getRootNode() || window;

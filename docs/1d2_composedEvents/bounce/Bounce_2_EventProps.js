@@ -1,5 +1,5 @@
 //Event.props version
-import {bounceSequence} from "./BouncedPath.js";
+import {bounceSequence} from "./lib/BouncedPath.js";
 
 Object.defineProperties(Event.prototype, {
   'currentTarget': {

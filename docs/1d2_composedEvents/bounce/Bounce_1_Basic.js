@@ -10,10 +10,10 @@
 //         This means the sum of both capture and bubble event listeners run in insertion order, not necessarily capture before bubble.
 //         It is my opinion that it might be better to always run capture before bubble, also at_target, but
 //         the 'old way' is chosen because I guess that this will cause the least disturbances in existing web apps.
-import {bounceSequence} from "./BouncedPath.js";
+import {bounceSequence} from "./lib/BouncedPath.js";
 
 class EventFrame {
-  constructor(event) {
+  constructor(event, bounceSequence) {
     this.event = event;
     const composedPath = event.composedPath();
     this.bouncedPath = bounceSequence(composedPath[0], composedPath[composedPath.length - 1]);
@@ -23,7 +23,7 @@ class EventFrame {
     this.listener = -1;
   }
 
-  next() {
+  next(getListeners) {
     this.listener++;
     for (; this.doc < this.bouncedPath.length; this.doc++, this.phase = 0) {
       const context = this.bouncedPath[this.doc];
@@ -33,7 +33,7 @@ class EventFrame {
           if (this.phase === 0 && this.target === path.length - 1) continue; //skip at_target during capture
           const elCapBub = this.phase ? this.target : path.length - 1 - this.target;
           const target = path[elCapBub];
-          const listenerEntries = target[listeners];
+          const listenerEntries = getListeners(target);
           if (listenerEntries) {
             for (; this.listener < listenerEntries.length; this.listener++) {
               const listener = listenerEntries[this.listener];
@@ -50,15 +50,19 @@ class EventFrame {
   }
 }
 
+function getListeners(target){
+  return target[listeners];
+}
+
 const listeners = Symbol("listeners");
 const removedListeners = [];
 const eventStack = [];
 
 function eventTick(e) {
-  const frame = new EventFrame(e);
+  const frame = new EventFrame(e, bounceSequence);
   eventStack.unshift(frame);
   e.stopImmediatePropagation();
-  for (let listener; listener = frame.next();) {
+  for (let listener; listener = frame.next(getListeners);) {
     listener.once && removedListeners.push(listener);
     listener.cb.call(listener.target, e);
   }
