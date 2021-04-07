@@ -70,8 +70,7 @@ EventTarget.prototype.removeEventListener = function (type, cb, options) {
 EventTarget.prototype.dispatchEvent = function (e, options) {    //completely override dispatchEvent
   if (e.__isSpent)
     throw new Error('Re-dispatch of events is disallowed.');
-  if (options instanceof Object && root instanceof EventTarget)
-    e.__propagationRoot = root;
-  eventTick(e, this, e.__propagationRoot || e.composed);
+  const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed;
+  eventTick(e, this, root);
 }
 //todo start explanation from dispatchEvent only. second step is addEventListener take-over.

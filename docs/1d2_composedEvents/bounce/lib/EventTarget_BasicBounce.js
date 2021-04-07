@@ -1,9 +1,5 @@
 const removedListeners = [];
 
-//todo 1
-//todo then we can call the ticker directly from dispatchEvent,
-//todo and then we can control the composedPath from both the eventListener and the bouncedPath.
-
 import {bounceSequence} from "./BouncedPath.js";
 import {tick} from "./EventLoop.js";
 
@@ -12,19 +8,22 @@ const listeners = Symbol("listeners");
 function eventTick(e) {
   const composedPath = e.composedPath();
   const propagationContexts = bounceSequence(composedPath[0], composedPath[composedPath.length - 1]);
-  const stackEmpty = tick(e, propagationContexts, getListeners, removeListener);
-  if (stackEmpty)
+  const stackSize = tick(e, propagationContexts, getListeners, removeListener);
+  if (stackSize === 0)
     removedListeners.map(removeListenerImpl);
 }
 
-function onFirstNativeListener(e){
+function onFirstNativeListener(e) {
   e.stopImmediatePropagation();
   eventTick(e);
 }
 
-function getListeners(target, type) {
-  //todo onClick, etc. how to do this so as not to mutate the depth of the listener list? have onclick always first, and with empty value if not set?
-  return target[listeners]?.filter(listener => listener.type === type) || [];
+function typeAndPhaseIsOk(listener, type, phase) {
+  return listener.type === type && (phase === 2 || (listener.capture && phase === 1) || (!listener.capture && phase === 3));
+}
+
+function getListeners(target, type, phase) {
+  return target[listeners]?.filter(listener => typeAndPhaseIsOk(listener, type, phase)) || [];
 }
 
 function removeListener(listener) {

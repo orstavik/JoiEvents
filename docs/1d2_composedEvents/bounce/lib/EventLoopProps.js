@@ -8,10 +8,10 @@ Object.defineProperties(Event.prototype, {
       return frame.listener === -1 ? null : frame.bouncedPath[frame.doc].path[frame.target];
     }
   },
-  'eventPhase': {
-    get: function () {  //0 not_started/ended, 1 capture, 2 at_target, 3 bubble
+  'eventPhase': {     //adding phase 4 for event finished propagating.
+    get: function () {
       const frame = this.__frame;
-      return frame.listener === -1 ? 0 : frame.phase === 0 ? 1 : frame.target === 0 ? 2 : 3;
+      return frame ? frame.phase : 0;
     }
   },
   'path': {
