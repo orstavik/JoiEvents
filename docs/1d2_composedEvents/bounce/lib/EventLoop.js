@@ -1,6 +1,7 @@
 class EventLoop {
   constructor(event, propagationContexts) {
     this.event = event;
+    event.__frame = this;
     this.contexts = propagationContexts;
     this.doc = 0;
     this.phase = 0;
