@@ -7,7 +7,7 @@ The Document sequence for bounced event listeners is defined as follows:
 Event targets are grouped by their direct PropagationContext. The PropagationContext consists of:
 1. `root`: a PropagationRoot which is the `shadowRoot` for web components and the `window` for the main DOM.
 2. `parent`: the UseR PropagationContext's PropagationRoot (`root`).
-3. `path`: all the element's within that PropagationContext between the `target` and in direct ascent upto and including the PropgationContext's `root`.
+3. `path`: all the element's within that PropagationContext between the `target` and in direct ascent upto and including the PropagationContext's `root`.
    
 PropagationContexts are sequenced according to the following three rules, listed in order of priority:
 1. **UseR wins**. All event listeners in the UseR contexts *always* run before any event listener in the UseD contexts (cf. top->down, lightDom->shadowDom).
