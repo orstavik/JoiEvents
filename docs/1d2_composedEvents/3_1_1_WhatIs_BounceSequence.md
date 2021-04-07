@@ -156,31 +156,63 @@ This demo compares `bouncedPath` with normal, flatDom `composedPath()`.
     constructor() {
       super();
       this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = '<link-slot><inner-host></inner-host></link-slot>';
+      this.shadowRoot.innerHTML = '<upper-inner-link-slot><inner-link-slot><inner-host></inner-host></inner-link-slot></upper-inner-link-slot>';
     }
   }
 
   class InnerHost extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = '<h1>hello sunshine</h1>';
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<h1>hello sunshine</h1>';
     }
   }
 
   class LinkSlot extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = '<frame-slot><slot></slot></frame-slot>';
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<frame-slot><slot></slot></frame-slot>';
     }
   }
 
   class FrameSlot extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({mode: "open"});
-      this.shadowRoot.innerHTML = '<slot></slot>';
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  class InnerLinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<inner-frame-slot><slot></slot></inner-frame-slot>';
+    }
+  }
+
+  class InnerFrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  class UpperInnerLinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<upper-inner-frame-slot><slot></slot></upper-inner-frame-slot>';
+    }
+  }
+
+  class UpperInnerFrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<slot></slot>';
     }
   }
 
@@ -188,92 +220,119 @@ This demo compares `bouncedPath` with normal, flatDom `composedPath()`.
   customElements.define("inner-host", InnerHost);
   customElements.define("link-slot", LinkSlot);
   customElements.define("frame-slot", FrameSlot);
+  customElements.define("inner-link-slot", InnerLinkSlot);
+  customElements.define("inner-frame-slot", InnerFrameSlot);
+  customElements.define("upper-inner-link-slot", UpperInnerLinkSlot);
+  customElements.define("upper-inner-frame-slot", UpperInnerFrameSlot);
+</script>
+<script type="module">
 
-  function makeBouncedPath(composedPath) {
-    const docs = new Map();
-    for (let el of composedPath) {
-      let root = el.getRootNode && el.getRootNode() || window;
-      root === document && (root = window);
-      let list = docs.get(root);
-      !list && docs.set(root, list = []);
-      list.push(el);
-    }
-    const sorted = [];
-    for (let doc of docs) {
-      const [root, elems] = doc;
-      if (sorted.length === 0)
-        sorted.push(doc);
-      else if (elems[0] instanceof HTMLSlotElement)
-        sorted.push(doc);
-      else
-        sorted.unshift(doc);
-    }
-    return sorted;
-  }
+  import {bounceSequence, convertToBounceSequence, print} from "../bounce/BouncedPath.js";
 
-  function printBouncedPath(bouncedPath) {
-    return bouncedPath.map(([doc, elems]) => `${(doc === window ? 'window' : doc.host.tagName)}#shadow: ` + elems.map(el => el.nodeName || 'window').join(', '));
-  }
+  window.addEventListener('click', e => console.log(e.composedPath()));
+  window.addEventListener('click', e => {
+    const bouncedPathConvert = print(convertToBounceSequence(e.composedPath()));
+    const bouncedPathFromTarget = print(bounceSequence(e.composedPath()[0], true));
+    console.log(JSON.stringify(bouncedPathConvert) === JSON.stringify(bouncedPathFromTarget));
+    console.log(bouncedPathFromTarget);
+  });
 
-  window.addEventListener('click', e => console.log(printBouncedPath(makeBouncedPath(e.composedPath()))));
+  const h2 = document.querySelector('h2');
+  h2.click();
+  const h1 = document.querySelector('outer-host').shadowRoot.querySelector('inner-host').shadowRoot.querySelector('h1');
+  h1.click();
 </script>
 ```
 
-When you `click` on Hello Sunshine you get a `bouncedPath` with the same 23 elements sorted under 7 different `Document`s/`window. For simplicity, we de
+`h2.click()` produces the following `composedPath()`, with the following contexts:
 
-```
-"window#shadow:       OUTER-HOST, SPAN, LINK-SLOT, DIV, BODY, HTML, #document, window"
-"OUTER-HOST#shadow:   INNER-HOST, LINK-SLOT, #document-fragment"
-"INNER-HOST#shadow:   H1, #document-fragment"
-"LINK-SLOT#shadow:    SLOT, FRAME-SLOT, #document-fragment"
-"FRAME-SLOT#shadow:   SLOT, #document-fragment"
-"LINK-SLOT#shadow:    SLOT, FRAME-SLOT, #document-fragment"
-"FRAME-SLOT#shadow:   SLOT, #document-fragment"
-```
-
-And, the real difference becomes apparent when you look add the `eventPhase` secondarily, and then see that the `Document` now only shifts 6 times:
-
-```
-windown, #document, BODY, DIV, LINK-SLOT, SPAN, OUTER-HOST, SPAN, LINK-SLOT, DIV, BODY, HTML, #document, window"
-  #document-fragment, LINK-SL0T, INNER-HOST, LINK-SLOT, #document-fragment"
-    #document-fragment, H1, #document-fragment"
-      #document-fragment, FRAME-SLOT, SLOT, FRAME-SLOT, #document-fragment"
-        #document-fragment, SLOT, #document-fragment"
-          #document-fragment, FRAME-SLOT, SLOT, FRAME-SLOT, #document-fragment"
-            #document-fragment, SLOT, #document-fragment"
+```                  
+event target      | propagationContexts
+------------------|-----------------------------------
+h2                | m                     m
+slot              |  ls                  ls
+slot              |   fs                fs
+document-fragment |    fs              fs
+frame-slot        |     ls            ls
+document-fragment |      ls          ls
+link-slot         |       m         m
+div               |        m       m
+body              |         m     m
+html              |          m   m
+document          |           m m
+Window            |            m
+======================================================
+12 targets        | 8 context shifts
 ```
 
-## Why: `Document` top-down? Why `host` node shadows *before* `slotted` shadows?
+`h2.click()` produces the following `bouncedPath` (each line represent one propagation context):
 
-In bounce sequencing there are *two* principles that appear contradictory:
+```                  
+PropagationContexts | event targets
+--------------------|-----------------------------------
+window:             | H2,LINK-SLOT,DIV,BODY,HTML,#document,window
+  LINK-SLOT:        | SLOT,FRAME-SLOT,#document-fragment
+    FRAME-SLOT:     | SLOT,#document-fragment
+======================================================
+2 context shifts    | 12 targets
+```
 
-1. `Document`s are sorted *top-down* for `host` node shadows, but then
-2. *bottom-up* for slotted shadows.
+`h1.click()` produces the following `composedPath()`, with the following contexts:
 
-Why is that?
+```                  
+event target           | PropagationContexts
+-----------------------|-----------------------------------------------------------
+h1                     | i                                                       i
+document-fragment      |  i                                                     i
+inner-host             |   o                                                   o
+slot                   |    ils                                               ils
+slot                   |     ifs                                             ifs
+document-fragment      |      ifs                                           ifs
+inner-frame-slot       |       ils                                         ils
+document-fragment      |        ils                                       ils
+inner-link-slot        |         o                                       o
+slot                   |          uils                                  uils
+slot                   |           uifs                                uifs
+document-fragment      |            uifs                              uifs
+upper-inner-frame-slot |             uils                            uils
+document-fragment      |              uils                          uils
+upper-inner-link-slot  |               o                           o
+document-fragment      |                o                         o
+outer-host             |                 m                       m
+span                   |                  m                     m
+slot                   |                   ls                  ls
+slot                   |                    fs                fs
+document-fragment      |                     fs              fs
+frame-slot             |                      ls            ls
+document-fragment      |                       ls          ls
+link-slot              |                        m         m
+div                    |                         m       m
+body                   |                          m     m
+html                   |                           m   m
+document               |                            m m
+Window                 |                             m
+=================================================================================
+29 targets             | 27 context shifts
+```
 
-## draft on the reason for bounce sequence.
+`h1.click()` produces the following `bouncedPath` (each line represent one propagation context):
 
-1. the uppermost document is the "end-user-developer".
-2. the innermost target is closest to the (user) action.
+```
+PropagationContexts           | event targets
+------------------------------|-----------------------------------
+window:                       | OUTER-HOST,SPAN,LINK-SLOT,DIV,BODY,HTML,#document,window
+  OUTER-HOST:                 | INNER-HOST,INNER-LINK-SLOT,UPPER-INNER-LINK-SLOT,#document-fragment
+    INNER-HOST:               | H1,#document-fragment
+    INNER-LINK-SLOT:          | SLOT,INNER-FRAME-SLOT,#document-fragment
+      INNER-FRAME-SLOT:       | SLOT,#document-fragment
+    UPPER-INNER-LINK-SLOT:    | SLOT,UPPER-INNER-FRAME-SLOT,#document-fragment
+      UPPER-INNER-FRAME-SLOT: | SLOT,#document-fragment
+  LINK-SLOT:                  | SLOT,FRAME-SLOT,#document-fragment
+    FRAME-SLOT:               | SLOT,#document-fragment
+======================================================
+8 context shifts              | 29 targets
+```
 
-(1) The uppermost `Document` is the main document. This is the document of the app. Inner(lower) `Document`s are web components. These are developed by other developers to be used by outer `Document` contexts. Therefore, event listener functions in the outer `Document` contexts should run *first*, so that they can programmatically control/block lower actions. The outer `Document` uses one finite set of inner elements (and thus one finite set of other `Document`s); an inner element can be used in hundreds or thousands of other outer contexts, and therefore cannot be expected to adjust its behavior to the quirks of all of them. Outer `Document` should control inner `Document`, and by having the other `Document` event listeners run before the inner `Document` event listeners, this is achieved.
-
-The purpose of `.preventDefault()` is exactly this. `.preventDefault()` is a function that can be called to control a function associated with the internals of native elements that will be triggered *after* event propagation. Put simply, *when event propagation bounce, default actions can be implemented as more or less regular event listeners in any web component!*
-
-This means that event listeners in the upper `Document`s should be processed *before* the lower "HostNodeShadowDom" `Document`s.
-
-(2) If a `<h1>` is put inside a `<div>` which is put inside an `<a>`, and the user clicks on the `<h1>`, then the `<div>` is closer to the user action than the `<a>`. Thus, if `<div>` and `<a>` has one competing (default) action, then by default the action *chosen* by the user would be the action of the element *closest* to the original target.
-
-In the case of SlotMatroskas, the outer SlotMatroska should run *before* the inner SlotMatroska.
-
-This means that you get the following recursive structure:
-
-1. you start with the full path from the inner most target to the top, and you reverse it.
-2. Then you find all the targets to the outermost `Document`.
-3. This is your first list of elements, you run the event listeners on these elements capture, then bubble.
-4. Then you look bottom up at the elements inside the `Document`. If there is a ShadowDOM associated with that element in the path, you step into that document. You repeat the steps from 2 in this `Document`.
-5. When there are no more elements to look for shadowDOMs in, then you go back to the top.
 
 ## References
 
