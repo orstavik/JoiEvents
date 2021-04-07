@@ -1,0 +1,113 @@
+<div>
+  <link-slot>
+    <span>
+      <outer-host></outer-host>
+    </span>
+    <h2>hello world</h2>
+  </link-slot>
+</div>
+
+<script>
+  class OuterHost extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<upper-inner-link-slot><inner-link-slot><inner-host></inner-host></inner-link-slot></upper-inner-link-slot>';
+    }
+  }
+
+  class InnerHost extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<h1>hello sunshine</h1>';
+    }
+  }
+
+  class LinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<frame-slot><slot></slot></frame-slot>';
+    }
+  }
+
+  class FrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  class InnerLinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<inner-frame-slot><slot></slot></inner-frame-slot>';
+    }
+  }
+
+  class InnerFrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  class UpperInnerLinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<upper-inner-frame-slot><slot></slot></upper-inner-frame-slot>';
+    }
+  }
+
+  class UpperInnerFrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({mode: "open"});
+      shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  customElements.define("outer-host", OuterHost);
+  customElements.define("inner-host", InnerHost);
+  customElements.define("link-slot", LinkSlot);
+  customElements.define("frame-slot", FrameSlot);
+  customElements.define("inner-link-slot", InnerLinkSlot);
+  customElements.define("inner-frame-slot", InnerFrameSlot);
+  customElements.define("upper-inner-link-slot", UpperInnerLinkSlot);
+  customElements.define("upper-inner-frame-slot", UpperInnerFrameSlot);
+</script>
+<script type="module">
+
+  import {bounceSequence, convertToBounceSequence, print} from "../bounce/BouncedPath.js";
+
+  window.addEventListener('click', e => console.log(e.composedPath()));
+  window.addEventListener('click', e => {
+    const bouncedPathConvert = convertToBounceSequence(e.composedPath());
+    const bouncedPathFromTarget = bounceSequence(e.composedPath()[0], true);
+    console.log(JSON.stringify(bouncedPathConvert) === JSON.stringify(bouncedPathFromTarget));
+    console.log(print(bouncedPathFromTarget));
+  });
+  //when you click on Hello Sunshine you get a
+  //composed path 23 elements, 7 document contexts.
+  // [h1, document-fragment, inner-host, slot, slot, document-fragment, frame-slot, document-fragment, link-slot, document-fragment, outer-host, span, slot, slot, document-fragment, frame-slot, document-fragment, link-slot, div, body, html, document, Window]
+
+  // Innerhost = I, Outerhost = O, LinkSlot = L, FrameSlot = F, InnerLinkSlot = IL, InnerFrameSlot = IF, main document = M
+  // [I, I, O, L, F, F, L, L, O, O, M, M, IL, IF, IF, IL, IL, M, M, M, M, M, M]
+  // [    x  x  x     x     x     x     x   x       x       x                 ]
+  // 19 context shifts during propagation (capture+bubble)
+  // The same 23 elements sorted in Bounce order
+  // [M, M, M, M, M, M, M, M, O, O, O, I, I, L, L, L, F, F, IL, IL, IL, IF, IF]
+  // [                      x        x     x        x     x           x       ]
+  // 6 context shifts during propagation (capture+bubble)
+
+  function getPropagationRoot(target, composedPath) {
+    if (target === window) return target;
+    const root = target.getRootNode();
+    return root === document ? composedPath[composedPath.length - 1] : root;
+  }
+</script>

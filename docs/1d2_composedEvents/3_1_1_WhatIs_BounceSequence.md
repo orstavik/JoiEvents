@@ -1,70 +1,96 @@
 # WhatIs: Bounce sequence?
 
-Bounce sequence is essentially `composed: true` AND `composed: false` sequence, with *two* rule change:
+## Bounced Document Sequence
 
-1. **`Document` before `eventPhase`**
-2. `Event`s are declared with `rootNode`/`Document` context, not only `target`. (If no `rootNode` provided, the `.getRootNode()` of the `target` is used, essentially echoing `composed: false`; if `composed: true` is set on the event, the `Document` context is set to `window`, echoing `composed: true`).
+The Document sequence for bounced event listeners is defined as follows:
 
-These two simple adjustments a) solve *all* the problems associated with `composed` event priority, b) *can be* implemented in existing systems and likely *fix* more issues than it will create, and c) is conceptually very simple.
+Event targets are grouped by their direct PropagationContext. The PropagationContext consists of:
+1. `root`: a PropagationRoot which is the `shadowRoot` for web components and the `window` for the main DOM.
+2. `parent`: the UseR PropagationContext's PropagationRoot (`root`).
+3. `path`: all the element's within that PropagationContext between the `target` and in direct ascent upto and including the PropgationContext's `root`.
+   
+PropagationContexts are sequenced according to the following three rules, listed in order of priority:
+1. **UseR wins**. All event listeners in the UseR contexts *always* run before any event listener in the UseD contexts (cf. top->down, lightDom->shadowDom).
+2. **Lowest wins**. If one UseR context uses two other contexts, then the lowest context nearest the `target` run first.
+3. **Nest first, sibling second**. Nested UseD contexts run before sibling UseD contexts in the UseR context.
 
-## RulesOfThumb: for bounced event path
+Bounce sequence include all and only the same event targets as in the flattenedDOM `composedPath()`. However, the event target nodes are listed in a different sequence and categorized under their propagation root node (cf. `rootNode` or `window`). This sequencing breaks with the flatDom sequence of event listeners currently in use.
 
-1. A propagation path is defined from an Element (or Document or window) target, up to a context node (Document or window).
-2. All elements in the flattenedDOM between target and context are included in the event propagation path.
-3. All the elements in the propagation path are **first** sorted according to `.getRootNode()` `Document`.
-4. The `Document`s are sorted **top-down** for HostNodeShadowDom contexts first.
-5. Then `Document`s are sorted **bottom-up** for any potential SlottedShadowDom contexts.
-6. And any nested SlotShadowDom contexts (SlotMatroskas) are in turn sorted **top-down**. (ps. the `Document` priorities are "intuitive" when working with actual elements and event listeners in the DOM).
-7. Within each document, the elements are then sorted in capture, target, and bubble phase first (as if no shadowDom ever existed).
-8. For each event target, event listeners are sorted FIFO per eventPhase (as usual).
-9. `.stopPropagation()` only apply to event listeners within the same `Document`: `stopPropagation()` never applies to event listeners in neither HostShadowDoms nor SlottedShadowDoms.
-10. `.preventDefault()` applies to event listeners marked `preventable` in subsequent `Document`s, but does not apply to any event listener inside the same `Document`.
-11. There are only *two* `eventPhase`s: capture and bubble. No more "target". To find out if the event phase would correspond to the old at-target, just check if `event.currentTarget === event.path[0]`.
+Bounced sequence is therefore listed as a set of propagation contexts consisting of:
+   1. `root` is the propagation root of the document, ie. `getRootNode()` or `window`; 
+   2. `parent` is the propagation root of the UseR `Document` context; 
+   3. `path` is the same `Document` path, ie. `event.path`.
 
-## HowTo: convert `composedPath` to `bouncedPath`?
+## HowTo: make `bounceSequence(target, root)`?
 
-The algorithm for converting `composedPath` into `bouncedPath` is simple:
+We can produce a bounced sequence given a `target` and a `root`. We first make a wrapper function for ensuring correct argument types: `bounceSequence(target, root)`. The target must be an `EventTarget`/`window`. The `root` must be either a `true` for `composed: true`, `false` for `composed: false`, or a `Document`/`window`.
 
-1. sort all the elements in the `composedPath` per `.getRootNode()`. One special rule is that `document` is sorted under `window`.
-2. The `Document`s in the HostNodeShadowDom hierarchy are sorted first, top-down.
-3. Then the SlottedShadowDom Documents are sorted bottom-up (nested SlottedShadowDom elements sorted together top-down).
+Second, we start with the innermost `target` node and build a same document `path` upwards for it. We then repeat this process on the `.host` node of the target until we get to the `endDocumentWindow`. This results in the "HostNode Document Shadows", that we sort from outside in, in the **UseR before UseD** `Document` order.
+
+Then, we traverse all the host node `Document` event targets to find `Element`s that are slotted, and the corresponding `assignedSlot` and `shadowRoot` for each slotted sequence. If there are any SlotMatroschkas inside the slotted shadowDOM, we recursively accept them before we moved on to the next slotted pair.
 
 ```javascript
-function makeBouncedPath(composedPath) {
-  const docs = new Map();
-  for (let el of composedPath) {
-    let root = el.getRootNode && el.getRootNode() || window;
-    root === document && (root = window);
-    let list = docs.get(root);
-    !list && docs.set(root, list = []);
-    list.push(el);
+
+export function bounceSequence(target, root) {
+  if (!(target instanceof EventTarget || target instanceof Window))
+    throw new Error('IllegalArgumentType: the "target" in bounceSequence(target, ...) must be either an EventTarget or Window.');
+  if (root === true)
+    root = window;
+  else if (root === undefined || root === false)
+    root = target.getRootNode();
+  else if (!(root instanceof DocumentFragment))
+    throw new Error('IllegalArgumentType: the "root" in bounceSequence(target, root) must be either true (as in composed: true), false (as in composed: false), or a Document or Window.');
+  return bounceSequenceImpl(target, root, undefined);
+}
+
+function bounceSequenceImpl(startNode, endDocumentWindow, parent) {
+  let contexts = [];
+  for (let t = startNode; t; t = t.host) {
+    const path = [];
+    for (; t; t = t.parentNode)
+      path.push(t);
+    t = path[path.length - 1];
+    t === document && path.push(t = window);
+    contexts[0] && (contexts[0].parent = t);
+    contexts.unshift({root: t, path, parent});
+    if (t === endDocumentWindow)
+      break;
   }
-  const sorted = [];
-  for (let doc of docs) {
-    const [root, elems] = doc;
-    if (sorted.length === 0)
-      sorted.push(doc);
-    else if (elems[0] instanceof HTMLSlotElement)
-      sorted.push(doc);
-    else
-      sorted.unshift(doc);
+  for (let i = contexts.length - 1; i >= 0; i--) {
+    const {root, path} = contexts[i];
+    for (let j = 0; j < path.length - 1; j++) {
+      const mightBeSlotted = path[j];
+      const mightBeHost = path[j + 1];
+      const slot = mightBeSlotted.assignedSlot;
+      const shadow = mightBeHost.shadowRoot;
+      if (slot && shadow)
+        contexts = [...contexts, ...(bounceSequenceImpl(slot, shadow, root))];
+    }
   }
-  return sorted;
+  return contexts;
 }
 ```
 
-The sequence in `bouncedPath` closely echo the sequence in `composedPath`, hence the simple conversion function.
+The drawback of making `bouncedSequence` based on `target` and `root` is that it is sensitive to DOM manipulation. If the event targets within the original `bouncedSequence` are repositioned by an event listener, then a subsequent event listener cannot recreate the `bouncedSequence` using the same `target` and `root`.
 
-The below method converts a composedPath into a bouncedPath correctly based on a topDownBounce algorithm.
+## HowTo: convert `composedPath()` to `bouncedPath`?
+
+To access the original eventTarget sequence and turn that into a `bouncedPath`, then we need a function to convert the `composedPath()` (which is frozen and represents the original event target sequence), and turn that into a `bouncedPath`.
+
+When converting the `composedPath()` into a `bouncedPath` it is better to iterate top-down, rather than bottom-up:
 
 ```javascript
-function topDownBounce(composedPath, parent) {
+export function convertToBounceSequence(composedPath) {
+  return convertToBounceSequenceImpl(composedPath);
+}
+
+function convertToBounceSequenceImpl(composedPath, parent) {
   const root = composedPath.pop();
   const context = {parent, root, path: [root]};
   let res = [];
   while (composedPath.length) {
     if (composedPath[composedPath.length - 1] instanceof ShadowRoot) {
-      const shadow = topDownBounce(composedPath, root);
+      const shadow = convertToBounceSequenceImpl(composedPath, root);
       res = [...shadow, ...res];
     } else {
       const target = composedPath.pop();
@@ -77,12 +103,45 @@ function topDownBounce(composedPath, parent) {
 }
 ```
 
-## Demo: `bouncePath()`
+## HowTo: `print(bouncedPath)`?
 
-This demo illustrate what the `bouncePath()` looks like when applied to the same structure as `.composedPath()`.
+To view and understand the bouncedPath, we should indent the `Document` contexts on the UseD level. This means that the uppermost UseR `Document` will be the leftmost entry, and then `Document`s will be listed in the order in which their event targets are called.
+
+The `print(bouncedPath)` function here listed also checks that all the `root` nodes matches the `getRootNode()` of the elements in the path (this may not be true when elements are repositioned dynamically in the DOM), and that the propagation contexts are listed in the correct a) UseR then UseD, b) lowestWins, and c) nestedBeforeSibling.   
+
+```javascript
+function getDepth(depths, root, parent) {
+  const depth = depths.get(root);
+  if (depth !== undefined)
+    return depth
+  const parentDepth = depths.get(parent);
+  if (parentDepth === undefined)
+    throw new Error('BouncedPathBug 1: A UseD document is listed before its UseR document.');
+  const depths2 = Array.from(depths.entries()).reverse();
+  for (let [lastRoot, lastDepth] of depths2) {
+    if (lastRoot === parent) break;
+    if (lastDepth.length <= parentDepth.length)
+      throw new Error('BouncedPathBug 2: Maybe sibling document listed before a nested document?');
+  }
+  return depths.set(root, parentDepth + '  '), depths.get(root);
+}
+
+export function print(bouncedPath) {
+  const depths = new Map([[undefined, '']]);
+  if(!bouncedPath.every(({root, path})=>path.every(el=> root === window ? el === window || el === document || el.getRootNode() === document: el.getRootNode() === root))) throw new Error('BouncedPathBug: root node error.');
+  return bouncedPath.map(({parent, root, path}) =>
+    getDepth(depths, root, parent) +
+    (root.host ? root.host.nodeName : 'window') + ': ' +
+    path.map(et => et.nodeName || 'window')
+  );
+}
+```
+
+## Demo: `bouncePath` vs. flatDom-path 
+
+This demo compares `bouncedPath` with normal, flatDom `composedPath()`.
 
 ```html
-
 <div>
   <link-slot>
     <span>
