@@ -1,26 +1,40 @@
 # Why: sequence event listeners?
 
+> In this dicussion, `defaultAction`s are considered "event listeners". This is 100% deliberate. `defaultAction`s are a special set of event listeners, both technically and conceptually. And understanding default actions as event listeners is especially helpful in understanding how event listeners are *already* sequenced in complex DOM constructions, and thus how event listeners *should* be sequenced.
+
 The premises for this discussion are:
 1. The existing algorithm for prioritizing and sequencing event listeners for events we call "sequencing-of-event-listeners-for-composed-true-and-false-events", or just "composed sequencing" for short.
 2. Composed sequencing switches between different `Document` contexts *often*. Event listeners from one `Document` can be called both *before* and *after* event listeners from another `Document`, and vice versa. In very complex, hard to read patterns. 
 
-## WhyAndHow: do the sequence of event listeners matter?
+## How: event listeners affect each other?
 
-Often it does **NOT** matter if one event listener runs *before* or *after* another event listener: the event listener performs a function (that do state changes) that do not change the premises for the other event listener, *and vice versa*. For such event listener pairs, the sequence of event listeners doesn't matter.
+The ways one event listener influence another event listener are:
+1. **change JS object state**. One event listener changes the state of a JS object that another event listener use.
+2. **change DOM state**. One event listener changes the state of DOM elements that another event listener/default action reads during their execution.
+3. **change event state**. Most commonly, one event listener stops another event listener or prevents a default action from being invoked.
 
-However! Many other event listeners **do** influence each other, directly or indirectly. These event listeners change *some kind of state* that *should* influence *how* another event listener function. Here, the sequence of event listeners is *extremely important*, and if the sequence between such event listeners are somehow wrong, then that will essentially invert the result of the event listener as a pair (yes, it is the event equivalent of `+` becoming `-` in a mathematical expression). 
+## Why: do event listener sequence matter?
 
-So. Event listener sequence matter *a lot* when one event listener change state that is the premise of another event listener. So, *why* do one event listener need to change the state/premise behind another? And *how*?
+It doesn't always matter if one event listener runs *before* or *after* another event listener: if event listener A **only** reads and writes to state properties that event listener B **neither** reads nor writes to, **and vice versa**, then it doesn't matter if you call A first or B first.
 
-## WhyAndHow: one event listener affect another event listener?
+However! Many event listeners **do** influence each other. These event listeners reads or writes to a state property that another event listener for the same event either reads or writes to, directly or indirectly. If event listeners are called in the wrong sequence, then one event listener will:
+1. read data that is updated, and assume that it has not been updated,
+2. read data that is not updated, and assume that it has been updated,
+3. overwrite newer data with older data.
 
-The reasons *why* one event listener needs to influence another event listener is really infinite. The interplay between event listeners are tightly associated with the functionality of the app. Or the particular behavior of a specific web component. Thus, "the why" is really not helpful as a starting point for understanding event listener interaction (and thus sequencing).
+Thus. It is *extremely important* that event listeners are called in the correct sequence. So, the questions become: how do event listeners affect each other? And what is criteria by which one event listener should be placed before another (what do we mean by "correct sequence" when it comes to event listeners)?
 
-However, the mechanisms for *how* one event listener *do* influence another event listener are *finite* and very helpful for understanding event listener interaction (and sequencing). An event listener can:
-1. **change state** that another event listener/default action depends upon/reads during their execution.
-2. **stop/prevent** another event listener/default action from *being invoked*.
+## WhatIs: correct event listener sequence?
 
-**Note!!** In this dicussion I will recast `defaultAction`s as "event listeners". I stand by choice 100%. `defaultAction`s are just a special set of event listeners, both technically and conceptually. And approaching them as such helps clarify the needs for how event listeners *should* be able to control each other, and thus *what event sequence **truly is needed** in the DOM*. 
+The primary criterium for correct event listener sequence is **developer expectations**. If a developer believes that B will be called before A, but then it turns out that A is called before B, then you likely end up with a bug/race condition error. Thus, the sequence of event listeners that the JS run-time effectuate should match the model of the DOM, the event, and event listeners that developers a) meet in other situations and therefore b) have learned.
+
+The second criterium for event listener sequence is **developer purview**. Sometimes, the developer of event listener A have access to the same information about the DOM as the developer of event listener B. They might be the same person, making two event listeners in the same `Document`. Here, the developer purview is the same, and thus do not influence the sequence between the two event listeners.
+
+However, often the purview of the developer behind two event listeners running in the same application is *not* the same. For example, event listener A is written as part of a reusable component A intended for use in 5 to 5 million different apps, and event listener B is part of one of these specific apps using the reusable component A. Here, developer B *knows concretely about* both itself and reusable component A, while developer A can only make *vague, generic assumptions* about the actions of other event listeners such as B. **The context of the use*R* document *sees* the context of the use*D* document, but NOT vice versa**.
+
+> It is worth noting that developer A and developer B might very well be the same person. Developer A might make a component to reuse in his own application, for sure. But developer A might also need to simply divide his work in different times, and wish to finish the development of component A before beginning the work on component B that uses component A. Thus, developer purview can very well be understood as component purview.
+
+Developer expectations and purview are the criteria against which to judge event listener sequence. So, which event listener sequence is *best* given otherwise established developer expectations and purview?
 
 ## HowTo: change the state for another event listener?  
 
