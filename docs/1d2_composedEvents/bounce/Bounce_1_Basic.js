@@ -10,31 +10,34 @@
 //         This means the sum of both capture and bubble event listeners run in insertion order, not necessarily capture before bubble.
 //         It is my opinion that it might be better to always run capture before bubble, also at_target, but
 //         the 'old way' is chosen because I guess that this will cause the least disturbances in existing web apps.
+import {bounceSequence} from "./BouncedPath.js";
+
 (function () {
 
-  function getPropagationRoot(el) {
-    const root = el.getRootNode && el.getRootNode() || window;
-    return root === document ? window : root;
-  }
-
-  function makeBouncedPath(composedPath) {
-    const docs = [];
-    for (let el of composedPath) {
-      const root = getPropagationRoot(el);
-      const doc = docs.find(({root: oldRoot}) => oldRoot === root);
-      doc ?                   //first encounter
-        doc.path.push(el) :
-        el instanceof HTMLSlotElement ?
-          docs.push({root, path: [el]}) :
-          docs.unshift({root, path: [el]});
-    }
-    return docs;
-  }
-
+  // function getPropagationRoot(el) {
+  //   const root = el.getRootNode && el.getRootNode() || window;
+  //   return root === document ? window : root;
+  // }
+  //
+  // function makeBouncedPath(composedPath) {
+  //   const docs = [];
+  //   for (let el of composedPath) {
+  //     const root = getPropagationRoot(el);
+  //     const doc = docs.find(({root: oldRoot}) => oldRoot === root);
+  //     doc ?                   //first encounter
+  //       doc.path.push(el) :
+  //       el instanceof HTMLSlotElement ?
+  //         docs.push({root, path: [el]}) :
+  //         docs.unshift({root, path: [el]});
+  //   }
+  //   return docs;
+  // }
+  //
   class EventFrame {
     constructor(event) {
       this.event = event;
-      this.bouncedPath = makeBouncedPath(event.composedPath());
+      const composedPath = event.composedPath();
+      this.bouncedPath = bounceSequence(composedPath[0], composedPath[composedPath.length - 1]);
       this.doc = 0;
       this.phase = 0;
       this.target = 0;

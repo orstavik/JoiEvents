@@ -27,7 +27,7 @@ export function bounceSequence(target, root) {
     root = window;
   else if (root === undefined || root === false)
     root = target.getRootNode();
-  else if (!(root instanceof DocumentFragment))
+  else if (!(root instanceof DocumentFragment || root instanceof Window))
     throw new Error('IllegalArgumentType: the "root" in bounceSequence(target, root) must be either true (as in composed: true), false (as in composed: false), or a Document or Window.');
   return bounceSequenceImpl(target, root, undefined);
 }
