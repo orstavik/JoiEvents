@@ -1,22 +1,29 @@
 const removedListeners = [];
 
-let ticker;
-let organizer;
+//todo 1
+//todo then we can call the ticker directly from dispatchEvent,
+//todo and then we can control the composedPath from both the eventListener and the bouncedPath.
 
-export function setTickOrganizer(tick, organizerCb) {
-  ticker = tick;
-  organizer = organizerCb;
-}
-
-function eventTick(e) {
-  if (ticker(e, organizer, getListeners, removeListener))
-    removedListeners.map(removeListenerImpl);
-}
+import {bounceSequence} from "./BouncedPath.js";
+import {tick} from "./EventLoop.js";
 
 const listeners = Symbol("listeners");
 
+function eventTick(e) {
+  const composedPath = e.composedPath();
+  const propagationContexts = bounceSequence(composedPath[0], composedPath[composedPath.length - 1]);
+  const stackEmpty = tick(e, propagationContexts, getListeners, removeListener);
+  if (stackEmpty)
+    removedListeners.map(removeListenerImpl);
+}
+
+function onFirstNativeListener(e){
+  e.stopImmediatePropagation();
+  eventTick(e);
+}
+
 function getListeners(target, type) {
-  //todo add getting the handleEvent listeners here
+  //todo onClick, etc. how to do this so as not to mutate the depth of the listener list? have onclick always first, and with empty value if not set?
   return target[listeners]?.filter(listener => listener.type === type) || [];
 }
 
@@ -52,7 +59,8 @@ EventTarget.prototype.addEventListener = function (type, cb, options) {
   const passive = options instanceof Object && 'passive' in options ? options.passive : defaultPassiveValue(type, target);
   const once = options instanceof Object && 'once' in options && options.once;
   const listener = {target, type, cb, capture, passive, once};
-  listener.realCb = eventTick.bind(listener); //we don't use the listener object, but we need to bind the eventTick to something to get a unique realCb.
+  listener.realCb = onFirstNativeListener.bind(listener);
+  //we don't use the listener object, but we need to bind the nativeEventListener to something to get a unique realCb.
   addListenerImpl(listener);
 }
 
