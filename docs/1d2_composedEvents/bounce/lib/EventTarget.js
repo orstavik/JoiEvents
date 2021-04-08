@@ -6,8 +6,7 @@ import {tick} from "./EventLoop.js";
 const listeners = Symbol("listeners");
 
 function eventTick(e, target, root) {
-  const propagationContexts = bounceSequence(target, root);
-  const stackEmpty = tick(e, propagationContexts, getListeners, removeListener);
+  const stackEmpty = tick(e, bounceSequence(target, root), getListeners, removeListener);
   stackEmpty && removedListeners.map(removeListenerImpl);
 }
 
@@ -69,7 +68,7 @@ EventTarget.prototype.removeEventListener = function (type, cb, options) {
 }
 
 EventTarget.prototype.dispatchEvent = function (e, options) {    //completely override dispatchEvent
-  if (e.__frame.listener >= 0)//todo e.eventPhase !== 0
+  if (e.eventPhase > 0)
     throw new Error('Re-dispatch of events is disallowed.');
   const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed;
   eventTick(e, this, root);
