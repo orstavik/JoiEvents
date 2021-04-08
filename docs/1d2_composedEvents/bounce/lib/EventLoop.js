@@ -1,3 +1,4 @@
+export {EventOG} from './Event.js';
 import {getEventState} from './Event.js';
 
 function pathForPhase(path, phase) {

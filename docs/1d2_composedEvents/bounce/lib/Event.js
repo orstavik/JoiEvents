@@ -1,3 +1,9 @@
+export const EventOG = Object.freeze({
+  stopPropagationOG : Event.prototype.stopPropagation,
+  stopImmediatePropagationOG : Event.prototype.stopImmediatePropagation,
+  preventDefaultOG : Event.prototype.preventDefault
+});
+
 const cache = new WeakMap();
 
 export function getEventState(e) {
@@ -50,7 +56,8 @@ Object.defineProperties(Event.prototype, {
       return state.contexts?.map(({parent, root, path}) => ({parent, root, path: path.slice()})) || [];
     }
   },
-  //bubbles, composedPath, we don't need to override them. always static
+  //bubbles, composed: NO need to override, always static
+  //composedPath: override to get the correct propagationRoot
   'stopPropagation': {
     value: function () {
       const state = getEventState(this);

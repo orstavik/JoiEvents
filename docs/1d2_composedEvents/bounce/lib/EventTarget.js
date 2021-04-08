@@ -1,7 +1,7 @@
 const removedListeners = [];
 
 import {bounceSequence} from "./BouncedPath.js";
-import {tick} from "./EventLoop.js";
+import {tick, EventOG} from "./EventLoop.js";
 
 const listeners = Symbol("listeners");
 
@@ -11,7 +11,7 @@ function eventTick(e, target, root) {
 }
 
 function onFirstNativeListener(e) {
-  e.stopImmediatePropagation();
+  EventOG.stopImmediatePropagation.call(e);
   const composedPath = e.composedPath();
   eventTick(e, composedPath[0], composedPath[composedPath.length - 1]);
 }
