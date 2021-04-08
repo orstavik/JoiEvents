@@ -1,8 +1,10 @@
+import {} from './Event.js';
+
 function pathForPhase(path, phase) {
   return phase === 1 ? path.slice(1).reverse() : phase === 2 ? [path[0]] : phase === 3 ? path.slice(1) : [];
 }
 
-export class EventLoop {
+class EventLoop {
   constructor(event, propagationContexts) {
     this.event = event;
     this.contexts = propagationContexts;
