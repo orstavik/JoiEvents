@@ -1,4 +1,6 @@
-export {EventLoop} from "./EventLoop.js";
+import {EventLoop} from "./EventLoop.js";
+
+export {tick} from "./EventLoop.js";
 
 //this adds properties to the Event so that we can get the correct state information from it.
 //rule #x: adding phase 4 for event finished propagating.
