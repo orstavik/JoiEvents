@@ -1,21 +1,3 @@
-//Event.dispatchEvent version (disallow redispatching of events)
-
-//todo move this up to the second step.
-
-//reasons why re-dispatching events are bad:
-//1. timestamp should be at initial dispatch, not event object creation.
-//2. properties such as composed and bubbles are really associated with a single dispatch instance.
-//3. confusion arise if you use an event as key and then expect properties such as target, path, composedPath() etc to be constant.
-//   if somebody uses the event as a key in a map/set, or as an object to dirtycheck against, it is 95% likely that the
-//   thing checked is the dispatch instance, and not the event object per se.
-//4. preventDefault applies across dispatches.
-//5. but stopPropagation is reset for each new dispatch.
-//6. the browser can reuse objects to optimize in the background, there are not really any performance benefits to gain here.
-
-//In this system, re-dispatchEvent is disallowed mainly because it cannot function smoothly with defaultActions.
-//you cannot both read .preventDefault after the event has completed propagation, And call .preventDefault() *before* the
-//event begins propagation, And call .preventDefault() on an event, and then re-dispatchEvent it.
-
 (function () {
   function getPropagationRoot(target, composedPath) {
     if (target === window) return target;
@@ -42,22 +24,22 @@
   const stopImmediatePropagationOG = Event.prototype.stopImmediatePropagation;
   Object.defineProperties(Event.prototype, {
     'stopPropagation': {
-      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
-      //todo create a pre-frame for that?
       value: function () {
         const frame = this.__frame;
-        if (frame.listener === -1)
+        if(!frame){
+          //how to preserve this? Do we create an EventFrame in advance?
+        } else if (frame.listener === -1)
           frame.bouncedPath.forEach(context => context.stopImmediate = true);
         else
           frame.bouncedPath[frame.doc].stop = true;
       }
     },
     'stopImmediatePropagation': {
-      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
-      //todo create a pre-frame for that?
       value: function () {
         const frame = this.__frame;
-        if (frame.listener === -1)
+        if(!frame){
+          //how to preserve this? Do we create an EventFrame in advance?
+        } else if (frame.listener === -1)
           frame.bouncedPath.forEach(context => context.stopImmediate = true);
         else
           frame.bouncedPath[frame.doc].stopImmediate = true;
@@ -66,14 +48,17 @@
     'bubbles': {
       get: function () {
         const frame = this.__frame;
-        return frame.bubbles;
+        return frame && frame.bubbles;
       }
     },
     'preventDefault': {
-      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
-      //todo create a pre-frame for that?
       value: function (rootOrHost) {
         const frame = this.__frame;
+        if(!frame){
+          //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
+          //todo create a pre-frame for that?
+          return;
+        }
         if (arguments.length === 0) {
           frame.bouncedPath[frame.doc].prevented = true;
           return;
@@ -96,11 +81,11 @@
       }
     },
     'defaultPrevented': {
-      //todo when we call stopPropagation() and preventDefault() *before* event dispatch, then we have a problem.
-      //todo create a pre-frame for that?
       get: function () {
         const frame = this.__frame;
-        if (frame.listener === -1)
+        if(!frame){
+          return false;
+        } else if (frame.listener === -1)
           return frame.bouncedPath[0].prevented;
 
         for (let c = frame.bouncedPath[frame.doc]; c; c = frame.bouncedPath.find(({root}) => root === c.parent))
@@ -205,7 +190,6 @@
     }
   }
 
-  const listeners = Symbol("listeners");
   const removedListeners = [];
   const eventStack = [];
 
@@ -221,6 +205,7 @@
     eventStack.length === 0 && removedListeners.forEach(removeListenerImpl);
   }
 
+  const listeners = Symbol("listeners");
   function getListener(target, type, cb, capture) {
     target[listeners] || (target[listeners] = []);
     return target[listeners].find(old => old.type === type && old.cb === cb && old.capture === capture && !old.removed);

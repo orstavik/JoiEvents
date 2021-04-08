@@ -1,11 +1,5 @@
-//Event.stopProp version
 
-// rule #4: 'stopPropagation' and 'stopImmediatePropagation' works only per document.
-// rule #5: 'event.bubbles' turned into a static reader for the {bubbles: true/false} property of the event/dispatch.
-// rule #6: if you call stopPropagation() or stopImmediatePropagation() *before* event propagation begins, then
-//          you will not run any event listeners. This is slightly a different behavior than the platform.
-
-import {bounceSequence} from "./lib/BouncedPath.js";
+import {bounceSequence} from "../lib/BouncedPath.js";
 
 function getPropagationRoot(el) {
   const root = el.getRootNode && el.getRootNode() || window;

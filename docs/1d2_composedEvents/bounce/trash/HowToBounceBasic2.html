@@ -1,0 +1,147 @@
+<script type="module">
+
+  import {EventFrame} from "./EventFrame.js";
+
+  const listeners = Symbol("listeners");
+  const eventStack = [];
+  const removedListeners = [];
+
+  function addListenerImpl(listener) {
+    listener.target[listeners].push(listener);
+    addEventListenerOG.call(listener.target, listener.type, listener.realCb, {capture: listener.capture, passive: listener.passive});
+  }
+
+  function removeListenerImpl(listener) {
+    listener.target[listeners].splice(listener.target[listeners].indexOf(listener), 1);
+    removeEventListenerOG.call(listener.target, listener.type, listener.realCb, {capture: listener.capture, passive: listener.passive});
+  }
+
+  function getListener(target, type, cb, capture) {
+    return target[listener] && target[listener].find(old => old.type === type && old.cb === cb && old.capture === capture && !old.removed);
+  }
+
+  function defaultPassiveValue(type, target) {
+    return (type === 'touchstart' || type === 'touchmove') && (target === window || target === document || target === body);
+  }
+
+  function addEventListener(type, cb, options) {
+    const capture = options instanceof Object ? options.capture : !!options;
+    if (getListener(this, type, cb, options, capture))
+      return;
+    const target = this;
+    const passive = 'passive' in options ? options.passive : defaultPassiveValue(type, target);
+    const listener = {target, type, cb, capture, passive};
+    if (options.once) {
+      listener.realCb = e => {
+        rel(listener, e);
+        listener.target.removeEventListener(type, listener.realCb, {capture: listener.capture, passive: listener.passive});
+      };
+    } else {
+      listener.realCb = e => rel(listener, e);
+    }
+    this[listeners] || (this[listeners] = []);
+    addListenerImpl(listener);
+
+    //add the listener to the current composed target of one of the event frames.
+    for (let eventFrame of eventStack) {
+      if (type !== eventFrame.event.type) continue;
+      if (this !== eventFrame.getCurrentComposedTarget()) continue;
+      const frameRealPhase = eventFrame.getComposedEventPhase();
+      if (listener.capture && frameRealPhase === Event.BUBBLING_PHASE) continue;
+      if (!listener.capture && frameRealPhase === Event.CAPTURING_PHASE) continue;
+      eventFrame._addedListeners.push(listener);
+    }
+  }
+
+  function removeEventListener(type, cb, options) {
+    const listener = getListener(this, type, cb, options instanceof Object ? options.capture : !!options);
+    if (!listener)
+      return;
+    if (!eventStack.length)
+      return removeListenerImpl(listener);
+    listener.removed = true;
+    removedListeners.push(listener);
+  }
+
+  function rel(event, listener) {
+    //get the frame object
+    const frame = EventFrame.getOrMakeEventFrame(event);
+    const completed = frame.frameTick(listener);
+    if (!completed)
+      return;
+
+    //dev test
+    if (eventStack[0] !== frame) throw new Error('omg, the event stack is in disarray');
+    //drop the current last stack frame
+    eventStack.shift();
+
+    //clean up stack
+    while(eventStack.length && eventStack[0].completeComposedFrame())
+      eventStack.shift();
+    if (!eventStack.length)
+      removedListeners.forEach(removeListenerImpl);
+  }
+</script>
+
+<div>
+  <link-slot>
+    <span>
+      <outer-host></outer-host>
+    </span>
+    <h2>hello world</h2>
+  </link-slot>
+</div>
+
+<script>
+  class OuterHost extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<link-slot><inner-host></inner-host></link-slot>';
+    }
+  }
+
+  class InnerHost extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<h1>hello sunshine</h1>';
+    }
+  }
+
+  class LinkSlot extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<frame-slot><slot></slot></frame-slot>';
+    }
+  }
+
+  class FrameSlot extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<slot></slot>';
+    }
+  }
+
+  customElements.define("outer-host", OuterHost);
+  customElements.define("inner-host", InnerHost);
+  customElements.define("link-slot", LinkSlot);
+  customElements.define("frame-slot", FrameSlot);
+
+  window.addEventListener('click', e => console.log(e.composedPath()));
+  //when you click on Hello Sunshine you get a
+  //composed path 23 elements, 7 document contexts.
+  // [h1, document-fragment, inner-host, slot, slot, document-fragment, frame-slot, document-fragment, link-slot, document-fragment, outer-host, span, slot, slot, document-fragment, frame-slot, document-fragment, link-slot, div, body, html, document, Window]
+
+  // Innerhost = I, Outerhost = O, LinkSlot = L(1&2), FrameSlot = F(1&2), main document = M
+  // [I, I, O, L1, F1, F1, L1, L1, O, O, M, M, L2, F2, F2, L2, L2, M, M, M, M, M, M]
+  // [    x   x   x      x        x     x     x   x       x       x                ] //10 context shifts,
+  //19 context shifts when capture+bubble
+  //The same 23 elements sorted in Bounce order
+  // [M, M, M, M, M, M, M, M, O, O, O, I, I, L1, L1, L1, F1, F1, L2, L2, L2, F2, F2]
+  // [                       x        x     x           x       x           x      ] //6 context shifts when capture+bubble
+
+  window.addEventListener('click', e => console.log(printBouncedPath(makeBouncedPath(e.composedPath()))));
+</script>

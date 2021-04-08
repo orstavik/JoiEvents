@@ -2,6 +2,9 @@ export function convertToBounceSequence(composedPath) {
   return convertToBounceSequenceImpl(composedPath);
 }
 
+//todo Do I need to add the host/slot type for the context? it has a lot of meaning for the default action?
+//todo Or do I simply use the native composedPath()?
+
 function convertToBounceSequenceImpl(composedPath, parent) {
   const root = composedPath.pop();
   const context = {parent, root, path: [root]};

@@ -1,5 +1,6 @@
-export {EventOG} from './Event.js';
+export {EventOG, checkNativePreventDefault} from './Event.js';
 import {getEventState} from './Event.js';
+import {bounceSequence} from "./BouncedPath.js";
 
 function pathForPhase(path, phase) {
   return phase === 1 ? path.slice(1).reverse() : phase === 2 ? [path[0]] : phase === 3 ? path.slice(1) : [];
@@ -25,13 +26,14 @@ function nextInLoop(event, contexts, getListeners) {
       }
     }
   }
+  event.phase = 4, event.doc = 0;
 }
 
 const eventStack = [];
 
-export function tick(e, propagationContexts, getListeners, removeListener) {
+export function propagate(e, target, root, getListeners, removeListener) {
   const eventState = getEventState(e);
-  eventState.contexts = propagationContexts;
+  const propagationContexts = eventState.contexts = bounceSequence(target, root);
   eventStack.unshift(eventState);
   for (let listener; listener = nextInLoop(eventState, propagationContexts, getListeners);) {
     listener.once && removeListener(listener);
