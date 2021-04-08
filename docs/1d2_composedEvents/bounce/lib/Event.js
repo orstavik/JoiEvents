@@ -1,4 +1,4 @@
-import {findNativeDefaultAction} from "./FindNativeDefaultAction.js";
+import {bounceSequence, composedPath} from "./BouncedPath.js";
 
 export const EventOG = Object.freeze({
   composedPath: Event.prototype.composedPath,
@@ -15,7 +15,16 @@ export const EventOG = Object.freeze({
 
 const cache = new WeakMap();
 
-export function getEventState(e) {
+export function setPaths(e, target, root){
+  const eventState = getEventState(e);
+  eventState.target = target;
+  eventState.root = root;
+  eventState.composedPath = composedPath(target, root);
+  eventState.contexts = bounceSequence(target, root);
+  return eventState;
+}
+
+function getEventState(e) {
   let state = cache.get(e);
   if (!state)
     cache.set(e, state = {
@@ -50,16 +59,22 @@ function propagationContextPrevented(contexts, prevented, i) {
   return false;
 }
 
-export function checkNativePreventDefault(event) {
-  const target = findNativeDefaultAction(event, EventOG.composedPath.call(event));
-  if (!target)
-    return false;
+export function checkAndPreventNativeDefaultAction(event) {
   const state = getEventState(event);
-  if (state.preventedHosts.includes(target))
-    return EventOG.preventDefault.call(event);
-  const hostIndex = state.contexts?.findIndex(({path}) => path.includes(target));
-  if (propagationContextPrevented(state.contexts, state.prevented, hostIndex))
-    EventOG.preventDefault.call(event);
+  for (let t of EventOG.composedPath.call(event)) {
+    if (!(t instanceof Element && t.tagName.indexOf('-') < 0 && t.getDefaultAction))
+      continue;
+    const defaultAction = t.getDefaultAction(event);
+    if (!defaultAction)
+      continue;
+    if (state.preventedHosts.includes(t))
+      return EventOG.preventDefault.call(event);
+    let propagationContextIndex = state.contexts?.findIndex(({path}) => path.includes(t));
+    if (propagationContextIndex === -1) propagationContextIndex = 0; //a composed: true event
+    const defaultPreventedForContext = propagationContextPrevented(state.contexts, state.prevented, propagationContextIndex);
+    if (defaultPreventedForContext)
+      EventOG.preventDefault.call(event);
+  }
 }
 
 Object.defineProperties(Event.prototype, {
@@ -96,10 +111,8 @@ Object.defineProperties(Event.prototype, {
   //bubbles, composed: NO need to override, always static
   'composedPath': {
     value: function () {
-      const fullPath = EventOG.call(this);                       //todo
-      const last = this.contexts[0].root;                        //todo
-      const index = fullPath.indexOf(last);
-      return index >= 0 ? fullPath.slice(0, index) : fullPath;
+      const state = getEventState(this);
+      return state?.composedPath || [];
     }
   },
   'stopPropagation': {
@@ -140,4 +153,4 @@ Object.defineProperties(Event.prototype, {
         state.preventedHosts.push(element);
     }
   }
-});
+});                           

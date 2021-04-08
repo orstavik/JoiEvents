@@ -1,6 +1,5 @@
-export {EventOG, checkNativePreventDefault} from './Event.js';
-import {getEventState} from './Event.js';
-import {bounceSequence} from "./BouncedPath.js";
+export {EventOG, checkAndPreventNativeDefaultAction} from './Event.js';
+import {setPaths} from './Event.js';
 
 function pathForPhase(path, phase) {
   return phase === 1 ? path.slice(1).reverse() : phase === 2 ? [path[0]] : phase === 3 ? path.slice(1) : [];
@@ -32,10 +31,9 @@ function nextInLoop(event, contexts, getListeners) {
 const eventStack = [];
 
 export function propagate(e, target, root, getListeners, removeListener) {
-  const eventState = getEventState(e);
-  const propagationContexts = eventState.contexts = bounceSequence(target, root);
+  const eventState = setPaths(e, target, root);
   eventStack.unshift(eventState);
-  for (let listener; listener = nextInLoop(eventState, propagationContexts, getListeners);) {
+  for (let listener; listener = nextInLoop(eventState, eventState.contexts, getListeners);) {
     listener.once && removeListener(listener);
     listener.cb.call(listener.target, e);
   }

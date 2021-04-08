@@ -1,9 +1,20 @@
+//todo Do I need to add the host/slot type for the context? it has a lot of meaning for the default action?
+//todo Or do I simply use the native composedPath()?
+
+export function composedPath(target, root) {
+  const res = [];
+  while (target) {
+    res.push(target);
+    if (target === root)
+      return res;
+    target = target === document ? window : target.parentNode || target.assignedSlot || target.host;
+  }
+  return res;
+}
+
 export function convertToBounceSequence(composedPath) {
   return convertToBounceSequenceImpl(composedPath);
 }
-
-//todo Do I need to add the host/slot type for the context? it has a lot of meaning for the default action?
-//todo Or do I simply use the native composedPath()?
 
 function convertToBounceSequenceImpl(composedPath, parent) {
   const root = composedPath.pop();
@@ -80,7 +91,7 @@ function getDepth(depths, root, parent) {
 
 export function print(bouncedPath) {
   const depths = new Map([[undefined, '']]);
-  if(!bouncedPath.every(({root, path})=>path.every(el=> root === window ? el === window || el === document || el.getRootNode() === document: el.getRootNode() === root))) throw new Error('BouncedPathBug: root node error.');
+  if (!bouncedPath.every(({root, path}) => path.every(el => root === window ? el === window || el === document || el.getRootNode() === document : el.getRootNode() === root))) throw new Error('BouncedPathBug: root node error.');
   return bouncedPath.map(({parent, root, path}) =>
     getDepth(depths, root, parent) +
     (root.host ? root.host.nodeName : 'window') + ': ' +

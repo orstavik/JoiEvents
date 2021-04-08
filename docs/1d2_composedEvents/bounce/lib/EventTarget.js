@@ -1,6 +1,6 @@
 const removedListeners = [];
 
-import {propagate, EventOG, checkNativePreventDefault} from "./EventLoop.js";
+import {propagate, EventOG, checkAndPreventNativeDefaultAction} from "./EventLoop.js";
 
 const listeners = Symbol("listeners");
 
@@ -13,7 +13,7 @@ function onFirstNativeListener(e) {
   EventOG.stopImmediatePropagation.call(e);
   const composedPath = e.composedPath();
   eventTick(e, composedPath[0], composedPath[composedPath.length - 1]);
-  checkNativePreventDefault(e);
+  checkAndPreventNativeDefaultAction(e);
 }
 
 function typeAndPhaseIsOk(listener, type, phase) {
