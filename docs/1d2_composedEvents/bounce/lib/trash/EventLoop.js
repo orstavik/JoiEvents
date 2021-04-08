@@ -2,25 +2,20 @@ function pathForPhase(path, phase) {
   return phase === 1 ? path.slice(1).reverse() : phase === 2 ? [path[0]] : phase === 3 ? path.slice(1) : [];
 }
 
-export class EventLoop {
+class EventLoop {
   constructor(event, propagationContexts) {
     this.event = event;
+    event.__frame = this;
     this.contexts = propagationContexts;
     this.doc = 0;
     this.phase = 0;
     this.target = 0;
     this.listener = -1;
-    this.stopImmediate = event.__frame?.stopImmediate || [];
-    this.stop = event.__frame?.stopImmediate || [];
-    this.prevented = event.__frame?.stopImmediate || [];
-    event.__frame = this;
   }
 
   next(getListeners) {
     this.listener++;
-    main: for (; this.doc < this.contexts.length; this.doc++, this.phase = this.target = this.listener = 0) {
-      if (this.stopImmediate[this.doc])
-        continue main;
+    for (; this.doc < this.contexts.length; this.doc++, this.phase = 0) {
       const context = this.contexts[this.doc];
       for (; this.phase < 4; this.phase++, this.target = 0) {
         const path = pathForPhase(context.path, this.phase);
@@ -31,8 +26,6 @@ export class EventLoop {
             if (!listener.removed)
               return listenerEntries[this.listener];
           }
-          if (this.stop[this.doc])
-            continue main;
         }
       }
     }

@@ -1,26 +1,29 @@
 const removedListeners = [];
 
-import {bounceSequence} from "./BouncedPath.js";
-import {tick} from "./trash/EventLoop.js";
+import {bounceSequence} from "../BouncedPath.js";
+import {tick} from "./EventLoop.js";
 
 const listeners = Symbol("listeners");
 
-function eventTick(e, target, root) {
-  const propagationContexts = bounceSequence(target, root);
-  const stackEmpty = tick(e, propagationContexts, getListeners, removeListener);
-  if (stackEmpty)
+function eventTick(e) {
+  const composedPath = e.composedPath();
+  const propagationContexts = bounceSequence(composedPath[0], composedPath[composedPath.length - 1]);
+  const stackSize = tick(e, propagationContexts, getListeners, removeListener);
+  if (stackSize === 0)
     removedListeners.map(removeListenerImpl);
 }
 
 function onFirstNativeListener(e) {
   e.stopImmediatePropagation();
-  const composedPath = e.composedPath();
-  eventTick(e, composedPath[0], composedPath[composedPath.length - 1]);
+  eventTick(e);
 }
 
-function getListeners(target, type) {
-  //todo onClick, etc. how to do this so as not to mutate the depth of the listener list? have onclick always first, and with empty value if not set?
-  return target[listeners]?.filter(listener => listener.type === type) || [];
+function typeAndPhaseIsOk(listener, type, phase) {
+  return listener.type === type && (phase === 2 || (listener.capture && phase === 1) || (!listener.capture && phase === 3));
+}
+
+function getListeners(target, type, phase) {
+  return target[listeners]?.filter(listener => typeAndPhaseIsOk(listener, type, phase)) || [];
 }
 
 function removeListener(listener) {
@@ -65,11 +68,3 @@ EventTarget.prototype.removeEventListener = function (type, cb, options) {
   const capture = options instanceof Object ? options.capture : !!options;
   removeListener(getListener(this, type, cb, capture));
 }
-
-EventTarget.prototype.dispatchEvent = function (e, options) {    //completely override dispatchEvent
-  if (e.__frame && e.__frame.phase === 4 || e.__frame.listener >= 0 || e.__frame.contexts) //all these properties should be set when the event is actually dispatched
-    throw new Error('Re-dispatch of events is disallowed.');
-  const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed;
-  eventTick(e, this, root);
-}
-//todo start explanation from dispatchEvent only. second step is addEventListener take-over.

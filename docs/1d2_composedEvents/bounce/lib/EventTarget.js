@@ -1,13 +1,12 @@
 const removedListeners = [];
 
 import {bounceSequence} from "./BouncedPath.js";
-import {tick} from "./trash/EventLoop.js";
+import {tick} from "./EventLoop.js";
 
 const listeners = Symbol("listeners");
 
-function eventTick(e) {
-  const composedPath = e.composedPath();
-  const propagationContexts = bounceSequence(composedPath[0], composedPath[composedPath.length - 1]);
+function eventTick(e, target, root) {
+  const propagationContexts = bounceSequence(target, root);
   const stackSize = tick(e, propagationContexts, getListeners, removeListener);
   if (stackSize === 0)
     removedListeners.map(removeListenerImpl);
@@ -15,7 +14,8 @@ function eventTick(e) {
 
 function onFirstNativeListener(e) {
   e.stopImmediatePropagation();
-  eventTick(e);
+  const composedPath = e.composedPath();
+  eventTick(e, composedPath[0], composedPath[composedPath.length - 1]);
 }
 
 function typeAndPhaseIsOk(listener, type, phase) {
@@ -32,7 +32,7 @@ function removeListener(listener) {
 
 function getListener(target, type, cb, capture) {
   target[listeners] || (target[listeners] = []);
-  return target[listeners].find(old => old.type === type && old.cb === cb && old.capture === capture); //todo removed must be handled inside EventLoop
+  return target[listeners].find(old => old.type === type && old.cb === cb && old.capture === capture && !old.removed);
 }
 
 function defaultPassiveValue(type, target) {
@@ -68,3 +68,11 @@ EventTarget.prototype.removeEventListener = function (type, cb, options) {
   const capture = options instanceof Object ? options.capture : !!options;
   removeListener(getListener(this, type, cb, capture));
 }
+
+EventTarget.prototype.dispatchEvent = function (e, options) {    //completely override dispatchEvent
+  if (e.__frame.listener >= 0)
+    throw new Error('Re-dispatch of events is disallowed.');
+  const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed;
+  eventTick(e, this, root);
+}
+//todo start explanation from dispatchEvent only. second step is addEventListener take-over.
