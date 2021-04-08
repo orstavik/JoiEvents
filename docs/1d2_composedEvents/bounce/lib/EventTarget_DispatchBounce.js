@@ -1,19 +1,18 @@
 const removedListeners = [];
 
 import {bounceSequence} from "./BouncedPath.js";
-import {tick} from "./EventLoop.js";
+import {tick} from "./trash/EventLoop.js";
 
 const listeners = Symbol("listeners");
 
 function eventTick(e, target, root) {
-  e.__isSpent = true;
   const propagationContexts = bounceSequence(target, root);
   const stackEmpty = tick(e, propagationContexts, getListeners, removeListener);
   if (stackEmpty)
     removedListeners.map(removeListenerImpl);
 }
 
-function onFirstNativeListener(e){
+function onFirstNativeListener(e) {
   e.stopImmediatePropagation();
   const composedPath = e.composedPath();
   eventTick(e, composedPath[0], composedPath[composedPath.length - 1]);
@@ -68,7 +67,7 @@ EventTarget.prototype.removeEventListener = function (type, cb, options) {
 }
 
 EventTarget.prototype.dispatchEvent = function (e, options) {    //completely override dispatchEvent
-  if (e.__isSpent)
+  if (e.__frame && e.__frame.phase === 4 || e.__frame.listener >= 0 || e.__frame.contexts) //all these properties should be set when the event is actually dispatched
     throw new Error('Re-dispatch of events is disallowed.');
   const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed;
   eventTick(e, this, root);

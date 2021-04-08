@@ -1,7 +1,7 @@
 const removedListeners = [];
 
 import {bounceSequence} from "./BouncedPath.js";
-import {tick} from "./EventLoop.js";
+import {tick} from "./trash/EventLoop.js";
 
 const listeners = Symbol("listeners");
 
@@ -32,7 +32,7 @@ function removeListener(listener) {
 
 function getListener(target, type, cb, capture) {
   target[listeners] || (target[listeners] = []);
-  return target[listeners].find(old => old.type === type && old.cb === cb && old.capture === capture && !old.removed);
+  return target[listeners].find(old => old.type === type && old.cb === cb && old.capture === capture); //todo removed must be handled inside EventLoop
 }
 
 function defaultPassiveValue(type, target) {
