@@ -86,6 +86,29 @@
     }
   }
 
+  //todo add a test for stopPropagation
+  //todo add a test for stopImmediatePropagation
+
+  //todo add tests for stopPropagation and stopImmediatePropagation before event dispatch.
+
+  //todo add a test for this type of defaultAction event listener
+  // defaultActionEventListener(e) {
+  //   if (e.defaultPrevented)
+  //     return
+  //   // if (!this.hasAttribute("additive"))
+  //   //   e.preventDefault()
+  //   // if (this.getAttribute('additive') === "once")
+  //   //   this.removeAttribute("additive")
+  //   const composed = false;
+  //   const beforeEvent = new Event("before-red", {composed});
+  //   this.dispatchEvent(beforeEvent);
+  //   if (beforeEvent.defaultPrevented) //state change aborted
+  //     return
+  //   doLocalOrGlobalStateChange();
+  //   const afterEvent = new Event("after-red", {composed});
+  //   this.dispatchEvent(afterevent);
+  // }
+
   customElements.define("outer-host", OuterHost);
   customElements.define("inner-host", InnerHost);
   customElements.define("link-slot", LinkSlot);
