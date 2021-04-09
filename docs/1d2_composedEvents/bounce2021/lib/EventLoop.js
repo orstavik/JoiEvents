@@ -35,7 +35,7 @@ export function propagate(e, target, root, getListeners, removeListener) {
   eventStack.unshift(eventState);
   for (let listener; listener = nextInLoop(e.type, eventState, eventState.contexts, getListeners);) {
     listener.once && removeListener(listener);
-    listener.cb.call(listener.target, e);
+    listener.cb instanceof Function ? listener.cb.call(listener.target, e) : listener.cb.handleEvent.call(listener.cb.handleEvent, e);
   }
   if (eventState !== eventStack.shift()) throw 'omg';
   return eventStack.length === 0;
