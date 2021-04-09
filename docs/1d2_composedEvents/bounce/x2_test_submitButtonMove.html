@@ -1,0 +1,23 @@
+<form action="#sunshine">
+  <input type="submit" value="hello">
+  <two-submits></two-submits>
+</form>
+
+<script>
+  class TwoSubmits extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<input type="submit" value="i move"><input type="submit" value="i stand">';
+      this.shadowRoot.children[0].addEventListener('click', function (e) {
+        document.body.children[0].append(this);
+      });
+    }
+  }
+
+  customElements.define('two-submits', TwoSubmits);
+
+  document.querySelector('input').addEventListener('click', function(e){
+    document.querySelector('two-submits').shadowRoot.append(this);
+  });
+</script>

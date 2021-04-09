@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<two-inputs></two-inputs>
+<input type="text" id="three">
+
+<script>
+  class TwoInputs extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<slot><h1>bob</h1></slot>';
+    }
+  }
+
+  customElements.define('two-inputs', TwoInputs);
+
+</script>
+</body>
+</html>

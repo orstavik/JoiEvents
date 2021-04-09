@@ -1,0 +1,24 @@
+<details>
+  <summary>hello</summary>
+  sunshine
+</details>
+<two-summary></two-summary>
+
+<script type="module">
+  class TwoSummary extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+      this.shadowRoot.innerHTML = '<summary>i move</summary><summary>i stand</summary>';
+      this.shadowRoot.children[0].addEventListener('click', function (e) {
+        document.body.children[0].prepend(this);
+      });
+    }
+  }
+
+  customElements.define('two-summary', TwoSummary);
+
+  document.querySelector('summary').addEventListener('click', function(e){
+    document.querySelector('two-summary').shadowRoot.append(this);
+  });
+</script>
