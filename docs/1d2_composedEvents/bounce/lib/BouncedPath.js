@@ -7,7 +7,7 @@ export function composedPath(target, root) {
     res.push(target);
     if (target === root)
       return res;
-    target = target === document ? window : target.parentNode || target.assignedSlot || target.host;
+    target = target === document ? window : target.assignedSlot || target.parentNode || target.host;
   }
   return res;
 }
@@ -91,7 +91,10 @@ function getDepth(depths, root, parent) {
 
 export function print(bouncedPath) {
   const depths = new Map([[undefined, '']]);
-  if (!bouncedPath.every(({root, path}) => path.every(el => root === window ? el === window || el === document || el.getRootNode() === document : el.getRootNode() === root))) throw new Error('BouncedPathBug: root node error.');
+  if (!bouncedPath.every(({
+                            root,
+                            path
+                          }) => path.every(el => root === window ? el === window || el === document || el.getRootNode() === document : el.getRootNode() === root))) throw new Error('BouncedPathBug: root node error.');
   return bouncedPath.map(({parent, root, path}) =>
     getDepth(depths, root, parent) +
     (root.host ? root.host.nodeName : 'window') + ': ' +
