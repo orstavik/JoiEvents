@@ -1,6 +1,6 @@
 const removedListeners = [];
 
-import {bounceSequence} from "../BouncedPath.js";
+import {bounceSequence} from "../../bounce2021/lib/BouncedPath.js";
 import {tick} from "./EventLoop.js";
 
 const listeners = Symbol("listeners");

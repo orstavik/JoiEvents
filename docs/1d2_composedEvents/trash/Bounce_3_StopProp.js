@@ -1,5 +1,5 @@
 
-import {bounceSequence} from "../lib/BouncedPath.js";
+import {bounceSequence} from "../bounce2021/lib/BouncedPath.js";
 
 function getPropagationRoot(el) {
   const root = el.getRootNode && el.getRootNode() || window;

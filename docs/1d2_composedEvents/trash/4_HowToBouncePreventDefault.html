@@ -43,8 +43,8 @@
   const composedPathOG = Event.prototype.composedPath;
   Object.defineProperties(Event.prototype, {
     'preventDefault': {                                                                                   //todo added
-      value: function () {                                                                                //todo added
-        this[frame].preventDescendantDocuments(this.currentDocument, false);                              //todo added
+      value: function (el) {                                                                              //todo added
+        this[frame].preventDefault(el);                                                                   //todo added
       }                                                                                                   //todo added
     },                                                                                                    //todo added
     'defaultPrevented': {                                                                                 //todo added
@@ -148,15 +148,12 @@
       return this.bouncedPath[this.doc]?.root;
     }
 
-    preventDescendantDocuments(root, second) {                                                            //todo added
-      for (let docEntry of this.bouncedPath) {                                                            //todo added
-        if (root === docEntry.root) {                                                                     //todo added
-          if ('defaultPrevented' in docEntry)                                                             //todo added
-            return;                                                                                       //todo added
-          docEntry.defaultPrevented = second;                                                             //todo added
-          this.preventDescendantDocuments(docEntry.root, true);                                           //todo added
-        }                                                                                                 //todo added
-      }                                                                                                   //todo added
+    preventDefault(target) {                                                                              //todo added
+      if (!(target instanceof HTMLElement))
+        return this.bouncedPath[this.doc].defaultPrevented = true, undefined;
+      if (target.shadowRoot)
+        return this.bouncedPath.find(({root}) => root === target.shadowRoot).defaultPrevented = true, undefined;
+      return this.nativeElementsDefaultPrevented.push(target);
     }                                                                                                     //todo added
                                                                                                           //todo added
     defaultPrevented() {                                                                                  //todo added
@@ -165,7 +162,7 @@
                                                                                                           //todo added
     defaultPreventedForNativeElement(hostNode) {                                                          //todo added
       for (let doc of this.bouncedPath) {                                                                 //todo added
-        if(doc.nodes.includes(hostNode))                                                                  //todo added
+        if (doc.nodes.includes(hostNode))                                                                  //todo added
           return 'defaultPrevented' in doc;                                                               //todo added
       }                                                                                                   //todo added
       return false;                                                                                       //todo added
