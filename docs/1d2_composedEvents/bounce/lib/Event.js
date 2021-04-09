@@ -1,4 +1,5 @@
 import {bounceSequence, composedPath} from "./BouncedPath.js";
+import {} from "./Polyfish_getDefaultAction.js";
 
 export const EventOG = Object.freeze({
   composedPath: Event.prototype.composedPath,
@@ -17,8 +18,6 @@ const cache = new WeakMap();
 
 export function setPaths(e, target, root){
   const eventState = getEventState(e);
-  eventState.target = target;
-  eventState.root = root;
   eventState.composedPath = composedPath(target, root);
   eventState.contexts = bounceSequence(target, root);
   return eventState;
@@ -31,7 +30,7 @@ function getEventState(e) {
       doc: 0,
       phase: 0,
       target: 0,
-      listener: -1,
+      listener: 0,
       stopImmediate: [],
       stop: [],
       prevented: [],

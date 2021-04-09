@@ -1,6 +1,7 @@
 const removedListeners = [];
 
 import {propagate, EventOG, checkAndPreventNativeDefaultAction} from "./EventLoop.js";
+import {} from "./GlobalEventHandlers.js";
 
 const listeners = Symbol("listeners");
 
@@ -70,7 +71,7 @@ EventTarget.prototype.removeEventListener = function (type, cb, options) {
 EventTarget.prototype.dispatchEvent = function (e, options) {    //completely override dispatchEvent
   if (e.eventPhase > 0)
     throw new Error('Re-dispatch of events is disallowed.');
-  const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed;
+  const root = options instanceof Object && options.root instanceof EventTarget ? options.root : e.composed ? window : this.getRootNode();
   eventTick(e, this, root);
 }
 //todo start explanation from dispatchEvent only. second step is addEventListener take-over.
