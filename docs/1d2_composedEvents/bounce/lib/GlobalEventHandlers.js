@@ -30,6 +30,6 @@ for (let event of events) {
       this.addEventListener(event, oldFun);
     }
   };
-  for (let interface of interfaces)
-    Object.prototype.defineProperty(interface.prototype, handler, prop);
+  for (let iface of interfaces)
+    Object.defineProperty(iface.prototype, handler, prop);
 }
