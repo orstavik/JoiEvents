@@ -1,3 +1,17 @@
+//Problem 1: reasons why re-dispatching events are bad:
+//1. timestamp should be at initial dispatch, not event object creation.
+//2. properties such as composed and bubbles are really associated with a single dispatch instance.
+//3. confusion arise if you use an event as key and then expect properties such as target, path, composedPath() etc to be constant.
+//   if somebody uses the event as a key in a map/set, or as an object to dirtycheck against, it is 95% likely that the
+//   thing checked is the dispatch instance, and not the event object per se.
+//4. preventDefault applies across dispatches.
+//5. but stopPropagation is reset for each new dispatch.
+//6. the browser can reuse objects to optimize in the background, there are not really any performance benefits to gain here.
+
+//In this system, re-dispatchEvent is disallowed mainly because it cannot function smoothly with defaultActions.
+//you cannot both read .preventDefault after the event has completed propagation, And call .preventDefault() *before* the
+//event begins propagation, And call .preventDefault() on an event, and then re-dispatchEvent it.
+
 <script>
 
   //opinion #1: Event objects should not be reused. Override dispatchEvent() to clone all events that has propagated before.
@@ -6,12 +20,13 @@
   //            Re-dispatching event objects is a trap.
 
   const dispatchEventOG = EventTarget.prototype.dispatchEvent;
+   function cloneEvent (e) {
+    const clone = new Event(e);
+    return Object.assign(clone, e);
+  }
+
   EventTarget.prototype.dispatchEvent = function (e) {
-    if (spentEvents.has(e)) {
-      const clone = new Event(e);
-      Object.assign(clone, e);
-      e = clone;
-    }
+    e = e.eventPhase === Event.ENDED ? cloneEvent(e): e;
     dispatchEventOG.call(this, e);
   }
 

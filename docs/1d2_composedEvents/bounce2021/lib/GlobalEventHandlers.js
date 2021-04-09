@@ -1,3 +1,7 @@
+function typeCheckListener(listen){
+  return listen instanceof Function || listen instanceof Object && listen.handleEvent instanceof Function;
+}
+
 const cache = new WeakMap();
 
 function getFromCache(target, event) {
@@ -22,12 +26,13 @@ for (let event of events) {
       return getFromCache(this, event);
     },
     set: function (fun) {
-      //todo type check the fun argument
       const oldFun = getFromCache(this, event);
       if (oldFun)
         this.removeEventListener(event, oldFun);
-      putInCache(this, fun);
-      this.addEventListener(event, oldFun);
+      const isListener = typeCheckListener(fun);  //note type checking is done after the old event listener is removed.
+      putInCache(this, isListener ? fun: undefined);
+      isListener && this.addEventListener(event, oldFun);
+      return fun;
     }
   };
   for (let iface of interfaces)

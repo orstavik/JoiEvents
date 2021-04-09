@@ -17,6 +17,10 @@ function onFirstNativeListener(e) {
   checkAndPreventNativeDefaultAction(e);
 }
 
+function typeCheckListener(listen){
+  return listen instanceof Function || listen instanceof Object && listen.handleEvent instanceof Function;
+}
+
 function typeAndPhaseIsOk(listener, type, phase) {
   return listener.type === type && (phase === 2 || (listener.capture && phase === 1) || (!listener.capture && phase === 3));
 }
@@ -50,6 +54,8 @@ function removeListenerImpl(l) {
 
 const addEventListenerOG = EventTarget.prototype.addEventListener;
 EventTarget.prototype.addEventListener = function (type, cb, options) {
+  if(!typeCheckListener(cb))
+    return;
   const capture = options instanceof Object ? options.capture : !!options;
   if (getListener(this, type, cb, capture))
     return;
@@ -75,17 +81,3 @@ EventTarget.prototype.dispatchEvent = function (e, options) {    //completely ov
   eventTick(e, this, root);
 }
 //todo start explanation from dispatchEvent only. second step is addEventListener take-over.
-
-//Problem 1: reasons why re-dispatching events are bad:
-//1. timestamp should be at initial dispatch, not event object creation.
-//2. properties such as composed and bubbles are really associated with a single dispatch instance.
-//3. confusion arise if you use an event as key and then expect properties such as target, path, composedPath() etc to be constant.
-//   if somebody uses the event as a key in a map/set, or as an object to dirtycheck against, it is 95% likely that the
-//   thing checked is the dispatch instance, and not the event object per se.
-//4. preventDefault applies across dispatches.
-//5. but stopPropagation is reset for each new dispatch.
-//6. the browser can reuse objects to optimize in the background, there are not really any performance benefits to gain here.
-
-//In this system, re-dispatchEvent is disallowed mainly because it cannot function smoothly with defaultActions.
-//you cannot both read .preventDefault after the event has completed propagation, And call .preventDefault() *before* the
-//event begins propagation, And call .preventDefault() on an event, and then re-dispatchEvent it.

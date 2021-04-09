@@ -1,0 +1,15 @@
+<h1>hello sunshine</h1>
+
+<script>
+
+  const h1 = document.querySelector('h1');
+  h1.addEventListener('click', {
+    hello: "sunshine",
+    handleEvent: function (e) {
+      console.log(this)
+      console.log(this.hello)
+      console.log(e)
+      debugger;
+    }
+  });
+</script>
