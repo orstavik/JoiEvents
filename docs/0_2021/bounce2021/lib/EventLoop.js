@@ -35,7 +35,14 @@ export function propagate(e, target, root, getListeners, removeListener) {
   eventStack.unshift(eventState);
   for (let listener; listener = nextInLoop(e.type, eventState, eventState.contexts, getListeners);) {
     listener.once && removeListener(listener);
-    listener.cb instanceof Function ? listener.cb.call(listener.target, e) : listener.cb.handleEvent.call(listener.cb.handleEvent, e);
+    try{
+      listener.cb instanceof Function ? listener.cb.call(listener.target, e) : listener.cb.handleEvent.call(listener.cb.handleEvent, e);
+    } catch (err){
+      const error = new ErrorEvent('Uncaught Error', {error : err, message : err.message});
+      window.dispatchEvent(error);
+      if (!error.defaultPrevented)
+        console.error(error);
+    }
   }
   if (eventState !== eventStack.shift()) throw 'omg';
   return eventStack.length === 0;
