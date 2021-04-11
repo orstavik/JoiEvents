@@ -64,5 +64,73 @@ https://www.w3.org/TR/uievents/#events-inputevent-event-order
     // window.addEventListener("keydown", e => e.preventDefault());
     //.preventDefault() on beforeinput will block the two later tasks from the InputController
     //window.addEventListener("beforeinput", e => e.preventDefault());
+    
+     const InputController = {
+      keydown: function (e) {
+        toggleTick(function () {
+          // beforeinput event
+          const beforeInputEvent = new InputEvent("my-beforeinput", {
+            composed: true,
+            bubbles: true
+          });
+          e.target.dispatchEvent(beforeInputEvent);
+
+          if (beforeInputEvent.defaultPrevented) return;
+
+          // this is start update the input element
+          if (e.key === "Backspace")
+            e.target.value = e.target.value.substr(
+              0,
+              e.target.value.length - 1
+            );
+
+          // this is end update the input element
+          const inputEvent = new InputEvent("my-input", {
+            composed: true,
+            bubbles: true
+          });
+          inputEvent.key = e.key;
+          e.target.dispatchEvent(inputEvent);
+        });
+      },
+      // here we set a new characters
+      keypress: function (e) {
+        toggleTick(function () {
+          e.target.value += e.key;
+        });
+      }
+    };
+
+    window.addEventListener("keydown", InputController.keydown, true);
+    window.addEventListener("keypress", InputController.keypress, true);
+
+    //.preventDefault() on keypress will block the InputController from creating its 3 subsequent tasks
+    window.addEventListener("keypress", e => e.preventDefault(), true);
+    //.preventDefault() on keydown will block the InputController from creating its 3 subsequent tasks
+    // We can not prevent it, because it will block keyup event
+    // window.addEventListener("keydown", e => e.preventDefault());
+    //.preventDefault() on beforeinput will block the two later tasks from the InputController
+    window.addEventListener("beforeinput", e => e.preventDefault(), true);
+
+
+    //NOTE! The input event is sync.
+    // That means that tasks queued in the event loop from a beforeinput event listener, should run AFTER the input event dispatch.
+    // and this means that the act of changing the input element's value property doesnt dispatch a new event.
+    window.addEventListener(
+      "beforeinput",
+      function (e) {
+        toggleTick(function () {
+          console.log("toggletick beforeinput ");
+        });
+      },
+      true
+    );
+    window.addEventListener("keypress", e => console.log("keypress"), true);
+    window.addEventListener("input", e => console.log("input"), true);
+    window.addEventListener("keydown", e => console.log("keydown"), true);
+    window.addEventListener("beforeinput", e => console.log("beforeinput"), true);
+    window.addEventListener("my-beforeinput", e => console.log("my-beforeinput"), true);
+    window.addEventListener("my-input", e => console.log("my-input"), true);
+    
   })();
 </script>
