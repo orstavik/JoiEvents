@@ -23,3 +23,28 @@
 
   //todo I think touch events gets GC earlier, are placed behind getters. Find out which event data gets lost due to GC
 </script>
+
+<div id="top">Div
+    <div>div
+      <p>P<span>Span</span></p>
+    </div>
+</div>
+
+<button onclick="setTimeout(()=>{alert('click')},2000)">2s alert</button>
+
+<script>
+  let divElem = document.querySelector("#top");
+  let pElem = document.querySelector("P");
+  let spanElem = document.querySelector("SPAN");
+  let initialEvent;
+
+  divElem.addEventListener(touchcancel, (e) => {
+    initialEvent = e;
+  },true);
+
+  pElem.addEventListener(touchcancel, (e) => {
+    if (e !== initialEvent)
+      alert("Something have been lost")
+  },true);
+  
+</script>
