@@ -3,7 +3,7 @@
 When implementing custom control of event propagation, it is often useful to know if the event has been stopped or not. In this chapter we add an `.isStopped` property to the `Event` interface to report back the state of the propagation.
 
 There are a couple of things to make note of:
-1. if you call `stopPropagation()` first, then the event is only blocked from propagating to the next `currentTarget`, not to the next event listener on the same `currentTarget`. Therefore, the `stopImmediatePropagation()` can *override* the `stopPropagation()` method, but not the other way round.
+1. If you call `stopPropagation()` first, then the event is only blocked from propagating to the next `currentTarget`, not to the next event listener on the same `currentTarget`. Therefore, the `stopImmediatePropagation()` can *override* the `stopPropagation()` method, but not the other way round.
 2. In this implementation, `isStopped` returns `false` even though an event listener has called `stopPropagation()` on the event previously, as long as the event remains on the same `currentTarget`. This is useful for our use of the `isStopped` in the subsequent chapter, but is a bit counter intuitive when `isStopped` is viewed in isolation.
 
 ## Implementation
@@ -90,4 +90,4 @@ Object.defineProperties(Event.prototype, {
 
 ## References
 
- * 
+ * [javascript.info: stopPropagation() vs event.stopImmediatePropagation()](https://javascript.info/bubbling-and-capturing#stopping-bubbling)
